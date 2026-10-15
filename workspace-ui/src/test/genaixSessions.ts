@@ -8,6 +8,7 @@ export function sessionFixture(overrides: Partial<Session> & Pick<Session, 'id'>
         title: `Session ${overrides.id}`,
         inputs: {},
         open_plan_id: null,
+        open_plan_ids: [],
         executing_plan_id: null,
         plan_count: 0,
         status: 'active',

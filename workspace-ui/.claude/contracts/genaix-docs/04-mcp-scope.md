@@ -1,6 +1,8 @@
 # CMS MCP layer scope (cms-mcp)
 
-Companion machine-readable specification: `mcp/tools.json` (version `1.0.0-rc.4`), reading guide in
+Companion machine-readable specification: `mcp/tools.json` (version `1.0.0-rc.5`, a draft for review
+that changes only the list of GenAIx-side tools; the CMS tool surface is that of the agreed
+`1.0.0-rc.4`), reading guide in
 `mcp/README.md`. This document describes the CMS MCP server: the tools it exposes, its transport,
 authentication, error mapping and the requirements its implementation has to meet. How a particular client
 stores credentials or drives a workflow is integration, covered in `09-integration-guide.md`.

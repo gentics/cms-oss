@@ -7,7 +7,8 @@ import type { RunNotice as Notice } from '@/store/useWorkspaceEventStore';
 import styles from './RunNotice.module.css';
 
 /**
- * A run's ending or error in the stream: Stopped (`run.cancelled`), failed with its problem
+ * A run's ending or error in the stream: Stopped (`run.cancelled`, not when a message redirected the
+ * plan, which `useWorkspaceEventStore` keeps out of the notices), failed with its problem
  * (`run.failed`), a recoverable `error`, or the MCP connection it could not use (`auth.required`,
  * whose `how_to_fix` the contract marks as safe to show).
  */

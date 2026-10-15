@@ -1,13 +1,14 @@
-import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RefreshCwIcon, RocketIcon, RouteIcon, TriangleAlertIcon, Undo2Icon, XIcon } from 'lucide-react';
+import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, PencilIcon, RefreshCwIcon, RocketIcon, RouteIcon, TriangleAlertIcon, XIcon } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { errorMessageKey, problemMessageKey } from '@/helper/errorMapper/errorMapper';
-import { planActions } from '@/helper/planActions/planActions';
+import { isFirstDraft, planActions, revisionOf } from '@/helper/planActions/planActions';
 import { gateRefusalOf, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
-import type { Plan, Publication, TransitionRequest } from '@/services/apiService/genaix/types';
+import type { Plan, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
+import { useRevisePlanStore } from '@/store/useRevisePlanStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import { PublishDialog, type PublishPhase } from './PublishDialog';
@@ -20,7 +21,6 @@ const ACTION_ICONS: Record<Action, LucideIcon> = {
     release: RocketIcon,
     publish: GlobeIcon,
     request_review: EyeIcon,
-    reopen: Undo2Icon,
     discard: XIcon,
 };
 
@@ -44,6 +44,14 @@ type Publishing = { phase: 'confirm'; options: TransitionOptions } | { phase: 'p
 
 // How many of the plan's pages are in each publish status. A status outside the contract's enum counts
 // as pending (client rule: tolerate unknown enum values).
+// What discarding does to the pages the plan wrote: the strictest `plan_policy.on_discard` of the plan's
+// modules, `restore` over `keep` (rc.5); `keep` while the modules are not known.
+function onDiscardOf(plan: Plan, workflows: Workflow[] | undefined): 'keep' | 'restore' {
+    const policies = (plan.workflows ?? []).map(({ id }) => workflows?.find((workflow) => workflow.id === id)?.plan_policy?.on_discard);
+
+    return policies.includes('restore') ? 'restore' : 'keep';
+}
+
 function countByStatus(publications: Publication[]): Partial<Record<PublicationStatus, number>> {
     const counts: Partial<Record<PublicationStatus, number>> = {};
 
@@ -63,7 +71,8 @@ interface PlanHeadProps {
     isInCard?: boolean;
     /**
      * On the review page's panel: also offers the gated transitions (`GATED_ACTIONS` in `planActions`), and what
-     * to do about a transition the gates refused. Elsewhere only discard and reopen.
+     * to do about a transition the gates refused. Elsewhere only discard, and "Ask for a change" or "Stop and
+     * change", which put the chat composer into revising the plan (there is no composer on the review page).
      */
     withGatedActions?: boolean;
     /** Whether the user may publish the plan's pages in the CMS; without it, publish is not offered (request review is). */
@@ -94,8 +103,14 @@ interface PlanHeadProps {
  * that can put pages online asks first in a dialog (`PublishDialog`), which then follows publishing to
  * its end: Publish, and after a refused publish "Publish anyway" and "Check again" (which repeats the
  * publish, as the gates only run with the transition). Discard asks first, saying what
- * happens to the pages by the module's `plan_policy.on_discard`. Stopping a plan's run is the
+ * happens to the pages by the modules' `plan_policy.on_discard` (`onDiscardOf`). Stopping a plan's run is the
  * composer's (`SessionComposer`).
+ *
+ * A plan is changed with a message, not a transition (rc.5 removed `reopen`): outside the review page,
+ * "Ask for a change" on a plan that finished its work and "Stop and change" on one that executes
+ * (`revisionOf`) put the chat composer into revising this plan (`useRevisePlanStore`), whose next
+ * message goes out with `options.mode: revise` (`SessionComposer`). A revision being drafted shows as
+ * such: `drafting`, but with the items of its current version.
  */
 export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions = false, canPublish = true, children }: PlanHeadProps) {
     const { t } = useTranslation();
@@ -107,7 +122,8 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     // The publish dialog, while it is open.
     const [publishing, setPublishing] = useState<Publishing>();
     const notices = useWorkspaceEventStore((state) => selectSession(sessionId)(state).notices);
-    const onDiscard = useWorkflows().data?.find(({ id }) => id === plan.workflow)?.plan_policy?.on_discard ?? 'keep';
+    const onDiscard = onDiscardOf(plan, useWorkflows().data);
+    const isRevising = useRevisePlanStore((state) => state.planIds[sessionId] === plan.id);
 
     // `isCheck` for "Check again", which has the gates check the plan rather than release it at the user's word.
     function transition(action: Action, { acknowledgeChecks, isCheck }: TransitionOptions = {}) {
@@ -168,11 +184,14 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
         .filter((status) => counts[status])
         .map((status) => t(`planBar.count.${status}`, { count: counts[status] }))
         .join(', ');
-    const isUnderWay = plan.status === 'proposed' || plan.status === 'accepted' || plan.status === 'running';
+    const isUnderWay = plan.status === 'drafting' || plan.status === 'proposed' || plan.status === 'accepted' || plan.status === 'running';
     const isClosed = plan.status === 'discarded' || plan.status === 'superseded';
     const tone = counts.failed ? styles.bad : isUnderWay || isClosed ? undefined : styles.ok;
     const Icon = counts.failed ? CircleAlertIcon : isUnderWay || isClosed ? RouteIcon : CircleCheckIcon;
     const actions = planActions(plan.status, withGatedActions).filter((action) => canPublish || action !== 'publish');
+    const revision = withGatedActions ? undefined : revisionOf(plan.status);
+    // A revision is drafted with the items of the version it revises (rc.5); a first draft has none.
+    const statusKey = plan.status === 'drafting' && !isFirstDraft(plan) ? 'revising' : plan.status;
     const publish = publishing && publishState(publishing);
     const refusedAction = latest?.input.request.action;
     const refusal = withGatedActions && latest?.status === 'error' && refusedAction && actions.includes(refusedAction)
@@ -233,11 +252,23 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
             <div className={[styles.head, isInCard && styles.inCard, tone].filter(Boolean).join(' ')}>
                 <Icon size={16} className={styles.icon} aria-hidden />
                 <span className={styles.text}>
-                    <span className={styles.status}>{t(`parts.plan.status.${plan.status}`)}</span>
+                    <span className={styles.status}>{t(`parts.plan.status.${statusKey}`)}</span>
                     {summary && ` · ${summary}`}
                 </span>
                 <span className={styles.actions}>
                     {actions.flatMap(actionButtons)}
+                    {revision && (
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            aria-pressed={isRevising}
+                            disabled={Boolean(pending)}
+                            onClick={() => useRevisePlanStore.getState().start(sessionId, plan.id)}
+                        >
+                            <PencilIcon size={14} />
+                            {t(`planBar.revise.${revision}`)}
+                        </Button>
+                    )}
                     {children}
                 </span>
                 {publish && (

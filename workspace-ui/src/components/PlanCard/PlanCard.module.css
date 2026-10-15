@@ -175,3 +175,53 @@
     box-shadow: 0 0 0 12px rgba(var(--interactive-rgb), 0);
   }
 }
+
+/* A step the revision removed: struck through until the version is accepted (rc.5). */
+.removed .marker {
+  background: var(--bg-subtle);
+  color: var(--fg-muted);
+}
+
+.removed .label {
+  color: var(--fg-muted);
+  text-decoration: line-through;
+}
+
+/* A revision being drafted: the items of the current version, muted until the new one is proposed. */
+.drafting .label {
+  color: var(--fg-secondary);
+}
+
+/* What a proposed revision did to the item (design.md §12 "Badge": 10 px, uppercase, `--corner-sm`). */
+.change {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), 0.12);
+  color: var(--fg-primary);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+/* A step the server refused (design.md §3.3 "Ungültiges Feld"): icon and text in `--error`. */
+.invalid .marker {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.invalid .input {
+  border-color: rgba(var(--error-rgb), 0.55);
+  background: var(--error-bg);
+}
+
+.problem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--error);
+  font-size: var(--font-size-xs);
+}

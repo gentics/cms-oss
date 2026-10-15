@@ -8,6 +8,7 @@ import { ConfirmedSettingsCard, InteractionCard } from '@/components/Interaction
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
+import { isFirstDraft } from '@/helper/planActions/planActions';
 import { useSessionMessages } from '@/hooks/useGenaixQueries';
 import { useOpenPlan } from '@/hooks/useOpenPlan';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
@@ -182,10 +183,11 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
     const { t } = useTranslation();
     const history = useSessionMessages(sessionId);
     const openPlan = useOpenPlan(sessionId);
-    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
+    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations, executingPlanId } = useWorkspaceEventStore(useShallow((state) => {
         const session = selectSession(sessionId)(state);
 
         return {
+            executingPlanId: session.executingPlanId,
             messages: session.messages,
             run: session.run,
             awaitedRunIds: session.awaitedRunIds,
@@ -262,10 +264,10 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
     });
 
     // Each plan but the open one, where its first `plan.updated` came (rc.4: one card per plan, a closed
-    // one included), once it is more than a draft (`drafting`, no items yet). A plan read with
-    // `GET …/plans/{plan_id}` has no place and stands at the end.
+    // one included), once it is more than a first draft (`isFirstDraft`; a revision being drafted keeps
+    // its items, rc.5). A plan read with `GET …/plans/{plan_id}` has no place and stands at the end.
     const placedPlans = (plans ?? [])
-        .filter(({ plan }) => plan.id !== openPlan?.id && plan.status !== 'drafting')
+        .filter(({ plan }) => plan.id !== openPlan?.id && !isFirstDraft(plan))
         .map((livePlan) => ({
             ...planPlace(entries, livePlan),
             seq: livePlan.seq,
@@ -303,7 +305,12 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
         node: <InteractionCard interaction={interaction} sessionId={sessionId} />,
     }));
 
-    if (isSessionWorking({ run, messages, awaitedRunIds })) {
+    // An accepted plan runs one execute run per segment of one module's items (rc.5): between one
+    // segment's `run.completed` and the next one's `run.started` no run is active, but the plan is still
+    // `running`. Whether it is done comes from its status, never from `run.completed`.
+    const isBetweenSegments = !run && (plans ?? []).some(({ plan }) => plan.id === executingPlanId && plan.status === 'running');
+
+    if (isSessionWorking({ run, messages, awaitedRunIds }) || isBetweenSegments) {
         placed.push({ key: 'thinking', node: <ThinkingIndicator text={run?.statusText} /> });
     }
 

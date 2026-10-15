@@ -6,9 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
+import type { GenaixEvent, Plan } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useHandOffStore } from '@/store/useHandOffStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
+import { useRevisePlanStore } from '@/store/useRevisePlanStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 import { stubUploads } from '@/test/stubUploads';
@@ -97,6 +99,7 @@ describe('SessionPage', () => {
         useErrorNotificationStore.setState({ errors: [] });
         useHandOffStore.setState({ handOffs: {} });
         useInteractionDraftStore.setState({ drafts: {}, locks: {} });
+        useRevisePlanStore.setState({ planIds: {} });
     });
 
     afterEach(() => {
@@ -433,6 +436,95 @@ describe('SessionPage', () => {
             ]));
             expect(useInteractionDraftStore.getState().locks['i-1']).toBe('expired');
             expect(field).toHaveTextContent('Existing customers');
+        });
+    });
+
+    describe('changing a plan (rc.5)', () => {
+        function showPlan(status: Plan['status']) {
+            const plan: Plan = {
+                id: 'p-1',
+                workflows: [{ id: 'content_create', version: '1.0.0' }],
+                status,
+                version: 1,
+                summary: 'Invitation page PNDemo',
+                items: [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'done' }],
+            };
+
+            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-14T14:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
+        }
+
+        // Sends the messages to `posts`; every read (the modules, the plans) goes to `reads` and gets an empty list.
+        function stubPosts(response: () => Response = accepted) {
+            const posts = vi.fn<typeof fetch>(async () => response());
+            const reads = vi.fn<typeof fetch>(async () => Response.json({ items: [], next_cursor: null }));
+
+            vi.stubGlobal('fetch', withEmptySessionList(async (input, init) => (init?.method === 'POST' ? posts(input, init) : reads(input, init))));
+
+            return Object.assign(posts, { reads });
+        }
+
+        it('sends the next message as a revision of the plan after "Ask for a change", then leaves that mode', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts();
+
+            showPlan('done');
+
+            const { field } = await renderPage();
+
+            await user.click(screen.getByRole('button', { name: 'Ask for a change' }));
+
+            expect(screen.getByText('Change this plan')).toBeInTheDocument();
+            await waitFor(() => expect(field).toHaveFocus());
+
+            await user.keyboard('Make it more colourful{Enter}');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({
+                parts: [{ type: 'text', text: 'Make it more colourful' }],
+                options: { mode: 'revise', plan_id: 'p-1' },
+            });
+            await waitFor(() => expect(screen.queryByText('Change this plan')).not.toBeInTheDocument());
+        });
+
+        it('says that sending stops an executing plan, and leaves the mode with Esc', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts();
+
+            showPlan('running');
+
+            const { field } = await renderPage();
+
+            await user.click(screen.getByRole('button', { name: 'Stop and change' }));
+
+            expect(screen.getByText('Sending stops the current work and changes the plan.')).toBeInTheDocument();
+            await waitFor(() => expect(field).toHaveFocus());
+
+            await user.keyboard('{Escape}');
+
+            expect(screen.queryByText('Change this plan')).not.toBeInTheDocument();
+
+            await user.keyboard('Is the page online?{Enter}');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Is the page online?' }] });
+        });
+
+        it('leaves the mode and reads the plans again when the plan cannot be revised (409 plan_not_revisable)', async () => {
+            const user = userEvent.setup();
+            const { reads } = stubPosts(() => Response.json({ type: 't', title: 't', status: 409, genaix_code: 'plan_not_revisable' }, { status: 409 }));
+            showPlan('done');
+
+            const { field } = await renderPage();
+
+            await user.click(screen.getByRole('button', { name: 'Ask for a change' }));
+            await waitFor(() => expect(field).toHaveFocus());
+            await user.keyboard('Make it more colourful{Enter}');
+
+            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
+                { messageKey: 'chat.sendFailed', detailKey: 'errors.genaix.plan_not_revisable' },
+            ]));
+            expect(useRevisePlanStore.getState().planIds).toEqual({});
+            await waitFor(() => expect(reads.mock.calls.some(([input]) => String(input).endsWith('/sessions/s-1/plans'))).toBe(true));
         });
     });
 

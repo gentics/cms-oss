@@ -347,6 +347,17 @@ describe('GenAIx query hooks', () => {
             ]);
         });
 
+        it('sends a revision of a plan with options.mode revise and its plan_id (rc.5)', async () => {
+            const fetchMock = stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));
+
+            const { result } = renderHook(() => useSendTurn('s-1'), { wrapper });
+
+            act(() => result.current.mutate({ parts, files: [], revisePlanId: 'plan-1' }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({ parts, options: { mode: 'revise', plan_id: 'plan-1' } });
+        });
+
         it('uploads the files first, then posts the message with a file_ref per file', async () => {
             const log: string[] = [];
             const fetchMock = stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));
@@ -466,7 +477,7 @@ describe('GenAIx query hooks', () => {
     });
     describe('usePlanState', () => {
         it('loads the state of one plan, and nothing without a plan', async () => {
-            const fetchMock = stubFetch(Response.json({ workflow: 'content_create', plan: { id: 'pl-1', status: 'done' }, checks: [] }));
+            const fetchMock = stubFetch(Response.json({ workflows: [{ id: 'content_create', version: '1.0.0' }], plan: { id: 'pl-1', status: 'done' }, checks: [] }));
             const { result, rerender } = renderHook(({ planId }: { planId?: string }) => usePlanState('s-1', planId), { wrapper, initialProps: {} });
 
             expect(result.current.fetchStatus).toBe('idle');

@@ -1,0 +1,45 @@
+# GenAIx Integration Kit
+
+> Contracts, mocks and a reference client for integrating GenAIx into the Gentics CMP9 Agentic Workspace: one standardized GenAIx API, the CMS MCP tool specification, the Content RAG contract, construct and devtools requirements, and workflow modules with quality gates.
+
+The machine-readable artifacts are normative: where a prose document and a contract file disagree, the contract file wins. Read the architecture document first, then the API narrative for a Workspace UI role or the MCP and integration documents for a CMS role. This package is a specification with runnable mocks, not the finished integration.
+
+Contract version: 1.0.0-rc.5, shared by openapi.yaml and mcp/tools.json.
+
+## Documents
+
+- [GenAIx Phase One contracts](/rc5/md/README.md): What this package contains, the reading order, the machine-readable artifacts and the contract versions.
+- [Architecture](/rc5/md/01-architecture.md): The architecture of the GenAIx/CMP9 integration: what GenAIx does, how it connects to the CMS, and the contracts the Workspace UI and the CMS team build against.
+- [Auth and context flow](/rc5/md/02-auth-and-context-flow.md): Identity, authentication and context propagation in full: actors, headers, sequence diagrams, failure modes, the external-agent path.
+- [The GenAIx API](/rc5/md/03-genaix-api.md): Narrative guide to `openapi.yaml`: resources, the session as a conversation and its plans, the plan lifecycle, revising and redirecting a plan, plans across several modules, the event model, the message-part registry, the plan view, errors, and scenario walkthroughs.
+- [CMS MCP layer scope (cms-mcp)](/rc5/md/04-mcp-scope.md): The CMS MCP server: tool groups, per-tool purpose/input/output/REST mapping/role, scenario coverage, what is explicitly excluded.
+- [Content RAG contract](/rc5/md/05-content-rag-contract.md): The `search_content` tool family, the search endpoint it wraps, and example questions through to answers.
+- [Construct and devtools API requirements](/rc5/md/06-construct-devtools-requirements.md): Construct (tag type) creation through the CMS REST API: the REST call sequence, validation and similarity checks, what remains filesystem-only.
+- [Workflow modules and quality gates](/rc5/md/08-workflow-modules.md): Workflows as versioned modules with quality gates: module layout, the manifest and verdict schemas, how several modules compose in one plan, the four gate kinds, the gate catalogue per scenario, security boundaries.
+- [Integration guide](/rc5/md/09-integration-guide.md): How the API contract and the MCP specification are wired together: the CMS custom proxy configuration and the two caller modes, credential provisioning, header forwarding, streaming, plan cards (propose, adjust, accept, revise, stop and change), several plans in one conversation, multi-page edits and per-page publishing from the Workspace.
+- [CMS MCP tool specification](/rc5/md/mcp-README.md): How to read mcp/tools.json: the tool specification's structure, its groups, roles and REST mappings.
+- [GenAIx API v1 mock](/rc5/md/mocks-genaix-mock-README.md): The GenAIx API mock: how to run it, its headers, the scenario transcripts it replays, its configuration and its limits.
+- [cms-mcp-mock](/rc5/md/mocks-cms-mcp-mock-README.md): The CMS MCP server mock: how to run and connect to it, its fixture tokens and roles, and what is mocked rather than real.
+- [GenAIx API v1 reference client](/rc5/md/client-README.md): The reference client: what it proves about the contract, its module layout and its known limitations.
+- [The hand-out as a docker compose stack](/rc5/md/deploy-README.md): The docker compose stack: how to serve this whole package on one port, the URL map, the fixture credentials and how to rebuild it.
+- [Session lifecycle](/rc5/md/examples-session-lifecycle.md): The same ground as the API narrative, ordered as the call sequence a client actually makes.
+- [The hand-out on OpenShift](/rc5/md/deploy-openshift-README.md): The same stack as deploy/docker-compose.yml, on a cluster, as one pod with three containers behind one route.
+
+## Contracts
+
+- [GenAIx API](/rc5/openapi.yaml): OpenAPI 3.1 description of every route, schema, example and SSE event of the GenAIx API. Normative.
+- [CMS MCP tool specification](/rc5/mcp/tools.json): Every CMS MCP tool with its input and output schema, required roles and REST mapping. Normative.
+- [events.schema.json](/rc5/schemas/events.schema.json): JSON Schema for every SSE event payload.
+- [parts.schema.json](/rc5/schemas/parts.schema.json): JSON Schema for the message-part registry.
+- [problem.schema.json](/rc5/schemas/problem.schema.json): JSON Schema for the RFC 9457 error body.
+- [workflow-manifest.schema.json](/rc5/schemas/workflow-manifest.schema.json): JSON Schema for a workflow module manifest.
+- [gate-verdict.schema.json](/rc5/schemas/gate-verdict.schema.json): JSON Schema for a quality-gate verdict.
+
+## Optional
+
+- [requests.http](/rc5/examples/requests.http): Every GenAIx API operation as a runnable request, in session-lifecycle order.
+- [S1 content create](/rc5/examples/s1-content-create.sse): Complete event stream of the content-creation scenario, including CMS writes and an interaction.
+- [S2 content research](/rc5/examples/s2-content-research.sse): Complete event stream of a research scenario: search calls, a table part and citations.
+- [S3 construct create](/rc5/examples/s3-construct-create.sse): Complete event stream of creating a construct, including template validation.
+- [S4 admin user](/rc5/examples/s4-admin-user.sse): Complete event stream of an administrative scenario: a form interaction and permission impact.
+- [S5 failure and recovery](/rc5/examples/s5-failure-and-recovery.sse): Complete event stream of the error, credential-recovery and cancellation events.

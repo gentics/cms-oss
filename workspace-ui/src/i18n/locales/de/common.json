@@ -163,6 +163,14 @@
         "pageSettings": {
             "change": " – ändere seine Seiteneinstellungen:",
             "empty": "leeren"
+        },
+        "revise": {
+            "title": "Diesen Plan ändern",
+            "hint": {
+                "ask": "Ihre nächste Nachricht ändert diesen Plan.",
+                "stop": "Senden stoppt die laufende Arbeit und ändert den Plan."
+            },
+            "cancel": "Plan nicht ändern"
         }
     },
     "chat": {
@@ -190,7 +198,8 @@
                 "waiting": "Wartet auf Sie",
                 "done": "Erledigt",
                 "skipped": "Übersprungen",
-                "failed": "Fehlgeschlagen"
+                "failed": "Fehlgeschlagen",
+                "removed": "Entfernt"
             }
         },
         "file": "Datei",
@@ -235,7 +244,9 @@
                 "template": "Template",
                 "language": "Sprache",
                 "filename": "Dateiname",
-                "publish_at": "Veröffentlichen am"
+                "publish_at": "Veröffentlichen am",
+                "file_folder": "Ordner für Dateien",
+                "image_folder": "Ordner für Bilder"
             },
             "source": {
                 "text": "Aus Ihrem Text",
@@ -250,7 +261,6 @@
         "collapse": "Plan ausblenden",
         "actions": {
             "release": "Freigeben",
-            "reopen": "Wieder öffnen",
             "publish": "Veröffentlichen",
             "request_review": "Prüfung anfordern",
             "discard": "Verwerfen"
@@ -259,7 +269,6 @@
             "release": "Wird freigegeben…",
             "publish": "Wird veröffentlicht…",
             "request_review": "Prüfung wird angefordert…",
-            "reopen": "Wird wieder geöffnet…",
             "discard": "Wird verworfen…"
         },
         "count": {
@@ -303,6 +312,10 @@
             "failed": "Veröffentlichen fehlgeschlagen",
             "cancelled": "Das Veröffentlichen wurde abgebrochen.",
             "close": "Schließen"
+        },
+        "revise": {
+            "ask": "Änderung anfragen",
+            "stop": "Stoppen und ändern"
         }
     },
     "handOff": {
@@ -387,6 +400,8 @@
             "cancel": "Abbrechen",
             "done": "Fertig",
             "status": {
+                "drafting": "Wird entworfen",
+                "revising": "Wird überarbeitet",
                 "proposed": "Vorgeschlagen",
                 "accepted": "Angenommen",
                 "running": "Läuft",
@@ -396,6 +411,16 @@
                 "review_requested": "Wartet auf Prüfung",
                 "discarded": "Verworfen",
                 "superseded": "Durch einen neueren Plan ersetzt"
+            },
+            "restore": "Wiederherstellen",
+            "change": {
+                "added": "Neu",
+                "changed": "Geändert"
+            },
+            "invalid": {
+                "caption": "Passen Sie die markierten Schritte an",
+                "dependency_order": "Steht vor einem Schritt, den er braucht",
+                "other": "Dieser Schritt kann so nicht geändert werden"
             }
         },
         "citation": {
@@ -484,7 +509,6 @@
             "publish": "Veröffentlichen",
             "publishRemaining": "Rest veröffentlichen",
             "request_review": "Prüfung anfordern",
-            "reopen": "Wieder öffnen",
             "discard": "Verwerfen"
         },
         "gate": {
@@ -721,7 +745,9 @@
             "model_error": "Das KI-Modell hat einen Fehler gemeldet.",
             "model_rate_limited": "Das KI-Modell ist ausgelastet. Bitte versuchen Sie es gleich noch einmal.",
             "rate_limited": "Zu viele Anfragen. Bitte versuchen Sie es gleich noch einmal.",
-            "service_unavailable": "Der KI-Dienst ist derzeit nicht verfügbar."
+            "service_unavailable": "Der KI-Dienst ist derzeit nicht verfügbar.",
+            "plan_not_revisable": "Dieser Plan ist endgültig abgeschlossen und kann nicht mehr geändert werden.",
+            "dependency_order": "Ein Schritt steht vor einem Schritt, von dem er abhängt."
         },
         "cms": {
             "AUTHREQUIRED": "Bitte melden Sie sich im CMS an.",

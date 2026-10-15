@@ -376,7 +376,9 @@ function noticeOf(event: GenaixEvent): RunNotice | undefined {
 
     switch (event.type) {
         case 'run.cancelled':
-            return { ...base, kind: 'cancelled' };
+            // A redirect is no stop: the user's message cancelled the plan's run to revise the plan, whose
+            // proposing run follows at once (rc.5, `cancel_reason: redirected`).
+            return event.run.cancel_reason === 'redirected' ? undefined : { ...base, kind: 'cancelled' };
         case 'run.failed':
             return { ...base, kind: 'failed', error: event.error };
         case 'error':

@@ -73,10 +73,10 @@ function listChildren() {
 
 const TEMPLATE = [{ id: 'st-1', label: 'Read source material' }, { id: 'st-2', label: 'Propose plan' }];
 
-// Since rc.4 the steps are those of a plan, under the plan's module: this one is drafted under
-// `workflow`, so it has no card of its own.
+// Since rc.4 the steps are those of a plan, under the plan's modules: this one is drafted under
+// `workflow`, so it has no card of its own. Its reported step ids are `<workflow>/<id>` (rc.5).
 function draftPlan(seq: number, workflow: string) {
-    apply(event(seq, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflow, status: 'drafting', version: 0, summary: '', items: [] } }));
+    apply(event(seq, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflows: [{ id: workflow, version: '1.0.0' }], status: 'drafting', version: 0, summary: '', items: [] } }));
 }
 
 function texts() {
@@ -146,6 +146,57 @@ describe('ChatStream', () => {
         expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
+    it('keeps thinking between the execute runs of a plan\'s module segments, until the plan is done (rc.5)', async () => {
+        const plan = (status: string) => ({ id: 'p-1', workflows: [{ id: 'content_create', version: '1.0.0' }, { id: 'content_edit', version: '1.0.0' }], status, version: 3, summary: 'PNDemo', items: [] });
+
+        stubHistory([]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        apply(
+            event(1, 'run.started', { run_id: 'r-1', plan_id: 'p-1', run: { id: 'r-1', status: 'running', plan_id: 'p-1', workflow: 'content_create' } }),
+            event(2, 'plan.updated', { run_id: 'r-1', plan_id: 'p-1', plan: plan('running') }),
+            event(3, 'session.updated', { session: { id: SESSION, open_plan_id: 'p-1', executing_plan_id: 'p-1' } }),
+            event(4, 'run.completed', { run_id: 'r-1', plan_id: 'p-1', run: { id: 'r-1', status: 'completed', plan_id: 'p-1' } }),
+        );
+
+        await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Thinking'));
+
+        apply(
+            event(5, 'run.started', { run_id: 'r-2', plan_id: 'p-1', run: { id: 'r-2', status: 'running', plan_id: 'p-1', workflow: 'content_edit' } }),
+            event(6, 'plan.updated', { run_id: 'r-2', plan_id: 'p-1', plan: plan('done') }),
+            event(7, 'run.completed', { run_id: 'r-2', plan_id: 'p-1', run: { id: 'r-2', status: 'completed', plan_id: 'p-1' } }),
+        );
+
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    it('does not show a run a message redirected as stopped (rc.5)', async () => {
+        stubHistory([message('m-1', 'user', 'Create the page', 'r-1'), message('m-2', 'assistant', 'Uploading the PDF.', 'r-1')]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        await screen.findByText('Uploading the PDF.');
+        apply(event(1, 'run.cancelled', { run_id: 'r-1', plan_id: 'p-1', run: { id: 'r-1', status: 'cancelled', plan_id: 'p-1', cancel_reason: 'redirected' } }));
+
+        expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    });
+
+    it('keeps a revision being drafted in the chat with its items, but not a first draft (rc.5)', async () => {
+        const items = [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'done' }];
+
+        stubHistory([]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        apply(
+            event(1, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflows: [{ id: 'content_create', version: '1.0.0' }], status: 'drafting', version: 1, summary: 'PNDemo', items } }),
+            event(2, 'plan.updated', { plan_id: 'p-2', plan: { id: 'p-2', workflows: [], status: 'drafting', version: 0, summary: 'FAQ page', items: [] } }),
+            event(3, 'session.updated', { session: { id: SESSION, open_plan_id: 'p-2', executing_plan_id: null } }),
+        );
+
+        expect(await screen.findByText('Create page PNDemo')).toBeInTheDocument();
+        expect(screen.getByText('Being revised')).toBeInTheDocument();
+        expect(screen.queryByText('FAQ page')).not.toBeInTheDocument();
+    });
+
     it('hides the thinking indicator while the run waits for an answer, and shows the question instead', async () => {
         stubHistory([]);
         render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
@@ -178,7 +229,7 @@ describe('ChatStream', () => {
     describe('the agent\'s head', () => {
         // The open plan is in the plan bar, not in the chat (`useOpenPlan`); a superseded one keeps its card
         // where its first `plan.updated` came.
-        const plan = { id: 'p-1', workflow: 'page_create', status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+        const plan = { id: 'p-1', workflows: [{ id: 'page_create', version: '1.0.0' }], status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
 
         it('shows first, before a plan and the thinking indicator, while the agent has not written yet', async () => {
             stubHistory([]);
@@ -213,7 +264,7 @@ describe('ChatStream', () => {
     describe('stream order', () => {
         // The open plan is in the plan bar, not in the chat (`useOpenPlan`); a superseded one keeps its card
         // where its first `plan.updated` came.
-        const plan = { id: 'p-1', workflow: 'page_create', status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+        const plan = { id: 'p-1', workflows: [{ id: 'page_create', version: '1.0.0' }], status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
         const settings = [{ type: 'setting', key: 'template', value: '17', label: 'Kampagnen-Landingpage' }];
 
         it('splits an agent message where a confirmation and a plan came while it was streaming', async () => {
@@ -303,8 +354,8 @@ describe('ChatStream', () => {
             expect(steps).toHaveTextContent('0 of 2 steps done');
 
             apply(
-                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'done' } }),
-                event(3, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'st-2', label: 'Propose plan', status: 'running' } }),
+                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
+                event(3, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Propose plan', status: 'running' } }),
                 event(4, 'message.started', { run_id: 'r-2', message_id: 'm-4', role: 'assistant' }),
                 event(5, 'part.started', { run_id: 'r-2', message_id: 'm-4', part_index: 0, part: { type: 'text', format: 'plain', text: 'Here is the plan.' } }),
             );

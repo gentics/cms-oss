@@ -7,10 +7,12 @@ decides which gates run, and never decides whether a gate passed.
 
 Since `1.0.0-rc.4` a module carries out **plans**, not sessions. A session is one
 conversation; the built-in **session agent** reads and answers in it and drafts a plan when the
-user asks for a change, and every plan runs under one workflow module with its own steps, checks,
-gates, derived settings, previews, publications and lifecycle (`Plan.status`). Where this document
-says "the plan", it means the plan a module's runs work for; before `1.0.0-rc.4` that was the
-session as a whole.
+user asks for a change, and every plan has its own steps, checks, gates, derived settings,
+previews, publications and lifecycle (`Plan.status`). Since `1.0.0-rc.5` a plan is carried out by
+one or more modules (by exactly one in `1.0.0-rc.4`), which the harness composes (§6.7), and it
+is **living**: a follow-up on the same work revises it as a new version the user accepts again,
+instead of opening another plan (§6.5). Where this document says "the plan", it means the plan a
+module's runs work for; before `1.0.0-rc.4` that was the session as a whole.
 
 Read alongside `03-genaix-api.md` §6 (event model) and §8 (the workflow view) for the wire shapes,
 `04-mcp-scope.md` §3–§5 for tool groups and the scenario coverage matrix,
@@ -27,14 +29,17 @@ gates here.
    or an agent it spawned, and blocking comes from the manifest. A model self-report can never set
    `blocking: true`.
 3. **The model reaches the workflow rail only through harness tools** — `report_step`, `update_plan`,
-   `report_check`, `request_interaction`, `write_artifact`, `set_derived_settings`, and since
-   `1.0.0-rc.4` `draft_plan` and `recall` — in-process MCP tools under the `genaix` namespace,
+   `report_check`, `request_interaction`, `write_artifact`, `set_derived_settings`, since
+   `1.0.0-rc.4` `draft_plan` and `recall`, and since `1.0.0-rc.5` `revise_plan` — in-process MCP
+   tools under the `genaix` namespace,
    validated before they reach the event log (§6.3).
 4. **The tool surface is the module's, narrowed by the user's permissions** (§6.2), and neither half
    is widenable by the model. The session agent's surface is core: read tools only.
-5. **Modules are versioned and pinned.** `workflow_version` is stored on the plan when it is
-   drafted (on the session before `1.0.0-rc.4`), so a module upgrade never changes a plan already
-   in flight; the next plan of the same conversation uses the module then loaded.
+5. **Modules are versioned and pinned.** Each module's version is stored on the plan when the
+   module joins it, in `Plan.workflows` (`1.0.0-rc.5`; `workflow_version` on the plan in
+   `1.0.0-rc.4`, on the session before), so a module upgrade never changes a plan already in
+   flight; a module a revision adds joins at the version then loaded, and the next plan of the
+   same conversation uses the modules then loaded.
 6. **Gates fail closed.** A blocking gate that times out, crashes or returns an unparseable verdict
    has failed. Silence is never success.
 7. **Nothing in a module is user-authored at runtime.** Modules ship with the deployment and are
@@ -64,7 +69,7 @@ workflows/
   session/
     manifest.yaml               the session agent: id, version, title, model, skills
     prompts/system.md           the session agent's prompt fragment
-    skills/choose-workflow.md   e.g. how to pick a module for a new plan
+    skills/choose-workflow.md   e.g. how to tell a revision from new work
   content_create/
     manifest.yaml               the whole declaration; the only required file besides system.md
     genaix.yaml                 optional harness-side knobs the manifest schema does not carry
@@ -94,7 +99,8 @@ workflows/
 Conventions the loader enforces:
 
 - The directory name equals `manifest.yaml`'s `id`, which matches `^[a-z][a-z0-9_]{2,39}$`. Ids are
-  public API (`Plan.workflow`, `GET /workflows`) and freeze on release.
+  public API (`Plan.workflows`, `PlanItem.workflow`, the `<workflow>/` prefix of step and check
+  ids, `GET /workflows`) and freeze on release.
 - A `script` gate has exactly one file, `gates/<gate id>.py` or `.sh`. A `subagent` gate has
   `gates/<gate id>.md` and `gates/<gate id>.yaml`. A `prompt` gate has `prompts/<gate id>.md`; a
   `human` gate needs no file.
@@ -152,7 +158,6 @@ produces: [page]
 plan_approval: true
 
 plan_policy:
-  concurrency: exclusive
   on_discard: keep
   write_targets:
     create_folder: { object: folder, from: parentFolderId, creates: folder }
@@ -309,19 +314,18 @@ existing pages only. And `allow_mcp` on a gate is a second, narrower allowlist o
 the `verbatim_identical` script may read the page back and do nothing else.
 
 The fifth is `plan_policy` (`1.0.0-rc.4`), which says how the module's plans behave in a session.
-`concurrency: exclusive` means no new plan may be drafted in the session while this one is open;
-`allow_while_released` would let a new plan be drafted and executed once this one is released and
-only waits to be published. Two plans never execute at once either way. `on_discard: keep` leaves
-the pages a discarded plan wrote as unpublished drafts; `restore` would restore each page's version
-from before the plan in a short run of the harness, not of the model. Both are served as
-`Workflow.plan_policy`. A member the module leaves out comes from the repo-wide `defaults.yaml`,
-and a member it sets may only be stricter than the default (§5), so with the defaults below
-`allow_while_released` is not available to any module until the repository allows it:
+`on_discard: keep` leaves the pages a discarded plan wrote as unpublished drafts; `restore` would
+restore each page's version from before the plan in a short run of the harness, not of the model.
+A plan with several modules follows the strictest value among them, `restore` over `keep`
+(`1.0.0-rc.5`). It is served as `Workflow.plan_policy`. A member the module leaves out comes from
+the repo-wide `defaults.yaml`, and a member it sets may only be stricter than the default (§5).
+rc.4's `concurrency` member is removed in `1.0.0-rc.5`: several plans may be open, at most one
+executes, and a follow-up revises the plan it concerns instead of waiting for it to close, so a
+manifest carrying `concurrency` no longer validates.
 
 ```yaml
 # workflows/defaults.yaml
 plan_policy:
-  concurrency: exclusive
   on_discard: keep
 ```
 
@@ -337,12 +341,16 @@ after the denylist to the plan's objects, keyed by the tool's bare name:
 
 So `create_page` is allowed only into a folder some plan item targets, the page it creates becomes
 an object of the plan, and `update_page_tags` and its siblings are allowed only on a page the plan
-targets or created. A write tool the module grants without a binding is refused at every call
+targets or created. In a plan with several modules each item is bound by its own module's
+`write_targets`, and the plan's scope is their union (`1.0.0-rc.5`): the page a `content_create`
+item created is in scope for the `content_edit` item that colours it. A write tool the module grants without a binding is refused at every call
 (§6.2), which is why the conformance tests fail such a module before it is deployed (§9).
 
-`entry_hints` (`1.0.0-rc.4`) are short phrases the session agent reads when it chooses a module for
-a new plan (§6.1). They are prompt material for the agent, never served by the API and never a
-routing rule: the choice is the agent's `draft_plan` call, and the user still accepts the plan.
+`entry_hints` (`1.0.0-rc.4`) are short phrases that say, with `produces`, what the module is for.
+The session agent reads them when it names the modules it expects (§6.1), and since
+`1.0.0-rc.5` the plan's proposing run picks the plan's modules by them (§6.7). They are prompt
+material and never a routing rule: the user still accepts the plan. Since `1.0.0-rc.5` the API
+serves them as `Workflow.entry_hints` on `GET /workflows` (they were not served before).
 
 ## 4. Manifest schema
 
@@ -356,15 +364,15 @@ example above; the constraints worth stating in prose are:
 | `version` | `^\d+\.\d+\.\d+$` |
 | `scenario` | `S1`, `S2`, `S3`, `S4` or `none`; `none` is served as `scenario: null` in the catalogue (`content_edit`) |
 | `roles` | at least one of `content_creator`, `chief_content_creator`, `cmp_administrator`, `any`. Documentation for clients and administrators only: roles never narrow which workflows a subject sees or may start; `Workflow.available` and `capabilities.workflows` depend on authorized connections and configuration alone, and the CMS enforces permissions per tool call (`1.0.0-rc.2`) |
-| `produces` | `page`, `construct`, `report`, `user`, `none` |
+| `produces` | `page`, `construct`, `report`, `user`, `file` (`1.0.0-rc.5`, as the API already had it), `none` |
 | `plan_approval` | boolean, default `false`. `true` makes the plan's proposing run propose and end without any CMS write; the user's `plan` part on an `execute` message accepts the plan, as proposed or adjusted (§6.5). `false` (`1.0.0-rc.4`): a module with a CMS write tool still needs **one user confirmation** of the drafted plan before it writes; a module without one (`content_research`) runs at once, because reading is free. Served unchanged as `Workflow.plan_approval` (`1.0.0-rc.3`; per plan since `1.0.0-rc.4`) |
-| `plan_policy.concurrency` | `exclusive` (default) or `allow_while_released` (§3). Served as `Workflow.plan_policy.concurrency` (`1.0.0-rc.4`) |
-| `plan_policy.on_discard` | `keep` (default) or `restore` (§3). Served as `Workflow.plan_policy.on_discard` (`1.0.0-rc.4`) |
+| `plan_policy.on_discard` | `keep` (default) or `restore` (§3). Served as `Workflow.plan_policy.on_discard` (`1.0.0-rc.4`); a plan with several modules follows the strictest (`1.0.0-rc.5`) |
+| `plan_policy` members | only `on_discard` and `write_targets`; `concurrency` is removed in `1.0.0-rc.5` and fails validation |
 | `plan_policy.write_targets` | map keyed by a write tool's bare name (`^[a-z][a-z0-9_]{1,63}$`) to `{object, from, creates, item_kind}`, at least one member. Harness only, never served (`1.0.0-rc.4`) |
-| `entry_hints` | up to 20 unique phrases of 3 to 200 characters, read by the session agent when it chooses a module for a new plan. Never served (`1.0.0-rc.4`) |
+| `entry_hints` | up to 20 unique phrases of 3 to 200 characters, read by the session agent when it names the modules it expects, and with `produces` what a plan's proposing run picks its modules by (`1.0.0-rc.5`). Served as `Workflow.entry_hints` since `1.0.0-rc.5` (not served in `1.0.0-rc.4`) |
 | `required_connectors[]` | `{type, optional}`; `type` is a connector type slug such as `cms` |
 | `tool_groups` | object keyed by connector type plus the reserved `genaix` |
-| `steps_template[].id` | `^st-[0-9]+(-[0-9]+)?$`, recursive through `substeps` |
+| `steps_template[].id` | `^st-[0-9]+(-[0-9]+)?$`, recursive through `substeps`. Unique within the module; a reported `Step.id` is `<module id>/<template id>` (`1.0.0-rc.5`) |
 | `quality_gates[]` | `{id, label, kind, blocking, when}` required; `steps`, `inputs`, `timeout_seconds` (1-600), `retries` (0-2), `on_error`, `allow_mcp`, `source`, `description` optional |
 | `quality_gates[].kind` | `script`, `subagent`, `prompt`, `human` |
 | `quality_gates[].when` | one or more of `step_end`, `before_release`, `before_publish`. The catalogue publishes every trigger as `QualityGate.triggers[]` and the first one as `when` / `step_id` (`1.0.0-rc.2`) |
@@ -393,9 +401,8 @@ express:
 - every `plan_policy.write_targets` binding names a CMS write tool the module grants, and its
   `from`, when present, is an argument of that tool's input schema in `mcp/tools.json`
   (`1.0.0-rc.4`);
-- the module's `plan_policy` only **tightens** `defaults.yaml`: `exclusive` over
-  `allow_while_released`, `restore` over `keep`. A loosening override fails validation
-  (`1.0.0-rc.4`);
+- the module's `plan_policy` only **tightens** `defaults.yaml`: `restore` over `keep`. A
+  loosening override fails validation (`1.0.0-rc.4`);
 - no gate's `allow_mcp` names a write group (§10), and `constructs` counts as one;
 - every `quality_gates[].steps` entry exists in `steps_template`, substeps included;
 - every `script` and `subagent` gate has its files on disk, and every script gate compiles;
@@ -424,13 +431,15 @@ authorised connection for every non-optional `required_connectors` type. A modul
 authorised `cms` connection is listed with `available: false` and a `reason`, not hidden, so the
 client can explain what to fix.
 
-A plan resolves its module once, when it is drafted (by `draft_plan`, or by `POST /sessions` with
-`workflow`), and stores `workflow` and `workflow_version` on the `Plan` (`1.0.0-rc.4`; on the
-session before). Both appear on `Plan`, `PlanSummary` and `PlanState`, and every run of the plan
-uses the stored version, while the next plan of the conversation takes the module as then loaded.
-Since modules load only at startup, stored and loaded versions can diverge only across a restart;
-the harness then logs a warning, uses the loaded module, and sets `workflow_version_drift: true` on
-the plan's `PlanState`. `version` is semver read narrowly: patch for prompt and threshold changes,
+A plan resolves each of its modules once, when the module joins it: the plan's proposing run
+picks the modules (§6.7), and a revision may add one. It stores them as `Plan.workflows`, `{id,
+version}` in run order (`1.0.0-rc.5`; `workflow` and `workflow_version` on the `Plan` in
+`1.0.0-rc.4`, on the session before). They appear on `Plan` and `PlanState`, the ids on
+`PlanSummary`, and every run of the plan uses the stored versions, while the next plan of the
+conversation takes the modules as then loaded. Since modules load only at startup, stored and
+loaded versions can diverge only across a restart; the harness then logs a warning, uses the
+loaded module, and sets `workflow_version_drift: true` on the plan's `PlanState` when any of its
+modules differs. `version` is semver read narrowly: patch for prompt and threshold changes,
 minor for additive steps or non-blocking gates, major for a changed step id, a removed gate or a new
 blocking gate.
 
@@ -455,9 +464,11 @@ The harness composes the system prompt of a plan's run in a fixed order, so a pr
 readable:
 
 1. the GenAIx base prompt (identity, safety, output conventions), shared by all modules;
-2. `prompts/system.md` of the plan's module;
+2. `prompts/system.md` of the plan's module (in an execute run of a plan with several modules,
+   the module of the run's segment, `Run.workflow`);
 3. the step template as a numbered list carrying the exact `Step.id` values the agent must report,
-   and the rule that `report_step` is the only way to move the rail;
+   prefixed with the module (`content_create/st-5`, `1.0.0-rc.5`), and the rule that
+   `report_step` is the only way to move the rail;
 4. the plan context block: `Session.context` references, the plan's `inputs`, the known
    `derived_settings`, and the uploaded files with their `mode` (`source` or `verbatim`);
 5. the **gate contract block**: one line per gate with `id`, `label`, `kind`, `blocking` and
@@ -469,8 +480,10 @@ readable:
 
 A run of the session agent uses the same order with the `session` module in place of the plan's:
 its `prompts/system.md`, no step template and no gate contract, and in place of item 4 the
-catalogue it may draft plans under, each module with its `title`, `description`, `entry_hints` and
-whether it needs the user's acceptance (`1.0.0-rc.4`).
+catalogue of modules it may name for a plan, each with its `title`, `description`, `entry_hints`
+and whether it needs the user's acceptance (`1.0.0-rc.4`), and the open plans it may revise
+(`1.0.0-rc.5`). A plan's proposing run gets the same catalogue, because it picks the plan's
+modules (§6.7).
 
 Telling the agent what the gates are is not the same as relying on it. It raises the first-attempt
 pass rate, which is a latency and cost argument, while the verdict still comes from the harness.
@@ -478,15 +491,18 @@ pass rate, which is a latency and cost argument, while the verdict still comes f
 **The conversation context** (`1.0.0-rc.4`, normative behaviour). Every run, of a plan or of the
 session agent, sees the conversation in this order, after the system prompt:
 
-1. **The current task**, always first: the open plan's id, workflow, status, items with status and
-   target, what waits for the user, and the user's last decision on it. In a run of a plan this is
-   that plan; a session-agent run with no open plan says so.
-2. **The ledger**, always and never compacted: for each closed plan its workflow, accepted version
-   and items, the objects written with their versions, the check outcomes and the publication
-   outcomes; and every user decision (acceptance and adjustment, settings confirmations,
+1. **The current task**, always first: the plan the conversation currently works on
+   (`Session.open_plan_id`) with its id, modules, version, status, items with status, module and
+   target, what waits for the user, and the user's last decision on it; and the other open plans
+   (`Session.open_plan_ids`, `1.0.0-rc.5`). In a run of a plan this is that plan; a session-agent
+   run with no open plan says so.
+2. **The ledger**, always and never compacted: for each plan its modules, accepted versions and
+   items, the objects written with their versions, the check outcomes and the publication
+   outcomes; every revision (`plan_revised`, `1.0.0-rc.5`) with its version, who asked, why and
+   the item changes; and every user decision (acceptance and adjustment, settings confirmations,
    interaction answers, transitions with their comment). The ledger is stored in its own table as
-   each plan closes and each decision happens, kept for the session's lifetime and erased with it;
-   event retention never shortens it.
+   each plan changes and each decision happens, kept for the session's lifetime and erased with
+   it; event retention never shortens it.
 3. **The recent conversation** verbatim within a budget, structured parts rendered compactly
    (tables as rows, citations as reference lists, page structures as block summaries).
 4. **Older conversation** as a rolling summary, made at turn boundaries only and never while a plan
@@ -504,7 +520,8 @@ connection named in `SessionContext.connection_ids`, falling back to the user's 
 connection of that type; a non-optional type with no authorised connection fails the run with
 `auth.required {connection_id, connector, reason, how_to_fix}` before any model call.
 
-It then expands the plan module's `tool_groups` into exact qualified tool names, using the group
+It then expands the `tool_groups` of the run's module (for an execute run the module of its
+segment, `Run.workflow`, `1.0.0-rc.5`) into exact qualified tool names, using the group
 metadata in `mcp/tools.json` per connector type and its own registry for `genaix`, subtracts
 `tool_denylist`, and passes the result to the agent runtime as the complete set of permitted tools,
 with no built-in tools loaded and host-level settings ignored. Each resolved connection becomes one
@@ -530,49 +547,55 @@ never make (`content_create` grants `constructs` for its catalogue reads and den
 
 | `Run.mode` | CMS tools | `genaix` tools |
 |---|---|---|
-| `session` | every **read** group of the installation's connectors (`identity`, `search`, `content_read`, the reads of `constructs`), whatever any module grants; never a write | `draft_plan`, `recall`, `request_interaction`, `load_skill`, `read_file` |
+| `session` | every **read** group of the installation's connectors (`identity`, `search`, `content_read`, the reads of `constructs`), whatever any module grants; never a write | `draft_plan`, `revise_plan` (`1.0.0-rc.5`), `recall`, `request_interaction`, `load_skill`, `read_file` |
 | `side` | the same reads | `recall`, `load_skill`, `read_file`; nothing that asks the user or changes state |
-| `propose` | the module's reads; **every write withheld** | the plan tools, `recall`, the rest of the module's `genaix` groups |
-| `execute` | the module's reads and its bound writes (`write_targets`) | as `propose` |
+| `propose` | the reads of the plan's modules; **every write withheld** | the plan tools, `recall`, the rest of the modules' `genaix` groups |
+| `execute` | the reads of the segment's module (`Run.workflow`) and its bound writes (`write_targets`) | as `propose`, for that module |
 | `transition` | what the transition needs (`publish_page` for `publish` and `request_review`, the restore for `on_discard: restore`), called by the harness, not by the model | none |
 
 The session agent's tool surface is core, not the `session` module's: no manifest can give it a
 write. Reading is free in every mode, so a question never waits for a plan. A **side run** is the
 session agent started by a user message while a plan's run is active (`Session.side_run_id`), at
 most one at a time: the user keeps asking while long work runs, and the plan's run is unaffected. A
-message that accepts a plan or answers the plan run's interaction is never a side run.
+message that accepts a plan, answers the plan run's interaction or redirects the plan (§6.5,
+`1.0.0-rc.5`) is never a side run.
 
 **Write-target enforcement** (`1.0.0-rc.4`). In an `execute` run, every CMS write tool call is
 checked by the harness **before** it reaches the CMS. The harness looks up the tool's
 `write_targets` binding, reads the target id from the `from` argument, and allows the call only
 when that object is one of the executing plan's objects: an item's `target`, or an object the plan
-created through a `creates` binding. A tool bound by `item_kind` is allowed only while the plan has
+created through a `creates` binding. In a plan with several modules the binding is that of the
+segment's module, and the objects are those of the whole plan, so the plan's scope is the union of
+its modules' scopes (`1.0.0-rc.5`). A tool bound by `item_kind` is allowed only while the plan has
 items of that kind. Anything the harness cannot map — no binding, the argument missing or not an
 id, an object outside the plan — is refused; there is no allow-with-warning. The refusal is a
 normal tool outcome on the stream: `tool.started`, then `tool.failed` carrying a `422` problem with
 `genaix_code: plan_scope_violation` that names the object, then `error` with `recoverable: true`.
-The agent gets the problem as its tool result and tells the user the change would need a plan of
-its own, which the user then accepts like any other; it cannot widen the accepted plan itself,
-because an `update_plan` after acceptance never adds a target (§6.3).
+The agent gets the problem as its tool result and tells the user the change would need a revision
+of the plan (`1.0.0-rc.5`; a plan of its own before), which the user then accepts like any other;
+it cannot widen the accepted plan itself, because an `update_plan` after acceptance never adds a
+target (§6.3).
 `examples/s7-continuous-session.sse` shows the refusal. Objects another plan of the session wrote
 are outside this plan like any other.
 
 ### 6.3 Harness tools
 
-Eight in-process tools form the `harness` group, alongside the existing `genaix` tools for
+Nine in-process tools form the `harness` group, alongside the existing `genaix` tools for
 retrieval, reading attachments and loading skills (`mcp/tools.json` `genaix_side_tools`). Four of
-them are **plan tools**, offered only to a plan's runs (`propose`, `execute`); `draft_plan` is
-offered only to the session agent; `recall` is read-only and offered to every run (`1.0.0-rc.4`).
+them are **plan tools**, offered only to a plan's runs (`propose`, `execute`); `draft_plan` and
+`revise_plan` (`1.0.0-rc.5`) are offered only to the session agent; `recall` is read-only and
+offered to every run (`1.0.0-rc.4`).
 
 | Tool | Runs | Effect | Emits |
 |---|---|---|---|
-| `report_step` | plan | Set a step's or substep's status and detail. Ids are validated against `steps_template`; an unknown id is a tool error, not an invention. | `step.updated` |
-| `update_plan` | plan | Replace the whole plan **of the run's own plan**, never another; the harness increments `plan.version`. Before acceptance it shapes the proposal. Once the plan is accepted (§6.5), a change needs a `reason`, which the event carries, and may merge, split, reorder or drop items but never add a target the accepted version did not have. | `plan.updated` |
+| `report_step` | plan | Set a step's or substep's status and detail. Ids are validated against the `steps_template` of the plan's modules, as `<workflow>/<id>` (`1.0.0-rc.5`); an unknown id is a tool error, not an invention. | `step.updated` |
+| `update_plan` | plan | Replace the whole plan **of the run's own plan**, never another; the harness increments `plan.version`. Before acceptance it shapes the proposal, each item naming its module and the items it `depends_on` (`1.0.0-rc.5`). Once the plan is accepted (§6.5), a change needs a `reason`, which the event carries, and may merge, split, reorder or drop `pending` items but never add a target the accepted version did not have, nor change or drop a `done` item; more work is a revision. | `plan.updated` |
 | `report_check` | plan | Report an advisory check. The harness forces `blocking: false` and sets `kind: prompt` with a non-`gate` `source.type`, so a client can tell a self-report from a gate verdict. | `check.updated` |
 | `set_derived_settings` | plan | Propose folder, template, language, filename, url. Fields the user corrected are ignored and reported back as already decided. A module whose `produces` is empty or only `report` has no settings card (`derived_settings` is `null`) and the tool is an error for it; so does `content_edit` (§8.5). | `derived_settings.updated` |
 | `request_interaction` | plan, session | Ask the user (`ask_user`, `choice`, `confirm`, `form`, `settings_review`) and block until answered, timed out or cancelled. The interaction carries the run's `plan_id`, `null` for the session agent. | `interaction.requested`, `interaction.resolved` |
 | `write_artifact` | plan | Write a path-confined file into `<base>/sessions/<id>/artifacts/`. | `artifact.created`, `artifact.updated` |
-| `draft_plan` | session | `{workflow, summary?, inputs?}`: draft a new plan under a catalogue module. `inputs` are the plan's module inputs, validated against the module's `inputs_schema` (for `content_edit` the pages as `references`) and kept as `PlanState.inputs`; invalid inputs are a tool error. The harness creates the plan (`drafting`, version 0, `workflow_version` pinned), supersedes an open plan that is still `proposed`, and starts the plan's first run once the session agent's turn ends: the proposing run, or for a module without a CMS write tool the run that carries the plan out (§6.5). Refused as a tool error when the module is unknown, unavailable to the user, or `session`, or when the open plan's `plan_policy.concurrency` does not allow a new plan. | `plan.updated` (and `plan.updated` `superseded` for the replaced plan) |
+| `draft_plan` | session | `{goal, workflows?, inputs?}`: draft a new plan for work no plan of the session covers, unrelated objects and an unrelated goal. `goal` states the work in the user's terms; `workflows` names the modules the agent expects, a hint the proposing run may change (`1.0.0-rc.5`; a required `workflow` before); `inputs` are module inputs keyed by module id, each validated against that module's `inputs_schema` (for `content_edit` the pages as `references`) and kept as `PlanState.inputs`; invalid inputs are a tool error. The harness creates the plan (`drafting`, version 0) and starts the plan's first run once the session agent's turn ends: the proposing run, which picks the modules and pins their versions in `Plan.workflows`, or for work that only reads the run that carries the plan out (§6.5). When the user starts unrelated work instead of a plan still `drafting` or `proposed`, and says so, the harness supersedes that plan. Refused as a tool error when a named module is unknown, unavailable to the user, or `session`. | `plan.updated` (and `plan.updated` `superseded` for a replaced plan) |
+| `revise_plan` | session | `{plan_id, instruction}` (`1.0.0-rc.5`): revise a plan of the session as a new version, for a message that concerns the plan's objects or continues its goal. The plan is `proposed`, `done`, `released`, `published` or `review_requested`; an executing plan is redirected by GenAIx's router, not through this tool, and a `discarded` or `superseded` one is a tool error. The harness makes the plan `drafting` (clearing `closed_at` of a settled one) and starts its proposing run with the instruction once the session agent's turn ends; that run ends with the plan `proposed` at `version + 1` (§6.5). | `plan.updated` |
 | `recall` | every run | Read-only. Return earlier turns, parts, tool results, ledger entries and still retained events **exactly**, by plan, object, time range or text, from this session and the sessions it `continued_from` (same installation and subject only). | none |
 
 **`upload_session_file`** (`1.0.0-rc.4`, `genaix` group `session_files`). The model can see an
@@ -611,8 +634,10 @@ session's own `POST /sessions/{id}/transitions` before, which now keeps only `ar
 run untouched, so a user never loses a run to a refusal (`1.0.0-rc.2`, aligned with `openapi.yaml`,
 which has the gates run before the state change). `before_publish` gates run inside the same route
 for `action: publish` and `action: request_review`, before the first CMS write of the transition's
-run. Gates run per plan: only the plan's own module's gates, against the plan's own objects,
-steps and runs, never another plan's. A transition-time gate that needs the run's searches or parts
+run. Gates run per plan: only the gates of the plan's own modules, each over its module's items
+(`1.0.0-rc.5`), against the plan's own objects, steps and runs, never another plan's. A revision
+resets the release, so a revised plan runs its `before_release` gates again at its next
+`release`. A transition-time gate that needs the run's searches or parts
 gets **the plan's latest run's** (a `propose` or `execute` run of that plan, never a session-agent
 or side run): the harness keeps every run's tool calls with their inputs and results, and a
 `before_release` reviewer re-runs the searches of the run that produced the report.
@@ -624,45 +649,56 @@ steps, which may run on inferred settings, and before the first `content_write` 
 `plan_approval: true` that is the plan's proposing run, so the confirmed settings are part of what
 the user accepts. Either side may raise it (`1.0.0-rc.2`): the agent through
 `request_interaction(kind: settings_review)` with its own wording and the template options it found,
-or the harness itself before the first write when the agent did not ask; one review per run either
-way, and the write-tool call waits for the answer. The settings card is the plan's:
+or the harness itself before the first write when the agent did not ask; one review per plan
+version either way (`1.0.0-rc.5`; one per run before), covering the keys the modules of the
+version's pending items need, and the write-tool call waits for the answer. A version that uploads
+a file or an image into a folder the user did not name asks the advisory key `file_folder` or
+`image_folder` in the same review, recommending the node's `defaultFileFolderId` or
+`defaultImageFolderId` (`1.0.0-rc.5`, `03-genaix-api.md` §9.1). The settings card is the plan's:
 `derived_settings.updated` carries its `plan_id`. It is not a gate and it needs nothing in the
 manifest: no `quality_gates` entry, no new trigger point, no change to the module layout. Quality
 gates are unaffected by it, and a review that expires or is cancelled ends the run the same way any
 unanswered interaction does, with no write having happened.
 
-### 6.5 Plans: drafting, proposing, accepting
+### 6.5 Plans: drafting, proposing, accepting, revising
 
 Since `1.0.0-rc.4` every piece of work a module does is a **plan** with its own lifecycle
-(`PlanStatus`):
+(`PlanStatus`), living since `1.0.0-rc.5`:
 
 ```
-drafting ──► proposed ──► accepted ──► running ──► done ──► released ──► published
-   │            │  ▲                                          │  ▲       review_requested
-   │            │  └── adjusted (version + 1)                 │  └── reopen
-   │            └──► superseded (a newer proposal)            ▼
-   └────────────────────────────────────────────────────► discarded (by the user, any open status)
+drafting ─► proposed ─► accepted ─► running ─► done ─► released ─► published / review_requested
+              ▲  │          │          │        │        │              │
+              │  └ adjust   └── redirect ──┘    │        │              │
+              │                                 │        │              │
+              └─────── revise (version + 1, finished items kept) ───────┘
+any open status ─────────────────────────────────────────────► discarded
 ```
 
-Open is `drafting` to `released`; executing is `accepted` and `running`; the rest is closed, and a
-closed plan never changes again. Every lifecycle change emits `plan.updated` with the whole plan,
-its `id`, `workflow` and `status` included. **At most one plan of a session executes at a time.**
+Open is `drafting` to `released`; executing is `accepted` and `running`; settled is `published`
+and `review_requested`, closed but revisable; final is `discarded` and `superseded`, which never
+change again (`1.0.0-rc.5`; rc.4 closed a plan for good, with `reopen` as the one way back, and
+`reopen` is removed). Every lifecycle change emits `plan.updated` with the whole plan, its `id`,
+`workflows` and `status` included. **At most one plan of a session executes at a time**; several
+may be open (`Session.open_plan_ids`), and `Session.open_plan_id` is the one the conversation
+currently works on.
 
 **Drafting.** A plan starts in one of two ways: the session agent calls `draft_plan` (§6.3) when the
-user asks for a change, or `POST /sessions` names a `workflow` (a CMS context action such as "Create
-page here") and the first plan is drafted at once. Either way the plan is `drafting` at version 0,
-pinned to the module's `workflow_version`, and its first run starts. Plain questions never need a
-plan: the session agent answers them with its read tools. Whether a new plan may be drafted while
-another is open is the open plan's `plan_policy.concurrency` (§3); a new proposal always replaces an
-open plan that is still `proposed`, which becomes `superseded` without anything having been written.
+user asks for a change no plan covers, or `POST /sessions` names a `workflow` (a CMS context action
+such as "Create page here") and the first plan is drafted at once, naming that module as the one
+the user expects. Either way the plan is `drafting` at version 0 and its first run starts; the
+proposing run picks the modules and pins their versions (§6.7). Plain questions never need a plan:
+the session agent answers them with its read tools. A new plan never waits for another to close.
+A plan still `drafting` or `proposed` becomes `superseded`, without anything having been written,
+only when the user starts unrelated work instead and says so; a new proposal of the same work
+revises it (below).
 
-**How a plan reaches execution** depends on the module:
+**How a plan reaches execution** depends on its modules:
 
-| Module | First run | Acceptance |
+| Modules | First run | Acceptance |
 |---|---|---|
-| `plan_approval: true` (`content_create`, `content_edit`) | `propose`: reads, searches, raises the settings review where one is due, proposes the plan through `update_plan` and ends with every write withheld; the plan is `proposed` | the user's next `execute` message (below), which starts an `execute` run |
-| `plan_approval: false` with a CMS write tool (`construct_create`, `admin_user`) | `execute`, with every write held until the plan is accepted; the plan is `proposed` while the confirmation waits | **one confirmation**: the user answers the `confirm` interaction the run raises with the plan's `plan_id`, from the plan card or in the conversation; there is no separate proposing pass |
-| no CMS write tool (`content_research`) | `execute`, at once: `drafting` → `running` | none: reading is free |
+| any with `plan_approval: true` (`content_create`, `content_edit`) | `propose`: reads, searches, raises the settings review where one is due, proposes the plan through `update_plan` and ends with every write withheld; the plan is `proposed` | the user's next `execute` message (below), which starts an `execute` run |
+| all `plan_approval: false`, at least one with a CMS write tool (`construct_create`, `admin_user`) | `execute`, with every write held until the plan is accepted; the plan is `proposed` while the confirmation waits | **one confirmation**: the user answers the `confirm` interaction the run raises with the plan's `plan_id`, from the plan card or in the conversation; there is no separate proposing pass |
+| none with a CMS write tool (`content_research`) | `execute`, at once: `drafting` → `running` | none: reading is free |
 
 In the proposing run nothing is written and no interaction asks for the acceptance, because the
 user's answer is an ordinary message, not a reply to a question. The plan's `PlanState.state` is
@@ -670,34 +706,85 @@ user's answer is an ordinary message, not a reply to a question. The plan's `Pla
 
 **Acceptance is the user's own decision, and nothing else** (`1.0.0-rc.4` core rule). The model
 never accepts a plan, and no tool or gate does; an interaction answer counts only as the one
-confirmation of a `plan_approval: false` module above. For every other plan, a message accepts the
-open proposed plan only when it has `options.mode: execute` and carries one `plan` part naming
-the plan (`plan_id`) and its current version (`based_on_version`), since `1.0.0-rc.4`; a message
-without one never accepts a plan and goes to the session agent:
+confirmation of a `plan_approval: false` module above. For every other plan, a message accepts a
+proposed plan only when it has `options.mode: execute` and carries one `plan` part naming the plan
+(`plan_id`) and its current version (`based_on_version`), since `1.0.0-rc.4`; a message without
+one never accepts a plan and goes to the session agent:
 
-- without `items` the plan is accepted as proposed, `reason` "Accepted as proposed."; or
+- without `items` the plan is accepted as proposed and keeps its version and `reason`
+  (`1.0.0-rc.5`; rc.4 added a version "Accepted as proposed."); or
 - with `items` it is accepted as the user adjusted it, which GenAIx applies (`03-genaix-api.md` §5.1): items in the part's order;
-  an item whose `id` names a current step keeps that step's `kind` and `target` unless the part
-  sets them; an item without a known id is a new step with an id the harness assigns; a step the
-  part leaves out is removed. `reason` is "Adjusted by the user: …", summarising what was kept,
-  added and removed.
+  an item whose `id` names a current step keeps that step's `kind`, `target`, `workflow` and
+  `depends_on` unless the part sets them; an item without a known id is a new step with an id the
+  harness assigns and, without `workflow`, the module the harness picks; a step the part leaves
+  out is removed, except a `done` one, which is kept and cannot be changed (`1.0.0-rc.5`); an
+  order that puts an item before one it depends on is `422` with `code: dependency_order`; in a
+  revision, listing the id of an item the revision marks `removed` brings it back with its
+  earlier `change`, and leaving out an item another kept item `depends_on` is `422` with `code:
+  dependency_order` at that item. The plan becomes version current + 1, `reason` "Adjusted by
+  the user: …", summarising what was kept, added and removed.
 
 A `plan` part that cannot be applied never reaches a run: `409 plan_outdated` when
 `based_on_version` is not the plan's current `version`, `409 plan_closed` when the plan is closed
 or not of this session, `409 plan_not_proposed` when it is still `drafting` or already accepted. An
-accepting message that arrives while a run of a plan is active is `409 run_already_active`. The
-harness records `accepted_version`, `accepted_by` (the subject) and `accepted_at` on the plan,
-writes the decision into the ledger (§6.1), and emits `plan.updated` at version current + 1 holding
-exactly the plan the run will execute, first `accepted`, then `running`.
+accepting or adjusting message that arrives while a run of this or any other plan of the session
+is active is `409 run_already_active`: at most one plan executes. The harness records
+`accepted_version`, `accepted_by` (the subject) and `accepted_at` on the plan, writes the
+decision into the ledger (§6.1), and emits `plan.updated` holding exactly the plan the run will
+execute, first `accepted`, then `running`: at the same version when accepted as proposed, at
+version current + 1 when adjusted. `version` increments on every change of the plan's content
+(items, summary), never on a status change alone.
 
-**Executing.** The agent then works through that plan, its writes confined to the plan's objects
-(§6.2). When it has to deviate — merge two steps, split one, drop one it cannot carry out — it calls
+**Executing.** The agent then works through the plan's `pending` items, its writes confined to
+the plan's objects (§6.2); items finished in an earlier version are not run again. A plan with
+several modules runs one execute run per contiguous segment of `pending` items of the same module,
+in item order, each naming its module in `Run.workflow`, one after the other without another
+acceptance (`1.0.0-rc.5`, §6.7). When it has to deviate — merge two steps, split one, drop one it cannot carry out — it calls
 `update_plan` with a `reason`, so a further `plan.updated` says why; a run never deviates silently,
 and a deviation never adds a target (§6.3). Steps reported `done` in the proposing run stay done,
 and the execute run continues with the next pending step of the template. When the run has
 finished the plan's items and its `step_end` gates have run, the plan is `done` and waits for the
 user's `release`. The session stays `active` throughout; a message sent while the plan's run is
-active starts a read-only side run (§6.2) instead of interrupting it.
+active starts a read-only side run (§6.2) instead of interrupting it, unless it redirects the plan
+(below).
+
+**Revising** (`1.0.0-rc.5`). A plan covers a piece of work, not one change. A message that
+concerns a plan's objects or continues its goal revises that plan through the session agent's
+`revise_plan` (§6.3), whether the plan is `proposed`, `done`, `released`, `published` or
+`review_requested`; unrelated objects and an unrelated goal are new work (`draft_plan`), and a
+question is answered without a plan. `options.mode: revise` on the message forces a revision of
+`options.plan_id`, default `Session.open_plan_id`. The plan's proposing run, now on the existing
+plan, reads and plans with every write withheld and ends with the plan `proposed` at `version + 1`,
+same `id`, `reason` `Revised: <what changed>`; while it drafts, the plan keeps its current version
+and items:
+
+- `PlanItem.version` is the version that added an item, and `PlanItem.change` what this version
+  did to it against the version accepted before it: `added`, `changed`, `removed` or
+  `unchanged`. Once the revision is accepted an item keeps that `change` until the next
+  revision; on a plan never accepted every item is `added`, and an item dropped before any
+  acceptance disappears.
+- A `removed` item stays listed until the version is accepted, then it is dropped.
+- A `done` item is never removed or changed, because its write happened; undoing it is a further
+  item ("restore the previous title").
+- The user accepts the version with a `plan` part, as above, and the execute run carries out only
+  the `pending` items.
+- Publications (pages only: an uploaded file is published by the CMS under its own rules, not
+  by GenAIx) and checks accumulate over the versions; the revision resets the release, so the
+  `before_release` gates run again; the version gets at most one `settings_review` (§6.4).
+- A revised `published` or `review_requested` plan is open again (`closed_at` cleared); its pages
+  stay online until the next `publish`.
+- The ledger records `plan_revised` with the version, who asked, why and the item changes.
+
+**Redirecting** (`1.0.0-rc.5`). A message while a plan executes is a question, which gets a side
+run, or a redirection ("stop, use red instead"); GenAIx's router decides, and `options.mode:
+revise` naming the executing plan forces a redirection. The harness requests the cancel of the
+execute run at once; the run stops at the next tool boundary, never inside a CMS lock cycle. The
+harness emits `run.cancelled` with `run.cancel_reason: redirected` and starts the plan's
+proposing run with the message (`plan.updated` `drafting`, then `proposed` at `version + 1`).
+Items the cancelled run finished stay `done`; the item it was working on becomes `pending` again,
+or `done` when its write completed. A step the cancelled segment did not finish ends `skipped`,
+and its `step_end` gates do not run. A `drafting` plan can be revised too: the message redirects
+its proposing run, cancelled with `redirected` and started again with the message.
 
 `options.mode: plan_only` is independent of the flag and valid for every module: it ends a run at
 the plan whether or not the module asks for approval. The gates are unaffected; a `step_end` gate
@@ -715,25 +802,28 @@ session's only plan. The snapshot of one plan is `PlanState`,
 `GET /sessions/{session_id}/plans/{plan_id}`, which is rc.3's `WorkflowState` scoped to the plan:
 it carries `gates: [GateResult]`, and `Check` carries `gate_id`, `kind`, `evidence` and `plan_id`.
 `GET /sessions/{session_id}/workflow` and `WorkflowState` remain, deprecated, and answer for the
-open plan, else the latest.
+plan `open_plan_id` names, else the latest. Since `1.0.0-rc.5` `Step`, `Check`, `GateResult` and
+an execute `Run` also carry `workflow`, the module they belong to, and a `plan.updated` carries
+the plan's `versions` and each item's `change`; no event type is new.
 
 `GateResult` is the gate's own record, distinct from the `Check` it produces:
 
 ```json
 {
   "gate_id": "verbatim_identical",
+  "workflow": "content_create",
   "label": "Verbatim passages are character-identical",
   "kind": "script",
   "blocking": true,
   "when": "step_end",
-  "step_id": "st-5",
+  "step_id": "content_create/st-5",
   "status": "passed",
   "attempt": 1,
   "started_at": "2026-10-07T09:24:15Z",
   "ended_at": "2026-10-07T09:24:16Z",
   "duration_ms": 940,
   "verdict": "pass",
-  "check_ids": ["chk-verbatim-identical"],
+  "check_ids": ["content_create/chk-verbatim-identical"],
   "evidence_file_id": "f3a9...",
   "run_id": "c4e7a2b1-9d3f-4a86-b0c5-7e1f8d2a6b94",
   "plan_id": "5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60"
@@ -746,12 +836,60 @@ open plan, else the latest.
 `severity: warn`.
 
 A gate-produced `Check` keeps the shape `03-genaix-api.md` §8 defines and adds three fields, next
-to the `plan_id` every check carries since `1.0.0-rc.4`. Its id
-is `chk-<gate id with underscores replaced by hyphens>`, with `-1`, `-2` appended when one gate
-reports several checks. `source` comes from the gate's manifest `source` block when present, so a
+to the `plan_id` every check carries since `1.0.0-rc.4` and the `workflow` it carries since
+`1.0.0-rc.5`. Its id is `<workflow>/chk-<gate id with underscores replaced by hyphens>`, one per
+gate execution; the `<workflow>/` prefix (`1.0.0-rc.5`) applies in a one-module plan too, so the
+id stays stable when a revision adds a module. Every other check id follows the same rule: a check
+the agent reports is `<workflow>/<check id>` of the module whose run reported it, and a check of
+no module is `plan/<id>`. The manifest's gate ids stay unprefixed; in a plan they appear
+prefixed. `source` comes from the gate's manifest `source` block when present, so a
 gate enforcing a named guideline keeps `source.type: guideline` and the guideline id while still
 carrying `gate_id` and `kind`. Gates with no `source` block get `source.type: gate` and `source.id` =
 the gate id.
+
+### 6.7 Several modules in one plan
+
+Since `1.0.0-rc.5` one plan may use several modules. "Create a page from this PDF, upload the PDF
+and link it" is page creation (`content_create`), an upload and an edit (`content_edit`), and it
+is one plan, accepted, released and published as one. A module stays a self-contained unit, with
+its prompt, skills, gates and bindings, and needs to know no other: composition is the harness's
+job, so a module author writes a module as before and never names another module.
+
+**Picking and ordering.** The session agent states the goal and may name the modules it expects
+(`draft_plan` `workflows`), a hint, never binding. The plan's proposing run picks the modules from
+the catalogue by their `entry_hints` and `produces`, splits the work into items, each naming its
+module (`PlanItem.workflow`), and orders them by their dependencies (`PlanItem.depends_on`): the
+item that creates an object comes before every item that uses it, an upload before the link to the
+file, and a page is created before it is edited. `Plan.workflows` lists the modules in the order
+GenAIx runs them, each `{id, version}`. A revision may add a module, which joins at the version
+then loaded.
+
+| Item | Module | `kind` | `depends_on` |
+|---|---|---|---|
+| p1 Create page PNDemo from the PDF | `content_create` | `create` | |
+| p2 Colour title, teaser and text | `content_edit` | `update` | p1 |
+| p3 Upload the PDF into the file folder | `content_create` | `create` | |
+| p4 Link the PDF in the text | `content_edit` | `link` | p1, p3 |
+
+**What composes**, and how:
+
+| Concern | In a plan with several modules |
+|---|---|
+| Write scope | Each item is bound by its own module's `write_targets`; the plan's scope is their union (§6.2) |
+| Approval | The plan needs acceptance if any of its modules writes; a plan whose modules only read runs at once (§6.5), with the modules the session agent named in `draft_plan(workflows)` |
+| Settings | One `settings_review` per version, covering the keys the modules of its pending items need (§6.4) |
+| Steps | Each module's `steps_template`, in plan order; a proposing run across modules reports the propose step of each module whose items it plans. `Step.workflow` names the module, and a step id is always `<workflow>/<id>` (`content_edit/st-2`), so it stays stable when a revision adds a module; a step of no module, such as a transition run's, is `plan/<id>` (`plan/st-publish`). The manifest's `steps_template` ids stay unprefixed. A step shows its latest state; there is no step history per version |
+| Gates and checks | Each module's gates, over that module's items. `GateResult.workflow` and `Check.workflow` name the module; every check id is `<workflow>/<id>` (gate checks `<workflow>/chk-<gate id>`), `plan/<id>` for none. At `release` the `before_release` gates of every module run |
+| Execution | One execute run per contiguous segment of `pending` items of the same module, in item order; `Run.workflow` names the segment's module, and the segments of one acceptance run one after the other without another acceptance |
+| Prompt and tools | An execute run gets its segment module's `prompts/system.md`, skills, tool allowlist and bindings (§6.1, §6.2); the proposing run plans across the modules, `Run.workflow` `null` |
+| Discard | `on_discard` is the strictest value of the plan's modules, `restore` over `keep` |
+| Versions | Each module's version is pinned in `Plan.workflows` when it joins; `workflow_version_drift` is `true` when any of them differs from the loaded one |
+
+**For module authors.** Write `entry_hints` and `produces` so the proposing run can tell what the
+module is for; keep step and gate ids unique within the module, since the prefix makes them unique
+within a plan; bind every write tool in `write_targets`, because a binding covers only the items of
+your module. Nothing else changes: a module that worked alone in rc.4 composes in rc.5 once its
+manifest drops `plan_policy.concurrency`.
 
 ## 7. Quality gates
 
@@ -764,10 +902,10 @@ gate's scratch directory:
 
 ```json
 {
-  "gate": { "id": "verbatim_identical", "inputs": { "unit": "chars", "max_deviations_reported": 20 } },
+  "gate": { "id": "verbatim_identical", "workflow": "content_create", "inputs": { "unit": "chars", "max_deviations_reported": 20 } },
   "session": { "id": "9f1b..." },
-  "plan": { "id": "5b0e...", "version": 2, "workflow": "content_create", "workflow_version": "1.0.0" },
-  "trigger": { "when": "step_end", "step_id": "st-5", "run_id": "c4e7..." },
+  "plan": { "id": "5b0e...", "version": 2, "workflows": [{ "id": "content_create", "version": "1.0.0" }] },
+  "trigger": { "when": "step_end", "step_id": "content_create/st-5", "run_id": "c4e7..." },
   "state": {
     "cms_objects": [{ "type": "page", "id": 9142, "node_id": 3, "operation": "created" }],
     "derived_settings": { "template": { "type": "template", "id": 17 }, "language": "de" },
@@ -781,9 +919,12 @@ gate's scratch directory:
 ```
 
 `state` is the plan's (`1.0.0-rc.4`): its objects, derived settings and recorded tool calls, never
-another plan's; `files` are the session's, because uploads belong to the conversation. A gate
-input document of `1.0.0-rc.3` carried `workflow` and `workflow_version` on `session`; a script that
-must read both shapes takes them from `plan` when present.
+another plan's; `files` are the session's, because uploads belong to the conversation. In a plan
+with several modules a gate judges its own module's items (`1.0.0-rc.5`), and `gate.workflow` names
+that module. A gate input document of `1.0.0-rc.3` carried `workflow` and `workflow_version` on
+`session`, one of `1.0.0-rc.4` on `plan`; since `1.0.0-rc.5` the plan's modules are
+`plan.workflows` and the gate's own is `gate.workflow`, which is what a script that must read
+every shape takes when present.
 
 Exit code 0 with a schema-valid verdict on stdout is the only success path. Anything else — non-zero
 exit, unparseable stdout, a verdict failing its schema, a timeout — is an `error` verdict handled per
@@ -857,8 +998,8 @@ object, whether it is a script writing to stdout or a reviewer calling `submit_v
 `fail` or `warn` depending on `on_error`. `Check.blocking` is the manifest's `blocking` flag **and**
 a `fail` severity (`1.0.0-rc.2`): a blocking gate that answers `warn` yields a non-blocking `warn`
 check, acknowledgeable like any other, so a session can never be stuck behind a warning it can
-neither fix nor accept. Every gate execution yields exactly one `Check`, `chk-<gate id>` with `_`
-as `-`, the findings folded into `message` one line each with location, expected and actual, the
+neither fix nor accept. Every gate execution yields exactly one `Check`, `<workflow>/chk-<gate
+id>` with `_` as `-` (the prefix since `1.0.0-rc.5`), the findings folded into `message` one line each with location, expected and actual, the
 `suggested_action`s into `suggested_actions`; a gate does not split its findings into several
 checks. `verification` is how the verbatim proof reaches the UI unchanged: the script fills it, the
 harness copies it into `Check.verification`, and the lock badge reads `identical`.
@@ -870,8 +1011,8 @@ a `fail` `Check`, and hands the verdict back to the agent, which can correct the
 the step again; the gate re-runs with `attempt` incremented. `attempt` counts every execution of the
 gate **in the plan** (`1.0.0-rc.4`; in the session before), a retry of an infrastructure failure and
 a transition's re-check included, and each execution writes its own evidence file (`1.0.0-rc.2`);
-the plan's `PlanState` keeps the latest `GateResult` per gate. A second plan under the same module
-starts again at attempt 1. `GENAIX_GATE_MAX_ATTEMPTS` (default 3) caps the agent's own `step_end`
+the plan's `PlanState` keeps the latest `GateResult` per gate of each of its modules. A second plan
+using the same module starts again at attempt 1. `GENAIX_GATE_MAX_ATTEMPTS` (default 3) caps the agent's own `step_end`
 re-reports, prevents a loop, and on exhaustion the step stays `failed` and the failure carries into
 the transition triggers.
 
@@ -888,20 +1029,20 @@ quality_gate_failed`, carrying the failing set so a client can render it without
   "detail": "2 blocking quality gates failed. Fix them or ask the agent to, then try again.",
   "instance": "/api/v1/sessions/9f1b.../plans/5b0e.../transitions",
   "request_id": "req_01J...",
-  "failing_checks": [ { "id": "chk-verbatim-identical", "blocking": true, "severity": "fail", "...": "the full Check" },
-                      { "id": "chk-references-exist", "blocking": true, "severity": "fail", "...": "the full Check" },
-                      { "id": "chk-alt-text", "blocking": false, "severity": "warn", "...": "the full Check" } ],
+  "failing_checks": [ { "id": "content_create/chk-verbatim-identical", "blocking": true, "severity": "fail", "...": "the full Check" },
+                      { "id": "content_create/chk-references-exist", "blocking": true, "severity": "fail", "...": "the full Check" },
+                      { "id": "content_create/chk-alt-text", "blocking": false, "severity": "warn", "...": "the full Check" } ],
   "failing_gates": [
     { "gate_id": "verbatim_identical", "label": "Verbatim passages are character-identical",
-      "kind": "script", "blocking": true, "when": "before_release", "status": "failed",
-      "verdict": "fail", "attempt": 2, "check_ids": ["chk-verbatim-identical"],
+      "workflow": "content_create", "kind": "script", "blocking": true, "when": "before_release",
+      "status": "failed", "verdict": "fail", "attempt": 2, "check_ids": ["content_create/chk-verbatim-identical"],
       "evidence_file_id": "3a9c...", "started_at": "...", "ended_at": "...", "duration_ms": 412 },
     { "gate_id": "references_exist", "label": "All links and references resolve",
-      "kind": "script", "blocking": true, "when": "before_release", "status": "failed",
-      "verdict": "fail", "attempt": 1, "check_ids": ["chk-references-exist"],
+      "workflow": "content_create", "kind": "script", "blocking": true, "when": "before_release",
+      "status": "failed", "verdict": "fail", "attempt": 1, "check_ids": ["content_create/chk-references-exist"],
       "evidence_file_id": "51e0...", "started_at": "...", "ended_at": "...", "duration_ms": 88 }
   ],
-  "acknowledgeable_checks": ["chk-alt-text", "chk-guideline-compliance"]
+  "acknowledgeable_checks": ["content_create/chk-alt-text", "content_create/chk-guideline-compliance"]
 }
 ```
 
@@ -913,7 +1054,7 @@ shortened gate shape that `problem.schema.json` never had).
 Non-blocking failures never refuse a transition on their own, but they are not silent either. A
 transition whose trigger produced unacknowledged non-blocking `warn` or `fail` checks is refused
 with the same `409`, an empty `failing_gates` and those checks in `acknowledgeable_checks`; the
-client repeats the call with `acknowledge_checks: ["chk-alt-text", ...]` and it proceeds. The
+client repeats the call with `acknowledge_checks: ["content_create/chk-alt-text", ...]` and it proceeds. The
 acknowledgement is stored on the plan (`1.0.0-rc.4`; on the session before), attributed to the
 user's subject, appears on the `Check` as `acknowledged_by` and `acknowledged_at` and on the
 `GateResult`, and enters the ledger as a user decision (§6.1). It covers that plan's check only; the
@@ -929,8 +1070,9 @@ which is not.
 
 Every gate execution writes one evidence record into the session file store as a `File` with `kind:
 artifact` and `artifact_type: gate_evidence`, at
-`<base>/sessions/<id>/artifacts/gates/<plan_id>/<gate id>-<attempt>.json` (`1.0.0-rc.4`;
-`gates/<gate id>-<attempt>.json` before): the gate declaration, the input document, the raw verdict,
+`<base>/sessions/<id>/artifacts/gates/<plan_id>/<workflow>/<gate id>-<attempt>.json`
+(`1.0.0-rc.5`; `gates/<plan_id>/<gate id>-<attempt>.json` in `1.0.0-rc.4`, `gates/<gate
+id>-<attempt>.json` before): the gate declaration, the input document, the raw verdict,
 the script's stdout and stderr (64 KB each) or the reviewer's tool-call trace, and timing.
 `GateResult.evidence_file_id` points at it; `Check.evidence` is the gate's own evidence object (its
 gate-specific keys such as `unit`, `source_sha256`, `images_without_alt`) with the inline subset
@@ -1006,7 +1148,9 @@ gates bound as before. Every gate keeps its trigger; only the run it falls into 
 is then `done`, and `release` and `publish` are the user's transitions of this plan.
 `examples/s1-content-create.sse` records the execute run as one run (the proposing half ends at its
 first `plan.updated`); `examples/s7-continuous-session.sse` shows a `content_create` plan drafted
-in the middle of a conversation, and a second one superseding it before acceptance.
+in the middle of a conversation and revised before acceptance (`1.0.0-rc.5`; a second plan
+superseded it in rc.4), and `examples/s8-living-plan.sse` a `content_create` plan that gains
+`content_edit` items over four revisions, with a redirect.
 
 ### 8.2 Research, inventory and reporting, `content_research`
 
@@ -1083,7 +1227,9 @@ asks for the change it drafts a `content_edit` plan for them. Before `1.0.0-rc.4
 session created with `continued_from`; that link remains for a new conversation that builds on an
 old one (`03-genaix-api.md` §4.3), not for follow-up work in the same one. One plan handles up to
 20 pages, with one acceptance, one release and one publish for all of them; more pages, or a second
-round of changes, are a further plan. Canonical transcripts: `examples/s6-content-edit.sse` (a
+round of changes to the same pages, are a revision of the plan (`1.0.0-rc.5`; a further plan
+before), and a `content_edit` item may follow a `content_create` item in one plan, editing the page
+it created (§6.7). Canonical transcripts: `examples/s6-content-edit.sse` (a
 new conversation continued from S2 and created with `workflow: content_edit`, three pages in two
 folders with different publish permissions) and `examples/s7-continuous-session.sse` (the same work as a plan inside a longer
 conversation).
@@ -1103,7 +1249,6 @@ produces: [page]
 plan_approval: true
 
 plan_policy:
-  concurrency: exclusive
   on_discard: keep
   write_targets:
     update_page_tags: { object: page, from: pageId }
@@ -1263,9 +1408,10 @@ user can remove a page from the work by deleting its items. The proposing run th
 plan (§6.5). Those targets are also the plan's write scope: the `write_targets` bindings above map
 `pageId` of every write to a page, and a write to a page no item targets is refused with
 `plan_scope_violation` (§6.2), which S7 shows for a page the user removed from the plan. When the
-user wants another page included before accepting, the session agent drafts a new proposal that
-supersedes this one, so the added page's changes are approved like the others before anything is
-written; after acceptance, more pages are a further plan.
+user wants another page included before accepting, the session agent revises the proposed plan
+(`1.0.0-rc.5`; it drafted a new proposal that superseded this one before), so the added page's
+changes are approved like the others before anything is written; after acceptance, more pages are
+a further revision, and the pages already changed are not changed again.
 
 **No settings card.** `derived_settings` is `null` and `set_derived_settings` is an error, even
 though the module `produces: [page]`: every write targets an existing page whose node, folder,
@@ -1441,62 +1587,81 @@ already supported.
 
 ## 12. API surface
 
-The fields this document depends on (`1.0.0-rc.4`; `openapi.yaml` is authoritative):
+The fields this document depends on (`1.0.0-rc.5`, a draft for review; `openapi.yaml` is
+authoritative):
 
-- `Workflow`: `id`, `title`, `description`, `scenario`, `roles`, `optional`, `produces`, `version`,
+- `Workflow`: `id`, `title`, `description`, `scenario`, `roles`, `optional`, `produces`,
+  `entry_hints` (`1.0.0-rc.5`), `version`,
   `plan_approval` (`1.0.0-rc.3`; per plan and with the one-confirmation reading of `false` since
-  `1.0.0-rc.4`), `plan_policy {concurrency, on_discard}` (`1.0.0-rc.4`), `inputs_schema`,
+  `1.0.0-rc.4`), `plan_policy {on_discard}` (`1.0.0-rc.4`; `concurrency` removed in
+  `1.0.0-rc.5`), `inputs_schema`,
   `required_connectors` (connector types), `tool_groups`, `steps_template`,
   `quality_gates[{id, label, kind, blocking, when, description}]`, plus `available` and `reason` for
-  the `GET /me` narrowing. `GET /workflows` lists every module a plan can run under; the session
-  agent (module `session`) is not a catalogue entry, and `free_chat` is gone.
-- `Plan` (`1.0.0-rc.4`): `id`, `workflow`, `workflow_version`, `status` (`PlanStatus`: `drafting`,
-  `proposed`, `accepted`, `running`, `done`, `released`, `published`, `review_requested`,
-  `discarded`, `superseded`), `version` (0 while drafting), `accepted_version`, `accepted_by`,
-  `accepted_at`, `closed_at`, `summary`, `items`, `reason`. `PlanSummary` and `PlanPage` for the
-  list.
-- `PlanState` (`1.0.0-rc.4`): rc.3's `WorkflowState` scoped to one plan — `workflow`,
-  `workflow_version`, `workflow_version_drift`, `state`, `plan`, `steps`, `checks`,
+  the `GET /me` narrowing. `GET /workflows` lists every module a plan can use; the session agent
+  (module `session`) is not a catalogue entry, and `free_chat` is gone.
+- `Plan` (`1.0.0-rc.4`): `id`, `workflows` (`{id, version}` in run order, `1.0.0-rc.5`; `workflow`
+  and `workflow_version` before), `status` (`PlanStatus`: `drafting`, `proposed`, `accepted`,
+  `running`, `done`, `released`, `published`, `review_requested`, `discarded`, `superseded`),
+  `version` (0 while drafting), `accepted_version`, `accepted_by`, `accepted_at`, `closed_at`,
+  `summary`, `items`, `reason`, `versions` (`PlanVersion`, `1.0.0-rc.5`). `PlanItem` carries
+  `workflow`, `version`, `change` and `depends_on`, and status `removed` (`1.0.0-rc.5`).
+  `PlanSummary` (with `workflows` as module ids) and `PlanPage` for the list.
+- `PlanState` (`1.0.0-rc.4`): rc.3's `WorkflowState` scoped to one plan — `workflows`,
+  `workflow_version_drift`, `inputs` (keyed by module id), `state`, `plan`, `steps`, `checks`,
   `gates: [GateResult]`, `approval_chain`, `publications`, `previews`, `preview`,
   `derived_settings`, `cms_objects`, `pending_interaction`, `authorizations`. `WorkflowState` is
-  deprecated and equal to `PlanState` for the open, else latest, plan.
+  deprecated and equal to `PlanState` for the plan `open_plan_id` names, else the latest.
 - `Session`: `inputs`, `continued_from` (`1.0.0-rc.3`), `open_plan_id`, `executing_plan_id`,
-  `plan_count`, `side_run_id` (`1.0.0-rc.4`); `workflow` and `workflow_version` moved to `Plan`.
+  `plan_count`, `side_run_id` (`1.0.0-rc.4`), `open_plan_ids` (`1.0.0-rc.5`); `workflow` and
+  `workflow_version` moved to `Plan`.
   `SessionStatus` is `active`, `waiting_for_input` or `archived`. `SessionCreate.workflow` is
   optional and drafts the first plan; `SessionContext.connection_ids` selects the connections the
   session's runs bind to. List filters: `workflow` (any plan of the session), `plan_status`.
 - `Run`: `plan_id` (`null` for the session agent and side runs) and `mode` (`session`, `side`,
-  `propose`, `execute`, `transition`) (`1.0.0-rc.4`).
+  `propose`, `execute`, `transition`) (`1.0.0-rc.4`); `workflow`, the module of an execute run's
+  segment, and `cancel_reason` `redirected` (`1.0.0-rc.5`).
+- `Step`: `workflow`, and an `id` that is always `<workflow>/<template id>`, `plan/<id>` for a
+  step of no module (`1.0.0-rc.5`). `Check.id`: `<workflow>/<id>` or `plan/<id>` (`1.0.0-rc.5`).
+- `Workflow`: `entry_hints` (`1.0.0-rc.5`), served from the manifest.
+- `PlanVersion`: `kind` (`proposal`, `revision`, `adjustment`, `deviation`; optional,
+  `1.0.0-rc.5`).
 - Events: `plan_id` on `BaseEvent`, required on `plan.updated`, `step.updated`, `check.updated`,
   `derived_settings.updated`, `approval_chain.updated`, `preview.updated`, `publications.updated`
   and on `interaction.requested` (`null` for the session agent); `plan.updated` on every lifecycle
-  change; `status` kind `context_compacted` (`1.0.0-rc.4`).
+  change; `status` kind `context_compacted` (`1.0.0-rc.4`). The run events carry `plan_id` when
+  the run works for a plan, equal to `run.plan_id` (stated in `1.0.0-rc.5`).
 - `MessageCreate`: the `plan` user part (`UserPlan.plan_id`, required since `1.0.0-rc.4`, and
-  `based_on_version`) with `options.mode: execute` (§6.5).
+  `based_on_version`; `UserPlanItem.workflow` and `depends_on` since `1.0.0-rc.5`) with
+  `options.mode: execute` (§6.5); `options.mode: revise` and `options.plan_id` (`1.0.0-rc.5`).
 - `GateResult`: `gate_id`, `label`, `kind`, `blocking`, `when`, `step_id?`, `status`, `verdict?`,
   `attempt` (per plan), `started_at`, `ended_at`, `duration_ms`, `check_ids`, `evidence_file_id?`,
-  `run_id?`, `plan_id` (`1.0.0-rc.4`).
-- `Check`: `gate_id?`, `kind?`, `evidence?`, `acknowledged_by?`, `acknowledged_at?`, `plan_id` in
-  addition to the fields in `03-genaix-api.md` §8. `Publication` carries `plan_id` too.
-- `File.artifact_type`: includes `gate_evidence`, stored at `gates/<plan_id>/<gate>-<attempt>.json`.
+  `run_id?`, `plan_id` (`1.0.0-rc.4`), `workflow` (`1.0.0-rc.5`).
+- `Check`: `gate_id?`, `kind?`, `evidence?`, `acknowledged_by?`, `acknowledged_at?`, `plan_id`,
+  `workflow` (`1.0.0-rc.5`) in addition to the fields in `03-genaix-api.md` §8. `Publication` carries `plan_id` too.
+- `File.artifact_type`: includes `gate_evidence`, stored at
+  `gates/<plan_id>/<workflow>/<gate>-<attempt>.json` (`1.0.0-rc.5`).
 - Routes: `GET /sessions/{session_id}/plans`, `GET /sessions/{session_id}/plans/{plan_id}`,
   `POST /sessions/{session_id}/plans/{plan_id}/transitions` (`TransitionRequest`: `release`,
-  `reopen`, `publish`, `request_review`, `discard`, with `comment`, `at`, `acknowledge_checks`;
+  `publish`, `request_review`, `discard`, with `comment`, `at`, `acknowledge_checks`; `reopen`
+  removed in `1.0.0-rc.5`;
   `200` with the `Plan`, `202` with `TransitionAccepted {run_id, plan, session}`).
   `POST /sessions/{session_id}/transitions` keeps `archive` and `unarchive`
   (`SessionTransitionRequest`). `GET /sessions/{session_id}/workflow` is deprecated.
 - `GenaixCode`: `quality_gate_failed` (409); `plan_outdated` (409, `1.0.0-rc.3`); since
   `1.0.0-rc.4` `plan_not_found` (404), `plan_closed` (409), `plan_not_proposed` (409),
   `plan_scope_violation` (422, as `tool.failed` followed by a recoverable `error`, never as an HTTP
-  answer), `session_archived` (409); `run_already_active` (409) also covers a second side run.
+  answer), `session_archived` (409); `run_already_active` (409) also covers a second side run;
+  `plan_not_revisable` (409, `1.0.0-rc.5`); `errors[].code` `dependency_order` (`1.0.0-rc.5`).
 - Problem document for `quality_gate_failed`: `failing_gates[]` and `acknowledgeable_checks[]`.
 - `mcp/tools.json` `1.0.0-rc.4`: `genaix_side_tools` gains `load_skill`, `draft_plan`, `recall` and
   `upload_session_file`; the CMS tool `create_folder` is new and the URL source of `upload_file`
-  normative.
+  normative. `1.0.0-rc.5`: `draft_plan` takes optional `workflows` instead of a required
+  `workflow`, and `revise_plan` is new.
 - Schemas: `schemas/workflow-manifest.schema.json` (with `plan_policy` and `entry_hints` since
-  `1.0.0-rc.4`), `schemas/gate-verdict.schema.json`.
+  `1.0.0-rc.4`, without `plan_policy.concurrency` since `1.0.0-rc.5`),
+  `schemas/gate-verdict.schema.json`.
 
-No new event type is needed for gates or plans. `check.updated` carries gate-produced checks,
+No new event type is needed for gates or plans, nor for revisions and redirects (`1.0.0-rc.5`). `check.updated` carries gate-produced checks,
 `step.updated` carries the step a gate failed, `plan.updated` carries every plan lifecycle change,
 and `GateResult` reaches clients through `GET /sessions/{session_id}/plans/{plan_id}`. A dedicated
 `gate.updated` event, so a client can show a gate running before its check exists, is a purely

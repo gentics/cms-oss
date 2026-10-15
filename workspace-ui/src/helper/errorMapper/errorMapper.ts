@@ -24,6 +24,7 @@ const GENAIX_CODES: Record<GenaixCode, true> = {
     plan_outdated: true,
     plan_closed: true,
     plan_not_proposed: true,
+    plan_not_revisable: true,
     plan_scope_violation: true,
     interaction_already_answered: true,
     interaction_expired: true,
@@ -99,9 +100,14 @@ export function errorMessageKey(error: unknown): string {
         return 'errors.noCmsConnection';
     }
 
-    // A verbatim passage named a file it does not occur in (contract, `Problem.errors[].code`).
-    if (error instanceof GenaixApiError && error.problem?.errors?.some((fieldError) => fieldError.code === 'passage_not_found')) {
-        return 'errors.genaix.passage_not_found';
+    // A verbatim passage named a file it does not occur in, or a plan item came before one it depends on
+    // (rc.5; contract, `Problem.errors[].code`).
+    const fieldCode = error instanceof GenaixApiError
+        ? error.problem?.errors?.find(({ code }) => code === 'passage_not_found' || code === 'dependency_order')?.code
+        : undefined;
+
+    if (fieldCode) {
+        return `errors.genaix.${fieldCode}`;
     }
 
     if (error instanceof GenaixApiError && isKnown(GENAIX_CODES, error.genaixCode)) {

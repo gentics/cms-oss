@@ -91,7 +91,9 @@ interface MessageCreateFields {
     };
     options?: {
         model?: string;
-        mode: 'plan_only' | 'execute';
+        mode: 'plan_only' | 'execute' | 'revise';
+        /** The plan a `revise` message revises (rc.5); default `Session.open_plan_id`. */
+        plan_id?: string;
     };
 }
 

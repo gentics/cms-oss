@@ -1,5 +1,5 @@
 import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
-import { type DragEvent, type Ref, useImperativeHandle, useState } from 'react';
+import { type DragEvent, type ReactNode, type Ref, useImperativeHandle, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -36,6 +36,8 @@ export interface ComposerHandle {
     reset: () => void;
     /** Puts a reference token for each of `refs` at the start of the field, the caret at the end. */
     addReferences: (refs: ContextReference[]) => void;
+    /** Opens the text prompt and puts the caret at the end of the field. */
+    focus: () => void;
 }
 
 interface ComposerProps {
@@ -64,6 +66,10 @@ interface ComposerProps {
     onStop?: () => void;
     /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
     sessionId?: string;
+    /** Shown at the top of the box, above the field: what sending will do, such as revising a plan. */
+    header?: ReactNode;
+    /** Esc in the field, while no menu takes it: leaves what `header` says. */
+    onEscape?: () => void;
     ref?: Ref<ComposerHandle>;
 }
 
@@ -81,7 +87,7 @@ const TEXT_KEYS = {
  * (`isRunning`), Stop replaces send and calls `onStop`; beside send while the run lets the user go on
  * asking (`canSendMeanwhile`).
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, canSendMeanwhile = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, canSendMeanwhile = false, isStopping = false, onStop, sessionId, header, onEscape, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -132,6 +138,10 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         },
         reset,
         addReferences,
+        focus: () => {
+            openTyping();
+            editor.commands.focus('end');
+        },
     }));
 
     // One recognizer for the inline and the big mic; the words go into the field, nothing is sent.
@@ -155,12 +165,17 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         onSubmit(input);
     }
 
-    // Enter sends; while dictating, `VoiceInput` takes Enter and Esc before the field sees them, and
-    // while the @- or #-menu is open, Enter is the menu's.
+    // Enter sends and Esc calls `onEscape`; while dictating, `VoiceInput` takes Enter and Esc before the
+    // field sees them, and while the @- or #-menu is open, both are the menu's.
     function handleKeyDown(event: KeyboardEvent) {
-        if (event.key === 'Enter' && !event.shiftKey && !isReferenceMenuOpen(editor.state) && !isSettingMenuOpen(editor.state)) {
+        const isMenuOpen = isReferenceMenuOpen(editor.state) || isSettingMenuOpen(editor.state);
+
+        if (event.key === 'Enter' && !event.shiftKey && !isMenuOpen) {
             event.preventDefault();
             submit();
+        } else if (event.key === 'Escape' && onEscape && !isMenuOpen) {
+            event.preventDefault();
+            onEscape();
         }
     }
 
@@ -304,6 +319,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                     dictation.isListening ? styles.listening : '',
                 ].filter(Boolean).join(' ')}
             >
+                {header}
                 <div className={styles.attachments}>
                     <AttachmentList
                         attachments={attachments}

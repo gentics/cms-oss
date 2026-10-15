@@ -192,8 +192,8 @@ function PublishAtField({ id, value, onChange, disabled }: SettingFieldProps) {
 }
 
 /**
- * The field of one `settings_review` setting. `node`, `folder`, `template` and `language` are chosen,
- * never typed: the value is the CMS id or the language code, which the agent needs (a name is `422`,
+ * The field of one `settings_review` setting. `node`, `folder` (and `file_folder`, `image_folder`, the
+ * folders uploads go into, rc.5), `template` and `language` are chosen, never typed: the value is the CMS id or the language code, which the agent needs (a name is `422`,
  * contract `UserSettingPart.value`). `publish_at` uses the date picker. Any other key, such as
  * `filename`, is a constraint in the user's words and stays free text; so does a key with GenAIx options
  * that none of these is, as a select over them.
@@ -202,7 +202,10 @@ export function SettingField(props: SettingFieldProps) {
     const { id, row, value, onChange, disabled } = props;
 
     switch (row.key) {
+        // `file_folder`, `image_folder`: the advisory folders an upload goes into (rc.5), `recommended` preselected.
         case 'folder':
+        case 'file_folder':
+        case 'image_folder':
             return <FolderField {...props} />;
         case 'template':
             return <TemplateField {...props} />;

@@ -41,6 +41,21 @@ describe('errorMessageKey', () => {
         expect(errorMessageKey(genaixError(422, 'validation_failed'))).toBe('errors.genaix.validation_failed');
     });
 
+    it('names a plan item placed before one it depends on, and a plan that cannot be revised (rc.5)', () => {
+        const problem = {
+            type: 'x',
+            title: 'x',
+            status: 422,
+            genaix_code: 'validation_failed',
+            errors: [{ pointer: '/parts/0/plan/items/1', detail: 'p4 needs p3', code: 'dependency_order' }],
+        } as Problem;
+
+        expect(errorMessageKey(new GenaixApiError('/rest/proxy/genaix/x', 422, problem, new Headers()))).toBe('errors.genaix.dependency_order');
+        expect(translation('errors.genaix.dependency_order')).toEqual(expect.any(String));
+        expect(errorMessageKey(genaixError(409, 'plan_not_revisable'))).toBe('errors.genaix.plan_not_revisable');
+        expect(translation('errors.genaix.plan_not_revisable')).toEqual(expect.any(String));
+    });
+
     it('says when there is no cms connection to start a session with', () => {
         expect(errorMessageKey(new NoCmsConnectionError())).toBe('errors.noCmsConnection');
         expect(translation('errors.noCmsConnection')).toEqual(expect.any(String));

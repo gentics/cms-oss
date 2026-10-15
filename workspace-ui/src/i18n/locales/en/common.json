@@ -163,6 +163,14 @@
         "pageSettings": {
             "change": " – change its page settings:",
             "empty": "empty it"
+        },
+        "revise": {
+            "title": "Change this plan",
+            "hint": {
+                "ask": "Your next message changes this plan.",
+                "stop": "Sending stops the current work and changes the plan."
+            },
+            "cancel": "Don't change the plan"
         }
     },
     "chat": {
@@ -190,7 +198,8 @@
                 "waiting": "Waiting for you",
                 "done": "Done",
                 "skipped": "Skipped",
-                "failed": "Failed"
+                "failed": "Failed",
+                "removed": "Removed"
             }
         },
         "file": "File",
@@ -235,7 +244,9 @@
                 "template": "Template",
                 "language": "Language",
                 "filename": "File name",
-                "publish_at": "Publish at"
+                "publish_at": "Publish at",
+                "file_folder": "Folder for files",
+                "image_folder": "Folder for images"
             },
             "source": {
                 "text": "From your text",
@@ -250,7 +261,6 @@
         "collapse": "Hide plan",
         "actions": {
             "release": "Release",
-            "reopen": "Reopen",
             "publish": "Publish",
             "request_review": "Request review",
             "discard": "Discard"
@@ -259,7 +269,6 @@
             "release": "Releasing…",
             "publish": "Publishing…",
             "request_review": "Requesting review…",
-            "reopen": "Reopening…",
             "discard": "Discarding…"
         },
         "count": {
@@ -303,6 +312,10 @@
             "failed": "Publishing failed",
             "cancelled": "Publishing was stopped.",
             "close": "Close"
+        },
+        "revise": {
+            "ask": "Ask for a change",
+            "stop": "Stop and change"
         }
     },
     "handOff": {
@@ -387,6 +400,8 @@
             "cancel": "Cancel",
             "done": "Done",
             "status": {
+                "drafting": "Being drafted",
+                "revising": "Being revised",
                 "proposed": "Proposed",
                 "accepted": "Accepted",
                 "running": "Running",
@@ -396,6 +411,16 @@
                 "review_requested": "Waiting for review",
                 "discarded": "Discarded",
                 "superseded": "Replaced by a newer plan"
+            },
+            "restore": "Restore",
+            "change": {
+                "added": "New",
+                "changed": "Changed"
+            },
+            "invalid": {
+                "caption": "Adjust the highlighted steps",
+                "dependency_order": "Comes before a step it needs",
+                "other": "This step cannot be changed like this"
             }
         },
         "citation": {
@@ -484,7 +509,6 @@
             "publish": "Publish",
             "publishRemaining": "Publish remaining",
             "request_review": "Request review",
-            "reopen": "Reopen",
             "discard": "Discard"
         },
         "gate": {
@@ -721,7 +745,9 @@
             "model_error": "The AI model returned an error.",
             "model_rate_limited": "The AI model is busy. Please try again shortly.",
             "rate_limited": "Too many requests. Please try again shortly.",
-            "service_unavailable": "The AI service is currently unavailable."
+            "service_unavailable": "The AI service is currently unavailable.",
+            "plan_not_revisable": "This plan is closed for good and can no longer be changed.",
+            "dependency_order": "A step comes before a step it depends on."
         },
         "cms": {
             "AUTHREQUIRED": "Please log in to the CMS.",

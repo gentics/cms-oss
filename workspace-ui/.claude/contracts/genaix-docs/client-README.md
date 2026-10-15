@@ -4,38 +4,99 @@ A tiny client that consumes the stage 1 GenAIx API v1 contract end to end: a cha
 interface, a part-aware composer, structured message-part rendering, the live event
 stream, interactions, MCP connections, quality gates and the session lifecycle.
 
-Tracks `1.0.0-rc.4`. Its identity handling is the direct mode, which rc.3 introduced and
-rc.4 keeps. A session is one conversation and its work a sequence of plans: the client keys its
-state on `plan_id`, draws a card per plan, accepts a proposed plan with a `plan` part, and calls the
-plan transitions; the session itself only archives and unarchives. Editing a plan's items before
-accepting it and starting `content_edit` with `continued_from` are not implemented here.
+Tracks `1.0.0-rc.5` (draft: living plans). Its identity handling is the direct mode, which rc.3
+introduced and rc.4 and rc.5 keep. A session is one conversation and its work a set of plans: the
+client keys its state on `plan_id`, draws a card per plan, accepts a proposed plan or a revised
+version of it with a `plan` part (as proposed or adjusted in the card), revises a plan with a
+message (`options.mode: revise`), and calls the plan transitions; the session itself only archives
+and unarchives. Starting `content_edit` with `continued_from` is not implemented here.
 
-## Plans (1.0.0-rc.4)
+## Plans (1.0.0-rc.4, living since 1.0.0-rc.5)
 
 `lib/state.js` keeps one bucket per plan (`state.plans`, in `state.plan_order`): its plan, steps,
 checks, gates, derived settings, approval chain, publications and previews. Every plan-scoped event
-lands in the bucket its `plan_id` names. `state.plan`, `state.steps` and the other top-level fields
-are a view of one bucket: the plan the user picked on its card, else the current plan, which is the
-session's `open_plan_id`, else the most recently touched open plan, else the latest plan. The
-renderers written for one plan per session therefore draw the plan the user looks at, and plans never
-mix. `state.run` is the latest run that is not a side run; `state.side_run` the latest side run.
+lands in the bucket its `plan_id` names. A revision is a new version of the same plan with the same
+id, so it lands in the same bucket, and `plan.updated` replaces the plan whole when its `version` is
+not lower than the one held. `state.plan`, `state.steps` and the other top-level fields are a view of
+one bucket: the plan the user picked on its card, else the current plan, which is the session's
+`open_plan_id`, else the most recently touched open plan, else the latest plan. The renderers written
+for one plan per session therefore draw the plan the user looks at, and plans never mix. `state.run`
+is the latest run that is not a side run; `state.side_run` the latest side run.
 
-The plans column starts with the plan cards (`renderPlanCards`), oldest first, each with its status,
-module, version and publication counts, a Show button and the actions its status allows:
+Several plans may be open at once (rc.5): `openPlanIds(state)` is `Session.open_plan_ids` (or, before
+the session says, the buckets with an open status) and `currentPlanId(state)` is `open_plan_id`, the
+plan a message revises by default. `isRevisable(plan)` is every status but `discarded` and
+`superseded`; an unknown status counts as revisable and is left to the server to refuse.
+
+**One plan, several modules (rc.5).** `planModules(plan)` reads `Plan.workflows` (`[{id, version}]`),
+`PlanSummary.workflows` (ids) or an rc.4 plan's single `workflow`, plus any module an item names that
+the list lacks. `moduleOf(entry)` is a step's or check's `workflow`, else the `<workflow>/` prefix of its
+id (step and check ids are always `<workflow>/<id>` since rc.5).
+
+The plans column starts with the plan cards (`renderPlanCards`), oldest first. Each card shows:
+
+- its status, `current` on the plan `open_plan_id` names (highlighted with a bar), `open` on every
+  other open plan, and a chip per module with the version it was drafted under;
+- its version, the accepted version and the summary;
+- its items (`renderPlanItems`): status, kind, a module chip, the id, the label, the target, and the
+  items it needs (`depends_on`, shown quietly as `needs p1, p3`);
+- for a revision (`version` above `accepted_version`), a line `v3 against accepted v2` with the
+  counts of added, changed and removed items, a badge per item from `PlanItem.change` (`added`,
+  `changed`, `removed`; `unchanged` is quiet) and every `removed` item struck through until the
+  version is accepted. A plan that was never accepted has every item `added`, which says nothing,
+  so no badge is drawn then;
+- its version history (`Plan.versions`, `renderPlanVersions`), collapsed: per version its reason,
+  when and by whom it was accepted, and `+added ~changed -removed`;
+- `redirected` while a revision a message forced on its executing run is being drafted
+  (`run.cancelled` with `run.cancel_reason: redirected`, cleared by the next `plan.updated` that is
+  not `drafting`);
+- a Show button and the actions its status allows:
 
 | Plan status | Actions |
 |---|---|
-| `drafting`, `accepted` | Discard |
-| `proposed` | Accept (a message with the `plan` part naming the plan, as proposed), Discard |
-| `running` | Release (stops the run), Discard |
-| `done` | Release, Run again (the `plan` part without items), Discard |
-| `released` | Publish, Request review, Reopen, Discard |
-| `published`, `review_requested` | Reopen |
+| `drafting` | Discard |
+| `proposed` | Accept (`Accept v<n>` for a revision: the `plan` part naming the version, as proposed), Adjust, Discard |
+| `accepted` | Stop and change, Discard |
+| `running` | Stop and change, Release (stops the run), Discard |
+| `done` | Release, Run again (the `plan` part without items), Revise, Discard |
+| `released` | Publish, Request review, Revise, Discard |
+| `published`, `review_requested` | Revise |
+| `discarded`, `superseded` | none |
+
+There is no Reopen: rc.5 removed the transition. While another plan executes (at most one does),
+Accept, Adjust and Run again are not offered on the others; Revise and Discard still are.
+
+**Revise and Stop and change** put the composer into the run mode `revise plan` for that plan and
+say what sending will do; the message the user then writes (text, references, files, settings) goes
+out with `options: {mode: "revise", plan_id}`. On an executing plan that is the redirect: GenAIx
+cancels its run at the next tool boundary (`run.cancelled`, `cancel_reason: redirected`) and drafts
+the next version. The run mode can also be picked by hand; without a plan picked it names the plan
+shown when that one is revisable, else it leaves `plan_id` out and GenAIx takes `open_plan_id`. A
+`409 plan_not_revisable` says so and drops back to `execute`. A message typed in `execute` mode while
+a plan executes is a question for a side run, as in rc.4.
+
+**Adjust** opens an editor in the card (`renderPlanAdjust`): every pending item's label and module
+(any module the plan uses or the installation offers) can be changed, items move up and down, can be
+removed or kept again, and new items can be added with a module or with "GenAIx picks". A `done`
+item is listed but locked, since its write happened; a `removed` item is not offered. Before sending,
+`validateAdjustedPlan` refuses what the server would refuse with `422`: a done item changed or removed,
+an item placed before one it `depends_on` (`dependency_order`), and an item another kept item needs
+being removed. **Accept as adjusted** sends the `plan` part with `based_on_version` of the version
+shown and the items from `adjustedItems`: a kept item by its `id`, a module only where the user set one,
+a new item without an id. A `409 plan_outdated` (the plan was revised meanwhile) re-reads the plans
+and asks the user to look again.
 
 Opening a session lists `GET /sessions/{id}/plans` into cards and loads the `PlanState` of every
 open plan from `GET /sessions/{id}/plans/{plan_id}`; that is also where the gate records come from.
-A message the user types goes to the session agent unless it accepts a plan, so the composer needs
-no workflow and the new-session form's workflow is optional (none is the normal start).
+A message the user types goes to the session agent unless it accepts a plan or revises one, so the
+composer needs no workflow and the new-session form's workflow is optional (none is the normal
+start).
+
+Below the cards, the plan shown has its runs (`renderRuns`: mode, status, the module of an execute
+run's segment from `Run.workflow`, and a redirect), its steps grouped under their module in plan
+order (`renderSteps`; before the first step, the catalogue's `steps_template` of every module of the
+plan, with `<workflow>/` ids), its gates and checks each with a module chip, and the rest as before.
+The session header names the current run's module and how many plans are open.
 
 **This is not the Agentic Workspace.** Gentics builds that UI, and it is still being
 prototyped. This client exists to prove that the contract in `../openapi.yaml`,
@@ -153,9 +214,11 @@ only polls. No Phase One connector uses this.
 
 ### Replay mode, with no server at all
 
-Pick one of the seven recorded transcripts in the app bar, choose a speed and press
-**Replay**. `s7-continuous-session.sse` shows rc.4 whole: three plans in one conversation,
-the cards changing status, a side run and a refused write. `s5-failure-and-recovery.sse` is
+Pick one of the recorded transcripts in the app bar, choose a speed and press
+**Replay**. `s7-continuous-session.sse` shows the plans of one conversation: the cards changing
+status, a side run, a refused write, and a proposal revised to version 2 rather than superseded.
+`s8-living-plan.sse` (rc.5) is the living plan: one plan across two modules, revised several times,
+redirected while it runs, then released and published once. `s5-failure-and-recovery.sse` is
 the one for the unhappy paths: a locked CMS object, a recoverable error, an MCP server that
 refuses its credential, a failed run, a re-sent message and a cancel. The transcript is fed through exactly the same SSE parser, part reducer,
 state reducer and renderers that the live stream uses, so the full event model is
@@ -170,15 +233,35 @@ pick a `.sse` file from `stage1/examples/` instead; everything else works.
 cd stage1/client && node tests/parse-transcripts.mjs
 ```
 
-It replays all seven transcripts through the real modules under node, and exercises
-the composer's parts builder, the plain rendering and the request bodies as pure
-functions. 1084 assertions, covering:
+No dependencies, any recent node (tested on 24). It replays every transcript in
+`../examples/` through the real modules under node, and exercises the composer's parts
+builder, the plain rendering and the request bodies as pure functions. 1525 assertions
+at the time of writing, covering:
 
-- rc.4: one bucket per plan with the plans of each transcript in order, their final
-  status and version; every run's mode; `plan_id` on every plan-scoped event and none
-  in a side run; the view following the open plan and a selected card; the plan part
-  (accept as proposed, adjusted items, its plain rendering and validation); the plan
-  cards offering only the actions a status allows
+- rc.4: one bucket per plan with the plans of each transcript in order, their modules,
+  final status and version; every run's mode; `plan_id` on every plan-scoped event and
+  none in a side run; the view following the open plan and a selected card; the plan
+  part (accept as proposed, adjusted items, its plain rendering and validation); the
+  plan cards offering only the actions a status allows
+- rc.5, from the transcripts: every plan names its modules in `workflows`, every item one
+  of them, every step id is `<workflow>/<id>`, every execute run names its module, and a
+  gate check's id is `<workflow>/chk-<gate-id>`. S8 is asserted by what happens in it rather
+  than by counts: one plan across several modules, every proposed revision drawn with its diff
+  and `Accept v<n>`, `depends_on` shown, no done item removed or changed, a redirect on the card
+  and in the run list, an execute run per module, a version entry per version, the advisory
+  folder in its settings review. Any transcript without expectations is also replayed as a
+  smoke test: known event types, rc.5 shapes, the cards and panel render, replay is idempotent
+- rc.5, from synthetic events: a revision stays in its plan's bucket; `open_plan_ids` and
+  the highlighted current card; module chips; the diff of a revision (added, removed struck
+  through, counts against the accepted version), `depends_on`, the version history; accepting
+  a revision with its `based_on_version`; the adjust editor (done items locked, a module
+  set, dependency order, a removed dependency, the items sent); `options.mode: revise` with
+  `plan_id`; the actions per status (Revise, Stop and change, no Reopen, nothing while
+  another plan executes); steps grouped by module; a check's module; a redirected run on
+  the card and in the run list; unknown modules, statuses and changes still rendering
+- rc.5 settings review: `file_folder` and `image_folder` rendered as folder fields with
+  their recommendation preselected (also outside the suggestions when `other_allowed`),
+  the reason, and an `advisory` tag
 
 - every `data:` frame parses, and the SSE `id:` and `event:` fields agree with the
   payload's `seq` and `type`
@@ -192,7 +275,7 @@ functions. 1084 assertions, covering:
   approval chain, artifacts, preview, tool calls, interactions, terminal run
   statuses and recorded Problems match the transcripts
 - a gate-backed check names its gate, its kind and its evidence, and its id follows
-  `chk-<gate-id>`
+  `<workflow>/chk-<gate-id>` (`chk-<gate-id>` before rc.5)
 - no event carries a `GateResult`, so the reducer never invents one
 - `auth.required` is keyed by `connection_id` and carries the `connector` type, so
   two connections of the same type are distinct entries
@@ -459,6 +542,8 @@ prefilled settings editor.
 | `proposed[].evidence` | the quoted fragment of the user's message, under the row |
 | `proposed[].options` / `missing[].options` | the control is a select over them, with each option's `ref` shown as a chip |
 | `missing[]` | one empty row, marked required, that the run cannot proceed without |
+| `missing[].recommended`, `reason`, `other_allowed` | the recommendation preselected with its reason; with `other_allowed` the options are suggestions in a datalist and any id may be typed |
+| `file_folder`, `image_folder` (rc.5) | rendered like `folder`: a folder id field with the node's default file or image folder preselected, its reason, any other folder allowed, tagged `advisory` |
 
 `source` is the whole point of the tag: `from your text` means GenAIx guessed from
 what the user wrote and the evidence quote says from which words, `from context`
@@ -575,7 +660,7 @@ Every operation in `openapi.yaml` has a method in `lib/api.js`. The UI drives:
 | Start-up | `GET /ping`, `GET /me`, `GET /workflows` |
 | MCP | `GET /mcp/connectors`; `GET`, `POST /mcp/connections`; `GET`, `PATCH`, `DELETE /mcp/connections/{id}`; `GET`, `PUT`, `DELETE /mcp/connections/{id}/authorization` |
 | Sessions | `POST /sessions` (with or without `workflow`), `GET /sessions` with `status`, `workflow` and `plan_status`, `GET /sessions/{id}`, `PATCH /sessions/{id}`, `POST /sessions/{id}/transitions` (`archive`, `unarchive`) |
-| Plans | `GET /sessions/{id}/plans`, `GET /sessions/{id}/plans/{plan_id}`, `POST /sessions/{id}/plans/{plan_id}/transitions` with `acknowledge_checks`, and the `plan` part on a message |
+| Plans | `GET /sessions/{id}/plans`, `GET /sessions/{id}/plans/{plan_id}`, `POST /sessions/{id}/plans/{plan_id}/transitions` (`release`, `publish`, `request_review`, `discard`) with `acknowledge_checks`, the `plan` part on a message (as proposed or adjusted, a revision too), and `options.mode: revise` with `options.plan_id` |
 | Turns | `POST /sessions/{id}/messages`, `GET /sessions/{id}/messages`, `POST /sessions/{id}/runs/{run_id}/cancel` |
 | Stream | `GET /sessions/{id}/events` with `after`, `Last-Event-ID` and reconnect |
 | Interactions | `POST /sessions/{id}/interactions/{interaction_id}`, and `reply_to_interaction` on a message |
@@ -601,7 +686,7 @@ through `reply_to_interaction`.
 The session list and the session header show the session's plan count, the session
 header the current run's mode and a side run while one works, the new-session form
 disables a workflow whose `available` is false and shows its `reason`, and the plans
-column raises a badge on `workflow_version_drift` of the plan shown. The session header also lists the connections the session
+column raises a badge on `workflow_version_drift` of the plan shown, naming its modules and versions. The session header also lists the connections the session
 works against, from `context.connection_ids`.
 
 The new-session form offers a connection picker per entry in the workflow's
@@ -680,7 +765,7 @@ silence, which is longer than the 15-second heartbeat interval.
 - **Gates are as fresh as the last snapshot fetch.** They are not in the event
   stream, so the client re-fetches the shown plan's snapshot when a gate-backed
   check arrives, debounced by 600 ms. A gate whose result produces no check is not
-  noticed until the next transition or reopen.
+  noticed until the next transition or revision.
 - **The OAuth2 flow is only started, never completed here.** `action: start` and the
   returned `authorization_url` are shown; the callback lands on GenAIx, and this
   client polls with Re-check rather than listening for anything. No Phase One server
@@ -705,6 +790,13 @@ silence, which is longer than the 15-second heartbeat interval.
   noticed when a run fails or the list is re-read, not by a timer.
 - **Replay mode is read-only.** The composer, the transitions, the plan actions and the
   interaction cards are disabled, because there is no server to post to.
-- **A plan is accepted as proposed only.** The `plan` part with adjusted items is built and
-  validated by `lib/compose.js` (`buildPlanPart`), but no editor for the items exists here.
+- **The adjust editor sets labels, modules, order, removal and new items only.** An item's
+  `kind`, `target` and `depends_on` are kept as GenAIx proposed them (a new item's are chosen by
+  GenAIx); `buildPlanPart` would carry them, but there are no controls for them.
+- **A removed item cannot be brought back in the adjust editor.** The proposal dropped it, and the
+  contract does not say whether listing its id in an adjusted plan restores it; the client does not
+  offer it. Revise the plan with a message instead.
+- **The editor is redrawn on plan events.** Its rows live in the client's state, so typed edits
+  survive a redraw, but the focus does not. A revision arriving while it is open closes it on Accept
+  with a note rather than sending a part based on the older version.
 - **A side run cannot be cancelled from the UI.** Cancel targets the main run.

@@ -1,6 +1,6 @@
 {
   "$schema_note": "Specification of the Gentics CMS MCP tool surface (cms-mcp). Companion document: stage1/04-mcp-scope.md. Every inputSchema and outputSchema is JSON Schema draft 2020-12. $ref values resolve against the root of THIS document; dereference them before handing a schema to an MCP client. Tool names are snake_case; input and output field names are camelCase, identical to the CMS REST model names. Input schemas are strict (additionalProperties false); output schemas are intentionally open so cms-mcp can add fields additively.",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0-rc.5",
   "changelog": [
     {
       "version": "1.0.0-draft.1",
@@ -33,9 +33,14 @@
       "version": "1.0.0-rc.4",
       "summary": "Agreed by all parties (2026-10-12). create_folder added to content_write; the URL source of upload_file made normative; the list of GenAIx-side tools follows the GenAIx API 1.0.0-rc.4, in which a session holds several plans.",
       "detail": "(1) New tool create_folder (content_write, composite, phase one, S1): creates a folder below a parent folder in the parent's node, requires the folder permission create on the parent, refuses a duplicate name in the parent (failOnDuplicate) and returns the folder with created. (2) upload_file: the URL source, previously to be confirmed, is normative. The CMS fetches the URL itself, https only (http only for localhost in development), from hosts on the installation allowlist mcp.upload_url_hosts (environment MCP_UPLOAD_URL_HOSTS; empty refuses URL sources), follows no redirects, enforces connect 10 s and total 60 s timeouts and at most 25 MB, and refuses an expiresAt in the past without fetching. A refused or failed URL source is a tool error starting with 'URL source refused:'; the client may fall back to source.kind base64 (at most 5 MB, unchanged). GenAIx passes a short-lived signed link to a session file (GET /api/v1/file-links/{token} of the GenAIx API). (3) genaix_side_tools gains draft_plan (the session agent opens a new plan under a workflow module; the module's proposing run follows), recall (read-only: earlier turns, parts, tool results, the record of closed plans and user decisions, exactly) and load_skill (a module or corpus skill on demand), which GenAIx offered already without listing it. Transport and the remaining tools are unchanged; 1.0.0-rc.3 of the GenAIx API left this file at 1.0.0-rc.2."
+    },
+    {
+      "version": "1.0.0-rc.5",
+      "summary": "Draft for review (2026-10-14); 1.0.0-rc.4 stays the agreed version until this is agreed. The GenAIx-side tools follow the GenAIx API 1.0.0-rc.5, in which a plan is living and may use several workflow modules: draft_plan takes optional workflows instead of a required workflow, and revise_plan is new. The CMS tool surface is unchanged.",
+      "detail": "(1) draft_plan: the session agent names the goal of new work and may pass the workflow modules it expects (workflows, module ids); the plan's proposing run picks the modules the work needs, splits it into items, each naming its module, and orders them by their dependencies. The required single workflow of 1.0.0-rc.4 is gone. (2) New revise_plan(plan_id, instruction): a message about the work of an existing plan revises that plan as a new version instead of drafting another; items finished in an earlier version stay done. A plan that is executing is redirected by GenAIx's router, not by this tool (its run is cancelled with cancel_reason redirected, then the proposing run follows). Every plan but a discarded or superseded one is revisable. (3) genaix_side_tools gains schemas, the input schemas of draft_plan and revise_plan, because the GenAIx API now depends on their arguments. Transport, groups and every CMS tool are unchanged."
     }
   ],
-  "status": "1.0.0-rc.4 agreed and frozen for development (release candidate 4); 1.0.0 at the demo-readiness checkpoint",
+  "status": "1.0.0-rc.5 draft for review; 1.0.0-rc.4 stays agreed and frozen for development (release candidate 4) until rc.5 is agreed; 1.0.0 at the demo-readiness checkpoint",
   "owner": {
     "specification": "ioflair",
     "implementation": "Gentics (cms-mcp Java module)"
@@ -104,7 +109,7 @@
     }
   ],
   "genaix_side_tools": {
-    "description": "Not CMS tools and not part of this server. Listed so the division is unambiguous. upload_session_file uploads a session file into a CMS folder through upload_file (a signed GenAIx link, base64 as the fallback) and is offered instead of upload_file. draft_plan is offered to the session agent only, the plan tools (report_step, update_plan, report_check, set_derived_settings) to a plan's runs only.",
+    "description": "Not CMS tools and not part of this server. Listed so the division is unambiguous. upload_session_file uploads a session file into a CMS folder through upload_file (a signed GenAIx link, base64 as the fallback) and is offered instead of upload_file. draft_plan and revise_plan are offered to the session agent only, the plan tools (report_step, update_plan, report_check, set_derived_settings) to a plan's runs only. schemas holds the input schemas of draft_plan and revise_plan (since 1.0.0-rc.5), because the GenAIx API depends on their arguments; the other GenAIx-side tools are specified by GenAIx alone.",
     "tools": [
       "validate_handlebars_template",
       "report_step",
@@ -116,8 +121,75 @@
       "set_derived_settings",
       "load_skill",
       "draft_plan",
+      "revise_plan",
       "recall",
       "upload_session_file"
+    ],
+    "schemas": [
+      {
+        "name": "draft_plan",
+        "title": "Draft a plan",
+        "description": "Starts a new plan for a piece of work the user asked for: a change to the CMS that no existing plan of this session covers, with unrelated objects and an unrelated goal. State the goal in one or two sentences, in the user's terms. Do NOT call it for a question (answer it) or for a follow-up on the work of an existing plan, even a finished or published one (call revise_plan). You may name the workflow modules you expect in workflows; the plan's proposing run picks the modules the work needs from the catalogue, splits the work into items and orders them, so a guess is never binding. The plan appears as drafting and its proposing run follows on the same message; nothing is written before the user accepts.",
+        "inputSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "goal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "What the work is to achieve, in the user's terms."
+            },
+            "workflows": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "uniqueItems": true,
+              "description": "Optional. Ids of the workflow modules you expect the work to need, from the catalogue, such as content_create or content_edit. A hint, not a binding choice.",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{2,39}$"
+              }
+            },
+            "inputs": {
+              "type": "object",
+              "description": "Optional. Module inputs keyed by module id, each validated against that module's inputs_schema; for content_edit the pages to edit as references.",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "goal"
+          ]
+        }
+      },
+      {
+        "name": "revise_plan",
+        "title": "Revise a plan",
+        "description": "Revises an existing plan of this session as a new version, for a message that concerns the plan's objects or continues its goal: 'make it more colourful', 'also link the PDF', 'the link text should be different'. Use it instead of draft_plan for every follow-up on the same work, whether the plan is proposed, done, released, published or review_requested. Items finished in an earlier version stay done and are not run again; to undo one, ask for a further item in the instruction, never for its removal. A plan that is executing is not revised through this tool: GenAIx routes a redirection itself. A discarded or superseded plan cannot be revised: draft_plan instead. The plan's proposing run writes the new version; the user accepts it before anything is written.",
+        "inputSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The plan to revise, Plan.id. Usually the session's open_plan_id, the plan the conversation currently works on; one of open_plan_ids, or a published or review_requested plan."
+            },
+            "instruction": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "description": "What should change, in the user's terms, as the proposing run is to read it."
+            }
+          },
+          "required": [
+            "plan_id",
+            "instruction"
+          ]
+        }
+      }
     ]
   },
   "transport": {

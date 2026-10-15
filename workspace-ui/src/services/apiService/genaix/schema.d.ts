@@ -384,19 +384,22 @@ export interface paths {
          * Create a session
          * @description Creates a session owned by (installation token, subject). Since `1.0.0-rc.4` a
          *     session is **one conversation**, and the work it carries out is a sequence of
-         *     **plans** (`GET /sessions/{session_id}/plans`), each under its own workflow module
-         *     with its own steps, checks, gates, publications and lifecycle. The rules every
-         *     session keeps, enforced by GenAIx and never left to the model:
+         *     **plans** (`GET /sessions/{session_id}/plans`), each carried out by one or more
+         *     workflow modules (since `1.0.0-rc.5`; one module before) with its own steps, checks,
+         *     gates, publications and lifecycle. The rules every session keeps, enforced by GenAIx
+         *     and never left to the model:
          *
          *     1. **Plans never mix.** Every write, check, gate result, preview and publication
          *        belongs to exactly one plan (`plan_id`); at most one plan executes at a time; a
-         *        closed plan never changes again.
-         *     2. **The agent always knows the current task**: its context starts with the open
-         *        plan, and closed plans appear as a factual history.
+         *        final plan (`discarded`, `superseded`) never changes again, and any other changes
+         *        only by a new version the user accepts (since `1.0.0-rc.5`).
+         *     2. **The agent always knows the current task**: its context starts with the plan
+         *        the conversation works on (`open_plan_id`), and closed plans appear as a factual
+         *        history.
          *     3. **Only what the user accepted changes the CMS.** Write tools exist only in a plan
-         *        the user accepted, and a write must target an object of that plan
-         *        (`plan_scope_violation` otherwise). Releasing and publishing are the user's
-         *        transitions of a plan.
+         *        the user accepted, in the version that contains the write, and a write must
+         *        target an object of that plan (`plan_scope_violation` otherwise). Releasing and
+         *        publishing are the user's transitions of a plan.
          *     4. **Reading is free**, with or without a plan, at any time.
          *     5. **The agent proposes, the user accepts**, as proposed or adjusted, in the plan
          *        card (`plan` part with `plan_id`).
@@ -406,22 +409,23 @@ export interface paths {
          *
          *     Without `workflow` the session starts with the **session agent**, which reads,
          *     answers and proposes plans; that is the normal start of a Workspace conversation.
-         *     With `workflow` (a CMS context action such as "Create page here") the first plan
-         *     is drafted under that module at once. A session has no workflow of its own any
-         *     more, so `SessionPatch` has no `workflow` member either: a `PATCH` carrying one is
-         *     rejected as `422` with `genaix_code: validation_failed` like any other unknown
-         *     property.
+         *     With `workflow` (a CMS context action such as "Create page here") the first plan is
+         *     drafted at once, naming that module as the one the user expects; its proposing run
+         *     may add the further modules the work needs (since `1.0.0-rc.5`). A session has no
+         *     workflow of its own any more, so `SessionPatch` has no `workflow` member either: a
+         *     `PATCH` carrying one is rejected as `422` with `genaix_code: validation_failed` like
+         *     any other unknown property.
          *
          *     ### Continuing from an earlier session
          *
          *     `continued_from` (since `1.0.0-rc.3`) names an earlier conversation this one builds
          *     on; follow-up work in the same conversation is a further plan, not a new session
-         *     (since `1.0.0-rc.4`). It must be a session of the same
-         *     installation and the same subject; anything else, unknown and foreign alike, is
-         *     `422` with pointer `/continued_from`, so the call leaks nothing about other
-         *     sessions. GenAIx gives the agent the earlier session's user messages, its final
-         *     assistant messages and its `cms_objects` as read-only context. It copies no files,
-         *     no authorizations, no plan and no workflow state. The link is returned as
+         *     (since `1.0.0-rc.4`), or a revision of its plan (since `1.0.0-rc.5`). It must be a
+         *     session of the same installation and the same subject; anything else, unknown and
+         *     foreign alike, is `422` with pointer `/continued_from`, so the call leaks nothing
+         *     about other sessions. GenAIx gives the agent the earlier session's user messages,
+         *     its final assistant messages and its `cms_objects` as read-only context. It copies
+         *     no files, no authorizations, no plan and no workflow state. The link is returned as
          *     `Session.continued_from`, is immutable, and `GET /sessions?continued_from=<id>`
          *     lists the follow-ups of a session.
          *
@@ -591,10 +595,11 @@ export interface paths {
         /**
          * The plans of a session
          * @description Every plan of the session, oldest first, in short (since `1.0.0-rc.4`): the plan
-         *     cards a client draws in the conversation, and the ledger of closed work. At most one
-         *     plan is open unless a module's `plan_policy.concurrency` allows a new plan beside a
-         *     released one, and at most one executes. The state of one plan is
-         *     `GET /sessions/{session_id}/plans/{plan_id}`.
+         *     cards a client draws in the conversation, and the ledger of closed work. Several
+         *     plans may be open (since `1.0.0-rc.5`; `Session.open_plan_ids`), at most one
+         *     executes. A revised plan keeps its place and its `id`: it is listed once, at its
+         *     current `version`, with the modules it uses in `workflows`. The state of one plan,
+         *     with the history of its versions, is `GET /sessions/{session_id}/plans/{plan_id}`.
          */
         get: operations["listPlans"];
         put?: never;
@@ -617,7 +622,10 @@ export interface paths {
          * @description The plan, its steps, checks, gates, approval chain, publications, derived settings,
          *     objects and previews in one snapshot (since `1.0.0-rc.4`; for the session as a
          *     whole `GET /sessions/{session_id}/workflow` before). The reconnect counterpart of the
-         *     plan-scoped events carrying this `plan_id`. `404` with `genaix_code:
+         *     plan-scoped events carrying this `plan_id`. Since `1.0.0-rc.5` the plan may use
+         *     several modules (`workflows`, in run order; every item, step, gate and check names
+         *     its own `workflow`), and `plan.versions` is the history of its versions; steps,
+         *     checks, gates and publications are those of all its versions. `404` with `genaix_code:
          *     plan_not_found` for a plan id the session does not have.
          */
         get: operations["getPlan"];
@@ -647,15 +655,16 @@ export interface paths {
          *     | action | from (`PlanStatus`) | to | starts a run |
          *     |---|---|---|---|
          *     | `release` | `done` (also `running`, which stops it) | `released` | no |
-         *     | `reopen` | `released`, `review_requested`, `published` | `accepted` | no |
          *     | `publish` | `released` | `published` or `review_requested` | yes |
          *     | `request_review` | `released` | `review_requested` | yes |
          *     | `discard` | any open status | `discarded` | only with `on_discard: restore` |
          *
          *     Accepting a plan is not a transition: it is the user's message with a `plan` part
-         *     naming the plan, so the acceptance is part of the conversation.
-         *     A `reopen` of a published plan makes it executable again for corrections; its pages
-         *     stay published until the next `publish`.
+         *     naming the plan, so the acceptance is part of the conversation. Neither is revising
+         *     it (since `1.0.0-rc.5`, which removes rc.4's `reopen`): a message about the work of
+         *     a `done`, `released`, `published` or `review_requested` plan makes it `drafting`,
+         *     then `proposed` at the next version (`POST /sessions/{session_id}/messages`); the
+         *     pages of a published plan stay online until the next `publish`.
          *
          *     `release` stops generation: the plan's active run is cancelled before the status flips,
          *     **after** the gates have passed. The gates run first (since `1.0.0-rc.2`): a
@@ -669,9 +678,10 @@ export interface paths {
          *     transition run has landed; the outcome arrives on the event stream and in the next
          *     `GET /sessions/{session_id}/plans/{plan_id}`.
          *
-         *     **Closed plans.** A transition on a closed plan (`published` except `reopen`,
-         *     `review_requested` except `reopen`, `discarded`, `superseded`) is `409` with
-         *     `genaix_code: plan_closed`; an unknown plan id is `404` `plan_not_found`.
+         *     **Closed plans.** A transition on a closed plan, settled (`published`,
+         *     `review_requested`) or final (`discarded`, `superseded`), is `409` with
+         *     `genaix_code: plan_closed`; an unknown plan id is `404` `plan_not_found`. A settled
+         *     plan changes only through a revision.
          *
          *     **Every page the plan wrote** (since `1.0.0-rc.3`, per plan since `1.0.0-rc.4`).
          *     `publish` and `request_review` act on every page the plan created or changed: the
@@ -681,7 +691,11 @@ export interface paths {
          *     `PlanState.publications`, resolved from the permissions on **its own folder**, so one
          *     plan can publish one page directly and send another to review. The array is
          *     announced whole by `publications.updated` with the plan's `plan_id`. Pages another
-         *     plan of the session wrote are never touched.
+         *     plan of the session wrote are never touched. The publications of a revised plan
+         *     accumulate over its versions (since `1.0.0-rc.5`): a page a later version wrote again
+         *     is `pending` again, and `publish` sends out the pages of every version. Publications
+         *     are pages only: a file the plan uploaded is not published by GenAIx in rc.5; the
+         *     CMS publishes it under its own rules.
          *
          *     - `publish` handles every entry that is `pending` or `failed`, each directly or as a
          *       review request according to its folder; entries already `published` or
@@ -713,7 +727,8 @@ export interface paths {
          *     There is no partial discard: a page the user does not want published is taken out of
          *     the work by editing the plan before it is executed.
          *
-         *     **Discard** follows the module's `plan_policy.on_discard`: `keep` leaves the pages the
+         *     **Discard** follows `plan_policy.on_discard`, the strictest value of the plan's
+         *     modules (since `1.0.0-rc.5`; `restore` over `keep`): `keep` leaves the pages the
          *     plan wrote as they are (unpublished changes stay as drafts in the CMS) and answers
          *     `200`; `restore` restores each page's version from before the plan in a transition
          *     run and answers `202`, the plan being `discarded` once the run has landed. A plan that
@@ -733,8 +748,10 @@ export interface paths {
          *     still returns `202`; the final plan status follows the table above.
          *
          *     **Quality gates.** Before `release`, `publish` and `request_review` the harness runs
-         *     the plan's workflow module's gates for that moment (`when: before_release` or
-         *     `before_publish`) and re-checks the ones already run. The transition is refused with
+         *     the gates of every module of the plan for that moment (`when: before_release` or
+         *     `before_publish`; since `1.0.0-rc.5` over each module's own items) and re-checks the
+         *     ones already run. A revision resets the release, so a revised plan runs its
+         *     `before_release` gates again at its next `release`. The transition is refused with
          *     `409` and `genaix_code: quality_gate_failed` while **any** gate-sourced check is
          *     failing, blocking or not. The two kinds differ in how they clear:
          *
@@ -853,32 +870,91 @@ export interface paths {
          *       the user selected instead of what the model re-infers from prose.
          *     - `file_ref` parts attach session files; `mode: verbatim` puts the whole file
          *       under the same gate.
-         *     - a `plan` part accepts the open proposed plan it names in the version the user
+         *     - a `plan` part accepts the proposed plan it names in the version the user
          *       adjusted, and the run executes that plan (below).
          *
-         *     ### Plans: drafting, proposing, accepting
+         *     ### Plans: drafting, proposing, accepting, revising
          *
          *     Since `1.0.0-rc.4` a message goes to the **session agent** unless it accepts a plan
          *     or answers a plan run's question. The session agent reads and answers freely; when
-         *     the user asks for a change it drafts a plan under the fitting workflow module
-         *     (`plan.updated` with `status: drafting`), and that module's proposing run reads,
-         *     plans and ends without any CMS write (`status: proposed`). A module with
-         *     `plan_approval: true` (`content_create`, `content_edit`; since `1.0.0-rc.3`) always
-         *     proposes like this; `plan_only` asks the same of any module for one turn.
+         *     the user asks for a change it drafts a plan (`plan.updated` with `status:
+         *     drafting`), and the plan's proposing run reads, plans and ends without any CMS write
+         *     (`status: proposed`). A plan with a module that has `plan_approval: true`
+         *     (`content_create`, `content_edit`; since `1.0.0-rc.3`) always proposes like this;
+         *     `plan_only` asks the same of any module for one turn.
          *
-         *     Only the user accepts a plan, and only with a **`plan` part** naming it, on a message
-         *     in `options.mode: execute` (since `1.0.0-rc.4`): without `items` it accepts the plan
-         *     as proposed, with `items` as the user adjusted it. A plain message is never an
-         *     acceptance, because `execute` is the default mode and the user may be asking for
-         *     something else (S7: "make it a news item instead" drafts a new plan, which
-         *     supersedes the proposed one); every message without a `plan` part goes to the
-         *     session agent. The same `plan` part naming a `done` plan at its current version,
-         *     without `items`, runs that plan again (`running`) for corrections within the scope
-         *     the user accepted, a gate that refused the release for instance.
+         *     **Several modules** (since `1.0.0-rc.5`; one module per plan before). The proposing
+         *     run picks the modules the work needs by their `entry_hints` and their `produces`,
+         *     splits
+         *     the work into items, each naming its module (`PlanItem.workflow`), and orders them
+         *     by their dependencies (`depends_on`): an item that creates an object comes before
+         *     every item that uses it, and a page is created before it is edited.
+         *     `Plan.workflows` lists the plan's modules in the order GenAIx runs them. An accepted
+         *     plan runs as one execute run per contiguous segment of pending items of the same
+         *     module, in item order (`Run.workflow` names it), the segments one after the other
+         *     without another acceptance. Each item is bound by its own module's write scope, and
+         *     the plan needs acceptance when any of its modules writes. A plan that needs no
+         *     acceptance, because all its modules only read, runs at once with the modules the
+         *     session agent named in `draft_plan` (`workflows`).
+         *
+         *     **Revising** (since `1.0.0-rc.5`). A plan covers a piece of work, not one change: a
+         *     message about the work of an existing plan **revises** that plan instead of drafting
+         *     another. The session agent decides: a message that concerns the plan's objects or
+         *     continues its goal is a revision (its `genaix` tool `revise_plan`), unrelated
+         *     objects and an unrelated goal are new work (`draft_plan`), and a question is
+         *     answered without a plan. Every plan is revisable except a `discarded` or
+         *     `superseded` one. The plan's proposing run, now on the existing plan, emits
+         *     `plan.updated` with `status: drafting`, reads and plans with every write withheld,
+         *     and ends with the plan `proposed` at `version + 1`, under the same `id`, with
+         *     `reason` `Revised: <what changed>`. While it drafts, the plan keeps its current
+         *     version and items; the new version replaces them when the proposing run ends. A
+         *     revised `published` or `review_requested` plan is open again (`closed_at` cleared,
+         *     `status: drafting`); its pages stay online until the next `publish`. In a revised
+         *     version:
+         *
+         *     - `PlanItem.version` is the version that added the item, and `change` what this
+         *       version did to it against the version accepted before it: `added`, `changed`,
+         *       `removed` or `unchanged`. A client renders the difference from it. Once the
+         *       revision is accepted, an item keeps that `change` until the next revision; on a
+         *       plan never accepted every item is `added`, and an item dropped before any
+         *       acceptance disappears.
+         *     - A `removed` item (`change` and `status` `removed`) stays in the list until the
+         *       version is accepted; then it is dropped.
+         *     - A `done` item is never removed or changed, because its write happened. Undoing it
+         *       is a further item, for example `kind: update` "restore the previous title".
+         *     - The user accepts it with a `plan` part, exactly as a first proposal, and the
+         *       executing run carries out only the items with `status: pending`; items finished in
+         *       an earlier version are not run again.
+         *     - Publications and checks accumulate over the versions, and the revision resets the
+         *       plan's release: the `before_release` gates run again at the next `release`.
+         *     - One `settings_review` per version, covering the keys the modules of its pending
+         *       items need.
+         *
+         *     `options.mode: revise` makes a message a revision of the plan `options.plan_id`
+         *     (default `Session.open_plan_id`) whatever the session agent would decide, and a
+         *     redirection when that plan executes (below); `404` `plan_not_found` for a plan the
+         *     session does not have, `409` `plan_not_revisable` for a `discarded` or `superseded`
+         *     one. Several plans may be open at once (`Session.open_plan_ids`; rc.4's
+         *     `plan_policy.concurrency` is removed), and `Session.open_plan_id` is the one the
+         *     conversation currently works on, the most recently drafted or revised open plan.
+         *     A proposal is no longer superseded by a new proposal of the same work, it is
+         *     revised: `superseded` remains for a plan still `drafting` or `proposed` that the
+         *     user replaces with unrelated work, saying so.
+         *
+         *     Only the user accepts a plan, and only with a **`plan` part** naming it, on a
+         *     message in `options.mode: execute` (since `1.0.0-rc.4`): without `items` it accepts
+         *     the plan as proposed, with `items` as the user adjusted it. A plain message is never
+         *     an acceptance, because `execute` is the default mode and the user may be asking for
+         *     something else (S7: "make it a news item instead" revises the proposed plan since
+         *     `1.0.0-rc.5`; it drafted a new plan, which superseded the proposed one, before);
+         *     every message without a `plan` part goes to the session agent. The same `plan` part
+         *     naming a `done` plan at its current version, without `items`, runs that plan again
+         *     (`running`) for corrections within the scope the user accepted, a gate that refused
+         *     the release for instance.
          *
          *     - At most one `plan` part per message, and only with `mode: execute`; otherwise
          *       `422` with `genaix_code: validation_failed` and pointer `/parts/<i>`.
-         *     - `plan.plan_id` must name the session's open proposed plan, otherwise `409` with
+         *     - `plan.plan_id` must name a proposed plan of the session, otherwise `409` with
          *       `plan_closed` (a closed plan, or none of this session) or `plan_not_proposed` (a
          *       plan still drafting or already accepted).
          *     - `plan.based_on_version` must be that plan's current `version`, otherwise `409`
@@ -886,16 +962,31 @@ export interface paths {
          *       `GET /sessions/{session_id}/plans/{plan_id}` and lets the user adjust the current
          *       version.
          *     - Items in order are the order of work. An item whose `id` equals a current plan
-         *       item keeps that step, with its `kind` and `target` unless the part sets them; an
-         *       item without an `id`, or with one the plan does not have, is a new step and GenAIx
-         *       assigns its id; a current step the part does not list is removed.
+         *       item keeps that step, with its `kind`, `target`, `workflow` and `depends_on`
+         *       unless the part sets them; an item without an `id`, or with one the plan does not
+         *       have, is a new step, GenAIx assigns its id and, without `workflow`, its module; a
+         *       current step the part does not list is removed.
+         *     - A `done` item is kept as it is (since `1.0.0-rc.5`): leaving it out does not
+         *       remove it, and a part that changes its `label`, `kind`, `target` or `workflow` is
+         *       `422` with `genaix_code: validation_failed` at `/parts/<i>/plan/items/<j>`.
+         *     - An order that puts an item before one it depends on is `422` with
+         *       `genaix_code: validation_failed` and `code: dependency_order` at
+         *       `/parts/<i>/plan/items/<j>` (since `1.0.0-rc.5`).
+         *     - In a revision, listing the id of an item the revision marks `removed` brings it
+         *       back, with the `change` it had before the revision; leaving out an item another
+         *       kept item depends on is `422` `dependency_order` at that kept item.
          *
-         *     The run starts with a `plan.updated` at version current + 1 holding exactly the plan
-         *     it will execute, with `reason` `Accepted as proposed.` or `Adjusted by the user: ...`,
-         *     and then works; the plan is `accepted`, then `running`. When the agent has to
+         *     Accepted as proposed, the plan keeps its `version`: the run starts with a
+         *     `plan.updated` of the same version with `status: accepted`. Accepted as adjusted, the
+         *     run starts with a `plan.updated` at version current + 1 holding exactly the plan it
+         *     will execute, with `reason` `Adjusted by the user: ...` (since `1.0.0-rc.5`; in rc.4
+         *     an acceptance as proposed was version current + 1 too, with `reason` `Accepted as
+         *     proposed.`). `version` increments on every change of the plan's content (items,
+         *     summary), never on a status change alone. The run then works; the plan is
+         *     `accepted`, then `running`. When the agent has to
          *     deviate from that plan - merge, split or drop a step - it emits a further
          *     `plan.updated` whose `reason` says why; it never deviates silently, and it never
-         *     adds an item or a target after acceptance: more work is a new proposal the user
+         *     adds an item or a target after acceptance: more work is a revision the user
          *     accepts. A CMS write
          *     outside the plan's objects is refused before it reaches the CMS: `tool.failed` with
          *     a `422` problem `plan_scope_violation`, then `error` with `recoverable: true`; the
@@ -909,17 +1000,20 @@ export interface paths {
          *     call that writes to the CMS each of them the run uses must come from a `setting`
          *     part in a message, from the session `context`, or from a `settings_review`
          *     interaction the user answered. Reads and searches run before that point. Every other
-         *     setting key is advisory and never blocks.
+         *     setting key is advisory and never blocks; `file_folder` and `image_folder` (since
+         *     `1.0.0-rc.5`) are the advisory folder keys of an upload, described on
+         *     `DerivedSettings`.
          *
          *     When a write-governing setting was inferred from the text, or is missing altogether,
-         *     the run raises one batched `interaction.requested` of kind `settings_review`: at most
-         *     one per run, listing in `proposed` what it derived - with the `source` of each value
-         *     and the quoted `evidence` behind a text inference - and in `missing` what it still
-         *     needs. Settings that came from a chip or from the session context are not asked
-         *     again. The answer is a `SettingsAnswer`: `settings`, one real `setting` part per key,
-         *     accepted or corrected. It goes to
-         *     `POST /sessions/{session_id}/interactions/{interaction_id}` or, in the same round
-         *     trip as the next turn, to `reply_to_interaction` below.
+         *     the run raises one batched `interaction.requested` of kind `settings_review`: at
+         *     most one per run (since `1.0.0-rc.5` one per plan version, covering the keys the
+         *     modules of its pending items need), listing in `proposed` what it derived - with the
+         *     `source` of each value and the quoted `evidence` behind a text inference - and in
+         *     `missing` what it still needs. Settings that came from a chip or from the session
+         *     context are not asked again. The answer is a `SettingsAnswer`: `settings`, one real
+         *     `setting` part per key, accepted or corrected. It goes to `POST
+         *     /sessions/{session_id}/interactions/{interaction_id}` or, in the same round trip as
+         *     the next turn, to `reply_to_interaction` below.
          *
          *     **Who raises it** (since `1.0.0-rc.2`): either side, and a client sees one review
          *     per run either way. The agent may ask through its `request_interaction` tool with
@@ -957,17 +1051,39 @@ export interface paths {
          *     the CMS read tools, `read_file`, `load_skill` and `recall` only, no CMS write tool and
          *     no change to the plan, so the
          *     user can keep asking while long work runs. `Session.side_run_id` names it; at most
-         *     one at a time. A message that accepts a plan (its `plan` part) or answers the plan
-         *     run's interaction is never a side run.
+         *     one at a time. A message that accepts a plan (its `plan` part), answers the plan
+         *     run's interaction or redirects the plan is never a side run.
+         *
+         *     **Redirecting (since `1.0.0-rc.5`).** A message while a plan executes (`accepted`,
+         *     `running`) is a question, which gets a side run, or a **redirection** ("stop, use
+         *     red instead"). The router decides; `options.mode: revise` naming the executing plan
+         *     forces a redirection. On a redirection GenAIx:
+         *
+         *     1. requests the cancel of the plan's `execute` run at once; the run stops at the
+         *        next tool boundary, never inside a CMS lock cycle;
+         *     2. emits `run.cancelled` with `run.cancel_reason: redirected`;
+         *     3. starts the plan's proposing run with the message, which emits `plan.updated`
+         *        with `status: drafting`, then `proposed` at `version + 1`.
+         *
+         *     Items the cancelled run finished stay `done`; the item it was working on becomes
+         *     `pending` again, or `done` when its write completed. A step the cancelled segment
+         *     did not finish ends `skipped`, and its `step_end` gates do not run. The `202`
+         *     carries the proposing run's `run_id`.
+         *
+         *     A `drafting` plan can be revised too: a revision while its proposing run is active
+         *     redirects that run the same way, cancelled with `redirected` and started again with
+         *     the message.
          *
          *     `409` with `genaix_code: run_already_active` when the session agent's own run or a
-         *     side run is still active, or when a message that accepts a plan arrives while a
-         *     plan's run is active; the client waits or cancels it first
+         *     side run is still active, or when a message that accepts or adjusts a plan (a
+         *     `plan` part) arrives while a plan's run is active, that plan's or another plan's of
+         *     the session, since at most one plan executes; the client waits or cancels it first
          *     (`POST .../runs/{run_id}/cancel`). `409` with `session_archived` when the session
          *     is archived - unarchive it first. A plan's status never blocks a message. `409`
          *     with `plan_outdated`, `plan_closed` or `plan_not_proposed` when a `plan` part names
          *     a plan version that is no longer current, a closed plan, or a plan that is not
-         *     waiting for acceptance.
+         *     waiting for acceptance; `409` with `plan_not_revisable` when `options.plan_id` names
+         *     a `discarded` or `superseded` plan.
          *
          *     `reply_to_interaction` is a shortcut that answers a pending interaction and
          *     continues in the same call, equivalent to
@@ -1524,9 +1640,9 @@ export interface paths {
          * @deprecated
          * @description **Deprecated since `1.0.0-rc.4`.** A session holds several plans; read them with
          *     `GET /sessions/{session_id}/plans` and `GET /sessions/{session_id}/plans/{plan_id}`.
-         *     This route returns the `PlanState` of the session's open plan, else of its latest
-         *     plan, else `404`, so a client written against one workflow per session keeps
-         *     working for sessions with a single plan.
+         *     This route returns the `PlanState` of the session's current plan (`open_plan_id`),
+         *     else of its latest plan, else `404`, so a client written against one workflow per
+         *     session keeps working for sessions with a single plan.
          *
          *     The complete state of that plan in one snapshot: the plan, the steps with
          *     their substeps, the checks including verbatim proofs, the quality gates of the
@@ -1625,7 +1741,8 @@ export interface components {
                  *     `not_an_option` (a `settings_review` answer value is not one of the
                  *     key's `options`; pointer ends in `/value`), `invalid_url` (a connection
                  *     URL breaks the URL rules), `duplicate` (a second connection at the same
-                 *     URL).
+                 *     URL), `dependency_order` (since `1.0.0-rc.5`: an adjusted plan puts an
+                 *     item before one it `depends_on`; pointer `/parts/<i>/plan/items/<j>`).
                  */
                 code?: string;
             }[];
@@ -1685,10 +1802,13 @@ export interface components {
          *     `1.0.0-rc.4`: `session_released` is replaced by `session_archived` (a session is no
          *     longer released; its plans are), and `plan_not_found`, `plan_closed`,
          *     `plan_not_proposed` and `plan_scope_violation` are new.
+         *
+         *     `1.0.0-rc.5`: `plan_not_revisable` (`409`) is new: `options.plan_id` of a message
+         *     names a `discarded` or `superseded` plan, which can no longer be revised.
          * @example run_already_active
          * @enum {string}
          */
-        GenaixCode: "malformed_request" | "invalid_cursor" | "subject_missing" | "identity_invalid" | "unsupported_accept" | "invalid_installation_token" | "session_forbidden" | "session_not_found" | "run_not_found" | "file_not_found" | "interaction_not_found" | "plan_not_found" | "unknown_workflow" | "run_already_active" | "session_archived" | "workflow_transition_invalid" | "plan_outdated" | "plan_closed" | "plan_not_proposed" | "plan_scope_violation" | "interaction_already_answered" | "interaction_expired" | "events_pruned" | "file_too_large" | "unsupported_media_type" | "validation_failed" | "quality_gate_failed" | "cms_object_locked" | "mcp_connection_not_found" | "mcp_connection_limit" | "mcp_authorization_required" | "mcp_authorization_rejected" | "mcp_unreachable" | "cms_request_failed" | "model_error" | "model_rate_limited" | "rate_limited" | "service_unavailable";
+        GenaixCode: "malformed_request" | "invalid_cursor" | "subject_missing" | "identity_invalid" | "unsupported_accept" | "invalid_installation_token" | "session_forbidden" | "session_not_found" | "run_not_found" | "file_not_found" | "interaction_not_found" | "plan_not_found" | "unknown_workflow" | "run_already_active" | "session_archived" | "workflow_transition_invalid" | "plan_outdated" | "plan_closed" | "plan_not_proposed" | "plan_not_revisable" | "plan_scope_violation" | "interaction_already_answered" | "interaction_expired" | "events_pruned" | "file_too_large" | "unsupported_media_type" | "validation_failed" | "quality_gate_failed" | "cms_object_locked" | "mcp_connection_not_found" | "mcp_connection_limit" | "mcp_authorization_required" | "mcp_authorization_rejected" | "mcp_unreachable" | "cms_request_failed" | "model_error" | "model_rate_limited" | "rate_limited" | "service_unavailable";
         /**
          * Ping
          * @description Result of the installation-token check.
@@ -2215,7 +2335,7 @@ export interface components {
              */
             guidelines: string[];
             /**
-             * @description MCP connections this session works through. Omitted means the user's `default` connection of each connector type a plan's workflow requires. Naming them explicitly is how a client picks which of several instances a session touches. A connection that is deleted or loses its authorization makes the next run fail with `424` and `genaix_code: mcp_authorization_required`.
+             * @description MCP connections this session works through. Omitted means the user's `default` connection of each connector type a plan's modules require. Naming them explicitly is how a client picks which of several instances a session touches. A connection that is deleted or loses its authorization makes the next run fail with `424` and `genaix_code: mcp_authorization_required`.
              * @default []
              */
             connection_ids: string[];
@@ -2239,61 +2359,83 @@ export interface components {
         SessionStatus: "active" | "waiting_for_input" | "archived";
         /**
          * PlanStatus
-         * @description Lifecycle of a plan (since `1.0.0-rc.4`):
+         * @description Lifecycle of a plan (since `1.0.0-rc.4`; living since `1.0.0-rc.5`, when a follow-up
+         *     revises the plan as a new version instead of opening another, and `reopen` is
+         *     gone):
          *
          *     ```
-         *     drafting -> proposed -> accepted -> running -> done -> released -> published
-         *                    |  ^                                       |  ^      review_requested
-         *                    |  +-- adjusted (version + 1)              |  +-- reopen
-         *                    +-> superseded                             v
-         *     any open status ---------------------------------------> discarded
+         *     drafting ─► proposed ─► accepted ─► running ─► done ─► released ─► published / review_requested
+         *                   ▲  │          │          │        │        │              │
+         *                   │  └ adjust   └── redirect ──┘    │        │              │
+         *                   │                                 │        │              │
+         *                   └─────── revise (version + 1, finished items kept) ───────┘
+         *     any open status ─────────────────────────────────────────────► discarded
          *     ```
+         *
+         *     | From | The user… | Becomes |
+         *     |---|---|---|
+         *     | `proposed` | adjusts it in the card (`plan` part with `items`) | `accepted` at version + 1 |
+         *     | `drafting` | writes something else about the same work | its proposing run is redirected: `run.cancelled` with `cancel_reason: redirected`, started again with the message |
+         *     | `proposed` | accepts it as proposed (`plan` part without `items`) | `accepted` at the same version |
+         *     | `proposed` | writes something else about the same work | `drafting`, then `proposed` at version + 1 |
+         *     | `accepted`, `running` | asks a question | unchanged; a side run answers |
+         *     | `accepted`, `running` | redirects ("stop, use red instead") | `run.cancelled` with `cancel_reason: redirected`, then `drafting`, then `proposed` at version + 1 |
+         *     | `done`, `released` | writes a follow-up on the same work | `drafting`, then `proposed` at version + 1 |
+         *     | `published`, `review_requested` | writes a follow-up on the same work | `drafting`, then `proposed` at version + 1 (`closed_at` cleared) |
+         *     | any open status | discards it | `discarded` |
          *
          *     | Status | Meaning |
          *     |---|---|
-         *     | `drafting` | The session agent chose a workflow for new work; the module's proposing run reads and plans with every write withheld. |
+         *     | `drafting` | The session agent drafted new work or a revision; the plan's proposing run reads and plans with every write withheld. |
          *     | `proposed` | A plan version waits for the user. |
          *     | `accepted` | The user accepted a version, as proposed or adjusted; only the user's own message does this. |
-         *     | `running` | A run carries the plan out. |
+         *     | `running` | A run carries the plan's pending items out. |
          *     | `done` | The run finished the plan's items; the `step_end` gates ran. A `plan` part naming it, without `items`, runs it again (`running`) within the accepted scope. |
          *     | `released` | The `before_release` gates passed; the plan's pages wait to be published. |
          *     | `published` / `review_requested` | Every publication of the plan went out, or at least one waits for approval and none failed. |
-         *     | `discarded` | Abandoned by the user; pages already written stay or are restored per the module's `plan_policy.on_discard`. |
-         *     | `superseded` | A newer proposal replaced it before it was accepted. |
+         *     | `discarded` | Abandoned by the user; pages already written stay or are restored per `plan_policy.on_discard`, the strictest of the plan's modules. |
+         *     | `superseded` | Replaced, while `drafting` or `proposed`, by unrelated work the user started instead and said so (since `1.0.0-rc.5`; a new proposal of the same work revises the plan). |
          *
-         *     Open: `drafting` to `released`. Executing: `accepted`, `running`. Closed: the rest.
-         *     A failed or cancelled run leaves its plan where it was (`accepted` after a failed
-         *     execute run, `drafting` after a failed proposing run); the user's next message
-         *     retries. A closed plan never changes again, with one exception: `reopen` makes a `published`
-         *     or `review_requested` plan `accepted` again, for corrections to the pages it wrote
-         *     (they stay online until the next `publish`). `discarded` and `superseded` are final.
-         *     At most one plan of a session executes at a time.
+         *     The statuses fall into three classes (since `1.0.0-rc.5`):
          *
-         *     A plan whose module has no CMS write tool (`content_research`) needs no acceptance:
-         *     it goes from `drafting` to `running` at once, because reading is free. Every module
-         *     with a write tool needs the user's acceptance, as a proposal (`plan_approval: true`)
-         *     or as one confirmation of the drafted plan.
+         *     - **Open:** `drafting` to `released`. Executing: `accepted`, `running`.
+         *     - **Settled:** `published`, `review_requested`. Closed, but revisable.
+         *     - **Final:** `discarded`, `superseded`. Never change again.
+         *
+         *     Closed means settled or final. A failed or cancelled run leaves its plan where it
+         *     was (`accepted` after a failed execute run, `drafting` after a failed proposing run);
+         *     the user's next message retries. A run cancelled by a redirection leads to the
+         *     revision instead. Several plans of a session may be open; at most one executes at a
+         *     time.
+         *
+         *     A plan whose modules have no CMS write tool (`content_research`) needs no
+         *     acceptance: it goes from `drafting` to `running` at once, with the modules the
+         *     session agent named in `draft_plan`, because reading is free. A
+         *     plan with any module that has a write tool needs the user's acceptance, as a
+         *     proposal (`plan_approval: true`) or as one confirmation of the drafted plan.
          * @enum {string}
          */
         PlanStatus: "drafting" | "proposed" | "accepted" | "running" | "done" | "released" | "published" | "review_requested" | "discarded" | "superseded";
         /**
          * SessionBase
-         * @description The session fields themselves. `Session` is this, closed; `SessionCreated` is this plus the ids of the first message and its run. Nothing references `SessionBase` directly on the wire. Since `1.0.0-rc.4` a session is a conversation that holds a sequence of plans: the workflow and its version belong to each plan (`Plan`), the session points at its open and its executing plan. `intent` is present once the first message exists and `model` when the installation pins one.
+         * @description The session fields themselves. `Session` is this, closed; `SessionCreated` is this plus the ids of the first message and its run. Nothing references `SessionBase` directly on the wire. Since `1.0.0-rc.4` a session is a conversation that holds a sequence of plans: the workflow modules and their versions belong to each plan (`Plan`), the session points at its open plans and its executing plan. `intent` is present once the first message exists and `model` when the installation pins one.
          */
         SessionBase: {
             /** Format: uuid */
             id: string;
             /** @description User-set, or derived from the first user message when the client sent none. */
             title?: string;
-            /** @description The module inputs of the session's first plan, validated against that module's `inputs_schema` when the session was created with a `workflow`; every plan's own inputs are on its `PlanState.inputs` (since `1.0.0-rc.4`). Assembled from `context`, the attached files and the first message; stored so a run can be reproduced and a fixture can be generated from it. Empty for a session that started without a workflow. */
+            /** @description The module inputs of the session's first plan, validated against that module's `inputs_schema` when the session was created with a `workflow`; every plan's own inputs are on its `PlanState.inputs` (since `1.0.0-rc.4`; keyed by module id since `1.0.0-rc.5`). Assembled from `context`, the attached files and the first message; stored so a run can be reproduced and a fixture can be generated from it. Empty for a session that started without a workflow. */
             inputs: {
                 [key: string]: unknown;
             };
             /**
              * Format: uuid
-             * @description The plan of this session that is open (`drafting` to `released`), or `null` (since `1.0.0-rc.4`). At most one plan is open unless its module's `plan_policy.concurrency` lets a new plan start while it waits for publishing.
+             * @description The plan the conversation currently works on: the most recently drafted or revised plan that is open (`drafting` to `released`), or `null` (since `1.0.0-rc.4`; since `1.0.0-rc.5` several plans may be open, and this is the one a message revises by default). Every open plan is in `open_plan_ids`.
              */
             open_plan_id: string | null;
+            /** @description Every open plan of this session (`drafting` to `released`), oldest first, empty when none is (since `1.0.0-rc.5`). Contains `open_plan_id` when that is set. */
+            open_plan_ids: string[];
             /**
              * Format: uuid
              * @description The plan that is `accepted` or `running`, or `null` (since `1.0.0-rc.4`). At most one plan of a session executes at a time.
@@ -2343,7 +2485,7 @@ export interface components {
             authorizations: components["schemas"]["SessionAuthorizationSummary"][];
             /**
              * Format: uuid
-             * @description The earlier session this one follows up, as sent in `SessionCreate.continued_from` (since `1.0.0-rc.3`), or `null`. Immutable. The agent of this session sees that session's user messages, final assistant messages and `cms_objects` as read-only context and reaches it through `recall`; nothing else carries over. Since `1.0.0-rc.4` follow-up work inside one conversation is a further plan of the same session; `continued_from` links a new conversation to an earlier one.
+             * @description The earlier session this one follows up, as sent in `SessionCreate.continued_from` (since `1.0.0-rc.3`), or `null`. Immutable. The agent of this session sees that session's user messages, final assistant messages and `cms_objects` as read-only context and reaches it through `recall`; nothing else carries over. Since `1.0.0-rc.4` follow-up work inside one conversation is a further plan of the same session, or since `1.0.0-rc.5` a revision of its plan; `continued_from` links a new conversation to an earlier one.
              */
             readonly continued_from?: string | null;
         };
@@ -2522,7 +2664,7 @@ export interface components {
          *     message and is read-only.
          */
         SessionCreate: {
-            /** @description Optional since `1.0.0-rc.4`. Without it the session starts with the session agent, which reads, answers and proposes plans; this is the normal start of a Workspace conversation. With it (a CMS context action such as "Create page here"), the session's first plan is drafted under this workflow module from `GET /workflows`, and `message` goes to that plan's proposing run. `422` with `unknown_workflow` when no module of that id is installed. Availability (`capabilities.workflows`, `Workflow.available`) is a hint for the client, not a creation rule (since `1.0.0-rc.2`): a plan of a workflow the caller cannot yet act in is drafted, and its run answers `auth.required` and fails with `424` `mcp_authorization_required` until a credential exists; a credential sent in `authorizations` on this call counts for this session at once. */
+            /** @description Optional since `1.0.0-rc.4`. Without it the session starts with the session agent, which reads, answers and proposes plans; this is the normal start of a Workspace conversation. With it (a CMS context action such as "Create page here"), the session's first plan is drafted at once with this workflow module from `GET /workflows`, as `draft_plan` with `workflows: [<workflow>]` would, and `message` goes to that plan's proposing run, which may add the further modules the work needs (since `1.0.0-rc.5`; the plan's only module before). `422` with `unknown_workflow` when no module of that id is installed. Availability (`capabilities.workflows`, `Workflow.available`) is a hint for the client, not a creation rule (since `1.0.0-rc.2`): a plan of a workflow the caller cannot yet act in is drafted, and its run answers `auth.required` and fails with `424` `mcp_authorization_required` until a credential exists; a credential sent in `authorizations` on this call counts for this session at once. */
             workflow?: string;
             title?: string;
             context?: components["schemas"]["SessionContext"];
@@ -2534,7 +2676,7 @@ export interface components {
             authorizations?: components["schemas"]["SessionAuthorizationCreate"][];
             /**
              * Format: uuid
-             * @description An earlier conversation this one builds on (since `1.0.0-rc.3`; since `1.0.0-rc.4` work that follows up inside the same conversation is a further plan of the same session, not a new session). Must be a session of the same installation and subject; otherwise `422` with pointer `/continued_from`, the same answer for an unknown and a foreign id. GenAIx gives the agent that session's user messages, final assistant messages and `cms_objects` as read-only context, and copies no files, authorizations, plan or workflow state. Returned as `Session.continued_from`; not patchable.
+             * @description An earlier conversation this one builds on (since `1.0.0-rc.3`; since `1.0.0-rc.4` work that follows up inside the same conversation is a further plan of the same session, or since `1.0.0-rc.5` a revision of its plan, not a new session). Must be a session of the same installation and subject; otherwise `422` with pointer `/continued_from`, the same answer for an unknown and a foreign id. GenAIx gives the agent that session's user messages, final assistant messages and `cms_objects` as read-only context, and copies no files, authorizations, plan or workflow state. Returned as `Session.continued_from`; not patchable.
              */
             continued_from?: string;
         };
@@ -2549,11 +2691,11 @@ export interface components {
         };
         /**
          * TransitionRequest
-         * @description A transition of one plan, `POST /sessions/{session_id}/plans/{plan_id}/transitions` (since `1.0.0-rc.4`; in earlier versions the session's own transitions). `archive` is a session transition (`SessionTransitionRequest`).
+         * @description A transition of one plan, `POST /sessions/{session_id}/plans/{plan_id}/transitions` (since `1.0.0-rc.4`; in earlier versions the session's own transitions). `archive` is a session transition (`SessionTransitionRequest`). `reopen` is removed since `1.0.0-rc.5`: a follow-up message revises a settled plan instead.
          */
         TransitionRequest: {
             /** @enum {string} */
-            action: "release" | "reopen" | "publish" | "request_review" | "discard";
+            action: "release" | "publish" | "request_review" | "discard";
             /** @description Shown in the approval chain and stored as a system message in the session history. */
             comment?: string;
             /**
@@ -2564,7 +2706,7 @@ export interface components {
             /**
              * @description Ids of **non-blocking** failing checks the user has seen and accepts. They are **required** to get past them: a transition with unacknowledged non-blocking failures is refused with `409` and `genaix_code: quality_gate_failed`, listing them in `acknowledgeable_checks`. Repeating the call with those ids here lets the transition proceed and records the acceptance on each `Check` as `acknowledged_by` and `acknowledged_at`. A **blocking** check can never be acknowledged away: listing one has no effect and the call is refused again until the finding is fixed and the gate re-runs.
              * @example [
-             *       "chk-alt-text"
+             *       "content_create/chk-alt-text"
              *     ]
              */
             acknowledge_checks?: string[];
@@ -2623,13 +2765,18 @@ export interface components {
              */
             plan_id?: string | null;
             /**
+             * @description The workflow module of the segment an `execute` run carries out, `null` for every other mode (since `1.0.0-rc.5`): a `propose` run plans across the modules and picks them. An accepted plan runs one `execute` run per contiguous segment of pending items of the same module, in item order.
+             * @example content_edit
+             */
+            workflow?: string | null;
+            /**
              * @description What the run does (since `1.0.0-rc.4`):
              *
              *     | Mode | Run |
              *     |---|---|
              *     | `session` | The session agent: reads, answers, drafts a plan. No CMS write tool. |
              *     | `side` | A read-only run of the session agent while a plan executes. |
-             *     | `propose` | A plan's proposing run (`drafting`): reads and plans, every write withheld. |
+             *     | `propose` | A plan's proposing run (`drafting`), for a new plan or a revision (since `1.0.0-rc.5`): reads and plans, every write withheld. |
              *     | `execute` | A plan's run after the user accepted it: the only mode with CMS write tools. |
              *     | `transition` | The run of a plan's `publish` or `request_review`. |
              * @enum {string}
@@ -2651,6 +2798,7 @@ export interface components {
             usage?: components["schemas"]["Usage"];
             step_count: number;
             tool_call_count?: number;
+            /** @description Why the run was cancelled: the `reason` of the cancel request, or `redirected` (since `1.0.0-rc.5`) when a user message redirected the plan the run executed, whose proposing run follows. */
             cancel_reason?: string;
         };
         /** CancelRequest */
@@ -2830,11 +2978,16 @@ export interface components {
                 /** @description Overrides the session model for this run. Must be in `capabilities.models`. */
                 model?: string;
                 /**
-                 * @description `plan_only` makes the agent produce a plan and stop without writing to the CMS, in any module. `execute` lets it carry the plan out. A plan is accepted only by an `execute` message carrying a `plan` part that names it (since `1.0.0-rc.4`; since `1.0.0-rc.3` any `execute` message after a proposal was the approval). A `plan` part with `plan_only` is `422`.
+                 * @description `plan_only` makes the agent produce a plan and stop without writing to the CMS, in any module. `execute` lets it carry the plan out. A plan is accepted only by an `execute` message carrying a `plan` part that names it (since `1.0.0-rc.4`; since `1.0.0-rc.3` any `execute` message after a proposal was the approval). A `plan` part with `plan_only` or `revise` is `422`. `revise` (since `1.0.0-rc.5`) makes the message a revision of the plan `plan_id`, which must be open, `published` or `review_requested` (`409` `plan_not_revisable` for a `discarded` or `superseded` one), and redirects it when it executes: the plan becomes `drafting`, then `proposed` at the next version.
                  * @default execute
                  * @enum {string}
                  */
-                mode: "plan_only" | "execute";
+                mode: "plan_only" | "execute" | "revise";
+                /**
+                 * Format: uuid
+                 * @description The plan a `revise` message revises (since `1.0.0-rc.5`). Default `Session.open_plan_id`; with neither, the message is `422` with pointer `/options/plan_id`. Ignored in the other modes. `404` `plan_not_found` for a plan the session does not have.
+                 */
+                plan_id?: string;
             };
         } | unknown | unknown;
         /** MessageAccepted */
@@ -3725,7 +3878,7 @@ export interface components {
              */
             type: "setting";
             /**
-             * @description The setting name. `node`, `folder`, `template`, `language` and `publish_at` map onto `SessionContext` and `DerivedSettings`; any other key is carried as a constraint for the agent and echoed back unchanged.
+             * @description The setting name. `node`, `folder`, `template`, `language` and `publish_at` map onto `SessionContext` and `DerivedSettings`; any other key is carried as a constraint for the agent and echoed back unchanged. `file_folder` and `image_folder` (since `1.0.0-rc.5`) are advisory: the folder an uploaded file or image goes into, as the CMS folder id, which a client may render as a folder picker (see `DerivedSettings`).
              * @example language
              */
             key: string;
@@ -3802,18 +3955,32 @@ export interface components {
          *     - `plan_closed` when the plan is closed (published, review requested, discarded,
          *       superseded) or does not belong to the session;
          *     - `plan_not_proposed` when the plan is still `drafting` or already accepted (an
-         *       accepted plan changes only through the agent's `update_plan` with a `reason`).
+         *       accepted plan changes only through the agent's `update_plan` with a `reason`, or
+         *       through a revision since `1.0.0-rc.5`).
          *
          *     The items in order are the order of work:
          *
          *     - an item whose `id` equals the id of a current plan item keeps that step, with its
-         *       `kind` and `target` unless the item sets them;
+         *       `kind`, `target`, `workflow` and `depends_on` unless the item sets them;
          *     - an item without an `id`, or with one the current plan does not have, is a new step,
-         *       and GenAIx assigns its id;
-         *     - a current step the part does not list is removed.
+         *       GenAIx assigns its id and, when it names no `workflow`, its module;
+         *     - a current step the part does not list is removed, except a `done` one (since
+         *       `1.0.0-rc.5`): its write happened, so it is kept, and changing its `label`, `kind`,
+         *       `target` or `workflow` is `422` `validation_failed`;
+         *     - an item placed before one it `depends_on` is `422` `validation_failed` with
+         *       `code: dependency_order` at `/parts/<i>/plan/items/<j>` (since `1.0.0-rc.5`);
+         *     - in a revision, listing the id of an item the revision marks `removed` brings it
+         *       back: it is kept, with the `change` it had before the revision;
+         *     - leaving out an item that another kept item `depends_on` is `422`
+         *       `validation_failed` with `code: dependency_order` at that kept item.
          *
-         *     The run that executes it starts with `plan.updated` at version current + 1, holding
-         *     exactly this plan with GenAIx's ids and `reason` `Adjusted by the user: ...`.
+         *     A `plan` part, accepting or adjusting, while a run of any plan of the session is
+         *     active is `409` `run_already_active`: at most one plan executes.
+         *
+         *     With `items` the run that executes it starts with `plan.updated` at version
+         *     current + 1, holding exactly this plan with GenAIx's ids and `reason` `Adjusted by
+         *     the user: ...`. Without `items` the plan keeps its version (since `1.0.0-rc.5`): the
+         *     run starts with `plan.updated` of the same version and `status: accepted`.
          *
          *     Renders as a numbered list, `1. label` per item, items separated by `\n`, with `[`
          *     and `]` in a label escaped; without `items` (accepted as proposed) as
@@ -3855,7 +4022,7 @@ export interface components {
         UserPlan: {
             /**
              * Format: uuid
-             * @description The plan the user accepts (since `1.0.0-rc.4`): the open proposed plan of the session, `Plan.id`.
+             * @description The plan the user accepts (since `1.0.0-rc.4`): a proposed plan of the session, `Plan.id`.
              */
             plan_id: string;
             /** @description The `plan.version` the user adjusted. Must be the plan's current one, else `409` `plan_outdated`. */
@@ -3867,7 +4034,7 @@ export interface components {
         };
         /**
          * UserPlanItem
-         * @description One step of an adjusted plan. With the `id` of a current plan item it keeps that step; without one, or with an id the plan does not have, it is a new step.
+         * @description One step of an adjusted plan. With the `id` of a current plan item it keeps that step, an item the revision marks `removed` included, which is then kept with the `change` it had before the revision; without one, or with an id the plan does not have, it is a new step. Since `1.0.0-rc.5` it may name its module and the items it needs; an item another kept item depends on cannot be left out (`422` `dependency_order`).
          */
         UserPlanItem: {
             /**
@@ -3882,6 +4049,13 @@ export interface components {
              */
             kind?: "create" | "update" | "link" | "translate" | "publish" | "construct" | "report" | "other";
             target?: components["schemas"]["ContextReference"];
+            /**
+             * @description The workflow module that carries the step out (since `1.0.0-rc.5`), one of the installed modules. Absent keeps the current item's module; a new step without it gets the module GenAIx picks.
+             * @example content_edit
+             */
+            workflow?: string;
+            /** @description The ids of the items this step needs (since `1.0.0-rc.5`), each listed before it. Absent keeps the current item's dependencies. */
+            depends_on?: string[];
         };
         /**
          * Workflow
@@ -3891,10 +4065,15 @@ export interface components {
          *     what the workflow is for, what it needs in order to run, the steps it will report,
          *     and the quality gates that will be enforced.
          *
-         *     Modules are **versioned**. `version` is recorded on every plan as
-         *     `workflow_version` (on the session before `1.0.0-rc.4`), so a plan keeps reporting
-         *     against the module revision it was drafted under even after the installation
-         *     upgrades.
+         *     Modules are **versioned**. `version` is recorded on every plan that uses the module,
+         *     in `Plan.workflows` (since `1.0.0-rc.5`; `workflow_version` on the plan in rc.4, on
+         *     the session before), so a plan keeps reporting against the module revision it was
+         *     drafted under even after the installation upgrades.
+         *
+         *     A plan may use several modules (since `1.0.0-rc.5`). A module stays self-contained,
+         *     with its prompt, skills, gates and bindings, and needs to know no other module:
+         *     GenAIx composes them. The proposing run picks a plan's modules by `entry_hints` and
+         *     `produces`.
          *
          *     The manifest format itself is specified outside this document, in
          *     `schemas/workflow-manifest.schema.json` and `08-workflow-modules.md`. This schema is
@@ -3905,7 +4084,7 @@ export interface components {
             /** @example content_create */
             id: string;
             /**
-             * @description Module version from the manifest, semantic versioning. Recorded on every plan of this module as `workflow_version` (on the session before `1.0.0-rc.4`).
+             * @description Module version from the manifest, semantic versioning. Recorded on every plan that uses this module in `Plan.workflows` (since `1.0.0-rc.5`; as `workflow_version` before).
              * @example 1.2.0
              */
             version: string;
@@ -3923,8 +4102,16 @@ export interface components {
              * @default false
              */
             optional: boolean;
-            /** @description The steps a client may show before the agent has reported anything. Step ids match the `Step.id` values the agent then reports. */
+            /** @description The steps a client may show before the agent has reported anything. The ids are the module's own; in a plan the agent reports them prefixed as `Step.id` `<workflow>/<id>` (since `1.0.0-rc.5`; unprefixed before). */
             steps_template: components["schemas"]["StepTemplate"][];
+            /**
+             * @description Short phrases saying what work the module is for, from the manifest's `entry_hints` (since `1.0.0-rc.5`): what the session agent and a plan's proposing run pick modules by, together with `produces`.
+             * @example [
+             *       "edit existing pages",
+             *       "replace a value on several pages"
+             *     ]
+             */
+            entry_hints?: string[];
             /** @description Kinds of object a successful run of this workflow yields. */
             produces?: ("page" | "construct" | "report" | "user" | "file" | "none")[];
             /**
@@ -3933,9 +4120,10 @@ export interface components {
              *     plan's proposing run ends without any CMS write, leaving the plan `proposed`. The
              *     user's acceptance is a `plan` part naming the plan on a message in
              *     `options.mode: execute`: without `items` it accepts the plan as proposed, with
-             *     `items` as the user adjusted it. That run starts with a `plan.updated` at
-             *     version current + 1 holding the plan it will execute, `reason` `Accepted as
-             *     proposed.` or `Adjusted by the user: ...`, and a later deviation is announced by a
+             *     `items` as the user adjusted it. That run starts with a `plan.updated` holding the
+             *     plan it will execute: of the same version with `status: accepted` when it was
+             *     accepted as proposed (since `1.0.0-rc.5`), at version current + 1 with `reason`
+             *     `Adjusted by the user: ...` when adjusted. A later deviation is announced by a
              *     further `plan.updated` whose `reason` says why.
              *
              *     `false` (since `1.0.0-rc.4`): the drafted plan is still proposed, and one user
@@ -3946,16 +4134,10 @@ export interface components {
              * @default false
              */
             plan_approval: boolean;
-            /** @description How the module's plans behave towards the session (since `1.0.0-rc.4`; the manifest block of the same name, without its `write_targets`, which only the harness uses). Absent means the defaults. */
+            /** @description How the module's plans behave towards the session (since `1.0.0-rc.4`; the manifest block of the same name, without its `write_targets`, which only the harness uses). Absent means the defaults. `concurrency` is removed since `1.0.0-rc.5`: several plans may be open, and at most one executes. */
             plan_policy?: {
                 /**
-                 * @description `exclusive`: no new plan may be drafted in the session while this one is open. `allow_while_released`: once this plan is `released`, a new plan may be drafted and executed while it waits for publishing. Two plans never execute at once either way.
-                 * @default exclusive
-                 * @enum {string}
-                 */
-                concurrency: "exclusive" | "allow_while_released";
-                /**
-                 * @description What discarding an executed plan does to the pages it wrote: `keep` them as drafts, or `restore` each page's version from before the plan.
+                 * @description What discarding an executed plan does to the pages it wrote: `keep` them as drafts, or `restore` each page's version from before the plan. A plan with several modules follows the strictest value among them (`restore` over `keep`; since `1.0.0-rc.5`).
                  * @default keep
                  * @enum {string}
                  */
@@ -4021,7 +4203,7 @@ export interface components {
             tool_groups?: {
                 [key: string]: string[];
             };
-            /** @description Gates the harness runs for this workflow. Declared here so a client can show what will be checked before anything has run. */
+            /** @description Gates the harness runs for this workflow. Declared here so a client can show what will be checked before anything has run. The ids are the module's own; in a plan the gate's check is `<workflow>/chk-<gate id>` and its `GateResult.workflow` names the module (since `1.0.0-rc.5`). */
             quality_gates?: components["schemas"]["QualityGate"][];
             /** @description Model ids this module is validated against, in preference order. */
             models?: string[];
@@ -4113,8 +4295,9 @@ export interface components {
         /**
          * GateResult
          * @description What happened to one quality gate in one plan (in the session before `1.0.0-rc.4`).
-         *     The declaration lives in `Workflow.quality_gates` of the plan's module; this is the
-         *     execution record.
+         *     The declaration lives in `Workflow.quality_gates` of the module `workflow` names;
+         *     this is the execution record. A plan with several modules runs each module's gates
+         *     over that module's items (since `1.0.0-rc.5`).
          *
          *     `status` is the execution outcome and `verdict` the judgement, and they deliberately
          *     differ: a gate configured to downgrade its own errors ends as `status: error` with
@@ -4132,10 +4315,15 @@ export interface components {
          */
         GateResult: {
             /**
-             * @description Matches a `QualityGate.id` of the plan's workflow module.
+             * @description Matches a `QualityGate.id` of the module `workflow` names.
              * @example verbatim_identical
              */
             gate_id: string;
+            /**
+             * @description The workflow module that declares this gate (since `1.0.0-rc.5`), one of the plan's `workflows`.
+             * @example content_create
+             */
+            workflow?: string;
             label: string;
             /** @enum {string} */
             kind: "script" | "subagent" | "prompt" | "human";
@@ -4154,14 +4342,14 @@ export interface components {
              * @enum {string}
              */
             verdict?: "pass" | "warn" | "fail" | "error";
-            /** @description How many times this gate has run in this plan, retries of an infrastructure failure included (since `1.0.0-rc.2`: every execution counts, the evidence file is written per execution as `gates/<plan_id>/<gate>-<attempt>.json` since `1.0.0-rc.4`, `gates/<gate>-<attempt>.json` before, and the plan's view keeps the latest record per gate). A gate re-runs after the agent fixes what it reported, so a client can show "failed, then passed on the second attempt". 0 while `status` is `pending`. */
+            /** @description How many times this gate has run in this plan, retries of an infrastructure failure included (since `1.0.0-rc.2`: every execution counts, the evidence file is written per execution as `gates/<plan_id>/<workflow>/<gate>-<attempt>.json` since `1.0.0-rc.5`, `gates/<plan_id>/<gate>-<attempt>.json` in rc.4, `gates/<gate>-<attempt>.json` before, and the plan's view keeps the latest record per gate). A gate re-runs after the agent fixes what it reported, so a client can show "failed, then passed on the second attempt". `1` for the first execution; `0` only while `status` is `pending` and the gate has not run. */
             attempt: number;
             /** Format: date-time */
             started_at?: string;
             /** Format: date-time */
             ended_at?: string;
             duration_ms?: number;
-            /** @description The `Check` objects this gate published, which is where the human-readable finding and the evidence live. Exactly one per execution (`chk-<gate id>`, the gate id with `_` as `-`), its findings folded into the check's `message`; the id is stable across attempts, so the check is replaced, not accumulated (since `1.0.0-rc.2`). */
+            /** @description The `Check` objects this gate published, which is where the human-readable finding and the evidence live. Exactly one per execution, `<workflow>/chk-<gate id with _ as ->` (`content_create/chk-verbatim-identical`; the prefix since `1.0.0-rc.5`, `chk-<gate id>` before), its findings folded into the check's `message`; the id is stable across attempts, so the check is replaced, not accumulated (since `1.0.0-rc.2`). */
             check_ids: string[];
             /**
              * Format: uuid
@@ -4192,15 +4380,32 @@ export interface components {
          * @description The complete state of one plan (since `1.0.0-rc.4`; until then the workflow state of a session, `WorkflowState`). The snapshot counterpart of the `plan.updated`, `step.updated`, `check.updated`, `approval_chain.updated`, `publications.updated`, `preview.updated` and `derived_settings.updated` events carrying this plan's `plan_id`.
          */
         PlanState: {
-            /** @description The workflow module carrying this plan out, as `Plan.workflow`. */
-            workflow: string;
-            /** @description The module inputs of this plan, validated against the module's `inputs_schema` when the plan was drafted (since `1.0.0-rc.4`): from `SessionCreate` for a session's first plan, otherwise from what the session agent passed to `draft_plan` (for `content_edit` the pages to edit as `references`). */
+            /** @description The workflow modules carrying this plan out, as `Plan.workflows` (since `1.0.0-rc.5`; `workflow` and `workflow_version` before). */
+            workflows: {
+                id: string;
+                version: string;
+            }[];
+            /**
+             * @description The module inputs of this plan, keyed by module id (since `1.0.0-rc.5`; one object before), each validated against that module's `inputs_schema` when the plan was drafted (since `1.0.0-rc.4`): from `SessionCreate` for a session's first plan, otherwise from what the session agent passed to `draft_plan` (for `content_edit` the pages to edit as `references`).
+             * @example {
+             *       "content_edit": {
+             *         "references": [
+             *           {
+             *             "type": "page",
+             *             "id": "8644",
+             *             "node_id": 3,
+             *             "label": "Versand und Lieferung"
+             *           }
+             *         ]
+             *       }
+             *     }
+             */
             inputs?: {
-                [key: string]: unknown;
+                [key: string]: {
+                    [key: string]: unknown;
+                };
             };
-            /** @description The module version this plan runs under. */
-            workflow_version?: string;
-            /** @description `true` when the installation now has a different version of this module than the plan was drafted under. The plan keeps running under its own version; this only tells a client that a newer one exists, which matters when a gate definition changed. */
+            /** @description `true` when the installation now has a different version of any of this plan's modules than the plan was drafted under. The plan keeps running under its own versions; this only tells a client that a newer one exists, which matters when a gate definition changed. */
             workflow_version_drift?: boolean;
             /**
              * @description Coarse phase of the plan, derived from `Plan.status` and the run and step states,
@@ -4230,7 +4435,7 @@ export interface components {
             plan: components["schemas"]["Plan"];
             steps: components["schemas"]["Step"][];
             checks: components["schemas"]["Check"][];
-            /** @description One entry per quality gate the plan's workflow module declares, in manifest order, with what happened to it in this plan. A client can render the gate list before anything has run, because every declared gate appears here with `status: pending`. */
+            /** @description One entry per quality gate the plan's workflow modules declare, module by module in the order of `workflows` and in manifest order within a module, with what happened to it in this plan. A client can render the gate list before anything has run, because every declared gate appears here with `status: pending`. */
             gates: components["schemas"]["GateResult"][];
             /** @description The plan-level approval chain. Since `1.0.0-rc.3` it equals the chain of the first entry of `publications`, so it is unchanged for a one-page plan; the chain of every page is on its `Publication`. */
             approval_chain: components["schemas"]["ApprovalStep"][];
@@ -4238,7 +4443,9 @@ export interface components {
              * @description One entry per page the plan created or changed (the pages of its `cms_objects` it
              *     wrote with `operation` `created` or `updated`, kept when publishing later sets
              *     `operation` to `published`), in the order of their first write, since
-             *     `1.0.0-rc.3` (per session before `1.0.0-rc.4`). Each entry is resolved from the
+             *     `1.0.0-rc.3` (per session before `1.0.0-rc.4`; over all the plan's versions
+             *     since `1.0.0-rc.5`). Pages only: an uploaded file has no entry, the CMS publishes
+             *     it under its own rules. Each entry is resolved from the
              *     permissions on its own page's folder and stays `pending` until the plan's
              *     `publish` or `request_review` handles it. Kept current by `publications.updated`
              *     with this `plan_id`, which always carries the whole array. Present on every
@@ -4255,12 +4462,12 @@ export interface components {
             previews?: components["schemas"]["Preview"][];
             /** @description The interaction this plan's run is currently blocked on, so a reconnecting client can re-render the question without replaying the stream. */
             pending_interaction?: components["schemas"]["Interaction"] | null;
-            /** @description The session's authorizations for the connections this plan's module requires, so one snapshot call says whether the plan can still act. A reconnecting client that finds an entry `expired` or `invalid`, or a required connection missing entirely, registers a fresh credential before sending the next message instead of waiting for the run to fail. */
+            /** @description The session's authorizations for the connections this plan's modules require, so one snapshot call says whether the plan can still act. A reconnecting client that finds an entry `expired` or `invalid`, or a required connection missing entirely, registers a fresh credential before sending the next message instead of waiting for the run to fail. */
             authorizations?: components["schemas"]["SessionAuthorizationSummary"][];
         };
         /**
          * Plan
-         * @description One unit of work of a session (since `1.0.0-rc.4`): the workflow module that carries it out, its lifecycle and the visible work plan. Versioned: every change increments `version` and emits `plan.updated` with the whole plan, so clients never merge deltas; a lifecycle change emits `plan.updated` too. Writes, checks, gates, previews and publications belong to exactly one plan, and a closed plan never changes again.
+         * @description One unit of work of a session (since `1.0.0-rc.4`): the workflow modules that carry it out, its lifecycle and the visible work plan. Versioned: every change increments `version` and emits `plan.updated` with the whole plan, so clients never merge deltas; a lifecycle change emits `plan.updated` too. Writes, checks, gates, previews and publications belong to exactly one plan. A **living** plan (since `1.0.0-rc.5`): a follow-up on the same work revises it as a new version with the same `id`, items finished in earlier versions kept; only a final plan (`discarded`, `superseded`) never changes again.
          */
         Plan: {
             /**
@@ -4269,19 +4476,28 @@ export interface components {
              */
             id: string;
             /**
-             * @description The workflow module that carries the plan out, fixed when it is drafted.
-             * @example content_edit
+             * @description The workflow modules the plan uses, in the order GenAIx runs them, each with the module version it was drafted under (since `1.0.0-rc.5`; replaces `workflow` and `workflow_version`). Every item names one of them in `PlanItem.workflow`. A revision may add a module, which joins at the version installed then.
+             * @example [
+             *       {
+             *         "id": "content_create",
+             *         "version": "1.2.0"
+             *       },
+             *       {
+             *         "id": "content_edit",
+             *         "version": "1.0.0"
+             *       }
+             *     ]
              */
-            workflow: string;
-            /**
-             * @description The module version the plan was drafted under.
-             * @example 1.0.0
-             */
-            workflow_version?: string;
+            workflows: {
+                /** @description The module id, as in `GET /workflows`. */
+                id: string;
+                /** @description The module version the plan was drafted under. */
+                version: string;
+            }[];
             status: components["schemas"]["PlanStatus"];
-            /** @description `0` while the plan is `drafting` and has no items yet; `1` for the first proposal; incremented by every change. */
+            /** @description `0` while the plan is `drafting` and has no items yet; `1` for the first proposal; incremented by every change of the plan's content (items, summary): an adjusted acceptance, a revision, a deviation during execution. Never incremented by a status change alone (since `1.0.0-rc.5`): accepting a plan as proposed keeps its version. While a revision is being drafted the plan keeps its current version and items until the proposing run ends with the new version. */
             version: number;
-            /** @description The version the user accepted, or `null` before acceptance. */
+            /** @description The version the user accepted last, or `null` before acceptance. While a revision is `drafting` or `proposed` it stays the previously accepted version, against which the items' `change` is stated. */
             accepted_version?: number | null;
             /** @description The subject that accepted the plan (`Me.user.subject`), or `null`. Never a login or user id. */
             accepted_by?: string | null;
@@ -4289,16 +4505,68 @@ export interface components {
             accepted_at?: string | null;
             /**
              * Format: date-time
-             * @description When the plan reached a closed status, or `null` while it is open.
+             * @description When the plan reached a closed status, or `null` while it is open. A revision of a settled plan clears it (since `1.0.0-rc.5`).
              */
             closed_at?: string | null;
             /** @description One or two sentences the user can approve or correct. */
             summary: string;
+            /** @description The work in order. Since `1.0.0-rc.5` the items of every version: those finished in an earlier version stay with `status: done`, and a `removed` item is listed until the version that removes it is accepted. */
             items: components["schemas"]["PlanItem"][];
             /** Format: date-time */
             created_at?: string;
-            /** @description Why the plan changed, for versions after the first. The version an approved plan starts executing with says `Accepted as proposed.` or `Adjusted by the user: ...` (since `1.0.0-rc.3`), and a later deviation from it says why. */
+            /** @description Why the plan changed, for versions after the first. An adjusted acceptance says `Adjusted by the user: ...` (since `1.0.0-rc.3`), and a later deviation from it says why. A revision says `Revised: <what changed>` (since `1.0.0-rc.5`). An acceptance as proposed changes no content, so it keeps the version and its `reason` (since `1.0.0-rc.5`; rc.4 added a version `Accepted as proposed.`). */
             reason?: string;
+            /** @description The history of the plan's versions, oldest first, one entry per version from `1` to `version` (since `1.0.0-rc.5`); empty while the plan is `drafting` at version `0`. */
+            versions?: components["schemas"]["PlanVersion"][];
+        };
+        /**
+         * PlanVersion
+         * @description One version of a plan (since `1.0.0-rc.5`): how and why it came about, whether and when the user accepted it, and how many items it added, changed and removed against the version accepted before it.
+         * @example {
+         *       "version": 3,
+         *       "kind": "revision",
+         *       "reason": "Revised: upload the PDF and link it in the text.",
+         *       "created_at": "2026-10-14T10:41:12Z",
+         *       "accepted_at": "2026-10-14T10:42:30Z",
+         *       "accepted_by": "sub_c3f1a07d9e5b4826",
+         *       "items_added": 2,
+         *       "items_changed": 0,
+         *       "items_removed": 0
+         *     }
+         */
+        PlanVersion: {
+            version: number;
+            /**
+             * @description How the version came about:
+             *
+             *     - `proposal`: the first proposal of the plan;
+             *     - `revision`: a user-driven revision (`Revised: ...`);
+             *     - `adjustment`: an acceptance with the plan the user adjusted (`Adjusted by the
+             *       user: ...`);
+             *     - `deviation`: the agent deviated from the accepted plan during execution, with
+             *       its `reason`.
+             *
+             *     Optional; absent where a producer does not state it.
+             * @enum {string}
+             */
+            kind?: "proposal" | "revision" | "adjustment" | "deviation";
+            /**
+             * @description The `Plan.reason` of this version, such as `Revised: ...` or `Adjusted by the user: ...`; absent for the first proposal, like `Plan.reason`.
+             * @example Revised: upload the PDF and link it in the text.
+             */
+            reason?: string;
+            /** Format: date-time */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @description When the user accepted this version, or `null` when they did not.
+             */
+            accepted_at: string | null;
+            /** @description The subject that accepted this version (`Me.user.subject`), or `null`. Never a login or user id. */
+            accepted_by: string | null;
+            items_added: number;
+            items_changed: number;
+            items_removed: number;
         };
         /**
          * PlanSummary
@@ -4307,8 +4575,14 @@ export interface components {
         PlanSummary: {
             /** Format: uuid */
             id: string;
-            workflow: string;
-            workflow_version?: string;
+            /**
+             * @description The ids of the workflow modules the plan uses, in run order (since `1.0.0-rc.5`; `workflow` and `workflow_version` before).
+             * @example [
+             *       "content_create",
+             *       "content_edit"
+             *     ]
+             */
+            workflows: string[];
             status: components["schemas"]["PlanStatus"];
             version: number;
             summary: string;
@@ -4332,23 +4606,55 @@ export interface components {
             /** @description The session's plans, oldest first. */
             items: components["schemas"]["PlanSummary"][];
         };
-        /** PlanItem */
+        /**
+         * PlanItem
+         * @description One item of a plan's work. Since `1.0.0-rc.5` an item names the module that carries it out, the version that added it, what the current version did to it and the items it needs. A `done` item is never removed or changed, because its write happened; undoing it is a further item.
+         */
         PlanItem: {
             id: string;
             label: string;
             /** @enum {string} */
             kind: "create" | "update" | "link" | "translate" | "publish" | "construct" | "report" | "other";
+            /**
+             * @description The workflow module that carries the item out (since `1.0.0-rc.5`), one of the plan's `workflows`. The item is bound by that module's write scope.
+             * @example content_edit
+             */
+            workflow: string;
             target?: components["schemas"]["ContextReference"];
-            /** @enum {string} */
-            status: "pending" | "running" | "done" | "skipped" | "failed";
+            /**
+             * @description An executing run carries out only the `pending` items. `removed` (since `1.0.0-rc.5`): the current version drops the item; it is listed until that version is accepted, then dropped.
+             * @enum {string}
+             */
+            status: "pending" | "running" | "done" | "skipped" | "failed" | "removed";
+            /** @description The plan version that added the item (since `1.0.0-rc.5`). */
+            version?: number;
+            /**
+             * @description What the current version did to the item against the version accepted **before** it (since `1.0.0-rc.5`), from which a client renders the difference. While a revision is proposed that is the last accepted version; once the revision is accepted the item keeps the `change` it was accepted with until the next revision. On a plan never accepted every item is `added`, and an item dropped before any acceptance disappears.
+             * @enum {string}
+             */
+            change?: "added" | "changed" | "removed" | "unchanged";
+            /**
+             * @description The ids of the items this item needs (since `1.0.0-rc.5`), each ordered before it: the item that creates an object comes before every item that uses it, a page is created before it is edited.
+             * @example [
+             *       "p1",
+             *       "p3"
+             *     ]
+             */
+            depends_on?: string[];
             detail?: string;
         };
         /**
          * Step
-         * @description One step of the workflow. Always sent as a full object, so `step.updated` is idempotent and order-independent beyond the `seq` ordering.
+         * @description One step of the workflow. Always sent as a full object, so `step.updated` is idempotent and order-independent beyond the `seq` ordering. A plan shows each of its modules' `steps_template`, in plan order (since `1.0.0-rc.5`), and a proposing run across modules reports the propose step of each module whose items it plans. A step shows its latest state: there is no history of steps per plan version.
          */
         Step: {
+            /** @description Unique within the plan. Since `1.0.0-rc.5` always `<workflow>/<step id of the module>` (`content_edit/st-2`), so an id stays stable when a revision adds a module. A step that belongs to no module, such as the step of a transition run, is `plan/<id>` (`plan/st-publish`). The catalogue's `steps_template` keeps the module's own, unprefixed ids. */
             id: string;
+            /**
+             * @description The workflow module whose step this is (since `1.0.0-rc.5`); absent on a `plan/` step.
+             * @example content_create
+             */
+            workflow?: string;
             label: string;
             /**
              * @description `waiting` means the step is blocked on a user interaction, not on the model.
@@ -4372,7 +4678,13 @@ export interface components {
          * @description One quality, guideline or requirement finding. Blocking is a per-check property, not a property of the severity: a `fail` may be advisory and a `warn` may block, depending on where the rule comes from.
          */
         Check: {
+            /** @description Unique within the plan. Since `1.0.0-rc.5` every check id is `<workflow>/<id>`, so it stays stable when a revision adds a module: a gate check is `<workflow>/chk-<gate id with _ as ->` (`content_create/chk-no-duplicate`), a check the agent reported is `<workflow>/<check id>` of the module whose run reported it, and a check of no module is `plan/<id>`. */
             id: string;
+            /**
+             * @description The workflow module whose gate produced the check, or whose run reported it (since `1.0.0-rc.5`). Absent on a `plan/` check and on a check that belongs to no plan.
+             * @example content_create
+             */
+            workflow?: string;
             label: string;
             /** @enum {string} */
             severity: "pass" | "info" | "warn" | "fail";
@@ -4383,7 +4695,7 @@ export interface components {
              *     non-blocking `warn` check, acknowledgeable like any other, so a session is never
              *     stuck behind a warning it cannot fix and cannot accept. A `prompt` gate's check
              *     and an agent self-report are never blocking. Every gate execution yields exactly
-             *     one check (`chk-<gate id>`), its findings folded into `message`.
+             *     one check (`<workflow>/chk-<gate id>`), its findings folded into `message`.
              */
             blocking: boolean;
             message: string;
@@ -4403,7 +4715,7 @@ export interface components {
             }[];
             verification?: components["schemas"]["Verification"];
             target?: components["schemas"]["ContextReference"];
-            /** @description The quality gate that produced this check, present when `source.type` is `gate`. Matches a `QualityGate.id` of the plan's workflow module. */
+            /** @description The quality gate that produced this check, present when `source.type` is `gate`. Matches a `QualityGate.id` of the module `workflow` names. */
             gate_id?: string;
             /**
              * @description The gate kind that produced it, present when `source.type` is `gate`, and `prompt` for an agent self-report (`source.type` other than `gate`). A client may weigh a `script` verdict differently from a `prompt` self-check, and a `prompt` check is never blocking.
@@ -4618,6 +4930,17 @@ export interface components {
          *     default exists in Phase One, so the value is never produced and a client need not
          *     handle it.
          *
+         *     **Advisory folder keys** (since `1.0.0-rc.5`). `file_folder` and `image_folder` name
+         *     the CMS folder an uploaded file or image goes into, by folder id. They are asked in
+         *     the version's `settings_review` when the plan uploads a file or an image and the user
+         *     named no folder, as `missing` entries with `other_allowed: true` whose `recommended`
+         *     value is the node's `defaultFileFolderId` or `defaultImageFolderId`, with the reason
+         *     for it; the answer decides them, and a client may render them as a folder picker.
+         *     They are advisory: they never block a write and have no field here, but a confirmed
+         *     one is listed in `corrected_by_user`. Since `1.0.0-rc.5` there is one
+         *     `settings_review` per plan version, covering the keys the modules of its pending
+         *     items need.
+         *
          *     **A confirmed review becomes the session context**: on resolution `Session.context`
          *     carries the confirmed `folder_id`, `template_id`, `language` and `publish_at`
          *     (`session.updated` lists `context` in `changed`), so the next run starts from the
@@ -4712,7 +5035,7 @@ export interface components {
                 source: "text" | "context" | "default";
                 /** @description The quoted fragment of the user's text the inference rests on. Present only for `source: text`. */
                 evidence?: string;
-                /** @description The CMS object the value names, for `node`, `folder` and `template`: its type, id, node and, for a folder, `path`, so a client shows `Manual · /Manual/` rather than a bare name. Since `1.0.0-rc.4` (2026-10-14). */
+                /** @description The CMS object the value names, for `node`, `folder` and `template` (and `file_folder` and `image_folder` since `1.0.0-rc.5`): its type, id, node and, for a folder, `path`, so a client shows `Manual · /Manual/` rather than a bare name. Since `1.0.0-rc.4` (2026-10-14). */
                 ref?: components["schemas"]["ContextReference"];
                 /** @description The alternatives, when a choice exists - two templates that both fit, or the folder the user referenced and the one the agent read the request as, each with its `reason`. The proposed `value` is one of them. They are a shortcut, not a limit: the answer may name any other object of the key's kind. */
                 options?: {
@@ -4723,7 +5046,7 @@ export interface components {
                     reason?: string;
                 }[];
             }[];
-            /** @description For `settings_review`: the settings this run needs, could not derive, and asks the user to provide. A client renders them as empty chips waiting for a value. */
+            /** @description For `settings_review`: the settings this run needs, could not derive, and asks the user to provide. A client renders them as empty chips waiting for a value. Since `1.0.0-rc.5` a plan that uploads a file or an image into a folder the user did not name lists the advisory key `file_folder` or `image_folder` here, with the node's default file or image folder as `recommended`, its `reason`, and `other_allowed: true`; a client may render it as a folder picker, and the answer decides it. */
             missing?: {
                 /** @description The setting name, exactly as in `UserSettingPart.key`. */
                 key: string;
@@ -4840,7 +5163,7 @@ export interface components {
             run_id?: string | null;
             /**
              * Format: uuid
-             * @description The plan this event belongs to (since `1.0.0-rc.4`). Required on the plan-scoped events (`plan.updated`, `step.updated`, `check.updated`, `derived_settings.updated`, `approval_chain.updated`, `preview.updated`, `publications.updated`) and on `interaction.requested`, where it is `null` for a question of the session agent; it may also appear on any other event of a plan's run (`run.started` carries the plan in `run.plan_id` instead). A client keys plan-scoped state on `plan_id` plus the object's own id. An event without it, replayed from a session older than `1.0.0-rc.4`, belongs to that session's only plan.
+             * @description The plan this event belongs to (since `1.0.0-rc.4`). Required on the plan-scoped events (`plan.updated`, `step.updated`, `check.updated`, `derived_settings.updated`, `approval_chain.updated`, `preview.updated`, `publications.updated`) and on `interaction.requested`, where it is `null` for a question of the session agent; it may also appear on any other event of a plan's run. The run events (`run.started`, `run.completed`, `run.failed`, `run.cancelled`) carry it whenever the run works for a plan, equal to `run.plan_id` (stated since `1.0.0-rc.5`), and leave it absent or `null` for a run of the session agent and a side run. A client keys plan-scoped state on `plan_id` plus the object's own id. An event without it, replayed from a session older than `1.0.0-rc.4`, belongs to that session's only plan.
              */
             plan_id?: string | null;
             type: components["schemas"]["EventType"];
@@ -5444,7 +5767,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description The request is valid but conflicts with the current state: a run is already active, the session is archived, the interaction was already answered, a `plan` part names an outdated plan version, a closed plan or a plan that is not waiting for acceptance, or the plan transition is not legal from here. */
+        /** @description The request is valid but conflicts with the current state: a run is already active, the session is archived, the interaction was already answered, a `plan` part names an outdated plan version, a closed plan or a plan that is not waiting for acceptance, a revision names a plan that cannot be revised, or the plan transition is not legal from here. */
         Conflict: {
             headers: {
                 "X-GenAIx-Request-Id": components["headers"]["XGenAIxRequestId"];
@@ -6287,7 +6610,7 @@ export interface operations {
                  */
                 status?: components["schemas"]["SessionStatus"][];
                 /**
-                 * @description Only sessions with at least one plan under this workflow module (since `1.0.0-rc.4`; the session's own workflow before).
+                 * @description Only sessions with at least one plan that uses this workflow module (since `1.0.0-rc.4`; the session's own workflow before; any of a plan's `workflows` since `1.0.0-rc.5`).
                  * @example [
                  *       "content_create"
                  *     ]
@@ -6311,7 +6634,7 @@ export interface operations {
                  */
                 continued_from?: string;
                 /**
-                 * @description Only sessions whose open plan, or latest plan when none is open, has this status (since `1.0.0-rc.4`). Repeat the parameter to allow several. `released` and `review_requested` together are the Workspace's "needs your attention" list, the role `status=released` had before.
+                 * @description Only sessions whose current plan (`open_plan_id`), or latest plan when none is open, has this status (since `1.0.0-rc.4`). Repeat the parameter to allow several. `released` and `review_requested` together are the Workspace's "needs your attention" list, the role `status=released` had before.
                  * @example [
                  *       "proposed",
                  *       "released"
@@ -6859,7 +7182,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Status changed synchronously (`release`, `reopen`, and `discard` with `on_discard: keep` or of a plan that wrote nothing). The plan as it is now. */
+            /** @description Status changed synchronously (`release`, and `discard` with `on_discard: keep` or of a plan that wrote nothing). The plan as it is now. */
             200: {
                 headers: {
                     [name: string]: unknown;

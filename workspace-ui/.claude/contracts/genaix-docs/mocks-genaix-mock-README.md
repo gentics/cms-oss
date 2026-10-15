@@ -1,7 +1,7 @@
 # GenAIx API v1 mock
 
 A standalone Python service that implements every route of
-[`../../openapi.yaml`](../../openapi.yaml) (`1.0.0-rc.4`) with in-memory state, and
+[`../../openapi.yaml`](../../openapi.yaml) (`1.0.0-rc.5` draft, living plans) with in-memory state, and
 replays the recorded scenario transcripts in [`../../examples`](../../examples) as live
 Server-Sent Events.
 
@@ -272,10 +272,11 @@ replays its transcript regardless. `GET /sessions?continued_from=<id>` lists the
 follow-ups, and `GET /sessions?label=a&label=b` the sessions carrying every given label,
 compared exactly. A `changeset:<uuid>` label still groups sessions if a client wants
 that, but "publish all" no longer needs it (see below). Since `1.0.0-rc.4` follow-up work
-in the same conversation is a further plan of the same session, not a new session.
+in the same conversation is a further plan of the same session, not a new session, and
+since `1.0.0-rc.5` a follow-up on the same work is a revision of its plan.
 
 `GET /sessions` filters by `status` (the session's: `active`, `waiting_for_input`,
-`archived`), by `workflow` (a session with any plan under that module) and by
+`archived`), by `workflow` (a session with any plan using that module) and by
 `plan_status` (the open plan's status, or the latest plan's when none is open).
 
 ## User messages: content or parts
@@ -381,59 +382,84 @@ would wait, so a chip-driven client never sees an interaction at all and the run
 straight through. The transcript's `corrected_by_user` still lists those keys, which is
 what the mock has to say about them: they were the user's input either way.
 
-## Where a message goes (rc.4)
+## Where a message goes (rc.4, living plans rc.5)
 
-A session is one conversation; its work is a sequence of **plans**, each under one
-workflow module with its own steps, checks, gates, publications and lifecycle. Every run
+A session is one conversation; its work is a sequence of **plans**, each carried out by
+one or more workflow modules (`Plan.workflows`, in run order; rc.5) with its own steps,
+checks, gates, publications and lifecycle. Every run
 belongs to a plan or to none, which `Run.plan_id` and `Run.mode` say:
 
 | `mode` | Who runs | Plan |
 |---|---|---|
-| `session` | the session agent: answers, or drafts a plan | none |
+| `session` | the session agent: answers, drafts a plan, or revises one (rc.5) | none |
 | `side` | the session agent with read tools only, while a plan's run works | none |
-| `propose` | a plan's proposing run: reads and plans, writes nothing | the plan |
-| `execute` | a plan's run after the user accepted it | the plan |
+| `propose` | a plan's proposing run, for a new plan or a revision: reads and plans, writes nothing | the plan |
+| `execute` | a plan's run after the user accepted it, one per segment of one module's pending items (`Run.workflow`) | the plan |
 | `transition` | the run of a plan's `publish` or `request_review` | the plan |
 
 A user message goes, in this order:
 
 1. `reply_to_interaction` naming a waiting run's question: the answer resumes that run and
    the message joins it; no run starts.
-2. A `plan` part (`options.mode: execute`): it accepts the plan it names, which must be the
-   session's open `proposed` plan at its current `version` (`409` `plan_closed`,
-   `plan_not_proposed`, `plan_outdated` otherwise). Without `items` the plan is accepted
-   as proposed; with them as adjusted. The plan becomes `accepted` (`accepted_version`,
-   `accepted_by`, `accepted_at`) and its execute run starts. The same part naming a
-   `done` plan without `items` runs it again (`scripts/followup.sse`). Any active run is
-   `409` `run_already_active`: a plan is never accepted beside a running one.
-3. A plan's run is active: a **side run** (`examples/s7-continuous-session.sse` run 5),
-   with `Session.side_run_id`; a second one while the first is active is `409`.
-4. The session agent's own run or a side run is active: `409` `run_already_active`.
-5. The open plan is `drafting` (created with the session, or its proposing run failed):
-   the plan's first run. It is `accepted` because its execute run failed or was
-   cancelled: the execute run again. Both are the contract's "the next message retries".
-6. Otherwise the **session agent**. A plain message never accepts a plan, even right after
-   a proposal: it is answered, or it drafts a new plan, which supersedes the unaccepted one.
+2. A `plan` part (`options.mode: execute`): while any run is active it is `409`
+   `run_already_active` before anything else (rc.5). It accepts the plan it names, which
+   must be a `proposed` plan of the session at its current `version` (`409`
+   `plan_closed`, `plan_not_proposed`, `plan_outdated` otherwise). Without `items` the
+   plan is accepted as proposed and keeps its version (rc.5, as S8 records it); with them
+   as adjusted, version + 1. The plan becomes `accepted` (`accepted_version`,
+   `accepted_by`, `accepted_at`) and its first execute run starts. The same part naming a
+   `done` plan without `items` runs it again (`scripts/followup.sse`).
+3. `options.mode: revise` (rc.5): a revision of `options.plan_id`, by default
+   `Session.open_plan_id` (`422` at `/options/plan_id` with neither, `404`
+   `plan_not_found`, `409` `plan_not_revisable` for a `discarded` or `superseded` plan).
+   While that plan's `execute` or `propose` run works it is a **redirect** (below);
+   otherwise the plan's proposing run starts at once, without a session-agent run.
+4. A plan's run is active: a **side run** (`examples/s7-continuous-session.sse` run 5),
+   with `Session.side_run_id`; a second one while the first is active is `409`. A message
+   that redirects (rc.5: it starts with "stop", "halt" or "wait", or says "instead",
+   "stattdessen" or `#redirect`) redirects the executing or proposing plan instead.
+5. The session agent's own run or a side run is active: `409` `run_already_active`.
+6. The current open plan is `drafting` (created with the session, or its proposing run
+   failed): the plan's first run, or the revision's proposing run again. It is `accepted`
+   because its execute run failed or was cancelled: the execute run for its pending
+   items again. Both are the contract's "the next message retries".
+7. Otherwise the **session agent**. A plain message never accepts a plan, even right after
+   a proposal: it is answered, it drafts a new plan, or it revises one.
 
 The mock's session agent decides deterministically (`genaix_mock/agent.py`):
 
-- `#draft:<workflow id>` drafts a plan under that module;
-- otherwise keywords, English and German, as S7 uses them: "setze", "ändere", "update",
-  "change", "edit", ... with at least one page reference (message or session context)
-  drafts `content_edit`; "erstelle", "create", "write", "news", "neue Seite" drafts
+- `#draft:<workflow id>` drafts a new plan under that module (`#new` likewise under the
+  module the keywords pick); `#revise` revises the current plan;
+- a message ending in `?` is a question and is answered;
+- keywords, English and German, as S7 uses them, pick a module: "setze", "ändere",
+  "update", "change", "edit", ... with at least one page reference (message or session
+  context) `content_edit`; "erstelle", "create", "write", "news", "neue Seite"
   `content_create`; "construct" or "Baustein" `construct_create`; "create user" or
   "Benutzer anlegen" `admin_user`;
-- `#ask` makes it ask the user first (`ask_user`, `plan_id: null`), so its run waits;
-- anything else is answered: `scripts/session-agent.sse` the first time, then
-  `scripts/followup.sse`.
+- with a revisable current plan (the open plan the conversation works on, else a
+  `published` or `review_requested` one) the message **revises** it when it is about the
+  same work: it names no page outside the plan, and its module is one of the plan's, or
+  `content_edit` on a plan that created a page, or there is no module but a revision word
+  ("make it", "mach", "add", "link", "upload", "lade", "instead", "lieber", "soll", ...).
+  A new page for a plan that never created one is new work (S7: "Erstelle jetzt eine
+  FAQ-Seite dazu" after the edit plan); "Mach daraus lieber eine News-Meldung" revises
+  the proposed FAQ plan (S7), "Mach sie bunter." the done PNDemo plan (S8);
+- otherwise a module drafts a new plan, and anything else is answered:
+  `scripts/session-agent.sse` the first time, then `scripts/followup.sse`;
+- `#ask` makes it ask the user first (`ask_user`, `plan_id: null`), so its run waits.
 
-Drafting is one `session` run with a `draft_plan` tool call, `plan.updated` with
-`drafting` at version 0 (preceded by the superseded plan's `plan.updated` when an
-unaccepted plan was open) and `session.updated`; the plan's first run follows on the same
-message, so the stream shows S7's runs 2 and 3. While the open plan is accepted, running
-or `done`, or `released` under an `exclusive` `plan_policy`, the agent drafts nothing and
-answers that the open plan comes first. `content_edit` has `allow_while_released`, so once
-it is released the next plan starts beside it.
+Drafting is one `session` run with a `draft_plan` tool call (`input_summary`
+`draft_plan workflows=[<module>] ...`), `plan.updated` with `drafting` at version 0 and
+`session.updated`; the plan's first run follows on the same message, so the stream shows
+S7's runs 2 and 3. Several plans may be open (rc.5, `Session.open_plan_ids`; there is no
+`plan_policy.concurrency` any more), so drafting never waits for another plan; the new
+plan becomes `open_plan_id`. It supersedes the open unaccepted proposal only when the
+message says so (`#supersede`).
+
+Revising is one `session` run with a `revise_plan` tool call, `plan.updated` with the plan
+back at `drafting` (same version, its items kept, `closed_at` cleared for a settled plan)
+and `session.updated`; the plan's proposing run follows on the same message (S7 runs 9 and
+10, S8 runs 4 and 5). See [Living plans](#living-plans-rc5).
 
 **A plan's first run** depends on the module, as `08-workflow-modules.md` §6.5 lays out:
 
@@ -448,8 +474,10 @@ built from the module's `steps_template` with nothing read or written.
 
 **The execute run** after a `plan` part replays `s1…@execute` or `s6…#2` for the two
 `plan_approval` modules and the module's whole transcript otherwise. It starts with the
-mock's own `plan.updated` (version current+1, `running`, the plan as the user sent it) and
-ends with `done`.
+mock's own `plan.updated` (`running`, the plan as the user sent it: the same version when
+accepted as proposed, version + 1 when adjusted) and ends with `done`. Since rc.5 it
+carries out one segment of pending items of one module (`Run.workflow`); the next
+segment's run follows on its own when it completes, and the plan is `done` after the last.
 
 A marker in the message picks the transcript of the **execute** run the message starts (the
 accepting message, a retry, or the first message of a module without a proposal); on a
@@ -513,6 +541,49 @@ consume a `seq` and are persisted, as the contract requires. One stream carries 
 of the session interleaved; with `follow=false` it ends once no run of the session is
 active, so a draft's follow-up run and a side run are part of it.
 
+## Living plans (rc.5)
+
+A follow-up on the work of a plan **revises** that plan instead of opening another. Every
+plan but a `discarded` or `superseded` one is revisable: `proposed`, `done`, `released`,
+`published` and `review_requested` alike (rc.4's `reopen` is gone).
+
+- **Revision.** The plan goes back to `drafting` at its current version, items kept
+  (`closed_at` cleared for a settled plan; it becomes `open_plan_id` again), then its
+  proposing run ends it `proposed` at `version + 1` with `reason: Revised: ...` and
+  `PlanVersion.kind: revision`. Items finished earlier stay `done` and `unchanged`; a new
+  item has `change: added` and the new `version`; an item the revision rewords is
+  `changed`; an accepted item it drops is listed with status and change `removed` until the
+  version is accepted. `change` is stated against the version accepted before the current
+  one (every item is `added` while the plan was never accepted). The user accepts with a
+  `plan` part as usual, and only the `pending` items run.
+- **Segments.** An accepted plan runs one execute run per contiguous segment of pending
+  items of one module, in item order, `Run.workflow` naming the module; the next segment
+  follows when one completes, without another acceptance. A module an item names joins
+  `Plan.workflows` (with its steps and gates) in the order its first item runs.
+- **Redirect.** A message while the plan's `execute` (or a drafting plan's `propose`) run
+  works that redirects it (`options.mode: revise`, or the words above) cancels that run:
+  it finishes the tool call it is in, ends `run.cancelled` with `cancel_reason:
+  redirected` (an unfinished step `skipped`, the item whose write completed `done`, the
+  item it was working on `pending` again), then the plan's proposing run starts with the
+  message (`drafting`, then `proposed` at `version + 1`); the `202` names that proposing
+  run. A recorded run that ends redirected (S8 run 9) holds still at its end until the live
+  redirect arrives, or completes after the interaction timeout as if nobody had.
+- **Publications** accumulate over the versions: a page written again is `pending` again,
+  and `publish` handles the pages of every version.
+
+**Generated or recorded.** Outside a scenario, the revision's session run (`revise_plan`)
+and its proposing run are generated by the mock (`scripts_loader.revise_tool_script`,
+`revision_script`; the items from `plans.revision_items`), and its segments replay the
+modules' transcripts. `#s8` in the message that drafts a plan binds that plan to
+`examples/s8-living-plan.sse`: the transcript is registered per run like any multi-run
+transcript (`s8-living-plan.sse#1` to `#12`), indexed by mode in
+`scripts_loader.SCENARIO_RUNS`, and each of the plan's runs takes the transcript's next
+run of its mode (session runs 1, 4, 7; proposing runs 2, 5, 8, 10; execute runs 3, 6, 9,
+11), generic behaviour once they run out. A recorded revision brings its items; items the
+live plan already finished stay as they are. Played with the messages S8 describes (see
+`tests/test_rc5.py::test_s8_living_plan_replays`), the live session has S8's runs,
+modules, plan versions, items and changes. Without the transcript `#s8` does nothing.
+
 ## Plans, several pages, follow-ups and publications
 
 What the Workspace prototype worked around on rc.2 (David Barbu's `mock-workarounds`) is
@@ -560,13 +631,19 @@ one `execute` message with a typed `plan` part naming the plan:
   `released` `409` `plan_not_proposed`; a `done` plan is accepted only without `items`,
   which runs it again. `based_on_version` must be that plan's `version`, else `409`
   `plan_outdated`. A refused message is not stored.
-- An item whose `id` is a current step keeps that step, with its `kind` and `target`
-  unless the item sets them; an item without an id, or with an unknown one, is a new step
-  with a mock-assigned id `u<n>` (`kind: update` when it targets a page, `other`
-  otherwise, unless set); a current step not listed is removed.
-- The execute run starts with `plan.updated` at version current+1 holding exactly that
-  plan, `running`, `reason` `Adjusted by the user: N kept, N added, N removed.`, or
-  `Accepted as proposed.` when the part has no `items` or repeats the plan unchanged.
+- An item whose `id` is a current item keeps it, with its `kind`, `target`, `workflow`
+  and `depends_on` unless the item sets them; an item without an id, or with an unknown
+  one, is a new item with a mock-assigned id `u<n>` (`kind: update` when it targets a
+  page, `other` otherwise, unless set; without `workflow` the module of the item before
+  it); a current item not listed is removed. rc.5: a `done` item is kept whether listed
+  or not, and changing its `label`, `kind`, `target` or `workflow` is `422` at
+  `/parts/<i>/plan/items/<j>`; an item listed before one it `depends_on` (or depending on
+  one the part removed) is `422` with `code: dependency_order`; listing a `removed` item
+  of a revision brings it back.
+- The execute run starts with `plan.updated` holding exactly that plan, `running`. Accepted
+  as proposed (no `items`, or the same items) the plan keeps its version and its reason,
+  and that version's `PlanVersion` gets `accepted_at`; adjusted it is version current+1
+  with `reason` `Adjusted by the user: N kept, N added, N removed.` (`kind: adjustment`).
 - `content` renders the part as a numbered list, `1. label` per item.
 
 The transcript's later `plan.updated` is reported on the user's plan: a step the
@@ -627,12 +704,12 @@ Plan transitions are `POST /sessions/{id}/plans/{plan_id}/transitions`:
 | action | from | to | run |
 |---|---|---|---|
 | `release` | `done`, or `running` (its run is cancelled after the gates passed) | `released` | no |
-| `reopen` | `released`, `review_requested`, `published`, while no other plan executes | `accepted` | no |
 | `publish` | `released` | `published` or `review_requested` | yes, `202` with `{run_id, plan, session}` |
 | `request_review` | `released` | `review_requested` | yes |
 | `discard` | any open status (an active run of the plan is cancelled) | `discarded` | no; `on_discard: restore` is not mocked, no module sets it |
 
-A transition on a closed plan is `409` `plan_closed` (except `reopen`), an action the
+`reopen` is gone (rc.5, `422`): a follow-up message revises a settled plan instead. A
+transition on a closed plan is `409` `plan_closed`, an action the
 status does not allow `409` `workflow_transition_invalid`, a repeated `discard` `200` with
 no event. The session's own route, `POST /sessions/{id}/transitions`, takes `archive` and
 `unarchive` only; a plan action sent there is `409` `workflow_transition_invalid` naming
@@ -662,7 +739,7 @@ fails the last page): that page fails in this attempt with `cms_object_locked`.
 
 As `sub_publisher`, the S6 plan ends with 8644 and 8871 `published`, 9011
 `review_requested` and the plan `review_requested`, which is S6's recorded outcome.
-`fixtures/pages.json` holds the pages of the S1, S2 and S6 transcripts with their folder;
+`fixtures/pages.json` holds the pages of the S1, S2, S6 and S8 transcripts with their folder;
 ids, names and folders are the transcripts' own, the URLs, the id of the `Publikationen`
 folder (64) and of the `Newsmeldung` template (19) and the approver groups of folders 42
 and 57 are invented for the mock.
@@ -672,19 +749,24 @@ and 57 are invented for the mock.
 `GET /workflows` reports the five modules exactly as the contract's example does,
 `content_edit` included; the session agent is no module and `free_chat` is gone (rc.4):
 `version`, `plan_approval` (`true` for `content_create` and `content_edit`; the others
-leave it out, which means `false`), `plan_policy` (`content_edit`:
-`allow_while_released`, `keep`; absent means `exclusive`, `keep`), `inputs_schema`,
+leave it out, which means `false`), `plan_policy` (`content_edit`: `on_discard: keep`;
+absent means `keep`; rc.5 removed `concurrency`), `inputs_schema`,
 `required_connectors` as `{type, optional}` objects,
 `tool_groups` as an allowlist keyed by connector type plus the reserved `genaix` key,
 `quality_gates` (each with `triggers`, the full trigger list, next to the first trigger in
 `when` / `step_id`), `steps_template` with `substeps` or a `description`, plus the
-per-user `available` and `reason`. A plan carries `workflow` and `workflow_version`, its
-`PlanState` the `inputs` (the context members the module's `inputs_schema` names, for
-`content_edit` the pages); a session carries `inputs` (those of the first plan, empty
-without `workflow`), `authorizations` and `continued_from`.
+per-user `available` and `reason`. A plan carries `workflows` (`{id, version}` in run
+order, rc.5), its `PlanState` the `inputs` keyed by module id (the context members the
+module's `inputs_schema` names, for `content_edit` the pages); a session carries `inputs`
+(those of the first plan, flat, empty without `workflow`), `authorizations` and
+`continued_from`.
 
 `GET /sessions/{id}/plans/{plan_id}` adds `gates`, one `GateResult` per declared gate of
-the plan's module, each with the plan's `plan_id`; attempts count per plan. The mock
+each of the plan's modules, module by module in `workflows` order, each with the plan's
+`plan_id` and its `workflow`; attempts count per plan. Steps are the modules'
+`steps_template`s in plan order, every step and check id is `<workflow>/<id>`
+(`content_edit/st-3`, `content_create/chk-alt-text`, whatever a transcript says), a step of
+no module `plan/<id>` without `workflow` (the publish run's `plan/st-publish`). The mock
 runs no gates: a verdict arrives as a `check.updated` event carrying `gate_id`, and the
 replay engine folds it into the matching gate record, mapping severity `pass` or `info` to
 verdict `pass`, `warn` to `warn` and `fail` to `fail`. A declared gate that no transcript
@@ -701,8 +783,9 @@ first release). The problem carries `failing_checks` (every such check, blocking
 Blocking checks cannot be waived; listing a non-blocking check in `acknowledge_checks`
 records `acknowledged_by` and `acknowledged_at` on it and takes it off the list. An action
 that is illegal from the current status is `409 workflow_transition_invalid` before any
-gate is consulted, a repeated `discard` is `200` with no event, and `discard`, `reopen`
-and the session's `archive` are never gated. `tool.started.tool` on every replayed stream is the bare
+gate is consulted, a repeated `discard` is `200` with no event, and `discard` and the
+session's `archive` are never gated. `acknowledge_checks` takes the qualified ids
+(`content_create/chk-alt-text`). `tool.started.tool` on every replayed stream is the bare
 wire name of `mcp/tools.json`, with `group` alongside.
 
 ## Pacing
@@ -757,7 +840,7 @@ curl -sX POST "${H[@]}" "${J[@]}" -d "{\"options\":{\"mode\":\"execute\"},\"part
   {\"type\":\"text\",\"text\":\"Passt so, bitte umsetzen.\\n\"},
   {\"type\":\"plan\",\"plan\":{\"plan_id\":\"$PID\",\"based_on_version\":1}}
 ]}" "$B/sessions/$SID/messages"
-curl -sX POST "${H[@]}" "${J[@]}" -d '{"action":"release","acknowledge_checks":["chk-alt-text"]}' \
+curl -sX POST "${H[@]}" "${J[@]}" -d '{"action":"release","acknowledge_checks":["content_create/chk-alt-text"]}' \
   "$B/sessions/$SID/plans/$PID/transitions"
 curl -sX POST "${H[@]}" "${J[@]}" -d '{"action":"publish"}' "$B/sessions/$SID/plans/$PID/transitions"
 ```
@@ -815,10 +898,11 @@ Real, in the sense that a client cannot tell the difference:
 - Both caller modes: direct `X-GCMS-Subject`, and the proxied RS256 CMS assertion with
   every verification rule, key selection by `kid` or trial, the keyed subject derivation
   and the error codes; both erasure routes; `X-HTTP-Method-Override: PATCH`.
-- The two state machines of rc.4: the session (`active`, `waiting_for_input`, `archived`,
-  `archive` and `unarchive`) and the plan (`drafting` to `published` or
-  `review_requested`, `discarded`, `superseded`), with `plan_closed`,
-  `plan_not_proposed`, `plan_not_found` and `session_archived`; `release` cancelling the
+- The two state machines: the session (`active`, `waiting_for_input`, `archived`,
+  `archive` and `unarchive`) and the living plan of rc.5 (`drafting` to `published` or
+  `review_requested`, `discarded`, `superseded`; every plan but a final one revisable,
+  version by version), with `plan_closed`, `plan_not_proposed`, `plan_not_revisable`,
+  `plan_not_found` and `session_archived`; `release` cancelling the
   plan's active run, `publish` and `request_review` handling every page of the plan with
   its own outcome, the plan status rule over `publications`, the retry of failed pages,
   and the quality gate refusal with its acknowledgement rules, all per plan.
@@ -827,10 +911,13 @@ Real, in the sense that a client cannot tell the difference:
   acceptance never beside a running plan, retries of a failed run.
 - Acceptance only by the user: a `plan` part (with all its validation), or the one
   `confirm` of a module without `plan_approval` that writes; a module without a write
-  tool runs at once. Superseding an unaccepted plan, one plan executing at a time,
-  `plan_policy.concurrency`, `plan_scope_violation` on a write outside the plan, and
+  tool runs at once. Several open plans, one executing at a time, revisions (session
+  agent or `options.mode: revise`), redirects at a tool boundary, segments per module,
+  superseding on request, `plan_scope_violation` on a write outside the plan, and
   `options.mode: plan_only` for every workflow.
-- `plan.updated` as a whole plan every time, with `version` per plan.
+- `plan.updated` as a whole plan every time, with `version`, `versions` (`PlanVersion`
+  with `kind`) and per item `workflow`, `version`, `change` and `depends_on`; run events
+  of a plan's run carry its `plan_id` in the envelope.
 - `continued_from` (ownership check, immutability, filter) and the exact `label` filter.
 - One active run per session, cancellation, and the interaction round trip with `409` on
   a double answer and `410` after expiry.
@@ -851,7 +938,7 @@ Mocked:
   keywords, not from understanding; a plan's runs replay its module's transcripts. The
   one thing read from a message beyond that is its `plan` part.
 - No MCP server and no CMS. Tool events are replayed, CMS object ids are the ones from the
-  transcripts (S1: page 9142; S6: pages 8644, 8871, 9011), and preview URLs point at
+  transcripts (S1: page 9142; S6: pages 8644, 8871, 9011; S8: page 9207, file 9311), and preview URLs point at
   `cms_base_url` and will not load. Who may publish where comes from the two fixtures,
   not from CMS permissions; a page failing to publish only happens on `#publishfail`.
 - Authorization is never verified against anything: the status follows the token prefix.
@@ -884,7 +971,16 @@ Mocked:
   the same session: there is no ledger, recall or compaction behind the session agent, so
   `status` `context_compacted` never appears.
 - A second plan of the same module replays the same transcript as the first, S1's page
-  creation included, so its pages are the first plan's pages again.
+  creation included, so its pages are the first plan's pages again. The same goes for a
+  revision's segments outside the S8 scenario: a `content_create` segment replays S1's
+  execute half, a `content_edit` one S6's run 2.
+- A generated revision reads its instruction by keywords only (`plans.revision_items`):
+  an upload adds a `content_create` item, a link a `content_edit` `link` item depending
+  on the page and the upload (or changes the pending link item), anything else changes the
+  pending `update` item or adds a `content_edit` `update` item on the plan's page. A
+  revision does not reset the `before_release` gates in the mock, since it runs none.
+- The router's redirect detection is a handful of words (see above); a client that wants
+  a redirect for sure sends `options.mode: revise`.
 - `on_discard: restore` is not mocked (no module sets it): a discard always keeps the pages.
 - The session agent answers `plan_only` like any message; only a plan's first run turns
   into a proposing run.
@@ -903,7 +999,7 @@ Mocked:
 ./run.sh test
 ```
 
-88 tests. They start a real uvicorn server on an ephemeral port, because in-process ASGI
+101 tests (`tests/test_api.py`, `tests/test_rc5.py`). They start a real uvicorn server on an ephemeral port, because in-process ASGI
 transports buffer responses and the SSE behaviour is the point; proxied mode runs against a
 second instance configured with two RS256 public keys the fixture generates. Covered: a
 full lifecycle per scenario (create, upload, message, consume the stream to
@@ -946,8 +1042,15 @@ and a non-publisher sending every page to review, S1's single publication with
 `publish_at`); rc.4 (sessions with and without a first plan, the plan routes and
 `PlanState`, run modes and `plan_id` on every plan-scoped event, acceptance only by a
 `plan` part or a module's one confirmation, a plain message going to the session agent,
-side runs, the session agent's own question blocking messages, superseding, one plan
-executing at a time, a done plan run again, `allow_while_released`, retries of a failed
-run, plan and session transitions with their refusals, credentials outliving plans, and
-S7 played live with its run modes); and a check that every path in `openapi.yaml` is
-routed and that the reported `api_version` matches the spec.
+side runs, the session agent's own question blocking messages, a done plan run again,
+retries of a failed run, plan and session transitions with their refusals, credentials
+outliving plans, and S7 played live with its run modes and its revision); rc.5 in
+`tests/test_rc5.py` (done items kept and never changed, `dependency_order`, removed items
+coming back, `change` and `version` per item, segments, the session agent telling a
+revision from new work, `options.mode: revise` and its `422`/`404`/`409`, a done plan
+revised twice across two modules with one execute run per segment, a redirect of an
+execute run and of a proposing run, several open plans and superseding on request, and
+S8 replayed live against `examples/s8-living-plan.sse`: the same runs, modules, cancel
+reasons, plan versions, items and changes, skipped while the transcript is missing); and
+a check that every path in `openapi.yaml` is routed and that the reported `api_version`
+matches the spec.

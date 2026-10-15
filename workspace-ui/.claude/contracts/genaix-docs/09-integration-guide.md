@@ -6,10 +6,12 @@ does; the CMS MCP specification (`mcp/tools.json`, `04-mcp-scope.md`) describes 
 Neither says how the two are wired together, who creates which credential, what the proxy in between
 must do, or what to do when a step fails. That is this document.
 
-Every route and field name used below exists in `openapi.yaml`, contract version `1.0.0-rc.4`
-(agreed 2026-10-12).
-Passages new in `rc.3` or `rc.4` say so; section 10 lists them. The one idea `rc.4` adds: **the
-session is the conversation, the plan is the unit of work.**
+Every route and field name used below exists in `openapi.yaml`, contract version `1.0.0-rc.5`, a
+draft for review (2026-10-14); `1.0.0-rc.4` (agreed 2026-10-12) stays the agreed contract until it
+is agreed. Passages new in `rc.3`, `rc.4` or `rc.5` say so; section 10 lists them. The one idea
+`rc.4` adds: **the session is the conversation, the plan is the unit of work.** The one idea `rc.5`
+adds: **the plan is living**: a follow-up on the same work revises it, and one plan may use several
+modules.
 
 ## 1. Purpose and audience
 
@@ -587,10 +589,11 @@ POST /sessions
   "model": "claude-sonnet-5" }
 ```
 
-Here the session agent drafts a `content_create` plan from the message; the same body with
-`"workflow": "content_create"` is what a "Create page here" action sends. A session has no workflow
-of its own (since `1.0.0-rc.4`): each plan names its module in `Plan.workflow`, and a `PATCH` of the
-session carrying `workflow` is `422`. `intent` is derived and read-only — the plain rendering of the
+Here the session agent drafts a plan from the message, and its proposing run picks
+`content_create`; the same body with `"workflow": "content_create"` is what a "Create page here"
+action sends. A session has no workflow of its own (since `1.0.0-rc.4`): each plan names its
+modules in `Plan.workflows` (since `1.0.0-rc.5`; one module in `Plan.workflow` before), and a
+`PATCH` of the session carrying `workflow` is `422`. `intent` is derived and read-only — the plain rendering of the
 first user message, per "Composing messages from the Workspace" below — so `POST /sessions` no
 longer accepts it as an input field; a session created with no `message` keeps an empty `intent`
 until one arrives. Context is never plain text: an at-mention, a tree selection, a guideline or an
@@ -617,7 +620,8 @@ logs and plain clients; a client that sends `content` and `references[]` with no
 served, and the server derives `parts` from them. An input part type the server does not recognize is
 rejected with `422` `validation_failed`; the same fallback leniency the event stream applies to
 unrecognized output part types does not extend to what a client may send in. The body also carries
-`files`, `reply_to_interaction`, and `options.mode` of `execute` (default) or `plan_only`.
+`files`, `reply_to_interaction`, and `options.mode` of `execute` (default), `plan_only` or, since
+`1.0.0-rc.5`, `revise` with `options.plan_id` (see "Stop and change" below).
 
 ```json
 POST /sessions/{session_id}/messages
@@ -640,7 +644,9 @@ watch one session, which is what an interactive UI wants. With `Accept: text/eve
 response body *is* the stream of the run just started, for command-line clients.
 
 Where a message goes (since `1.0.0-rc.4`): to the session agent, unless it accepts a plan (its
-`plan` part) or answers a plan run's interaction. **The
+`plan` part), answers a plan run's interaction or carries `options.mode: revise` (since
+`1.0.0-rc.5`). The session agent decides whether the message revises a plan, starts new work or
+is a question (see "Revising a plan" below). **The
 user can keep asking while a plan works.** While a plan's run is active (`propose`, `execute` or
 `transition`), a message starts a **side run**: the session agent with read tools and `recall`
 only, no CMS write tool and no change to the plan, named by `Session.side_run_id` next to the
@@ -649,8 +655,10 @@ the session agent's own run is active, a second side run while one is going, and
 accepts a plan while a plan's run is active. Wait for the run or cancel it with
 `POST /sessions/{session_id}/runs/{run_id}/cancel`, which is idempotent. A message whose
 `reply_to_interaction` names the waiting run's pending interaction is always accepted: the answer
-unblocks that run and the message joins it, and it is never a side run. A plan's status never
-blocks a message; an archived session does, with `409` `session_archived`.
+unblocks that run and the message joins it, and it is never a side run. A message that redirects
+the executing plan is never a side run either (since `1.0.0-rc.5`): GenAIx's router tells a
+question from a redirection, and `options.mode: revise` forces one. A plan's status never blocks a
+message; an archived session does, with `409` `session_archived`.
 
 ### Composing messages from the Workspace
 
@@ -675,7 +683,7 @@ review (below).
 | A chip pointing at an uploaded session file | `file_ref` | `{ "type": "file_ref", "file_id": "...", "mode": "source" \| "verbatim" }` |
 | A setting, stated either as a chip the user picked or as a confirmed settings review | `setting` | `{ "type": "setting", "key": "folder" \| "language" \| "template" \| "publish_at" \| ..., "value": "...", "label": "..." }` |
 | A structured-search selection (a saved filter, a picked facet combination) | `filter` | `{ "type": "filter", "label": "...", "criteria": {...} }` |
-| The plan card's acceptance, as proposed or as the user adjusted it, on an `execute` message (`1.0.0-rc.3`; `plan_id` since `1.0.0-rc.4`) | `plan` | `{ "type": "plan", "plan": { "plan_id": "...", "based_on_version": 3, "summary"?: "...", "items": [ { "id"?, "label", "kind"?, "target"? } ] } }` |
+| The plan card's acceptance, as proposed or as the user adjusted it, on an `execute` message (`1.0.0-rc.3`; `plan_id` since `1.0.0-rc.4`; item `workflow` and `depends_on` since `1.0.0-rc.5`) | `plan` | `{ "type": "plan", "plan": { "plan_id": "...", "based_on_version": 3, "summary"?: "...", "items": [ { "id"?, "label", "kind"?, "target"?, "workflow"?, "depends_on"? } ] } }` |
 
 `setting` parts override or fill the session's context for this request only, and the effect is
 reflected back in `derived_settings`, not silently assumed; `filter` parts become the input to a
@@ -756,16 +764,41 @@ The flow, end to end:
 2. The Workspace renders one chip per `proposed` and per `missing` entry, prefilled and editable,
    with `options` offered as a picker where the interaction supplies them. Showing `evidence`
    next to an inferred chip is what makes the card reviewable rather than a second form to fill in.
+   **Preselect a `missing` entry's `recommended` option and show its `reason`**: that is the
+   agent's choice after it read the CMS (the one template that fits), in machine-readable form,
+   so you never parse it out of `prompt`. Show a folder's `ref.path` next to its label
+   (`Manual · /Manual/`), so two folders of the same name are told apart. Where an entry has
+   `other_allowed: true`, its `options` are suggestions: offer your own CMS picker next to them.
 3. The user accepts or corrects, and the client answers with a list of `setting` parts covering
    every `proposed` and `missing` key — `POST /sessions/{id}/interactions/{interaction_id}`, or
-   `reply_to_interaction` on the next `POST .../messages`.
+   `reply_to_interaction` on the next `POST .../messages`. **For `node`, `folder` and
+   `template` the `value` is the CMS id, never the name: `{"key": "folder", "value": "2",
+   "label": "Manual"}`, not `{"key": "folder", "value": "Manual", ...}`.** Send back the
+   option's `value` the user picked, or the proposed `value` they kept; where an entry has
+   neither, the id of the object the user chose in your own CMS picker. A name is `422
+   validation_failed` with a pointer at that `value`.
 4. GenAIx stores those confirmed parts as a **user message** of `setting` parts, with
    `interaction_id` pointing at the review; `interaction.resolved` names it in `message_id`, so the
    decision appears in the transcript as the user's own. `derived_settings.updated` follows at
    once with every confirmed key in `corrected_by_user`, and the run continues to the write.
 
+Where the folder comes from decides what the card can offer. A folder the user referenced in the
+message (`@[Manual]`, a `reference` part) is proposed with `source: text` and that rendering as
+its `evidence`; a folder in the session context with `source: context`. Either way GenAIx then
+knows the folder and lists the templates it allows as the template's `options`. With no folder at
+all, both are `missing` and the template comes without options. **To skip the question for a
+folder or template the user picked explicitly, send it as a `setting` chip with its id** (`{"type":
+"setting", "key": "folder", "value": "2", "label": "Manual"}`): a chip is the user's own decision
+and is never reviewed again.
+
+When the agent reads the request differently from a folder the user referenced ("the root folder
+in @[Manual]" read as the root of the node, while the reference is a folder of that name below
+it), the proposed folder stays the referenced one and its `options` carry both, each with a
+`reason` and its `path`: render them as the choice they are.
+
 In the S1 turn the folder comes from the session context, the language was inferred from the words
-"auf Deutsch", and the template could not be derived at all — two of them qualify:
+"auf Deutsch", and the template was not in the user's words — two of them qualify, and the agent
+recommends the one that allows the registration form:
 
 ```json
 {
@@ -773,12 +806,16 @@ In the S1 turn the folder comes from the session context, the language was infer
   "kind": "settings_review",
   "prompt": "Ich habe diese Einstellungen aus deinem Text abgeleitet. Passt das so, bevor ich die Seite anlege?",
   "proposed": [
-    { "key": "folder", "value": "42", "label": "Richtlinien", "source": "context" },
+    { "key": "folder", "value": "42", "label": "Richtlinien", "source": "context",
+      "ref": { "type": "folder", "id": "42", "label": "Richtlinien", "node_id": 3,
+               "path": "/Richtlinien/" } },
     { "key": "language", "value": "de", "label": "Deutsch",
       "source": "text", "evidence": "auf Deutsch" }
   ],
   "missing": [
     { "key": "template", "label": "Template",
+      "recommended": "17",
+      "reason": "Nur die Kampagnen-Landingpage erlaubt den Baustein form_embed, den das Anmeldeformular braucht.",
       "options": [
         { "value": "17", "label": "Kampagnen-Landingpage",
           "ref": { "type": "template", "id": "17", "node_id": 3 } },
@@ -792,7 +829,7 @@ In the S1 turn the folder comes from the session context, the language was infer
 }
 ```
 
-The user keeps both proposals and picks the first template, so the answer repeats every key as a
+The user keeps both proposals and the recommended template, so the answer repeats every key as a
 `setting` part:
 
 ```json
@@ -813,47 +850,61 @@ History then shows those three parts as a user turn, rendered
 client with no chip composer needs nothing special here: it renders the prompt and the two arrays
 as text and sends the same `settings` list back.
 
-A review is raised at most once per run, batched, and only when a write-governing setting
-(`node`, `folder`, `template`, `language`, `publish_at`) was inferred from text or is missing.
+A review is raised at most once per plan version (since `1.0.0-rc.5`; once per run before),
+covering the keys the modules of the version's pending items need, batched, and only when a
+write-governing setting (`node`, `folder`, `template`, `language`, `publish_at`) was inferred from
+text or is missing, or the version uploads a file or an image into a folder the user did not name.
+That last case asks the advisory key `file_folder` or `image_folder` (since `1.0.0-rc.5`) as a
+`missing` entry with `other_allowed: true` and the node's default file or image folder as
+`recommended`: render it as a folder picker preselected with that folder, and answer with the
+chosen folder's id like any other `setting` part.
 Settings that came from a chip or from the session context do not trigger one on their own. If the
 review expires or the run is cancelled while it is open, the run ends without a CMS write.
 
-### The plan card: accept, adjust, discard
+### The plan card: accept, adjust, revise, discard
 
 Since `1.0.0-rc.4` the work of a conversation is a sequence of **plans**, and each plan is one card
-in it. A plan runs under one workflow module and has its own steps, checks, gates, derived
-settings, previews, publications and lifecycle (`PlanStatus`). The card needs one event:
-`plan.updated` carries the whole plan, `id`, `workflow` and `status` included, on every change of
-its items **and** on every lifecycle change. Keep one card per `plan.id` and replace its plan
-unconditionally whenever a `plan.updated` with that `plan_id` arrives.
+in it. A plan has its own steps, checks, gates, derived settings, previews, publications and
+lifecycle (`PlanStatus`), and since `1.0.0-rc.5` it is carried out by one or more workflow modules
+and **living**: one card per piece of work, which the user revises instead of replacing. The card
+needs one event: `plan.updated` carries the whole plan, `id`, `workflows`, `status`, `versions`
+and every item's `change` included, on every change of its items **and** on every lifecycle
+change. Keep one card per `plan.id` and replace its plan unconditionally whenever a
+`plan.updated` with that `plan_id` arrives; a revision arrives under the same `plan.id`, so it
+updates the same card.
 
-How a card comes about. The session agent calls its `draft_plan` tool with a workflow, and the
-first `plan.updated` appears: `status: drafting`, `version: 0`, no items. The module's proposing
-run follows on the same message (`run.started` with `run.mode: propose` and `run.plan_id`): it
-reads and plans with every write withheld, and ends with `plan.updated` at `status: proposed`,
-`version: 1`. Nothing has been written; the plan waits for the user.
+How a card comes about. The session agent calls its `draft_plan` tool with the goal, optionally
+naming the modules it expects, and the first `plan.updated` appears: `status: drafting`,
+`version: 0`, no items. The plan's proposing run follows on the same message (`run.started` with
+`run.mode: propose` and `run.plan_id`): it picks the modules, reads and plans with every write
+withheld, and ends with `plan.updated` at `status: proposed`, `version: 1`. Nothing has been
+written; the plan waits for the user.
 
-Whether a plan needs the user's acceptance depends on its module, never on the model:
+Whether a plan needs the user's acceptance depends on its modules, never on the model:
 
-- **`plan_approval: true`** (`content_create`, `content_edit`; since `1.0.0-rc.3`): always
-  proposes as above and waits.
-- **`plan_approval: false` with a CMS write tool** (`construct_create`, `admin_user`): the drafted
-  plan still needs one user confirmation, the card's accept or the answer to the `confirm`
-  interaction the plan raises (S3).
-- **No CMS write tool** (`content_research`): no acceptance at all. The plan goes from `drafting`
-  to `running` at once, because reading is free, and the card only shows progress.
+- **A module with `plan_approval: true`** (`content_create`, `content_edit`; since `1.0.0-rc.3`):
+  the plan always proposes as above and waits.
+- **Only `plan_approval: false` modules, at least one with a CMS write tool** (`construct_create`,
+  `admin_user`): the drafted plan still needs one user confirmation, the card's accept or the
+  answer to the `confirm` interaction the plan raises (S3).
+- **No CMS write tool in any module** (`content_research`): no acceptance at all. The plan goes
+  from `drafting` to `running` at once, because reading is free, and the card only shows progress.
 
-`options.mode: plan_only` stops any module after its plan for one turn.
+`options.mode: plan_only` stops any plan after its proposal for one turn.
 
 | `plan.status` | The card | What the user can do |
 |---|---|---|
-| `drafting` | the module, planning | discard |
-| `proposed` | summary and items, waiting | accept, adjust and accept, discard |
-| `accepted`, `running` | progress: steps, checks, previews | stop the run; `release` (stops it after the gates) |
-| `done` | the result, checks, previews | `release`, `discard` |
-| `released` | the pages waiting to be published | `publish`, `request_review`, `reopen`, `discard` |
-| `published`, `review_requested` | one outcome per page | `reopen` |
-| `discarded`, `superseded` | closed, read-only | nothing; a closed plan never changes again |
+| `drafting` | planning; for a revision, the previous version greyed | discard |
+| `proposed` | summary and items; for a revision, the difference against the accepted version | accept, adjust and accept, ask for a change, discard |
+| `accepted`, `running` | progress: steps, checks, previews | ask; "Stop and change"; stop the run; `release` (stops it after the gates) |
+| `done` | the result, checks, previews | ask for a change, `release`, `discard` |
+| `released` | the pages waiting to be published | `publish`, `request_review`, ask for a change, `discard` |
+| `published`, `review_requested` | one outcome per page | ask for a change: the card opens again at the next version |
+| `discarded`, `superseded` | closed, read-only | nothing; a final plan never changes again |
+
+"Ask for a change" is an ordinary message about the plan's work, or one with `options.mode:
+revise` and the plan's `options.plan_id` from a field on the card (since `1.0.0-rc.5`, below).
+There is no `reopen`: rc.4's transition is removed, and a revision replaces it.
 
 **Accepting.** Only the user's own message accepts a plan; the model never does. The card's accept
 sends an `execute` message with a `plan` part naming the plan and the version the user saw, its
@@ -863,29 +914,43 @@ to the session agent, because the user may be asking for something else. The rul
 
 - At most one `plan` part per message, and only with `options.mode: execute`; otherwise `422`
   `validation_failed` pointing at `/parts/<i>`.
-- `plan_id` must name the session's open proposed plan: `409` `plan_closed` for a closed plan (or
+- `plan_id` must name a proposed plan of the session: `409` `plan_closed` for a closed plan (or
   none of this session) and `409` `plan_not_proposed` for one still drafting or already accepted.
 - `based_on_version` must be that plan's current `version`; otherwise `409` `plan_outdated`. Re-read
   `GET /sessions/{session_id}/plans/{plan_id}`, show the current version and let the user re-apply
   the edit.
 - `items` in order are the order of work, 1 to 100 of them, each `label` 1 to 500 characters. An
-  item whose `id` names a current step keeps that step, with its `kind` and `target` unless the part
-  sets them; an item without an `id`, or with one the plan does not have, is a new step and gets an
-  id from GenAIx; a current step left out is removed.
+  item whose `id` names a current step keeps that step, with its `kind`, `target`, `workflow` and
+  `depends_on` unless the part sets them; an item without an `id`, or with one the plan does not
+  have, is a new step and gets an id, and without `workflow` a module, from GenAIx; a current step
+  left out is removed.
+- A `done` item is kept whatever the part says (since `1.0.0-rc.5`): leaving it out does not remove
+  it, and changing its `label`, `kind`, `target` or `workflow` is `422` `validation_failed` at
+  `/parts/<i>/plan/items/<j>`. Render `done` items read-only in the editor.
+- An order that puts an item before one it `depends_on` is `422` `validation_failed` with
+  `code: dependency_order` at `/parts/<i>/plan/items/<j>` (since `1.0.0-rc.5`). Keep a dragged item
+  below the items it depends on, or let the server's answer point at it.
 - The part renders into `content` as a numbered list, so history and plain clients still read the
   turn. That rendering is a display convention, not something a client should compose by hand: a
   numbered list in a `text` part is ordinary text.
-- A message that accepts a plan while another plan's run is active is `409` `run_already_active`:
-  at most one plan executes at a time.
+- A message that accepts or adjusts a plan (a `plan` part) while a run of that plan or of
+  another plan of the session is active is `409` `run_already_active`: at most one plan executes
+  at a time. Disable the card's accept while `Session.executing_plan_id` or `active_run_id` is
+  set.
+- In a revision, listing the id of an item the revision marks `removed` brings it back, with the
+  `change` it had before the revision; leaving out an item another kept item `depends_on` is `422`
+  `dependency_order` at that kept item.
 
-The execute run (`run.mode: execute`) opens with a further `plan.updated` at the next `version`,
-holding exactly the plan it will execute, with `accepted_version`, `accepted_by` and `accepted_at`
-set and a `reason` of `Accepted as proposed.` or `Adjusted by the user: ...`. If the agent later has
+The execute run (`run.mode: execute`) opens with a further `plan.updated` holding exactly the plan
+it will execute, with `accepted_version`, `accepted_by` and `accepted_at` set. Accepted as
+proposed, it has the **same** `version` and `status: accepted` (since `1.0.0-rc.5`; rc.4 added a
+version `Accepted as proposed.`); adjusted, it is at the next `version` with `reason` `Adjusted by
+the user: ...`. `version` changes only with the plan's content, never with its status alone. If the agent later has
 to merge, split or drop a step, it says so in another `plan.updated` with its own `reason`, never
 silently. A write outside the plan's objects (its items' targets and what it created) never reaches
 the CMS: the harness answers `tool.failed` with a `422` problem `plan_scope_violation`, then `error`
-with `recoverable: true`, and the agent tells the user it would need a plan change. S7 shows it for a
-page the user took out of the plan.
+with `recoverable: true`, and the agent tells the user it would need a revision of the plan. S7
+shows it for a page the user took out of the plan.
 
 In the S1 scenario the proposal is version 1 of plan `5b0e7c2a-...`, items `p1` to `p6`. The user
 drops the webinar form, moves the verbatim paragraph ahead of the key changes, and adds a contact
@@ -922,20 +987,101 @@ curl -s -X POST "${H[@]}" "${J[@]}" "$GX/sessions/$SID/messages" -d @plan-execut
 
 **Discarding.** The card's discard is a plan transition, not a message:
 `POST /sessions/{session_id}/plans/{plan_id}/transitions {"action": "discard"}`, from any open
-status, answered `200` with the `Plan`. The module's `plan_policy.on_discard` decides what happens
-to pages the plan already wrote: `keep` leaves them as drafts in the CMS (the default), `restore`
-restores each page's version from before the plan. The conversation goes on.
+status, answered `200` with the `Plan`. `plan_policy.on_discard`, the strictest value of the plan's
+modules (since `1.0.0-rc.5`), decides what happens to pages the plan already wrote: `keep` leaves
+them as drafts in the CMS (the default), `restore` restores each page's version from before the
+plan. The conversation goes on. Discard is for work the user wants to abandon; the record then says
+"discarded". Do not offer it as the way to change direction: that is a revision, which keeps the
+work.
 
-**Superseding.** A user who asks for something else while a plan is still `proposed` does not have
-to discard it: the session agent drafts a new plan, and the unaccepted one closes as `superseded`
-in a `plan.updated` of its own, just before the new card's first `plan.updated`. Nothing was written
-for it. Grey out the old card rather than removing it; it stays in `GET /sessions/{session_id}/plans`.
+**Revising a plan** (since `1.0.0-rc.5`). A follow-up on the work of a plan revises that plan
+instead of opening another, whether it is `proposed`, `done`, `released`, `published` or
+`review_requested`. The session agent tells a revision from new work and from a question; the card
+needs to do nothing for that, because the revision arrives as `plan.updated` under the same
+`plan.id`: first `status: drafting`, still at the current `version` with the current items
+(keep showing them while it drafts), then `status: proposed` at the next `version`, with
+`reason` `Revised: <what changed>`. Render it on the existing card:
 
-**One plan at a time.** At most one plan of a session executes (`Session.executing_plan_id`). Whether a
-new plan may be drafted while another is open is the module's `plan_policy.concurrency`:
-`exclusive` (the default) allows none until the open plan is closed, `allow_while_released` allows
-one once the open plan is `released` and only waits for publishing. `Session.open_plan_id` names the
-open plan, the card to keep in view.
+- **The difference.** Each item's `change` says what this version did to it against the version
+  accepted before it: while the revision is proposed, the version the user accepted last
+  (`plan.accepted_version`); after it is accepted, an item keeps the `change` it was accepted with
+  until the next revision. Values: `added`, `changed`, `removed` or `unchanged`. Mark added items,
+  show changed ones with their new label, strike removed ones through; a `removed` item stays
+  listed until the version is accepted, then it is dropped.
+- **Never accepted, no diff.** On a plan that was never accepted every item is `added`, also
+  after a revision of the proposal, and an item dropped before any acceptance simply disappears.
+  There is no difference to show then: render the proposal plainly, with no added markers, so a
+  first proposal and a revised one look alike.
+- **Finished work.** Items with `status: done` were carried out in an earlier version and are not
+  run again. They cannot be removed or changed, so render them read-only, without a delete
+  control; undoing one is a further item ("restore the previous title"), which the user asks for.
+- **Versions.** `plan.versions` is the history, oldest first: per version its `kind` (optional:
+  `proposal`, `revision`, `adjustment`, `deviation`), its `reason`,
+  `created_at`, `accepted_at`, `accepted_by` and the counts `items_added`, `items_changed`,
+  `items_removed`. Show "changed since you accepted" from the items, and the history list from
+  `versions` where the UI has room for it; both read from the same plan.
+- **Accepting.** The user accepts the revision exactly as a first proposal, with a `plan` part
+  naming the plan and the current `version`. The execute run carries out only the `pending` items.
+- **A settled plan.** Revising a `published` or `review_requested` plan opens it again: `closed_at`
+  is cleared and the card goes back to `drafting`. Its pages stay online until the next `publish`;
+  the plan's `publications` accumulate over its versions, and a page a later version wrote again is
+  `pending` again. Publications are pages only: a file the plan uploaded is not published by
+  GenAIx in rc.5; the CMS publishes it under its own rules. The revision also resets the release, so the `before_release` gates run again
+  at the next `release`.
+
+**Stop and change** (since `1.0.0-rc.5`). While a plan executes (`accepted`, `running`), a message
+is either a question, answered by a side run while the plan goes on, or a redirection ("stop, use
+red instead"). GenAIx's router decides for a plain message. A card control that means "change this
+plan now" sends the message with `options.mode: revise` and the plan's id, which forces a
+redirection:
+
+```json
+POST /sessions/{session_id}/messages
+{ "parts": [ { "type": "text", "text": "Der Linktext soll \"Einladung (PDF)\" lauten." } ],
+  "options": { "mode": "revise", "plan_id": "5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60" } }
+```
+
+The cancel is requested at once; the executing run stops at the next tool boundary and ends with
+`run.cancelled`, `run.cancel_reason: redirected`; the proposing run of the same plan follows on the same message
+(the `202` names its `run_id`) and ends with the plan `proposed` at the next version. Items the
+cancelled run finished stay `done`; the one it was working on is `pending` again, or `done` when its
+write completed. A step the cancelled segment did not finish ends `skipped`, and its `step_end`
+gates do not run. A `drafting` plan is redirected the same way: its proposing run is cancelled
+with `redirected` and started again with the message. Do not treat that `run.cancelled` as a failure or an end of the plan: show the card
+as being revised. The same `options.mode: revise` on a plan that does not execute revises it
+without the agent's decision; without `options.plan_id` it revises `Session.open_plan_id`. `409`
+`plan_not_revisable` for a `discarded` or `superseded` plan, `404` `plan_not_found` for a plan the
+session does not have.
+
+**Superseding** remains only for unrelated work: when the user starts something unrelated while a
+plan is still `drafting` or `proposed`, and says so, the session agent closes the unaccepted plan as
+`superseded` in a `plan.updated` of its own, just before the new card's first `plan.updated`.
+Nothing was written for it. Grey out the old card rather than removing it; it stays in
+`GET /sessions/{session_id}/plans`. A message about the same work revises the proposal instead
+(rc.4 superseded it).
+
+**Several plan cards** (since `1.0.0-rc.5`). Several plans may be open at once:
+`Session.open_plan_ids` lists them, oldest first, and `Session.open_plan_id` is the one the
+conversation currently works on, the most recently drafted or revised, and the card to keep in
+view. At most one plan executes (`Session.executing_plan_id`). rc.4's `plan_policy.concurrency` is
+removed, so a new plan never waits for another to close: a plan waiting for its release can sit next
+to a new one being proposed. Where the user acts on a card that is not the current one, send
+`options.plan_id` with `options.mode: revise`, so the change reaches that card's plan.
+
+**Several modules in one plan** (since `1.0.0-rc.5`). One plan may use several modules, listed in
+`plan.workflows` in the order GenAIx runs them: creating a page from a PDF, uploading the PDF and
+linking it is one card. Every item names its module in `workflow` and the items it needs in
+`depends_on`; GenAIx orders the items by those dependencies. The card need not show module
+boundaries: the items are what the user accepts, and `workflow` is there for a client that wants
+to label or group them. The progress rail shows each module's steps in plan order, with ids
+`<workflow>/<id>` (`content_edit/st-2`), and a step of no module, such as the publish step of a
+transition run, `plan/<id>` (`plan/st-publish`); a proposing run across modules reports the
+propose step of each module it plans for. A step shows its latest state; there is no step history
+per version, so redraw the rail from the latest `step.updated` per id. Checks are
+`<workflow>/<id>` too (a gate check `<workflow>/chk-<gate id>`), `plan/<id>` for none; the
+catalogue's `steps_template` and gate ids are the unprefixed module ids. An accepted version
+runs as one execute run per contiguous segment of one module's items, each `run.started` naming the
+module in `run.workflow`, without another acceptance between them.
 
 ### Editing existing pages, and following up in the same conversation
 
@@ -951,11 +1097,16 @@ page has a version newer than the one the agent read, and names the page.
 `examples/s6-content-edit.sse` is a three-page plan across two folders with different publish
 permissions, started from a context action.
 
-**Follow-up work is a further plan of the same session** (since `1.0.0-rc.4`). A question, an edit of
-the pages it found, a new page about the change: one conversation, three plans, each with its own
-card, release and publications. `examples/s7-continuous-session.sse` is exactly that sequence. The
-agent's context leads with the open plan and keeps a record of every closed plan and every user
-decision, so "now create an FAQ page about it" knows which pages the earlier plan changed.
+**New work is a further plan of the same session** (since `1.0.0-rc.4`); **more work on the same
+piece revises its plan** (since `1.0.0-rc.5`). A question, an edit of the pages it found, a new page
+about the change: one conversation, two plans, each with its own card, release and publications.
+`examples/s7-continuous-session.sse` is that sequence; "make it a news item instead" before the new
+page is accepted revises its plan rather than drafting a third. `examples/s8-living-plan.sse` is one
+plan revised four times across `content_create` and `content_edit`, with a redirect: create the
+PNDemo page from a PDF, make it more colourful, upload the PDF and link it, change the link text
+while the upload runs, then release and publish once. The agent's context leads with the plan the
+conversation currently works on and keeps a record of every plan, revision and user decision, so
+"now create an FAQ page about it" knows which pages the earlier plan changed.
 
 ```javascript
 // One conversation, successive plans (S7). cards: plan id -> the latest plan.updated's plan,
@@ -988,6 +1139,11 @@ await send(sid, {
 //    same session: a new card appears with its own plan_id.
 await send(sid, { content: 'Erstelle jetzt eine FAQ-Seite dazu.' });
 
+// 5. More on the same work revises the current card's plan: the same plan_id at the next version.
+//    From a field on a card, name the plan explicitly (since 1.0.0-rc.5).
+await send(sid, { content: 'Mach daraus lieber eine News-Meldung.',
+                  options: { mode: 'revise', plan_id: session.open_plan_id } });
+
 // Every plan of the conversation, oldest first: the cards, and the record of closed work.
 const { items: plans } = await (await fetch(`${GENAIX}/sessions/${sid}/plans`)).json();
 ```
@@ -999,7 +1155,7 @@ unknown and foreign), and gives the agent the earlier session's user messages, f
 messages and `cms_objects` as read-only context, which `recall` reaches too. Nothing else carries
 over: no files, no authorizations, no plan and no state, so the new session registers its own CMS
 token. Before `1.0.0-rc.4` it was also how research was followed by an edit; inside one
-conversation that is now a further plan.
+conversation that is now a further plan, or a revision of the plan when it is the same work.
 
 ```javascript
 // A new conversation that builds on an earlier one, with its own credential.
@@ -1021,8 +1177,8 @@ await fetch(`${GENAIX}/sessions?label=${encodeURIComponent('changeset:0d4f6a2e-7
 `GET /sessions?label=` may be repeated, and every given label must match exactly. The `changeset:`
 label is only an example of a client convention: since one plan publishes all of its pages, a
 "publish all" across sessions is not needed for multi-page work. `GET /sessions?workflow=` matches a
-session with any plan under that module, and `plan_status=` (since `1.0.0-rc.4`) filters on the open
-plan, else the latest: `plan_status=released&plan_status=review_requested` is the "needs your
+session with any plan that uses that module, and `plan_status=` (since `1.0.0-rc.4`) filters on the
+plan `open_plan_id` names, else the latest: `plan_status=released&plan_status=review_requested` is the "needs your
 attention" list.
 
 ### Consume the stream
@@ -1056,21 +1212,36 @@ What `1.0.0-rc.4` adds to reading the stream:
 - **Key plan state on `plan_id`.** Every plan-scoped event carries `plan_id`: the plan-state group
   above, `preview.updated`, and `interaction.requested` (where `null` means a question of the
   session agent). Keep that state per plan, keyed by `plan_id` plus the object's own id: step
-  `st-1` of one plan is not step `st-1` of the next. An event without `plan_id`, replayed from a
+  `content_edit/st-1` of one plan is not step `content_edit/st-1` of the next. An event without `plan_id`, replayed from a
   session older than `rc.4`, belongs to that session's only plan.
 - **Know which run you are looking at.** `run.started` names `run.plan_id` (`null` for the session
-  agent and for a side run) and `run.mode`: `session`, `side`, `propose`, `execute` or
+  agent and for a side run) and `run.mode`; every run event (`run.started`, `run.completed`,
+  `run.failed`, `run.cancelled`) also carries that plan as `plan_id` in the envelope when the run
+  works for a plan, and none for a session or side run, so a terminal event is routed to its card
+  without remembering the run. `run.mode` is one of `session`, `side`, `propose`, `execute` or
   `transition`. A side run's answer belongs in the conversation and leaves the executing plan's
   card alone; its terminal event ends the side run, not the plan's run.
-- **`session.updated`** carries `open_plan_id`, `executing_plan_id`, `plan_count` and
-  `side_run_id` as they change, so the client always knows which card is current.
+- **`session.updated`** carries `open_plan_id`, `open_plan_ids` (since `1.0.0-rc.5`),
+  `executing_plan_id`, `plan_count` and `side_run_id` as they change, so the client always knows
+  which card is current.
 - **`status` with `kind: context_compacted`** says that older turns were summarised for the
   agent's context at a turn boundary. Nothing was deleted: messages, plans and every user decision
   stay exact, and the agent can `recall` them. Show it as a quiet note or not at all.
 - **A write outside the executing plan** arrives as `tool.failed` with a `422` problem
   `plan_scope_violation`, followed by `error` with `recoverable: true`. The CMS was never called.
   Render it as a transparency line, not as a failure: the run goes on, and the agent proposes a
-  plan change instead.
+  revision of the plan instead.
+
+What `1.0.0-rc.5` adds:
+
+- **A revision updates the same card.** `plan.updated` with a known `plan.id` and `status:
+  drafting` after `done`, `released` or a settled status is a revision, not a new plan; render the
+  items' `change` (see "Revising a plan").
+- **`run.cancelled` with `run.cancel_reason: redirected`** ends an execute run the user redirected.
+  The plan's proposing run follows at once; keep the card, show it as being revised.
+- **`workflow` on steps, checks and execute runs.** Step and check ids are `<workflow>/<id>`, also
+  in a one-module plan; `run.workflow` names the module of an execute run's segment, `null` on
+  every other mode.
 
 Four client rules are normative: ignore an event whose `type` you do not know, without failing or
 closing the stream; tolerate an unknown part type, rendering its `text` field when present and
@@ -1086,8 +1257,8 @@ the shape of the thing. Comment lines are documentation only and never appear on
 ```
 id: 1
 event: run.started
-data: {"seq":1,"type":"run.started","run":{"id":"c4e7...","status":"running","trigger":"message",
-:       "plan_id":"5b0e...","mode":"execute",...}}
+data: {"seq":1,"type":"run.started","plan_id":"5b0e...","run":{"id":"c4e7...","status":"running","trigger":"message",
+:       "plan_id":"5b0e...","mode":"execute","workflow":"content_create",...}}
 : Show the agent as working on this plan's card. The session's active_run_id becomes this run's id.
 : step.updated then carries a full Step object with plan_id, keyed by plan_id and step id, always a
 : replacement, which fills the card's progress rail.
@@ -1095,7 +1266,8 @@ data: {"seq":1,"type":"run.started","run":{"id":"c4e7...","status":"running","tr
 id: 5
 event: tool.started
 data: {"seq":5,"type":"tool.started","tool_call_id":"tc-01","tool":"read_file","group":"genaix",
-:       "input_summary":"Read session file neue-nutzungsbedingungen-ab-q3.pdf (14 pages)","step_id":"st-1"}
+:       "input_summary":"Read session file neue-nutzungsbedingungen-ab-q3.pdf (14 pages)",
+:       "step_id":"content_create/st-1"}
 : input_summary is a human sentence, never raw arguments: tool input may contain a whole document
 : and must not reach the UI or the logs verbatim. tool.completed correlates by tool_call_id.
 
@@ -1123,7 +1295,8 @@ data: {"seq":69,"type":"preview.updated","plan_id":"5b0e...","cms_ref":{"type":"
 
 id: 70
 event: check.updated
-data: {"seq":70,"type":"check.updated","plan_id":"5b0e...","check":{"id":"chk-verbatim-identical",
+data: {"seq":70,"type":"check.updated","plan_id":"5b0e...","check":{"id":"content_create/chk-verbatim-identical",
+:       "workflow":"content_create",
 :       "severity":"pass","blocking":true,"source":{"type":"gate","id":"verbatim_identical"},"gate_id":"verbatim_identical",
 :       "kind":"script","evidence":{"source_sha256":"4e1c...","target_sha256":"4e1c..."},
 :       "verification":{"identical":true,"matched_units":269,...}}}
@@ -1142,46 +1315,53 @@ data: {"seq":92,"type":"run.completed","run":{...,"status":"completed"},"usage":
 Two reads replace the one snapshot of `rc.3` (since `1.0.0-rc.4`):
 
 - `GET /sessions/{session_id}/plans` lists every plan of the conversation in short, oldest first:
-  `id`, `workflow`, `status`, `version`, `summary`, `item_count`, `publication_counts` and the
-  timestamps. That is the list of cards, and the record of closed work.
+  `id`, `workflows` (module ids in run order, since `1.0.0-rc.5`; `workflow` before), `status`,
+  `version`, `summary`, `item_count`, `publication_counts` and the timestamps. That is the list of
+  cards, and the record of closed work. A revised plan keeps its place and its `id`, listed once at
+  its current `version`.
 - `GET /sessions/{session_id}/plans/{plan_id}` is the point-in-time snapshot of one plan, a
   `PlanState`: `plan`, `steps` with substeps, `checks`, `derived_settings`, `approval_chain`,
   `publications` (one per page, `1.0.0-rc.3`), `cms_objects`, `preview` (the most recent) and
   `previews` (the latest per page, `1.0.0-rc.3`), `pending_interaction` when the plan's run is
-  blocked, `authorizations`, and `gates`, one `GateResult` per declared gate. `404`
-  `plan_not_found` for a plan id the session does not have.
+  blocked, `authorizations`, and `gates`, one `GateResult` per gate each of the plan's modules
+  declares. Since `1.0.0-rc.5` `plan.versions` is the history of the plan's versions, and steps,
+  checks, gates and publications are those of all its versions. `404` `plan_not_found` for a plan
+  id the session does not have.
 
-`GET /sessions/{session_id}/workflow` is **deprecated**: it answers with the `PlanState` of the open
-plan, else of the latest plan, else `404`, so a client written for one workflow per session keeps
+`GET /sessions/{session_id}/workflow` is **deprecated**: it answers with the `PlanState` of the plan
+`open_plan_id` names, else of the latest plan, else `404`, so a client written for one workflow per session keeps
 working on sessions with a single plan. New code reads the plan routes.
 
 Gate execution records live **only** in the plan snapshot; no event carries a `GateResult`. The
 stream carries `check.updated`, and a gate-produced check names its `gate_id`, its `kind`
-(`script`, `subagent`, `prompt` or `human`) and machine-readable `evidence`. Hydrate `gates` from
+(`script`, `subagent`, `prompt` or `human`) and machine-readable `evidence`. A gate's `attempt`
+is `1` for its first execution (`0` only while it is `pending`), and its evidence file is
+`gates/<plan_id>/<workflow>/<gate>-<attempt>.json`. Hydrate `gates` from
 the snapshot of the check's `plan_id` and re-fetch it, debounced, whenever a gate-backed check
 arrives. Never synthesise a `GateResult` from a check: `status` (did the gate run) and `verdict`
 (what it judged) deliberately differ. A gate's `attempt` counts per plan.
 
 ### Release, acknowledge, publish
 
-Releasing, publishing, requesting review, reopening and discarding act on **one plan** (since
+Releasing, publishing, requesting review and discarding act on **one plan** (since
 `1.0.0-rc.4`): `POST /sessions/{session_id}/plans/{plan_id}/transitions` with `action` one of
-`release`, `reopen`, `publish`, `request_review`, `discard`, plus optional `comment`, `at` (to
-schedule a publish) and `acknowledge_checks`. The session stays `active` throughout; only the plan
+`release`, `publish`, `request_review`, `discard`, plus optional `comment`, `at` (to schedule a
+publish) and `acknowledge_checks`. rc.4's `reopen` is removed since `1.0.0-rc.5`: a follow-up
+message revises a plan, settled or not ("Revising a plan" above). The session stays `active` throughout; only the plan
 moves. The session's own route, `POST /sessions/{session_id}/transitions`, keeps `archive` and
 `unarchive` and nothing else.
 
 | `action` | From (`PlanStatus`) | To | Answer |
 |---|---|---|---|
 | `release` | `done` (also `running`, which stops the run after the gates passed) | `released` | `200` with the `Plan` |
-| `reopen` | `released`, `review_requested`, `published` | `accepted` | `200` with the `Plan` |
 | `publish` | `released` | `published` or `review_requested` | `202` with `run_id`, `plan`, `session` |
 | `request_review` | `released` | `review_requested` | `202` with `run_id`, `plan`, `session` |
 | `discard` | any open status | `discarded` | `200` with the `Plan` |
 
 Each real change emits `plan.updated` with the new `status`; a repeated `discard` is `200` with no
-event. A transition on a closed plan (other than `reopen`) is `409` `plan_closed`, and any other
-action not legal from the current status is `409` `workflow_transition_invalid`. The `202` of
+event. A transition on a closed plan, settled (`published`, `review_requested`) or final
+(`discarded`, `superseded`), is `409` `plan_closed`, and any other action not legal from the
+current status is `409` `workflow_transition_invalid`. The `202` of
 `publish` and `request_review` carries the plan as it is when the call returns, still `released`;
 the outcome arrives on the stream with the run's `plan_id`. Whether a `publish` becomes a direct
 publish or a review request is decided **server-side** from the calling user's CMS permissions on
@@ -1195,7 +1375,10 @@ module). A plan publishes every page it created or changed — its `cms_objects`
 `Publication` per such page: `{plan_id, cms_ref, status, approval_chain, publish_at?, at?,
 error?}`, `status` one of `pending`, `published`, `review_requested` or `failed`, each resolved
 from the permissions on that page's own folder and `pending` until a `publish` or
-`request_review`. Pages another plan of the session wrote are never touched. `publications.updated`
+`request_review`. Pages another plan of the session wrote are never touched. A revised plan's
+publications accumulate over its versions (since `1.0.0-rc.5`): `publish` sends out the pages of
+every version, and a page a later version wrote again is `pending` again. Publications are pages
+only: a file the plan uploaded has no entry; the CMS publishes it under its own rules. `publications.updated`
 carries the plan's whole array whenever an entry changes; replace it, never merge. `publish`
 handles every entry that is `pending` or `failed`, each directly or through review as its folder
 dictates; `request_review` sends each to review; `at` applies to all of them. Afterwards the plan
@@ -1210,8 +1393,9 @@ is:
 A repeated `publish` then retries only the `pending` and `failed` entries. The plan-level
 `approval_chain` equals the first entry's chain, so a one-page plan reads exactly as a one-page
 session did before. There is no partial discard: a user who wants a page out of the work removes it
-from the plan before accepting it. A published plan is closed and the conversation goes on; the
-next plan acts with the same session credential.
+from the plan before accepting it. A published plan is settled and the conversation goes on: the
+next plan acts with the same session credential, and a follow-up on the same work revises the
+published plan, whose pages stay online until its next `publish`.
 
 ```javascript
 // After POST .../plans/${planId}/transitions {action: "publish"} answered 202 and its run ended:
@@ -1224,8 +1408,10 @@ const retry = ps.publications.some(p => p.status === 'failed' || p.status === 'p
 // retry → offer "Publish remaining" on this plan's card, which repeats the same transition.
 ```
 
-Quality gates run before `release`, `publish` and `request_review`. While any gate-sourced check is
-`fail` the transition is refused with `409` `quality_gate_failed`, and the problem document explains
+Quality gates run before `release`, `publish` and `request_review`: the gates of every module of
+the plan, each over its own module's items (since `1.0.0-rc.5`). A revision resets the release, so
+a revised plan's `before_release` gates run again at its next `release`. While any gate-sourced
+check is `fail` the transition is refused with `409` `quality_gate_failed`, and the problem document explains
 it without a second call: `failing_checks` (the same `Check` objects the stream already sent),
 `failing_gates` (the `GateResult`s of the blocking ones) and `acknowledgeable_checks` (the ids of the
 non-blocking failures).
@@ -1303,10 +1489,13 @@ helps a URL that cannot be reached.
 | Blocking gate refuses a transition | `409` `quality_gate_failed` with `failing_gates` | Render the failing checks and their evidence. Fixing the finding re-runs the gate |
 | Non-blocking gate refuses | `409` `quality_gate_failed` with `acknowledgeable_checks` and empty `failing_gates` | Offer a tick box per id, repeat the transition with `acknowledge_checks` |
 | The plan changed since the user started editing it | `409` `plan_outdated` | Re-read `GET /sessions/{session_id}/plans/{plan_id}`, show the current plan, and let the user re-apply the edit before sending again |
-| The card is stale: the plan was superseded, discarded or already accepted | `409` `plan_closed` or `plan_not_proposed` | Re-read `GET /sessions/{session_id}/plans`, update the cards, and offer accept only on the open `proposed` plan |
+| The card is stale: the plan was superseded, discarded or already accepted | `409` `plan_closed` or `plan_not_proposed` | Re-read `GET /sessions/{session_id}/plans`, update the cards, and offer accept only on a `proposed` plan |
+| A change sent to a plan that can no longer change | `409` `plan_not_revisable` (a `revise` message naming a `discarded` or `superseded` plan) | Re-read the cards; offer the change as new work, without `options.plan_id` |
+| An adjusted plan out of dependency order | `422` `validation_failed`, `code: dependency_order`, pointer `/parts/<i>/plan/items/<j>` | Move the item below the items it `depends_on`, then accept again |
 | A run is already active | `409` `run_already_active` | While a plan's run is active, a plain message is a side run and accepted; refused are a second message during the session agent's run, a second side run, and an acceptance while a plan's run is active. Wait or cancel; a message answering the pending interaction through `reply_to_interaction` is accepted |
 | The session is archived | `409` `session_archived` on a message, an upload, a file delete or a credential `PUT` | Offer to bring it back with `POST /sessions/{session_id}/transitions {"action": "unarchive"}`, then register a fresh credential before the next turn |
-| A write outside the executing plan | `tool.failed` with `422` `plan_scope_violation`, then `error` with `recoverable: true` | A transparency line on the plan's card. Nothing reached the CMS; the run goes on and the agent proposes a plan change instead |
+| A write outside the executing plan | `tool.failed` with `422` `plan_scope_violation`, then `error` with `recoverable: true` | A transparency line on the plan's card. Nothing reached the CMS; the run goes on and the agent proposes a revision of the plan instead |
+| The user redirected an executing plan | `run.cancelled` with `run.cancel_reason: redirected`, then the plan's proposing run | Not a failure. Keep the card and show it as being revised; the new version arrives as `plan.updated` `proposed` |
 | Interaction answered too late | `410` `interaction_expired` | Collapse the card, say it expired, let the user send a normal message instead |
 | Event history pruned | `410` `events_pruned` | Re-hydrate from the message history and the plan snapshots, then reconnect with `after=0` |
 | Connection unreachable on create | `201` with `status.reachable: false` | Not an error. Accept it, and still allow a token to be registered |
@@ -1315,8 +1504,8 @@ helps a URL that cannot be reached.
 | A page changed in the CMS after the agent read it (`content_edit`) | `409` `quality_gate_failed` from `base_version_current`, naming the page | Tell the user who changed which page; a new run re-reads it |
 
 The reconnect checklist, for a client that lost its connection or a second client opening the same
-session: `GET /sessions/{session_id}` for status, `active_run_id`, `side_run_id`, `open_plan_id` and
-`executing_plan_id`, then `GET /sessions/{session_id}/messages` for history, then
+session: `GET /sessions/{session_id}` for status, `active_run_id`, `side_run_id`, `open_plan_id`,
+`open_plan_ids` and `executing_plan_id`, then `GET /sessions/{session_id}/messages` for history, then
 `GET /sessions/{session_id}/plans` for the cards, then `GET /sessions/{session_id}/plans/{plan_id}`
 for the full state of the open and the executing plan (closed plans only when the user opens one),
 then `GET /sessions/{session_id}/events?after=<highest seq you have>`, or `after=0` when you have
@@ -1471,7 +1660,9 @@ merge patch, with arrays replaced wholesale) and `lib/state.js` (the fold from s
 state). `node tests/parse-transcripts.mjs` replays all recorded transcripts through the real modules.
 Since `1.0.0-rc.4` `lib/state.js` keys its state on `plan_id`, one bucket per plan, and the client
 draws a card per plan with the actions its status allows: accept (a `plan` part), release, publish,
-request review, reopen, discard, and run again.
+request review, discard, and run again; since `1.0.0-rc.5` a revised plan updates its card, which
+renders the items' `change`, and a change asked from a card is a message with `options.mode:
+revise` naming that plan. There is no `reopen`.
 
 ## 9. Requirements towards the CMS and the Workspace UI
 
@@ -1558,9 +1749,17 @@ streaming flush, which needs the CMS release that includes GPU-2665. The load-be
 - Must render one card per plan, driven by `plan.updated`, with accept and adjust on a `proposed`
   plan, sent as a `plan` part carrying `plan_id` and the `based_on_version` the user saw; handle
   `409 plan_outdated`, `plan_closed` and `plan_not_proposed` by re-reading the plans; drive release,
-  publish, request review, reopen and discard per plan through
+  publish, request review and discard per plan through
   `POST /sessions/{session_id}/plans/{plan_id}/transitions`; and show a superseded or discarded
   plan as closed rather than removing it.
+- Must render a revision on the same card (since `1.0.0-rc.5`): the items' `change` against the
+  accepted version, `removed` items struck through until accepted, `done` items read-only. Must
+  offer a change on a `done`, `released`, `published` or `review_requested` plan instead of
+  steering the user to discard, and must not offer `reopen`, which is gone. "Stop and change" on an
+  executing plan is a message with `options.mode: revise` and that plan's `options.plan_id`; a
+  `run.cancelled` with `cancel_reason: redirected` is not a failure.
+- Must handle several open plan cards (`Session.open_plan_ids`, since `1.0.0-rc.5`), keeping the one
+  `open_plan_id` names in view, and must render a plan of several modules as one card.
 - Must show the per-page `publications` of each plan after its publish rather than one outcome
   for the conversation.
 - Must keep the composer open while a plan executes: a question then is a read-only side run,
@@ -1671,8 +1870,9 @@ filters by exact label. Switching workflows inside one session stays open.
 **rc.4 (agreed 2026-10-12).** **The session is the conversation, the plan is the
 unit of work.** A session no longer has a workflow: it starts with the session agent, which
 replaces `free_chat`, reads and answers freely with the session's credential, and drafts plans.
-Each plan runs under its own module with its own steps, checks, gates, publications and lifecycle
-(`PlanStatus`), and appears as one card driven by `plan.updated`. Section 5 changes accordingly:
+Each plan runs under its own module (several since `1.0.0-rc.5`) with its own steps, checks,
+gates, publications and lifecycle (`PlanStatus`), and appears as one card driven by
+`plan.updated`. Section 5 changes accordingly:
 no workflow picker, `workflow` on `POST /sessions` only for a CMS context action; acceptance only
 by the user's own message, a `plan` part carrying `plan_id` and `based_on_version`, with the new
 `409 plan_closed` and `409 plan_not_proposed` next to `plan_outdated`; a plan without a CMS write
@@ -1696,3 +1896,21 @@ Uploads from GenAIx into the CMS use a signed, short-lived GenAIx link the CMS f
 (`GET /file-links/{token}`), which needs the GenAIx host on the CMS allowlist
 `mcp.upload_url_hosts` (section 4); without it GenAIx falls back to base64, at most 5 MB. The CMS
 MCP gains `create_folder`.
+
+**rc.5 (draft, 2026-10-14, for review; rc.4 stays the agreed contract).** **Living plans, across
+modules.** A follow-up on the work of a plan revises it as a new version under the same `id`
+instead of opening another: the card stays, renders what changed from each item's `change` and the
+history from `plan.versions`, and items finished earlier stay `done` and are not run again. Every
+plan but a `discarded` or `superseded` one is revisable, a published one too, so `reopen` is gone
+and discard is no longer the way to change direction. A message while a plan executes is a
+question (side run) or a redirection; "Stop and change" is `options.mode: revise` with
+`options.plan_id`, and the redirected run ends `run.cancelled` with `cancel_reason: redirected`.
+Several plans may be open (`Session.open_plan_ids`; `plan_policy.concurrency` is removed), at most
+one executes, and `open_plan_id` is the card the conversation works on. One plan may use several
+modules (`Plan.workflows` replaces `workflow` and `workflow_version`; items carry `workflow` and
+`depends_on`; step and check ids are `<workflow>/<id>`). One settings review per version, with
+the advisory folder keys `file_folder` and `image_folder` for uploads. New codes:
+`409 plan_not_revisable`, `errors[].code` `dependency_order`. Breaking for rc.4 clients; the proxy
+configuration, the identity model and the credential lifetime are unchanged.
+`examples/s8-living-plan.sse` plays one plan revised four times across two modules, with a
+redirect.

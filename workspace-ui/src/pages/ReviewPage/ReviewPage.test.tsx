@@ -16,9 +16,9 @@ vi.mock('@/hooks/useSessionEvents', () => ({ useSessionEvents: () => {} }));
 const SESSION = 's-1';
 
 const state: PlanState = {
-    workflow: 'content_create',
+    workflows: [{ id: 'content_create', version: '1.0.0' }],
     state: 'done',
-    plan: { id: 'pl-2', workflow: 'content_create', status: 'done', version: 3, summary: 'New terms page in Richtlinien.', items: [] },
+    plan: { id: 'pl-2', workflows: [{ id: 'content_create', version: '1.0.0' }], status: 'done', version: 3, summary: 'New terms page in Richtlinien.', items: [] },
     steps: [],
     checks: [{ id: 'chk-1', label: 'Formal address', severity: 'pass', blocking: false, message: 'Fine.', source: { type: 'guideline', label: 'Tone & Address' } }],
     gates: [],
@@ -36,7 +36,7 @@ function planUpdated(...plans: [id: string, status: PlanStatus][]) {
         session_id: SESSION,
         plan_id: id,
         type: 'plan.updated',
-        plan: { id, workflow: 'content_create', status, version: 1, summary: '', items: [] },
+        plan: { id, workflows: [{ id: 'content_create', version: '1.0.0' }], status, version: 1, summary: '', items: [] },
     } as GenaixEvent));
 }
 

@@ -95,6 +95,35 @@ describe('InteractionCard', () => {
         });
     });
 
+    it('asks the folder for an upload as a folder picker, the recommended folder preselected (rc.5 file_folder)', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubAnswer();
+
+        renderCard(interaction({
+            kind: 'settings_review',
+            prompt: 'In welchen Ordner soll das PDF?',
+            missing: [{
+                key: 'file_folder',
+                label: 'Ordner fuer das PDF',
+                recommended: '88',
+                reason: 'Downloads ist der Standard-Dateiordner des Knotens.',
+                other_allowed: true,
+                options: [
+                    { value: '88', label: 'Downloads', ref: { type: 'folder', id: '88', node_id: 3, label: 'Downloads', path: '/Downloads/' } },
+                    { value: '57', label: 'Veranstaltungen', ref: { type: 'folder', id: '57', node_id: 3, label: 'Veranstaltungen', path: '/Veranstaltungen/' } },
+                ],
+            }],
+        }));
+
+        expect(screen.getByRole('combobox', { name: /Ordner fuer das PDF/ })).toHaveTextContent('Downloads');
+        expect(screen.getByText('Downloads ist der Standard-Dateiordner des Knotens.')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Other folder…' })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+        expect(await sentAnswer(fetchMock)).toEqual({ settings: [{ type: 'setting', key: 'file_folder', value: '88', label: 'Downloads' }] });
+    });
+
     it('answers a settings review with a corrected free-text value', async () => {
         const user = userEvent.setup();
         const fetchMock = stubAnswer();

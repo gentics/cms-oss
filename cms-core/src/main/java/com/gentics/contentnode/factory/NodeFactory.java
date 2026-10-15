@@ -586,8 +586,7 @@ public class NodeFactory {
 	}
 
 	/**
-	 * remove the current version of a given object from the cache. Cached versions of the object (with a version timestamp) are not removed,
-	 * see {@link #clearVersionsLocal(Class, Integer, Collection)}.
+	 * remove the current version of a given object from the cache.
 	 * @param clazz class of the nodeobject.
 	 * @param id id of the object to remove.
 	 */
@@ -600,8 +599,7 @@ public class NodeFactory {
 	}
 
 	/**
-	 * remove the current version of a given object from the local cache. Cached versions of the object (with a version timestamp) are not removed,
-	 * see {@link #clearVersionsLocal(Class, Integer, Collection)}.
+	 * remove the current version of a given object from the local cache.
 	 * @param clazz class of the nodeobject.
 	 * @param id id of the object to remove.
 	 */
@@ -620,10 +618,9 @@ public class NodeFactory {
 	}
 
 	/**
-	 * remove the current versions of the given objects from the cache. Cached versions of the objects (with a version timestamp) are not removed,
-	 * see {@link #clearVersionsLocal(Class, Integer, Collection)}.
-	 * @param clazz class of the nodeobjects.
-	 * @param ids ids of the objects to remove.
+	 * remove the given object and all its versions from the cache.
+	 * @param clazz class of the nodeobject.
+	 * @param ids id of the object to remove.
 	 */
 	public void clear(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException {
 		clearLocal(clazz, ids);
@@ -634,10 +631,9 @@ public class NodeFactory {
 	}
 
 	/**
-	 * remove the current versions of the given objects from the local cache. Cached versions of the objects (with a version timestamp) are not removed,
-	 * see {@link #clearVersionsLocal(Class, Integer, Collection)}.
-	 * @param clazz class of the nodeobjects.
-	 * @param ids ids of the objects to remove.
+	 * remove a given object and all its versions from the cache.
+	 * @param clazz class of the nodeobject.
+	 * @param ids id of the object to remove.
 	 */
 	public void clearLocal(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException {
 		PortalCache cache = getCache(clazz);

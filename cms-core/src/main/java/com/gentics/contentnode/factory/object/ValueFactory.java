@@ -68,7 +68,7 @@ public class ValueFactory extends AbstractFactory {
 	 */
 	protected final static String SELECT_VERSIONED_VALUE_SQL = "SELECT * FROM value_nodeversion WHERE id = ? AND nodeversiontimestamp = "
 			+ "(SELECT MAX(nodeversiontimestamp) FROM value_nodeversion "
-			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id) ORDER BY auto_id";
+			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id)";
 
 	/**
 	 * SQL Params for the selection of versioned value data

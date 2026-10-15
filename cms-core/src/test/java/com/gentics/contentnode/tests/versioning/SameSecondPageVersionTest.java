@@ -7,8 +7,6 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.sql.ResultSetMetaData;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,7 +17,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
@@ -153,62 +150,6 @@ public class SameSecondPageVersionTest {
 	}
 
 	/**
-	 * Test that saving the page does not modify the published version, if another (unpublished) version with the same timestamp exists
-	 * (like created by concurrent requests)
-	 * @throws NodeException
-	 */
-	@Test
-	public void testSaveWithDuplicateVersionTimestamp() throws NodeException {
-		Page page = createPageAt(base);
-		String tagName = addTagAndPublishAt(page, base + 10, "first");
-
-		// add another (unpublished) version with the timestamp of the published version
-		Trx.operate(t -> {
-			DBUtils.update("INSERT INTO nodeversion (timestamp, user_id, o_type, o_id, published, nodeversion) VALUES (?, ?, ?, ?, ?, ?)", base + 10, 1,
-					Page.TYPE_PAGE, page.getId(), 0, "1.1");
-			t.dirtObjectCache(Page.class, page.getId());
-		});
-		assertVersions(page, version("1.1", base + 10, false), version("1.0", base + 10, true), version("0.1", base, false));
-
-		// change the tag and save in the same second
-		setValueAndSaveAt(page, base + 10, tagName, "second");
-
-		assertVersions(page, version("1.2", base + 11, false), version("1.1", base + 10, false), version("1.0", base + 10, true),
-				version("0.1", base, false));
-		assertValue(page, base + 10, tagName, "first");
-		assertValue(page, base + 11, tagName, "second");
-	}
-
-	/**
-	 * Test that duplicate rows for the same version of a value are handled consistently: the first written row is used when loading
-	 * the version and when creating a new version
-	 * @throws NodeException
-	 */
-	@Test
-	public void testDuplicateVersionedValueRows() throws NodeException {
-		Page page = createPageAt(base);
-		String tagName = addTagAndSaveAt(page, base + 10, "first");
-		int valueId = Trx.supply(t -> t.getObject(page).getContentTag(tagName).getValues().getByKeyname("url").getId());
-
-		// add a second row for the same version of the value (with higher auto_id)
-		Trx.operate(() -> duplicateVersionedValue(valueId, base + 10, "duplicate"));
-		Trx.operate(t -> t.clearNodeObjectCache());
-
-		// loading the version of the page must use the first row
-		assertValue(page, base + 10, tagName, "first");
-
-		// loading the version of the value must use the first row
-		Trx.operate(t -> t.clearNodeObjectCache());
-		Trx.operate(t -> {
-			assertThat(t.getObject(Value.class, valueId, base + 10).getValueText()).as("Versioned value").isEqualTo("first");
-		});
-
-		// creating a new version (with another change) must also use the first row, so the (unchanged) value is not versioned again
-		addTagAndSaveAt(page, base + 20, "other");
-		assertThat(getVersionTimestamps(valueId)).as("Version timestamps of the value").containsExactly(base + 10, base + 10);
-	}
-
-	/**
 	 * Create a page with the given transaction timestamp
 	 * @param timestamp timestamp in seconds
 	 * @return page
@@ -284,46 +225,6 @@ public class SameSecondPageVersionTest {
 			getPartType(ShortTextPartType.class, editablePage.getContentTag(tagName), "url").setText(value);
 			editablePage.save();
 		});
-	}
-
-	/**
-	 * Duplicate the row of the given value version in value_nodeversion (with a new auto_id) and set the given value text in the duplicate
-	 * @param valueId value ID
-	 * @param timestamp version timestamp
-	 * @param valueText value text for the duplicate row
-	 * @throws NodeException
-	 */
-	protected void duplicateVersionedValue(int valueId, int timestamp, String valueText) throws NodeException {
-		List<String> columns = DBUtils.select("SELECT * FROM value_nodeversion WHERE 1 = 0", rs -> {
-			List<String> names = new ArrayList<>();
-			ResultSetMetaData metaData = rs.getMetaData();
-			for (int i = 1; i <= metaData.getColumnCount(); i++) {
-				if (!"auto_id".equals(metaData.getColumnName(i))) {
-					names.add(metaData.getColumnName(i));
-				}
-			}
-			return names;
-		});
-		String selectColumns = columns.stream().map(column -> "value_text".equals(column) ? "?" : column).collect(Collectors.joining(", "));
-		DBUtils.update(String.format("INSERT INTO value_nodeversion (%s) SELECT %s FROM value_nodeversion WHERE id = ? AND nodeversiontimestamp = ?",
-				String.join(", ", columns), selectColumns), valueText, valueId, timestamp);
-	}
-
-	/**
-	 * Get the version timestamps of all rows of the value in value_nodeversion (ordered by auto_id)
-	 * @param valueId value ID
-	 * @return list of version timestamps
-	 * @throws NodeException
-	 */
-	protected List<Integer> getVersionTimestamps(int valueId) throws NodeException {
-		return Trx.supply(() -> DBUtils.select("SELECT nodeversiontimestamp FROM value_nodeversion WHERE id = ? ORDER BY auto_id",
-				ps -> ps.setInt(1, valueId), rs -> {
-					List<Integer> timestamps = new ArrayList<>();
-					while (rs.next()) {
-						timestamps.add(rs.getInt("nodeversiontimestamp"));
-					}
-					return timestamps;
-				}));
 	}
 
 	/**

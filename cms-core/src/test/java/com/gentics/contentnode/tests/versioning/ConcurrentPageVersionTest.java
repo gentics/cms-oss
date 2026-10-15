@@ -297,6 +297,94 @@ public class ConcurrentPageVersionTest {
 	}
 
 	/**
+	 * Test creating a page version in a transaction with a stale snapshot, when another transaction published the page without
+	 * changing data in the meantime. Such a publish only updates the existing page version (renames it to a major version and marks it
+	 * as published) without inserting versioned records. The published version must not be modified by this transaction, the new
+	 * version must get a newer timestamp instead.
+	 * Like {@link #testCreateVersionWithStaleSnapshot()}, this does not depend on timing.
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateVersionAfterPublishWithoutChangesWithStaleSnapshot() throws Exception {
+		int base = (int) (System.currentTimeMillis() / 1000) + 3600;
+
+		// create and publish the page, so that the publisher is set (publishing again by the same user does not change versioned data)
+		Page page = Trx.supply(user, () -> createPage(node.getFolder(), template, "Stale publish"));
+		String tagName = Trx.supply(user, t -> {
+			t.setTimestamp(base * 1000L);
+			Page editablePage = t.getObject(page, true);
+			ContentTag tag = editablePage.getContent().addContentTag(constructId);
+			tag.setEnabled(true);
+			getPartType(ShortTextPartType.class, tag, "url").setText("first");
+			editablePage.save();
+			editablePage.publish();
+			return tag.getName();
+		});
+
+		// change the tag and save (creates an unpublished version)
+		Trx.operate(user, t -> {
+			t.setTimestamp((base + 10) * 1000L);
+			Page editablePage = t.getObject(page, true);
+			getPartType(ShortTextPartType.class, editablePage.getContentTag(tagName), "url").setText("second");
+			editablePage.save();
+		});
+
+		try (Trx trx = new Trx(user)) {
+			Transaction t = trx.getTransaction();
+			t.setTimestamp((base + 10) * 1000L);
+
+			// establish the snapshot of this transaction (with a consistent read of an InnoDB table)
+			System.out.println("DB isolation level: " + getIsolationLevel());
+			int versionCount = DBUtils.select("SELECT COUNT(*) c FROM nodeversion WHERE o_type = ? AND o_id = ?", ps -> {
+				ps.setInt(1, Page.TYPE_PAGE);
+				ps.setInt(2, page.getId());
+			}, rs -> rs.next() ? rs.getInt("c") : 0);
+			System.out.println("Page versions seen by this transaction before the other transaction: " + versionCount);
+
+			// another transaction publishes the page without changing it (and is committed)
+			executor.submit(() -> {
+				Trx.operate(user, t2 -> {
+					t2.setTimestamp((base + 10) * 1000L);
+					Page editablePage = t2.getObject(page, true);
+					editablePage.publish();
+				});
+				return null;
+			}).get(1, TimeUnit.MINUTES);
+			dumpNodeversions(page.getId());
+
+			// show the page versions as seen in the snapshot of this transaction
+			System.out.println("Page versions seen by this transaction after the other transaction: " + Arrays.stream(PageFactory.loadPageVersions(page.getId()))
+					.map(v -> v.getNumber() + "@" + v.getDate().getIntTimestamp() + (v.isPublished() ? " (published)" : ""))
+					.collect(Collectors.joining(", ")));
+
+			// this transaction changes the tag and creates a version
+			Page editablePage = t.getObject(page, true);
+			getPartType(ShortTextPartType.class, editablePage.getContentTag(tagName), "url").setText("third");
+			editablePage.save();
+			trx.success();
+		}
+
+		dumpNodeversions(page.getId());
+
+		Trx.operate(user, t -> {
+			Page current = t.getObject(Page.class, page.getId());
+			NodeObjectVersion[] versions = current.getVersions();
+			List<String> numbers = Arrays.stream(versions).map(NodeObjectVersion::getNumber).collect(Collectors.toList());
+			assertThat(duplicates(numbers)).as("Duplicate page version numbers").isEmpty();
+
+			NodeObjectVersion publishedVersion = current.getPublishedVersion();
+			assertThat(publishedVersion).as("Published version").isNotNull();
+			assertThat(publishedVersion.getDate().getIntTimestamp()).as("Timestamp of the published version").isEqualTo(base + 10);
+			Page published = t.getObject(Page.class, page.getId(), publishedVersion.getDate().getIntTimestamp());
+			assertThat(getUrl(published, tagName)).as("Value of the tag in the published version").isEqualTo("second");
+
+			assertThat(versions[0].getDate().getIntTimestamp()).as("Timestamp of the latest version").isEqualTo(base + 11);
+			Page latest = t.getObject(Page.class, page.getId(), versions[0].getDate().getIntTimestamp());
+			assertThat(getUrl(latest, tagName)).as("Value of the tag in the latest version").isEqualTo("third");
+		});
+	}
+
+	/**
 	 * Get the url value of the tag in the page
 	 * @param page page
 	 * @param tagName tag name

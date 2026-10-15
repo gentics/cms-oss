@@ -66,7 +66,7 @@ public class DatasourceEntryFactory extends AbstractFactory {
 	 */
 	protected final static String SELECT_VERSIONED_DATASOURCE_SQL = "SELECT * FROM datasource_nodeversion WHERE id = ? AND nodeversiontimestamp = "
 			+ "(SELECT MAX(nodeversiontimestamp) FROM datasource_nodeversion "
-			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id) ORDER BY auto_id";
+			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id)";
 
 	/**
 	 * SQL Params for the selection of versioned datasource data
@@ -79,7 +79,7 @@ public class DatasourceEntryFactory extends AbstractFactory {
 	 */
 	protected final static String SELECT_VERSIONED_DATASOURCE_VALUE_SQL = "SELECT * FROM datasource_value_nodeversion WHERE id = ? AND nodeversiontimestamp = "
 			+ "(SELECT MAX(nodeversiontimestamp) FROM datasource_value_nodeversion "
-			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id) ORDER BY auto_id";
+			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id)";
 
 	/**
 	 * SQL Params for the selection of versioned datasource_value data

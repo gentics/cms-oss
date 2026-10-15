@@ -285,7 +285,9 @@ public class TableVersion {
 	}
 
 	/**
-	 * Set whether the data shall be read with locking reads (SELECT ... FOR UPDATE)
+	 * Set whether the data shall be read with locking reads.
+	 *
+	 * @see #lock(String)
 	 * @param lockingReads true for locking reads
 	 */
 	public void setLockingReads(boolean lockingReads) {
@@ -294,7 +296,12 @@ public class TableVersion {
 
 	/**
 	 * Get the SQL statement, which selects the maximum auto_id of the versioned records (in the _nodeversion table).
-	 * The statement contains the bind parameters of the where part (see {@link #setWherePart(String)}) and can be used as subquery.
+	 *
+	 * <p>
+	 *     The statement contains the bind parameters of the where part (see {@link #setWherePart(String)}) and can
+	 *     be used as subquery.
+	 * </p>
+	 *
 	 * @return SQL statement
 	 */
 	public String getMaxAutoIdSQL() {
@@ -302,7 +309,8 @@ public class TableVersion {
 	}
 
 	/**
-	 * Append FOR UPDATE to the given select statement, if {@link #lockingReads} is set
+	 * Append FOR UPDATE to the given select statement, if {@link #lockingReads} is set.
+	 *
 	 * @param sql select statement
 	 * @return select statement
 	 */
@@ -935,9 +943,8 @@ public class TableVersion {
 	 * 		The SQL statement to the the versioned data.
 	 */
 	private String getVersionedDataSelect() {
-		// if there are multiple rows for the same version (which should not happen), the first written row is returned first
 		return " SELECT " + columnsList + " FROM `" + table + "_nodeversion` " + " WHERE " + table + "_nodeversion.id = ? AND " + table
-				+ "_nodeversion.nodeversiontimestamp = ? ORDER BY " + table + "_nodeversion.auto_id";
+				+ "_nodeversion.nodeversiontimestamp = ?";
 	}
 
 	/**
@@ -1078,12 +1085,10 @@ public class TableVersion {
 			timestamps.add(versionTimestampMap.get(id));
 		}
 
-		// order by auto_id descending, so that if there are multiple rows for the same version (which should not happen),
-		// the first written row comes last and is used by fetchVersionedData
 		String sql = String.format(
-				"SELECT %s, nodeversiontimestamp FROM `%s_nodeversion` WHERE %s_nodeversion.id IN (%s) AND %s_nodeversion.nodeversiontimestamp IN (%s) ORDER BY %s_nodeversion.auto_id DESC",
+				"SELECT %s, nodeversiontimestamp FROM `%s_nodeversion` WHERE %s_nodeversion.id IN (%s) AND %s_nodeversion.nodeversiontimestamp IN (%s)",
 				columnsList, table, table, StringUtils.repeat("?", ids.size(), ","), table,
-				StringUtils.repeat("?", timestamps.size(), ","), table);
+				StringUtils.repeat("?", timestamps.size(), ","));
 
 		Integer[] params = new Integer[ids.size() + timestamps.size()];
 		int index = 0;

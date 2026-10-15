@@ -1,0 +1,1 @@
+Jobs started with @Operator.executeLockedRethrowing()@ will now throw correct @RestMappedExceptions@ with the corresponding HTTP status code instead of returning a "200 OK" response with a GenericResponse that contains error information.

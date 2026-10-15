@@ -1,4 +1,4 @@
-import {getFileExtension} from './get-file-extension';
+import { getFileExtension } from './get-file-extension';
 
 describe('getFileExtension()', () => {
 
@@ -17,6 +17,14 @@ describe('getFileExtension()', () => {
     it('should have no extension', () => {
         mockFilename = 'test-file-without-extension';
         expect(getFileExtension(mockFilename)).toEqual('');
+    });
+
+    it('should have no extension for dot-files', () => {
+        expect(getFileExtension('.gitignore')).toEqual('');
+    });
+
+    it('should normalize the extension', () => {
+        expect(getFileExtension('image.jpeg', true)).toEqual('jpg');
     });
 
 });

@@ -1,18 +1,34 @@
-import { GroupResponse } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, GroupResponse } from '@gentics/cms-models';
 import {
     clickModalAction,
     clickTableRow,
+    dismissNotifications,
     EntityImporter,
+    expandTrableRow,
     findTableRowById,
+    findTrableRowById,
+    findTrableRowByText,
+    GroupImportData,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
     loginWithForm,
     navigateToApp,
+    NODE_MINIMAL,
     selectTab,
     TestSize,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { expect, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
-import { navigateToModule } from './helpers';
+import {
+    editRowPermissions,
+    expectOnlySuccessNotification,
+    expectRowPermissions,
+    groupTypePermissionNotificationId,
+    groupTypePermissionPath,
+    navigateToModule,
+} from './helpers';
 
 const NODE_SUPER_GROUP_ID = 2;
 const NODE_SUB_SUPER_GROUP_NAME = 'Node Sub Super Group';
@@ -116,6 +132,227 @@ test.describe('Group Module', () => {
 
                 await expect(usersTable.locator('.entity-table-actions-bar [data-action="create"]')).toBeVisible();
                 await expect(usersTable.locator('.entity-table-actions-bar [data-action="assign-users"]')).toBeVisible();
+            });
+        });
+    });
+
+    test.describe('Permissions', () => {
+        const TEST_GROUP: GroupImportData = {
+            [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
+            [IMPORT_ID]: 'group_permissions_target',
+
+            name: 'group_permissions_target',
+            description: 'Groups: Permissions Target',
+            permissions: [],
+        };
+
+        /** Column which contains the name of the element in the permissions trable */
+        const NAME_COLUMN = 'label';
+
+        let groupId: number;
+
+        test.beforeEach(async () => {
+            await IMPORTER.importData([TEST_GROUP]);
+            groupId = IMPORTER.get(TEST_GROUP).id;
+        });
+
+        async function openGroupEditor(page: Page): Promise<Locator> {
+            const master = await navigateToModule(page, 'groups');
+            const row = await findTableRowById(master.locator('gtx-group-table'), groupId);
+            await clickTableRow(row);
+
+            const editor = page.locator('gtx-group-detail');
+            await expect(editor).toBeVisible();
+
+            return editor;
+        }
+
+        async function openPermissionsTab(editor: Locator, tabId: string): Promise<Locator> {
+            const tab = await selectTab(editor.locator('.gtx-entity-detail > gtx-tabs'), tabId);
+            const trable = tab.locator('gtx-permissions-trable');
+            await expect(trable).toBeVisible();
+
+            return trable;
+        }
+
+        async function openAdminPermissions(page: Page): Promise<Locator> {
+            const editor = await openGroupEditor(page);
+            return openPermissionsTab(editor, 'admin-permissions');
+        }
+
+        async function getTypePermissions(type: AccessControlledType): Promise<Partial<Record<GcmsPermission, boolean>>> {
+            const res = await IMPORTER.client.group.getPermission(groupId, type).send();
+            return res.perms.reduce((acc, perm) => {
+                acc[perm.type] = perm.value;
+                return acc;
+            }, {});
+        }
+
+        test('should add and remove administrative permissions', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20288',
+            }],
+        }, async ({ page }) => {
+            const trable = await openAdminPermissions(page);
+            const row = findTrableRowById(trable, AccessControlledType.INBOX);
+
+            await test.step('Initial permissions are not granted', async () => {
+                await expectRowPermissions(row, {
+                    [GcmsPermission.READ]: false,
+                    [GcmsPermission.SET_PERMISSION]: false,
+                });
+            });
+
+            await test.step('Add permissions', async () => {
+                await editRowPermissions(page, row, NAME_COLUMN, {
+                    perms: {
+                        [GcmsPermission.READ]: true,
+                        [GcmsPermission.SET_PERMISSION]: true,
+                    },
+                }, groupTypePermissionPath(groupId, AccessControlledType.INBOX));
+
+                await expectOnlySuccessNotification(page, groupTypePermissionNotificationId(groupId));
+                await expectRowPermissions(row, {
+                    [GcmsPermission.READ]: true,
+                    [GcmsPermission.SET_PERMISSION]: true,
+                });
+                expect(await getTypePermissions(AccessControlledType.INBOX)).toMatchObject({
+                    [GcmsPermission.READ]: true,
+                    [GcmsPermission.SET_PERMISSION]: true,
+                });
+            });
+
+            await dismissNotifications(page);
+
+            await test.step('Remove permissions', async () => {
+                await editRowPermissions(page, row, NAME_COLUMN, {
+                    perms: {
+                        [GcmsPermission.SET_PERMISSION]: false,
+                    },
+                }, groupTypePermissionPath(groupId, AccessControlledType.INBOX));
+
+                await expectOnlySuccessNotification(page, groupTypePermissionNotificationId(groupId));
+                await expectRowPermissions(row, {
+                    [GcmsPermission.READ]: true,
+                    [GcmsPermission.SET_PERMISSION]: false,
+                });
+                expect(await getTypePermissions(AccessControlledType.INBOX)).toMatchObject({
+                    [GcmsPermission.READ]: true,
+                    [GcmsPermission.SET_PERMISSION]: false,
+                });
+            });
+        });
+
+        test('should reload the expanded row and its children when applying permissions to sub-objects', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20288',
+            }],
+        }, async ({ page }) => {
+            const trable = await openAdminPermissions(page);
+            const adminRow = findTrableRowById(trable, AccessControlledType.ADMIN);
+            const childRows = [
+                findTrableRowById(trable, AccessControlledType.USER_ADMIN),
+                findTrableRowById(trable, AccessControlledType.GROUP_ADMIN),
+                findTrableRowById(trable, AccessControlledType.CONTENT_ADMIN),
+            ];
+
+            await test.step('Expand the administration row', async () => {
+                await expandTrableRow(adminRow);
+                await expect(adminRow).toContainClass('expanded');
+
+                for (const child of childRows) {
+                    await expect(child).toBeVisible();
+                    await expectRowPermissions(child, {
+                        [GcmsPermission.READ]: false,
+                        [GcmsPermission.SET_PERMISSION]: false,
+                    });
+                }
+            });
+
+            await test.step('Add permissions to the row and sub-objects', async () => {
+                await editRowPermissions(page, adminRow, NAME_COLUMN, {
+                    subObjects: true,
+                    perms: {
+                        [GcmsPermission.READ]: true,
+                        [GcmsPermission.SET_PERMISSION]: true,
+                    },
+                }, groupTypePermissionPath(groupId, AccessControlledType.ADMIN));
+
+                await expectOnlySuccessNotification(page, groupTypePermissionNotificationId(groupId));
+
+                // Row has to stay expanded, and the children have to be reloaded as well
+                await expect(adminRow).toContainClass('expanded');
+                await expectRowPermissions(adminRow, {
+                    [GcmsPermission.READ]: true,
+                    [GcmsPermission.SET_PERMISSION]: true,
+                });
+                for (const child of childRows) {
+                    await expect(child).toBeVisible();
+                    await expectRowPermissions(child, {
+                        [GcmsPermission.READ]: true,
+                        [GcmsPermission.SET_PERMISSION]: true,
+                    });
+                }
+            });
+
+            await dismissNotifications(page);
+
+            await test.step('Remove permissions from the row and sub-objects', async () => {
+                await editRowPermissions(page, adminRow, NAME_COLUMN, {
+                    subObjects: true,
+                    perms: {
+                        [GcmsPermission.SET_PERMISSION]: false,
+                    },
+                }, groupTypePermissionPath(groupId, AccessControlledType.ADMIN));
+
+                await expectOnlySuccessNotification(page, groupTypePermissionNotificationId(groupId));
+
+                await expect(adminRow).toContainClass('expanded');
+                await expectRowPermissions(adminRow, {
+                    [GcmsPermission.READ]: true,
+                    [GcmsPermission.SET_PERMISSION]: false,
+                });
+                for (const child of childRows) {
+                    await expect(child).toBeVisible();
+                    await expectRowPermissions(child, {
+                        [GcmsPermission.READ]: true,
+                        [GcmsPermission.SET_PERMISSION]: false,
+                    });
+                }
+            });
+        });
+
+        test('should display the content row without children in the admin permissions, and keep the content permissions', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19752',
+            }],
+        }, async ({ page }) => {
+            const editor = await openGroupEditor(page);
+
+            await test.step('Admin permissions contain the content row without children', async () => {
+                const trable = await openPermissionsTab(editor, 'admin-permissions');
+                const contentRow = findTrableRowById(trable, AccessControlledType.CONTENT);
+
+                await expect(contentRow).toBeVisible();
+                await expect(contentRow).not.toContainClass('has-children');
+                await expect(contentRow).not.toContainClass('expandable');
+                await expect(contentRow.locator('.row-expansion icon')).toHaveCount(0);
+
+                // Attempting to expand the row must not do anything
+                await expandTrableRow(contentRow);
+                await expect(contentRow).not.toContainClass('expanded');
+                await expect(trable.locator('gtx-trable .data-row.row-level-1')).toHaveCount(0);
+            });
+
+            await test.step('Content permissions are still displayed', async () => {
+                const trable = await openPermissionsTab(editor, 'content-permissions');
+                const nodeRow = findTrableRowByText(trable, IMPORTER.get(NODE_MINIMAL).name);
+
+                await expect(nodeRow).toBeVisible();
+                await expect(nodeRow).toContainClass('expandable');
             });
         });
     });

@@ -1,5 +1,10 @@
 @if (permission) {
-  <span [class.gtx-perm-denied]="!permission.value">
+  <span
+    class="permission-state"
+    [class.gtx-perm-denied]="!permission.value"
+    [attr.data-type]="permission.type"
+    [attr.data-value]="!!permission.value"
+  >
     <gtx-icon
       [name]="'perm.' + permission.type"
       [title]="(permission.category ? (permission.category + '\n') : '') + permission.label + ': ' + ((permission.value ? 'common.yes' : 'common.no') | gtxI18n)"

@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GcmsNormalizer, Message, Raw } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
-import * as _ from'lodash-es'
-
 import {
     concatUnique,
     removeEntries,
@@ -16,12 +14,7 @@ import {
 } from '../utils/state-utils';
 import {
     ClearMessageState,
-    DeleteMessageError,
-    FetchAllMessageError,
-    FetchAllMessageStart,
     FetchAllMessageSuccess,
-    FetchUnreadMessageError,
-    FetchUnreadMessageStart,
     FetchUnreadMessageSuccess,
     MarkMessagesAsRead,
 } from './message.actions';
@@ -31,17 +24,13 @@ export interface MessageStateModel {
     read: number[];
     unread: number[];
     deliveredInstantMessages: number[];
-    fetching: boolean;
-    lastError?: string;
 }
 
 export const INITIAL_MESSAGE_STATE = defineInitialState<MessageStateModel>({
-    fetching: false,
     all: [],
     read: [],
     unread: [],
     deliveredInstantMessages: [],
-    lastError: undefined,
 });
 
 @AppStateBranch({
@@ -50,16 +39,12 @@ export const INITIAL_MESSAGE_STATE = defineInitialState<MessageStateModel>({
 })
 @Injectable()
 export class MessageStateModule {
+
     private normalizer = new GcmsNormalizer();
 
-    constructor(private appState: AppStateService) {}
-
-    @ActionDefinition(FetchAllMessageStart)
-    fetchAllMessageStart(ctx: StateContext<MessageStateModel>): void {
-        ctx.patchState({
-            fetching: true,
-        });
-    }
+    constructor(
+        private appState: AppStateService,
+    ) {}
 
     @ActionDefinition(FetchAllMessageSuccess)
     fetchAllMessageSuccess(
@@ -93,31 +78,12 @@ export class MessageStateModule {
             .toPromise()
             .then(() => {
                 ctx.patchState({
-                    fetching: false,
                     all: messages.map((msg) => msg.id),
                     read: readMessages.map((msg) => msg.id),
                     unread: unreadMessages.map((msg) => msg.id),
                     deliveredInstantMessages: instantMessagesIds,
                 });
             });
-    }
-
-    @ActionDefinition(FetchAllMessageError)
-    fetchAllMessageError(
-        ctx: StateContext<MessageStateModel>,
-        action: FetchAllMessageError,
-    ): void {
-        ctx.patchState({
-            fetching: false,
-            lastError: action.errorMessage,
-        });
-    }
-
-    @ActionDefinition(FetchUnreadMessageStart)
-    fetchUnreadMessageStart(ctx: StateContext<MessageStateModel>): void {
-        ctx.patchState({
-            fetching: true,
-        });
     }
 
     @ActionDefinition(FetchUnreadMessageSuccess)
@@ -133,21 +99,16 @@ export class MessageStateModule {
             action.unreadMessagesFromServer as Message<Raw>[]
         ).filter(
             (msg) =>
-                !this.appState.now.entity.message[msg.id] &&
-                !msg.isInstantMessage,
+                !this.appState.now.entity.message[msg.id]
+                && !msg.isInstantMessage,
         );
 
         if (
-            !newInboxMessage.length &&
-            ctx.getState().unread.length ===
-                action.unreadMessagesFromServer.length
+            !newInboxMessage.length
+            && ctx.getState().unread.length
+            === action.unreadMessagesFromServer.length
         ) {
             // Nothing to do
-            if (ctx.getState().fetching) {
-                ctx.patchState({
-                    fetching: false,
-                });
-            }
             return;
         }
 
@@ -166,22 +127,10 @@ export class MessageStateModule {
         ctx.dispatch(new AddEntities(normalized.entities));
 
         ctx.patchState({
-            fetching: false,
             all: allIds,
             read: ctx.getState().all.filter((id) => unreadIds.indexOf(id) < 0),
             unread: unreadIds,
             deliveredInstantMessages: instantMessages,
-        });
-    }
-
-    @ActionDefinition(FetchUnreadMessageError)
-    fetchUnreadMessageError(
-        ctx: StateContext<MessageStateModel>,
-        action: FetchUnreadMessageError,
-    ): void {
-        ctx.patchState({
-            fetching: false,
-            lastError: action.errorMessage,
         });
     }
 
@@ -191,11 +140,11 @@ export class MessageStateModule {
         action: MarkMessagesAsRead,
     ): void {
         const readMessageIDs = action.messageIds;
-        const changes =
-            !!readMessageIDs.length &&
-            readMessageIDs.some(
-                (id) => this.appState.now.entity.message[id].unread,
-            );
+        const changes
+            = !!readMessageIDs.length
+              && readMessageIDs.some(
+                  (id) => this.appState.now.entity.message[id].unread,
+              );
         if (!changes) {
             // Nothing to do
             return;
@@ -221,7 +170,6 @@ export class MessageStateModule {
         );
 
         ctx.patchState({
-            fetching: false,
             read: concatUnique(ctx.getState().read, readMessageIDs),
             unread: removeEntries(ctx.getState().unread, readMessageIDs),
         });
@@ -230,16 +178,5 @@ export class MessageStateModule {
     @ActionDefinition(ClearMessageState)
     clearMessageState(ctx: StateContext<MessageStateModel>): void {
         ctx.setState(INITIAL_MESSAGE_STATE);
-    }
-
-    @ActionDefinition(DeleteMessageError)
-    deleteMessagesError(
-        ctx: StateContext<MessageStateModel>,
-        action: FetchUnreadMessageError,
-    ): void {
-        ctx.patchState({
-            fetching: false,
-            lastError: action.errorMessage,
-        });
     }
 }

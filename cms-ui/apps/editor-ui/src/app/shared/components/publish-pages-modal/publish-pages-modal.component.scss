@@ -1,69 +1,28 @@
-@import "variables";
 @import "flex-modal";
 
 @include flex-modal;
 
-.language-list {
-    margin-left: 35px;
-    margin-bottom: 30px;
-    max-height: 300px;
-    overflow: auto;
-
-    .offline {
-        opacity: 0.5;
-    }
-
-    .language-name {
-        color: darken($gcms_color-highlight, 15%);
-    }
-}
-
-th {
-    padding: 15px 0 5px 0;
-    font-weight: normal;
-}
-
-td {
-    padding: 5px;
-}
-
-.selected-languages-header {
-    font-size: 12px;
-    padding-left: 22px;
-}
-
-.modal-title  {
+.table-actions-bar {
     display: flex;
-
-    h5 {
-        -webkit-box-flex: 1;
-        -ms-flex: 1 1 50%;
-        flex: 1 1 50%;
-    }
-
-    .select-variants-all {
-        margin-top: 16px;
-        
-        gtx-button {
-            -webkit-box-flex: 0;
-            -ms-flex: 0 0 auto;
-            flex: 0 0 auto;
-            margin-right: 5px;
-        }
-    }
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1rem;
 }
 
-gtx-contents-list-item {
-    display: table-row;
-}
-
-span.notice {
+.notice {
     display: block;
-    font-size: 12px;
+    font-size: 13px;
 }
 
-tr.notice-row {
-    th {
-        padding-top: 0;
+page-language-selector::ng-deep {
+    .language-select,
+    .one_language_text {
+        margin: 0;
     }
+}
+
+.modal-footer {
+    padding-top: 1rem;
 }

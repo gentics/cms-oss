@@ -859,19 +859,25 @@ export async function toggleDisplayAllCheckbox(
 }
 
 /**
- * Helper function to add a plugin temporarily to the end of the data-aloha-plugins string
+ * Helper function to add plugins temporarily to the end of the data-aloha-plugins string.
+ * Plugins which are already loaded are not added again.
  * @param page - The current page.
- * @param plugin - The plugin source (example: "common/characterpicker").
+ * @param plugin - The plugin source(s) (example: "common/characterpicker").
  */
-export function addTemporaryAlohaPlugin(page: Page, plugin: string): Promise<void> {
+export function addTemporaryAlohaPlugin(page: Page, plugin: string | string[]): Promise<void> {
+    const toAdd = Array.isArray(plugin) ? plugin : [plugin];
+
     return page.route('**/alohapage**', async (route) => {
         const response = await route.fetch();
         let body = await response.text();
 
         body = body.replace(
             /data-aloha-plugins\s*=\s*"([^"]*)"/,
-            (_, plugins) =>
-                `data-aloha-plugins="${plugins},${plugin}"`,
+            (_, plugins: string) => {
+                const loaded = plugins.split(',').map((name) => name.trim());
+                const missing = toAdd.filter((name) => !loaded.includes(name));
+                return `data-aloha-plugins="${[plugins, ...missing].join(',')}"`;
+            },
         );
 
         await route.fulfill({

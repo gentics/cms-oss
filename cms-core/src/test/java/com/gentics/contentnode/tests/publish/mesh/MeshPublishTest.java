@@ -30,6 +30,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.Level;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -43,6 +44,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
@@ -1319,6 +1321,76 @@ public class MeshPublishTest {
 	}
 
 	/**
+	 * Test publishing an image with focal point, for which the binary data is uploaded, but not saved to the content object (the filesize is 0).
+	 * Also, the publish process should not fail on focal-point-only updates.
+	 * @throws Exception
+	 */
+	@Test
+	public void testFocalPointPublishingWithBrokenBinary() throws Exception {
+		Folder folder = Trx.supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+			});
+		});
+
+		// create an image with focal point
+		ImageFile image = null;
+		try (InputStream inputStream = GenericTestUtils.getPictureResource("blume.jpg")) {
+			image = Trx.supply(() -> {
+				return create(ImageFile.class, img -> {
+					img.setFolderId(folder.getId());
+					img.setFileStream(inputStream);
+					img.setName("testimage.jpg");
+					img.setFpX(0.7f);
+					img.setFpY(0.3f);
+				});
+			});
+		}
+
+		// set the filesize to 0, so that the binary data will not be uploaded
+		image = update(image, upd -> {
+			upd.setFilesize(0);
+		});
+
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// assert image
+		assertObject("Image after creation", mesh.client(), MESH_PROJECT_NAME, image, true);
+
+		// update the focalpoint
+		image = update(image, upd -> {
+			upd.setFpX(0.5f);
+			upd.setFpY(0.5f);
+		});
+
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		// publish again
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// assert still published
+		assertObject("Image after creation", mesh.client(), MESH_PROJECT_NAME, image, true);
+	}
+
+	/**
 	 * Test recovering from a filename conflict
 	 * @throws Exception
 	 */
@@ -1437,6 +1509,57 @@ public class MeshPublishTest {
 			assertThat(context.getContext().publish(false).getReturnCode()).as("Publish process return code").isEqualTo(PublishInfo.RETURN_CODE_ERROR);
 			trx.success();
 		}
+	}
+
+	/**
+	 * Test that the reason for a failed publish process (and not only the interruption of the publish process) is contained in the error messages of the publish info
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testPublishFailureReasonInMessages() throws Exception {
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+		}).at(1).build();
+
+		Page pageA = Builder.create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(folder.getId());
+			p.setName("Page A");
+			p.setFilename("page_a.html");
+		}).at(2).publish().build();
+
+		Page pageB = Builder.create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(folder.getId());
+			p.setName("Page B");
+			p.setFilename("page_b.html");
+		}).at(3).publish().build();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// swap the filenames of pageA and pageB, which causes an unrecoverable conflict in Mesh
+		pageB = Builder.update(pageB, upd -> upd.setFilename("page_c.html")).at(4).publish().build();
+		pageA = Builder.update(pageA, upd -> upd.setFilename("page_b.html")).at(5).publish().build();
+		pageB = Builder.update(pageB, upd -> upd.setFilename("page_a.html")).at(6).publish().build();
+
+		// run publish process (we expect it to fail)
+		PublishInfo info = null;
+		try (Trx trx = new Trx()) {
+			info = context.getContext().publish(false);
+			trx.success();
+		}
+
+		assertThat(info.getReturnCode()).as("Publish process return code").isEqualTo(PublishInfo.RETURN_CODE_ERROR);
+		assertThat(info.getMessages()).as("Error messages of the publish process")
+			.filteredOn(message -> message.getLevel() == Level.ERROR)
+			.extracting(NodeMessage::toString)
+			.anySatisfy(message -> assertThat(message).contains("Error while performing task"));
 	}
 
 	/**

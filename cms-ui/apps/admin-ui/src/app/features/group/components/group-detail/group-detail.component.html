@@ -97,7 +97,7 @@
                                 [inlineExpansion]="true"
                                 [inlineSelection]="true"
                                 [parentName]="currentEntity.name"
-                                [parentType]="PermissionsTreeType.CONTENT"
+                                [parentType]="AccessControlledType.CONTENT"
                                 [groupPermissionsByCategory]="true"
                             ></gtx-permissions-trable>
                         } @else {
@@ -132,7 +132,7 @@
                                 [inlineSelection]="true"
                                 [parentName]="currentEntity.name"
                                 [groupPermissionsByCategory]="false"
-                                [excludedParentType]="PermissionsTreeType.CONTENT"
+                                [ignoreChildrenType]="[AccessControlledType.CONTENT]"
                             ></gtx-permissions-trable>
                         } @else {
                             <div class="message-unauthorized">

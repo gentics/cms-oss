@@ -9,8 +9,11 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.model.ObjectRef;
+import com.gentics.contentnode.mcp.model.Problem;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -60,6 +63,44 @@ public class AbstractMcpToolTest {
 		}
 	}
 
+	private static class FailingTool extends AbstractMcpTool {
+		private final Map<String, Object> outputSchema;
+
+		private final Exception failure;
+
+		FailingTool(Map<String, Object> outputSchema, Exception failure) {
+			this.outputSchema = outputSchema;
+			this.failure = failure;
+		}
+
+		@Override
+		public boolean requiresAuthentication() {
+			return false;
+		}
+
+		@Override
+		public Tool tool() {
+			return Tool.builder().name("test").inputSchema(JsonSchema.builder().type("object").build())
+					.outputSchema(outputSchema).build();
+		}
+
+		@Override
+		protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
+			throw failure;
+		}
+	}
+
+	private static class AuthenticatedTool extends TestTool {
+		AuthenticatedTool() {
+			super(null);
+		}
+
+		@Override
+		public boolean requiresAuthentication() {
+			return true;
+		}
+	}
+
 	private static CallToolResult call(AbstractMcpTool tool) {
 		return tool.call(McpTransportContext.EMPTY, CallToolRequest.builder("test").arguments(Map.of()).build());
 	}
@@ -83,6 +124,42 @@ public class AbstractMcpToolTest {
 		assertThat(result.isError()).isNotEqualTo(Boolean.TRUE);
 		assertThat(((TextContent) result.content().get(0)).text()).isEqualTo("{\"value\":\"hello\"}");
 		assertThat(result.structuredContent()).isEqualTo(Map.of("value", "hello"));
+	}
+
+	@Test
+	public void testErrorResultCarriesProblem() {
+		Map<String, Object> outputSchema = Map.of("type", "object", "properties",
+				Map.of("value", Map.of("type", "string")), "required", List.of("value"));
+
+		CallToolResult result = call(new FailingTool(outputSchema, new EntityNotFoundException("Page 7 not found")));
+
+		assertThat(result.isError()).isTrue();
+		assertThat(((TextContent) result.content().get(0)).text()).isEqualTo("Page 7 not found");
+		@SuppressWarnings("unchecked")
+		Map<String, Object> problem = (Map<String, Object>) ((Map<String, Object>) result.structuredContent())
+				.get("problem");
+		assertThat(problem).containsEntry("type", Problem.TYPE_PREFIX + "not-found").containsEntry("status", 404)
+				.containsEntry("tool", "test").containsEntry("retryable", false)
+				.containsEntry("detail", "Page 7 not found");
+	}
+
+	@Test
+	public void testUnauthenticatedCallHasNoProblem() {
+		CallToolResult result = call(new AuthenticatedTool());
+
+		assertThat(result.isError()).isTrue();
+		assertThat(((TextContent) result.content().get(0)).text()).contains("authenticated CMS session");
+		assertThat(result.structuredContent()).isNull();
+	}
+
+	@Test
+	public void testRequireOkCause() {
+		GenericResponse response = new GenericResponse(new Message(Message.Type.CRITICAL, "Name already used."),
+				new ResponseInfo(ResponseCode.INVALIDDATA, "Error"));
+
+		assertThatThrownBy(() -> AbstractMcpTool.requireOk(response, "Page 7 was not saved"))
+				.isInstanceOf(IllegalArgumentException.class).cause().isInstanceOf(RestMappedException.class)
+				.satisfies(cause -> assertThat(((RestMappedException) cause).getRestResponse()).isSameAs(response));
 	}
 
 	@Test

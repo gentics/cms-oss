@@ -213,15 +213,14 @@ public class UpdatePagePropertiesToolIntegrationTest {
 	}
 
 	@Test
-	public void testNodeIdIsRejected() throws Exception {
+	public void testNodeIdOfThePagesNode() throws Exception {
 		Page page = page("With Node ID");
-		PageState before = state(page);
 
-		String error = failure(editorContext,
+		Map<String, Object> result = success(editorContext,
 				Map.of("pageId", page.getId(), "nodeId", node.getId(), "name", "With Node ID Renamed"));
 
-		assertThat(error).contains("does not yet support nodeId");
-		assertThat(state(page)).isEqualTo(before);
+		assertThat(result.get("changedFields")).isEqualTo(List.of("name"));
+		assertThat(state(page).name()).isEqualTo("With Node ID Renamed");
 		assertThat(isLocked(page)).isFalse();
 	}
 

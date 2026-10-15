@@ -9,12 +9,14 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.mcp.auth.McpAuthenticator;
 import com.gentics.contentnode.mcp.auth.McpRequestCredentials;
 import com.gentics.contentnode.mcp.auth.McpSessionBinding;
 import com.gentics.contentnode.mcp.model.ObjectRef;
+import com.gentics.contentnode.mcp.model.Problem;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
@@ -41,7 +43,7 @@ import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
  * the real caller, not the CMS system user;</li>
  * <li>serializing the result of {@link #invoke(Map, Optional)} to a JSON text content block (and,
  * if the tool declares an output schema, also as structured content), or turning any exception it
- * throws into an {@code isError(true)} result.</li>
+ * throws into an {@code isError(true)} result, with a {@link Problem} as structured content.</li>
  * </ul>
  *
  * <p>
@@ -101,7 +103,9 @@ public abstract class AbstractMcpTool implements McpToolProvider {
 			// error is logged/reported instead of "null" (mirrors McpToolRegistry#invoke).
 			Throwable cause = e instanceof InvocationTargetException && e.getCause() != null ? e.getCause() : e;
 			logger.error(String.format("Error while invoking MCP tool '%s'", tool().name()), cause);
-			return CallToolResult.builder().isError(true).addTextContent(String.valueOf(cause.getMessage())).build();
+			Problem problem = Problem.of(tool().name(), cause);
+			return CallToolResult.builder().isError(true).addTextContent(String.valueOf(cause.getMessage()))
+					.structuredContent(Map.of("problem", MAPPER.convertValue(problem, Map.class))).build();
 		}
 	}
 
@@ -200,13 +204,14 @@ public abstract class AbstractMcpTool implements McpToolProvider {
 	 * @param response response
 	 * @param failure description of what failed, e.g. {@code "Page 7 was not saved"}, see
 	 *        {@link #errorMessage}
-	 * @throws IllegalArgumentException if the response is not OK
+	 * @throws IllegalArgumentException if the response is not OK, caused by a {@link RestMappedException} carrying
+	 *         the response
 	 */
 	protected static void requireOk(GenericResponse response, String failure) {
 		if (response == null || response.getResponseInfo() == null
 				|| response.getResponseInfo().getResponseCode() != ResponseCode.OK) {
-			throw new IllegalArgumentException(
-					errorMessage(failure, response != null ? response : new GenericResponse()));
+			GenericResponse failed = response != null ? response : new GenericResponse();
+			throw new IllegalArgumentException(errorMessage(failure, failed), new RestMappedException(failed));
 		}
 	}
 

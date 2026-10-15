@@ -596,6 +596,8 @@ export interface AbstractDevToolsAPI extends BasicAPI {
 }
 
 export interface AbstractElasticSearchAPI extends BasicAPI {
+    listIndices: (options?: ElasticSearchIndexListOptions) => ElasticSearchIndexListResponse;
+    rebuildIndex: (index: string, options?: ElasticSearchIndexRebuildOptions) => Response;
     search: (type: SearchableType, body: any, options?: ElasticSearchTypeSearchOptions) => ElasticSearchQueryResponse<InheritableItem<Raw>>;
 }
 

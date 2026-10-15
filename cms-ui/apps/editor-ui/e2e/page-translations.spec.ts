@@ -1,4 +1,4 @@
-import { NodeFeature, Variant } from '@gentics/cms-models';
+import { Feature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
     ITEM_TYPE_PAGE,
@@ -48,8 +48,9 @@ test.describe('Page Translation', () => {
         });
 
         await test.step('Specialized Test Setup', async () => {
+            // Is a global and a node feature, which both need to be enabled
             await IMPORTER.setupFeatures(TestSize.MINIMAL, {
-                [NodeFeature.AUTOMATIC_TRANSLATION]: true,
+                [Feature.AUTOMATIC_TRANSLATION]: true,
             });
         });
 

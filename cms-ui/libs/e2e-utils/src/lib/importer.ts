@@ -2,6 +2,7 @@ import {
     ConstructCategory,
     ContentRepository,
     ContentRepositoryType,
+    ElasticSearchIndex,
     Feature,
     File,
     FileUploadResponse,
@@ -72,7 +73,7 @@ import {
     TestSize,
     UserImportData,
 } from './common';
-import { ENV_E2E_CMS_URL, isEnvBool } from './config';
+import { ENV_E2E_CMS_URL } from './config';
 import {
     emptyNode,
     GROUP_ROOT,
@@ -424,6 +425,39 @@ export class EntityImporter {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Forces a rebuild of all ElasticSearch indices of the CMS, and waits until all of them
+     * have been completely indexed again.
+     * Requires the {@link Feature.ELASTICSEARCH} feature to be active.
+     * @param timeout Max time in milliseconds to wait for the indices to be completed.
+     */
+    public async rebuildElasticSearchIndices(timeout: number = 20_000): Promise<void> {
+        await this.setupClient();
+
+        const indices = (await this.client.elasticSearch.listIndices().send()).items.map((index) => index.name);
+        if (indices.length === 0) {
+            throw new Error('No ElasticSearch indices are available to rebuild!');
+        }
+
+        for (const index of indices) {
+            await this.client.elasticSearch.rebuildIndex(index, { drop: true }).send();
+        }
+
+        // The rebuild is done in the background, so we have to wait until everything has been indexed
+        const end = Date.now() + timeout;
+        let pending: string[] = indices;
+        while (pending.length > 0) {
+            if (Date.now() > end) {
+                throw new Error(`ElasticSearch indices have not been rebuilt within ${timeout}ms: ${pending.join(', ')}`);
+            }
+            await wait(500);
+
+            const current = (await this.client.elasticSearch.listIndices().send()).items as ElasticSearchIndex[];
+            pending = current.filter((index) => !index.found || index.queued > 0 || index.indexed < index.objects)
+                .map((index) => index.name);
         }
     }
 

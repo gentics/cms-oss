@@ -392,6 +392,8 @@ export class GCMSRestClient implements GCMSRootAPI {
     } as const;
 
     public elasticSearch: GCMSElasticSearchAPI = {
+        listIndices: (options) => this.executeMappedJsonRequest(GET, '/index', null, options),
+        rebuildIndex: (index, options) => this.executeMappedJsonRequest(PUT, `/index/${index}/rebuild`, null, options),
         search: (type, body, options) => this.executeMappedJsonRequest(POST, `/elastic/${type}/_search`, body, options),
     } as const;
 

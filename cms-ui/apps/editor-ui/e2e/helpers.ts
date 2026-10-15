@@ -274,6 +274,18 @@ export function selectTextIn(element: Locator, textToSelect: string): Promise<bo
     }, { textToSelect });
 }
 
+/**
+ * Clicks the editable and waits until Aloha has activated it.
+ * Only then are keys and the toolbar handled by Aloha. As Aloha may not be ready to handle
+ * the click yet (i.E. right after opening the page), the click is retried until it is active.
+ */
+export async function activateEditable(editable: Locator): Promise<void> {
+    await expect(async () => {
+        await editable.click();
+        await expect(editable).toContainClass('aloha-editable-active', { timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
+}
+
 export function selectEditorTab(page: Page, id: string): Promise<void> {
     return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
@@ -535,7 +547,7 @@ export async function expectItemPublished(item: Locator): Promise<void> {
 }
 
 export async function expectItemLanguageCode(item: Locator, languageCode: string): Promise<void> {
-    await expect(item.locator('>gtx-language-state .language-code')).toHaveText(languageCode);
+    await expect(item.locator('> .current-language-container > gtx-language-state .language-code')).toHaveText(languageCode);
 }
 
 export function pageListRowLanguage(item: Locator, lang: string): Locator {
@@ -864,7 +876,7 @@ export async function toggleDisplayAllCheckbox(
  * @param page - The current page.
  * @param plugin - The plugin source(s) (example: "common/characterpicker").
  */
-export function addTemporaryAlohaPlugin(page: Page, plugin: string | string[]): Promise<void> {
+export function addTemporaryAlohaPlugin(page: Page, plugin: string | string[]): Promise<Disposable> {
     const toAdd = Array.isArray(plugin) ? plugin : [plugin];
 
     return page.route('**/alohapage**', async (route) => {

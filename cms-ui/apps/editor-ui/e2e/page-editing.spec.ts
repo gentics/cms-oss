@@ -65,6 +65,7 @@ import {
     pickPaletteColor,
     rerouteAlohaConfig,
     selectEditorTab,
+    activateEditable,
     selectNode,
     selectRangeIn,
     selectTextIn,
@@ -659,7 +660,7 @@ test.describe('Page Editing', () => {
                     test(`should toggle format "${bind.tag}" with a keybind correctly`, async ({ page }) => {
                         await openEditingPageInEditmode(page);
 
-                        await mainEditable.click();
+                        await activateEditable(mainEditable);
                         await mainEditable.clear();
                         await mainEditable.fill(TEXT);
 
@@ -683,7 +684,7 @@ test.describe('Page Editing', () => {
                 const TEXT = 'Test-Text';
 
                 await openEditingPageInEditmode(page);
-                await mainEditable.click();
+                await activateEditable(mainEditable);
                 await mainEditable.clear();
                 await mainEditable.fill(TEXT);
 
@@ -838,7 +839,7 @@ test.describe('Page Editing', () => {
 
                 // Enter some sample text in multiple lines
                 const LINES = ['test content', 'foo bar', 'final text'];
-                await inlineEditable.click();
+                await activateEditable(inlineEditable);
                 await inlineEditable.fill(LINES[0]);
                 await inlineEditable.press('Enter');
                 await inlineEditable.type(LINES[1]);
@@ -1190,9 +1191,14 @@ test.describe('Page Editing', () => {
                 }
 
                 async function selectLinkAndOpenModal(): Promise<Locator> {
+                    // Activate the editable first, as clicking the link in an inactive editable doesn't activate it.
+                    await activateEditable(mainEditable);
+
                     const linkElement = mainEditable.locator('a');
                     await linkElement.click();
 
+                    // After re-opening the page, the toolbar isn't guaranteed to be on the formatting tab
+                    await selectEditorTab(page, 'formatting');
                     const insertLinkButton = findAlohaComponent(page, {
                         slot: 'insertLink',
                         action: 'secondary',
@@ -1710,7 +1716,7 @@ test.describe('Page Editing', () => {
                 }],
             }, async ({ page }) => {
                 // Clear the content
-                await mainEditable.click();
+                await activateEditable(mainEditable);
                 await mainEditable.clear();
 
                 await selectEditorTab(page, 'gtx.constructs');
@@ -1730,8 +1736,13 @@ test.describe('Page Editing', () => {
 
                 await test.step('Save, and re-open the page', async () => {
                     // Save the page, close it, open it again
+                    // Wait for the save to be done, as otherwise closing would prompt to discard the changes
+                    const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
                     await editorAction(page, 'save');
+                    await saveReq;
                     await editorAction(page, 'close');
+                    // Wait until content-frame is actually closed before trying to go to edit-mode
+                    await page.locator('content-frame').waitFor({ state: 'detached' });
                     await openEditingPageInEditmode(page);
 
                     // We can't reuse the locator from the other step, as it's a new iframe
@@ -1752,7 +1763,7 @@ test.describe('Page Editing', () => {
                 // Mark as slow, since we have a lot of timeouts/waits since we hold down a key for prolonged time.
                 test.slow();
 
-                await mainEditable.click();
+                await activateEditable(mainEditable);
                 await mainEditable.fill('text before');
                 expect(await selectRangeIn(mainEditable, 11, 11)).toEqual(true);
 
@@ -1839,7 +1850,7 @@ test.describe('Page Editing', () => {
                     description: 'SUP-20135',
                 }],
             }, async ({ page }) => {
-                await mainEditable.click();
+                await activateEditable(mainEditable);
                 await mainEditable.press('Enter');
                 await mainEditable.fill('text beforetextafter');
                 await expect(mainEditable.locator('p')).toHaveCount(1);

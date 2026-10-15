@@ -42,7 +42,6 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileFactory;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.Construct;

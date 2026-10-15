@@ -662,7 +662,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 	@Test
 	public void testManageForm() throws Exception {
-		try (var formsClosure = new NodeFeatureClosure(Feature.FORMS, true)) {
+		try (var formsClosure = new NodeFeatureClosure(Feature.FORMS, node1, true)) {
 			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 			ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
 			String packageName = response.getContentPackage().getName();
@@ -806,7 +806,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 	 */
 	@Test
 	public void testFailingImportRespondsWithErrorStatus() throws Exception {
-		try (var formsFeature = new NodeFeatureClosure(Feature.FORMS, true)) {
+		try (var formsFeature = new NodeFeatureClosure(Feature.FORMS, node1, true)) {
 			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 			String packageName = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION).getContentPackage().getName();
 			String node1Id = supply(() -> node1.getGlobalId().toString());

@@ -202,7 +202,8 @@ test.describe('Multichannelling', () => {
 
             // Wait for editor to be ready
             const iframe = await getAlohaIFrame(page);
-            editor = iframe.locator('main .GENTICS_tagname_content[contenteditable="true"]');
+            // Same as in `openPageForEditing`, as the `GENTICS_tagname_*` classes aren't always rendered
+            editor = iframe.locator('main .container [contenteditable="true"]');
             await editor.waitFor({ timeout: 60_000 });
         });
 
@@ -422,13 +423,17 @@ test.describe('Multichannelling', () => {
             testPage = IMPORTER.get(PAGE_FOUR);
 
             const mcCheckReq = waitForResponseFrom(page, 'GET', `/rest/admin/features/${Feature.MULTICHANNELLING}`);
-            const channelFeatReq = waitForResponseFrom(page, 'GET', `/rest/node/features/${channelNode.id}`);
 
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
 
             await mcCheckReq;
+            // The overlay blocks any interaction until the app is done with the login
+            await expect(page.locator('logging-in-overlay .logging-in-overlay')).toBeHidden({ timeout: 15_000 });
 
+            // Only start waiting right before selecting the node, as the login itself
+            // may already take longer than the request timeout.
+            const channelFeatReq = waitForResponseFrom(page, 'GET', `/rest/node/features/${channelNode.id}`);
             await selectNode(page, channelNode.id);
 
             const channelFeatRes = await channelFeatReq;

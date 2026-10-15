@@ -134,7 +134,10 @@ test.describe('Time Management', () => {
             const reqBody: PagePublishRequest = publishRes.request().postDataJSON();
             const diff = Math.trunc(futureDate.getTime() / 1_000) - reqBody.at;
             // Different times due to timezone differences which may occur
-            expect([0, 3_600, 7_200]).toContain(diff);
+            const tzDiff = Math.round(diff / 3_600) * 3_600;
+            expect([0, 3_600, 7_200]).toContain(tzDiff);
+            // Allow a second of difference, as the milliseconds may be rounded instead of truncated
+            expect(Math.abs(diff - tzDiff)).toBeLessThanOrEqual(1);
         });
 
         await test.step('Clear page publish', async () => {

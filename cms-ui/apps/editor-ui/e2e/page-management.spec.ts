@@ -1266,7 +1266,7 @@ test.describe('Page Management', () => {
             await pageListReq;
         });
 
-        const itemIndicator = item.locator('> gtx-language-state .indicator');
+        const itemIndicator = item.locator('> .current-language-container > gtx-language-state .indicator');
         await expect(itemIndicator).toHaveCount(1);
         await expect(itemIndicator).toContainClass('indicator-in-queue');
     });
@@ -1306,7 +1306,7 @@ test.describe('Page Management', () => {
         await pageListReq;
 
         // Now should be marked as in queue for taking it offline
-        const itemIndicator = item.locator('> gtx-language-state .indicator');
+        const itemIndicator = item.locator('> .current-language-container > gtx-language-state .indicator');
         await expect(itemIndicator).toHaveCount(1);
         await expect(itemIndicator).toContainClass('indicator-in-queue');
     });
@@ -1351,7 +1351,7 @@ test.describe('Page Management', () => {
         }
 
         async function expectItemInQueue(item: Locator): Promise<void> {
-            const itemIndicator = item.locator('> gtx-language-state .indicator');
+            const itemIndicator = item.locator('> .current-language-container > gtx-language-state .indicator');
             await expect(itemIndicator).toHaveCount(1);
             await expect(itemIndicator).toContainClass('indicator-in-queue');
         }

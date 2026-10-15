@@ -41,6 +41,11 @@ export enum Feature {
     OBJECT_TAG_SYNC = 'objtag_sync',
     LINK_CHECKER = 'link_checker',
     FORMS = 'forms',
+    /**
+     * If this feature is activated, automatic page translation is available.
+     * Has to be activated for the nodes as well, see {@link NodeFeature.AUTOMATIC_TRANSLATION}.
+     */
+    AUTOMATIC_TRANSLATION = 'automatic_translation',
 }
 
 /**

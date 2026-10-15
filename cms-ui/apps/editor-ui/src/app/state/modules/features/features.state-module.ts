@@ -32,6 +32,7 @@ const INTIIAL_FEATURES_STATE: FeaturesState = {
     [Feature.OBJECT_TAG_SYNC]: false,
     [Feature.LINK_CHECKER]: false,
     [Feature.FORMS]: false,
+    [Feature.AUTOMATIC_TRANSLATION]: false,
 
     nodeFeatures: {},
 };

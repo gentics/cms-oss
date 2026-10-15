@@ -12,3 +12,5 @@ feature:
   # value with a ENV value. In the tests we dynamically turn keycloak off.
   keycloak: ${env:KEYCLOAK_ACTIVE}
   keycloak_signout: ${env:KEYCLOAK_ACTIVE}
+
+  elasticsearch: ${env:ELASTICSEARCH_ACTIVE}

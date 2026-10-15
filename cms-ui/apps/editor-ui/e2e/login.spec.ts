@@ -162,15 +162,23 @@ test.describe('Login', () => {
                 return !url.hash.startsWith('#/login');
             });
 
+            // Wait for the list to be loaded before clearing the session, as otherwise
+            // pending requests would already cause a logout before we can click the folder.
+            const list = findList(page, ITEM_TYPE_FOLDER);
+            const item = findItem(list, IMPORTER.get(FOLDER_A).id);
+            const nameLink = item.locator('.item-name a');
+            await expect(nameLink).toBeVisible();
+
             // clear session cookie
             await context.clearCookies({ name: 'GCN_SESSION_SECRET' });
 
             // click on a folder
-            const list = findList(page, ITEM_TYPE_FOLDER);
-            const item = findItem(list, IMPORTER.get(FOLDER_A).id);
-            const nameLink = item.locator('.item-name a');
-            await expect(nameLink).toBeVisible({ timeout: 5_000 });
-            await nameLink.click();
+            // Background requests of the app may already detect the missing session and redirect
+            // to the login before the click happens, which is just as fine.
+            await Promise.race([
+                nameLink.click().catch(() => {}),
+                page.waitForURL(/login/),
+            ]);
 
             await expect(page).toHaveURL(/login/);
 
@@ -334,15 +342,23 @@ test.describe('Login', () => {
             await loginWithForm(page, KEYCLOAK_LOGIN);
             await expect(page.locator('project-editor')).toBeVisible();
 
+            // Wait for the list to be loaded before clearing the session, as otherwise
+            // pending requests would already cause a logout before we can click the folder.
+            const list = findList(page, ITEM_TYPE_FOLDER);
+            const item = findItem(list, IMPORTER.get(FOLDER_A).id);
+            const nameLink = item.locator('.item-name a');
+            await expect(nameLink).toBeVisible();
+
             // clear session cookie
             await context.clearCookies({ name: 'GCN_SESSION_SECRET' });
 
             // click on a folder
-            const list = findList(page, ITEM_TYPE_FOLDER);
-            const item = findItem(list, IMPORTER.get(FOLDER_A).id);
-            const nameLink = item.locator('.item-name a');
-            await expect(nameLink).toBeVisible({ timeout: 5_000 });
-            await nameLink.click();
+            // Background requests of the app may already detect the missing session and redirect
+            // to the login before the click happens, which is just as fine.
+            await Promise.race([
+                nameLink.click().catch(() => {}),
+                page.waitForURL(/login/),
+            ]);
 
             const currentUrl = page.url();
 

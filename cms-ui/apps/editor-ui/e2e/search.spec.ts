@@ -177,9 +177,13 @@ test.describe('Search', () => {
     // -------------------------------
     test.describe('via Gentics CMS', () => {
         test.beforeEach(async ({ page }) => {
-            await IMPORTER.setupFeatures({
-                [Feature.ELASTICSEARCH]: false,
-            });
+            // Elasticsearch is only available in the Enterprise Edition, and has to be disabled
+            // there, as the search would otherwise not be handled by the CMS itself.
+            if (isVariant(Variant.ENTERPRISE)) {
+                await IMPORTER.setupFeatures({
+                    [Feature.ELASTICSEARCH]: false,
+                });
+            }
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
@@ -465,6 +469,8 @@ test.describe('Search', () => {
             await IMPORTER.setupFeatures({
                 [Feature.ELASTICSEARCH]: true,
             });
+            // Make sure the indices are present and up to date, as the search would fail otherwise
+            await IMPORTER.rebuildElasticSearchIndices();
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);

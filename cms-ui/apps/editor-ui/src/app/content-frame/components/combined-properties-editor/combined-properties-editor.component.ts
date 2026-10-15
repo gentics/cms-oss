@@ -250,6 +250,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     private hasUpdatePermission = false;
+    /** If the currently active tab is an object-property, which determines the update permission on it's own. */
+    private activeTabIsObjectProperty = false;
 
     private item$ = new BehaviorSubject<ItemWithObjectTags | Node>(null);
     editedObjectProperty: EditableObjectTag;
@@ -349,6 +351,13 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             }),
         ).subscribe((perms) => {
             this.itemPermissions = perms;
+            // The permissions may be loaded after the tab has been activated already,
+            // in which case the update permission has to be updated here.
+            if (!this.activeTabIsObjectProperty && this.hasUpdatePermission !== perms?.edit) {
+                this.hasUpdatePermission = perms?.edit;
+                // Actions need to be rebuilt, as their enabled state is only checked when they change
+                this.rebuildContentTagActions();
+            }
             this.changeDetector.markForCheck();
         }));
 
@@ -419,11 +428,13 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     if (objProp) {
                         // Check if the tag is editable by the current user via the readOnly property
                         // readOnly: No Update Permission on the tag
+                        this.activeTabIsObjectProperty = true;
                         this.hasUpdatePermission = !objProp.readOnly;
                         return { item: itemWithObjProps.item as ItemWithObjectTags, tag: objProp };
                     }
                 }
 
+                this.activeTabIsObjectProperty = false;
                 this.hasUpdatePermission = this.itemPermissions?.edit;
                 return null;
             }),

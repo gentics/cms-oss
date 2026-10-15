@@ -31,7 +31,7 @@ import {
     UserImportData,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { cloneWithSymbols } from '@gentics/common';
 import { expect, Locator, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,
@@ -556,6 +556,7 @@ test.describe('Media Management', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-20081',
+        }],
     }, async ({ page }) => {
         await setupWithPermissions(page, [
             {
@@ -583,6 +584,7 @@ test.describe('Media Management', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-20269',
+        }],
     }, async ({ page }) => {
         const { entity, preview } = await setupForReplace(page, ITEM_TYPE_FILE, FIXTURE_FILE_TXT1);
         await setKeepFileName(preview, true);

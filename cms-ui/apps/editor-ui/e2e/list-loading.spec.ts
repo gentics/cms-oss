@@ -1,4 +1,5 @@
-import { AccessControlledType, GcmsPermission, Node, PageCopyResponse, User, Variant } from '@gentics/cms-models';
+import { randomId } from '@gentics/common';
+import { AccessControlledType, Feature, GcmsPermission, Node, PageCopyResponse, User, Variant } from '@gentics/cms-models';
 import {
     createClient,
     isVariant,
@@ -308,7 +309,17 @@ test.describe('List Loading', () => {
     test.describe('Content Staging', () => {
         test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
+        let packageName: string;
+
         test.beforeEach(async ({ page }) => {
+            await test.step('Setup content staging', async () => {
+                await IMPORTER.setupFeatures({
+                    [Feature.CONTENT_STAGING]: true,
+                });
+                packageName = `e2e_list_loading_${randomId()}`;
+                await IMPORTER.client.contentStaging.create({ name: packageName }).send();
+            });
+
             // Pagination data may be loaded from the server stored user-data
             // This will simply return empty data for the user
             await setupUserDataRerouting(page);
@@ -316,6 +327,15 @@ test.describe('List Loading', () => {
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
             await selectNode(page, IMPORTER.get(NODE_FULL)!.id);
+        });
+
+        test.afterEach(async () => {
+            await test.step('Cleanup content staging', async () => {
+                await IMPORTER.client.contentStaging.delete(packageName).send();
+                await IMPORTER.setupFeatures({
+                    [Feature.CONTENT_STAGING]: false,
+                });
+            });
         });
 
         test('should load content under staging mode, displaying items\' staging status', {
@@ -328,13 +348,18 @@ test.describe('List Loading', () => {
             await actionMenu.locator('.action-buttons-dropdown-content button[data-action-id="content-staging"]').click();
 
             const modal = page.locator('gtx-content-staging-modal');
-            await modal.locator('gtx-content-package-list gtx-contents-list-item gtx-checkbox label').click();
+            await modal.locator('gtx-content-package-list gtx-contents-list-item')
+                .filter({ has: page.locator('.item-name', { hasText: packageName }) })
+                .locator('gtx-checkbox label')
+                .click();
             await clickModalAction(modal, 'confirm');
 
             // Expect the leave content-staging mode button to be visible
-            await page.locator('gtx-button.staging-mode-leaver').isVisible();
+            await expect(page.locator('gtx-button.staging-mode-leaver')).toBeVisible();
 
             const folderList = findList(page, 'folder');
+            // Make sure the list is loaded, as otherwise the checks below could pass on an empty list
+            await expect(folderList.locator('item-list-row').first()).toBeVisible();
             const folderItems = await folderList.locator('item-list-row').all();
             for (const item of folderItems) {
                 const status = item.locator('.status-label.staging');
@@ -343,6 +368,7 @@ test.describe('List Loading', () => {
             }
 
             const pageList = findList(page, 'page');
+            await expect(pageList.locator('item-list-row').first()).toBeVisible();
             const pageItems = await pageList.locator('item-list-row').all();
             for (const item of pageItems) {
                 const status = item.locator('.status-label.staging');

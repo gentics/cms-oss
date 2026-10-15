@@ -170,6 +170,18 @@ test.describe('Selecting a part in the preview', () => {
 
         await expect(page.getByText('Selected: Text')).toBeHidden();
     });
+
+    test('closes the element menu and clears the selection with a click into the page outside the parts', async ({ page }) => {
+        await stubS1Session(page, [markedPage()]);
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Ab dem').click();
+        await expect(page.getByRole('menuitem', { name: 'Give feedback' })).toBeVisible();
+
+        await page.frameLocator(frameSelector).getByText('Kopfzeile').click();
+
+        await expect(page.getByRole('menu')).toBeHidden();
+        await expect(page.getByText('Selected: Text')).toBeHidden();
+    });
 });
 
 // Sending a turn: the default cms connection, a session already authorized for it (so no new CMS
@@ -343,6 +355,25 @@ test.describe('Feedback on a part of the preview', () => {
         await expect(page.locator('[data-dim]')).toHaveCount(0);
         expect(posted).toHaveLength(0);
     });
+
+    test('closes the feedback card and clears the selection with a click into the page outside the parts, without sending', async ({ page }) => {
+        await stubS1Session(page, [markedPage()]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Ab dem').click();
+        await page.getByRole('menuitem', { name: 'Give feedback' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Text' });
+
+        await card.getByRole('textbox', { name: 'What should happen to this spot?' }).fill('shorter');
+        await page.frameLocator(frameSelector).getByText('Kopfzeile').click();
+
+        await expect(card).toBeHidden();
+        await expect(page.locator('[data-dim]')).toHaveCount(0);
+        await expect(page.getByText('Selected: Text')).toBeHidden();
+        expect(posted).toHaveLength(0);
+    });
 });
 
 test.describe('Writing a part yourself', () => {
@@ -377,6 +408,24 @@ test.describe('Writing a part yourself', () => {
             ],
         });
         await expect(card).toBeHidden();
+    });
+
+    test('closes the edit card and clears the selection with a click into the page outside the parts, without sending', async ({ page }) => {
+        await stubS1Session(page, [markedPage()]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Ab dem').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Text' });
+
+        await card.getByRole('textbox', { name: 'New text' }).fill('Ab dem 1. August gilt');
+        await page.frameLocator(frameSelector).getByText('Kopfzeile').click();
+
+        await expect(card).toBeHidden();
+        await expect(page.getByText('Selected: Text')).toBeHidden();
+        expect(posted).toHaveLength(0);
     });
 
     test('sends nothing for an unchanged text and says so', async ({ page }) => {
@@ -479,6 +528,29 @@ test.describe('Swapping an image', () => {
             ],
         });
         await expect(card).toBeHidden();
+    });
+
+    test('closes the image card and clears the selection with a click into the page outside the parts, without sending', async ({ page }) => {
+        await stubS1Session(page, [imagePage()]);
+        await stubCmsImages(page);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('img', { name: 'Hero' }).click();
+        await page.getByRole('menuitem', { name: 'Swap the image' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Image' });
+
+        await card.getByRole('radio', { name: 'editorial-desk.jpg' }).click();
+
+        // The empty page below the parts.
+        const frameBox = (await page.locator(frameSelector).boundingBox())!;
+
+        await page.mouse.click(frameBox.x + 10, Math.min(frameBox.y + frameBox.height, 800) - 10);
+
+        await expect(card).toBeHidden();
+        await expect(page.getByText('Selected: Image')).toBeHidden();
+        expect(posted).toHaveLength(0);
     });
 
     test('closes the image card with its cancel button, without sending', async ({ page }) => {

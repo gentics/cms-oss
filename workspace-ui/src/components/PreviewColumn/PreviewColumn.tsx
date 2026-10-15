@@ -112,7 +112,8 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  *
  * A part of the page is selected by clicking it (`usePreviewElements`): a layer above the frame
  * outlines the part under the mouse and the selected one, the page itself stays as the CMS rendered
- * it (design.md §12 "Elemente in der Vorschau"). The header names the selection and clears it. When a
+ * it (design.md §12 "Elemente in der Vorschau"). The header names the selection and clears it; so
+ * does a click into the page outside the parts, which also closes the part's menu or card. When a
  * reload no longer has the selected part, the selection is cleared and a toast says so.
  *
  * The parts the last CMS write changed (`changed_elements`) are tinted until the next update.

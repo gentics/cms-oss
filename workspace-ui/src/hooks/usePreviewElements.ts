@@ -65,7 +65,8 @@ function findPart(doc: Document, tagName: string): Element | null {
  * The marked parts of the page in the preview frame `frameRef`: which one the mouse is over and where
  * the selected one (`selected`, a tag name) sits, both as boxes for an overlay above the frame. Call
  * `onFrameLoad` from the frame's `load`. A click on a part selects it through `onSelect` instead of
- * following a link in it; Escape in the frame clears the selection. The boxes follow scrolling,
+ * following a link in it; a click into the page outside the parts and Escape in the frame clear the
+ * selection. The boxes follow scrolling,
  * resizing and changes to the page. `changed` (tag names, from `changed_elements`) gives the boxes of
  * the parts the last CMS write changed; a name not on the page has none. `textOf` reads a part's
  * current text (`partTextOf`), `hasImage` whether it shows an image (`isImagePart`).
@@ -129,6 +130,8 @@ export function usePreviewElements(
             if (element) {
                 event.preventDefault();
                 callbacks.current.onSelect(previewElementOf(element));
+            } else {
+                callbacks.current.onSelect(null);
             }
         }
 

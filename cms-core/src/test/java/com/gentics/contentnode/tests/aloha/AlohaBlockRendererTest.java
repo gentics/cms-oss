@@ -245,35 +245,33 @@ public class AlohaBlockRendererTest {
 			prefs.setFeature(Feature.COPY_TAGS.toString().toLowerCase(), featureValue);
 		}
 	}
+
 	/**
-	 * Will do the same as {@link #readOnlyBlockCopyTags()}, but with the feature copy_tags off and the rendertype
-	 * parameter {@link AlohaRenderer#TAG_MARKERS} set instead. The tags must be annotated the same way.
+	 * Will do the same as {@link #block()}, but in the preview mode for Aloha ({@link RenderType#EM_ALOHA_PREVIEW}),
+	 * which renders the blocks exactly like the edit mode
 	 */
 	@Test
-	public void readOnlyBlockTagMarkers() throws Exception {
+	public void previewBlock() throws Exception {
+		assertEquals("Name of the preview mode", RenderType.EM_ALOHA_PREVIEW,
+				RenderType.parseEditMode(RenderType.renderEditMode(RenderType.EM_ALOHA_PREVIEW)));
+
 		InputStream inputStream = this.getClass().getResourceAsStream("blockinputs/" + filename);
-		InputStream resultStream = this.getClass().getResourceAsStream("roblockresults/" + filename);
+		InputStream resultStream = this.getClass().getResourceAsStream("blockresults/" + filename);
 
 		String template = IOUtils.toString(inputStream);
 		String result = IOUtils.toString(resultStream);
 
 		AlohaRenderer renderer = new AlohaRenderer();
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-		RenderType renderType = t.getRenderType();
-		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
+		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 		int editMode = renderType.getEditMode();
-		boolean featureValue = prefs.isFeature(Feature.COPY_TAGS);
 
 		try {
-			renderType.setEditMode(RenderType.EM_ALOHA_READONLY);
-			prefs.setFeature(Feature.COPY_TAGS.toString().toLowerCase(), false);
-			renderType.setParameter(AlohaRenderer.TAG_MARKERS, true);
-			assertEquals("Check if processing { " + filename + " } returns expected output", result, renderer.block(template, outerTag, new RenderResult()));
+			renderType.setEditMode(RenderType.EM_ALOHA_PREVIEW);
+			assertEquals("Check if processing { " + filename + " } returns the output of the edit mode", result,
+					renderer.block(template, outerTag, new RenderResult()));
 		} finally {
 			renderType.setEditMode(editMode);
-			prefs.setFeature(Feature.COPY_TAGS.toString().toLowerCase(), featureValue);
-			renderType.unsetParameter(AlohaRenderer.TAG_MARKERS);
 		}
 	}
 }

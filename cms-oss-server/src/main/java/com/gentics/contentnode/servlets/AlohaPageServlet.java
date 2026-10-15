@@ -73,8 +73,10 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 	 * added to the head) or "json" for getting the content and includes
 	 * separated in a json response. The default value is "html"</li>
 	 * <li>proxyprefix: optional prefix for all URLs</li>
-	 * <li>tagmarkers: "true" to annotate the tags of the page (data-gcn-* attributes) also in read only mode,
-	 * like the feature copy_tags does. Has no effect in edit mode, where the editable tags are rendered as annotated blocks anyway</li>
+	 * <li>tagmarkers: "true" (with real "view" or "newview") to render the page in the preview mode for Aloha
+	 * (RenderType.EM_ALOHA_PREVIEW): like in edit mode, but without Aloha Editor, the page is not locked and needs
+	 * view permission only, and the blocks and editables of the page are annotated (data-gcn-* attributes), e.g. for
+	 * a preview that needs to find the tags in the page. Has no effect in edit mode and for deleted pages</li>
 	 * <li>links: "backend" (default) when the generated URLs to other pages or files shall lead to the backend, "frontend" for URLs that link to the frontend </li>
 	 * <li>translation_master: id of the page from which this page is translated (if it is translated)</li>
 	 * <li>translation_version: version timestamp of the page version from which this page is translated (empty if translated from the current version)</li>
@@ -132,6 +134,10 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 			if (!Arrays.asList("view", "newview").contains(real)) {
 				renderMode = RenderType.EM_ALOHA;
 			}
+
+			// read only with tag markers: rendered in the preview mode for Aloha (like in edit mode, but without Aloha Editor
+			// and without locking the page)
+			boolean tagMarkers = renderMode == RenderType.EM_ALOHA_READONLY && Boolean.parseBoolean(request.getParameter("tagmarkers"));
 
 			// this flag will be set to true, if the user requested edit mode, but had no permission
 			boolean readOnlyBecauseNoPerm = false;
@@ -213,6 +219,10 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 						}
 						renderMode = RenderType.EM_ALOHA_READONLY;
 					}
+					// the preview mode needs view permission only, since the page is neither locked nor editable
+					if (tagMarkers && !page.isDeleted()) {
+						renderMode = RenderType.EM_ALOHA_PREVIEW;
+					}
 					folder = page.getFolder();
 					// set the response type always to text/html, since we wrap the page's content in HTML
 					response.setContentType("text/html");
@@ -260,10 +270,6 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 				}
 				if (readOnlyBecauseLocked) {
 					renderType.setParameter(AlohaRenderer.READONLY_LOCKED, true);
-				}
-				// annotate the tags in readonly mode, if requested (without locking the page, unlike edit mode)
-				if (renderMode == RenderType.EM_ALOHA_READONLY && Boolean.parseBoolean(request.getParameter("tagmarkers"))) {
-					renderType.setParameter(AlohaRenderer.TAG_MARKERS, true);
 				}
 				if (page.isDeleted()) {
 					renderType.setParameter(AlohaRenderer.DELETED, true);

@@ -212,7 +212,7 @@ public class ParseStructRenderer implements StructRenderer {
 			// found the tag in an open ml tag
 			if (!omitTagsEdit.contains(tag)) {
 				// check for aloha mode
-				if (renderType.getEditMode() != RenderType.EM_ALOHA) {
+				if (!RenderType.isAlohaEditMode(renderType.getEditMode())) {
 					// tag in ml tag, but not inline editable
 					StringBuffer replacement = new StringBuffer();
 
@@ -240,7 +240,7 @@ public class ParseStructRenderer implements StructRenderer {
 		} else {
 			// tag not in ml, not inline editable
 			if (!omitTagsEdit.contains(tag)) {
-				if (renderType.getEditMode() != RenderType.EM_ALOHA) {
+				if (!RenderType.isAlohaEditMode(renderType.getEditMode())) {
 					source.append(tag.getEditPrefix());
 					source.append(tag.getEditLink());
 					source.append(code);
@@ -281,7 +281,7 @@ public class ParseStructRenderer implements StructRenderer {
 
 			// when edit mode, we possibly need to reposition the rendered
 			// tag
-			if ((editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
+			if (RenderType.isAlohaEditMode(editMode) && tag.isEditable()) {
 				if (debugLog) {
 					logger.debug("rendering {" + tag + "} in editMode {" + editMode + "}");
 				}

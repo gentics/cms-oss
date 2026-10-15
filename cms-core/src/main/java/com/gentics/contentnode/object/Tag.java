@@ -459,12 +459,12 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 		boolean modifiedEditMode = false;
 
 		// TODO when the tag's main object is not the rendered root object, we disable editmode now
-		if (isEditable() && (editMode == RenderType.EM_ALOHA)) {
+		if (isEditable() && RenderType.isAlohaEditMode(editMode)) {
 			TagContainer container = getContainer();
 			StackResolvable rootObject = renderType.getRenderedRootObject();
 
 			if (rootObject instanceof TagContainer && !(tagContainersEqual(container, (TagContainer) rootObject))) {
-				if (editMode == RenderType.EM_ALOHA) {
+				if (RenderType.isAlohaEditMode(editMode)) {
 					editMode = RenderType.EM_ALOHA_READONLY;
 					modifiedEditMode = true;
 					if (logger.isDebugEnabled()) {
@@ -475,7 +475,7 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 			}
 		}
 
-		if (editMode == RenderType.EM_ALOHA) {
+		if (RenderType.isAlohaEditMode(editMode)) {
 			// edit mode
 			if (!isEnabled() && !isUnclicked()) {
 				// do not render anything (neither code nor div) when already

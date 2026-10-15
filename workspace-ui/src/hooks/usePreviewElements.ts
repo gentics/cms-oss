@@ -1,6 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
-/** The selector of the parts of a CMS page: the CMS marks them in read-only mode when `COPY_TAGS` is on (`AlohaRenderer`). */
+/** The selector of the parts of a CMS page: the CMS marks them with `tagmarkers=true` (edit mode without Aloha Editor, `AlohaPageServlet`). */
 const MARKED = '[data-gcn-tagid]';
 
 /** A marked part of the previewed page, as the CMS annotated it. */

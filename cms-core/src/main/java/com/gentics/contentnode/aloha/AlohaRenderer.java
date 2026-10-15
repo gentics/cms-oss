@@ -282,13 +282,6 @@ public class AlohaRenderer implements TemplateRenderer {
 	public final static String MARK_TAG = "aloha_block_marked";
 
 	/**
-	 * Name of the rendertype parameter, which (if set to true) lets the readonly mode annotate the tags
-	 * of the page (data-gcn-* attributes on the tag's root element) like the feature copy_tags does,
-	 * without the feature being active (e.g. for a preview that needs to find the tags in the page)
-	 */
-	public final static String TAG_MARKERS = "tagmarkers";
-
-	/**
 	 * The last action that was performed before this page has loaded
 	 */
 	public final static String LAST_ACTION = null;
@@ -1104,7 +1097,8 @@ public class AlohaRenderer implements TemplateRenderer {
 		Object actual = renderType.getStack().peek();
 
 		// Only run when in aloha mode and the actual rendered object is the root object
-		if ((renderType.getEditMode() == RenderType.EM_ALOHA || renderType.getEditMode() == RenderType.EM_ALOHA_READONLY) && rootObject.equals(actual)
+		if ((renderType.getEditMode() == RenderType.EM_ALOHA || renderType.getEditMode() == RenderType.EM_ALOHA_READONLY
+				|| renderType.getEditMode() == RenderType.EM_ALOHA_PREVIEW) && rootObject.equals(actual)
 				&& rootObject instanceof com.gentics.contentnode.object.Page) {
 			com.gentics.contentnode.object.Page page = (com.gentics.contentnode.object.Page) rootObject;
 			Node node = page.getFolder().getNode();
@@ -1119,6 +1113,11 @@ public class AlohaRenderer implements TemplateRenderer {
 			}
 
 			if (!isRenderSettings(renderType)) {
+				return template;
+			}
+
+			// the preview mode renders without Aloha Editor
+			if (renderType.getEditMode() == RenderType.EM_ALOHA_PREVIEW) {
 				return template;
 			}
 
@@ -1391,12 +1390,11 @@ public class AlohaRenderer implements TemplateRenderer {
 		}
 
 		// render the tag as block if either aloha edit mode or aloha readonly (preview) and the feature copy_tags is on
-		// or the tag markers are requested (rendertype parameter TAG_MARKERS)
 		if (parserTag instanceof ContentTag) {
 			ContentTag tag = (ContentTag) parserTag;
 			Content content = (Content) tag.getContainer();
 
-			if (editMode == RenderType.EM_ALOHA && tag.isEditable() && tag.isAlohaBlock() && content.getPages().contains(page)) {
+			if (RenderType.isAlohaEditMode(editMode) && tag.isEditable() && tag.isAlohaBlock() && content.getPages().contains(page)) {
 				// save eventually contained plinks
 				Map<String, String> savedPLinks = savePLinks(code);
 
@@ -1516,8 +1514,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 				// finally restore the plinks
 				code = restorePLinks(code, savedPLinks);
-			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY
-					&& (prefs.isFeature(Feature.COPY_TAGS, node) || Boolean.TRUE.equals(renderType.getParameter(TAG_MARKERS))))) {
+			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY && prefs.isFeature(Feature.COPY_TAGS, node))) {
 				var needWrapper = tag.isLocalizable() && editMode != RenderType.EM_PUBLISH && editMode != RenderType.EM_PREVIEW;
 				Matcher matcher = rootTagPattern.matcher(code);
 
@@ -1605,6 +1602,13 @@ public class AlohaRenderer implements TemplateRenderer {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		// shall we annotate the editables with classes?
 		boolean annotate = t.getNodeConfig().getDefaultPreferences().isFeature(Feature.ALOHA_ANNOTATE_EDITABLES);
+		// shall we annotate the editables with data- attributes (like the blocks)?
+		boolean tagMarkers = t.getRenderType() != null && t.getRenderType().getEditMode() == RenderType.EM_ALOHA_PREVIEW;
+		com.gentics.contentnode.object.Page rootPage = null;
+
+		if (tagMarkers && t.getRenderType().getRenderedRootObject() instanceof com.gentics.contentnode.object.Page) {
+			rootPage = (com.gentics.contentnode.object.Page) t.getRenderType().getRenderedRootObject();
+		}
 
 		while (matcher.find()) {
 			// The complete opening tag
@@ -1659,6 +1663,9 @@ public class AlohaRenderer implements TemplateRenderer {
 				}
 			}
 
+			// the data- attribute annotations of the editable's tag (in the preview mode)
+			String annotationsAttr = tagMarkers && tag != null ? " " + renderTagAnnotations(rootPage, tag) : "";
+
 			// check for liveedit_per_construct setting to retrieve tag specific html tag setting
 			if (t.getRenderType().getPreferences().getFeature("liveedit_tag_perconstruct") && !metaEditable && construct != null) {
 				tagName = construct.getLiveEditorTagName();
@@ -1688,11 +1695,11 @@ public class AlohaRenderer implements TemplateRenderer {
 					}
 				}
 				if (openingTag != null && closingTag != null) {
-					replacement = openingTag + "<" + tagName + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">" + closingTag;
+					replacement = openingTag + "<" + tagName + annotationsAttr + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">" + closingTag;
 				} else if (openingTag != null) {
-					replacement = openingTag + "<" + tagName + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">";
+					replacement = openingTag + "<" + tagName + annotationsAttr + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">";
 				} else {
-					replacement = "<" + tagName + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">";
+					replacement = "<" + tagName + annotationsAttr + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">";
 				}
 			} else {
 				// we have a valid root tag so we check if it contains an id
@@ -1733,6 +1740,11 @@ public class AlohaRenderer implements TemplateRenderer {
 					}
 				}
 
+				// add the data- attribute annotations, if necessary and the tag is not annotated yet
+				if (!annotationsAttr.isEmpty() && !newOpeningTag.contains("data-gcn-tagid=")) {
+					newOpeningTag = newOpeningTag.replaceFirst(openingTagName, Matcher.quoteReplacement(openingTagName + annotationsAttr));
+				}
+
 				// check whether the found htmltag denotes a block (and if yes, don't use it)
 				if (blockHTMLIds.contains(htmlId)) {
 					// the tag around the editable is a block, so it is not usable as editable tag
@@ -1746,7 +1758,7 @@ public class AlohaRenderer implements TemplateRenderer {
 							classesAttr = " class=\"" + classes + "\"";
 						}
 					}
-					replacement = openingTag + "<" + tagName + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">" + closingTag;
+					replacement = openingTag + "<" + tagName + annotationsAttr + classesAttr + " id=\"" + htmlId + "\">" + content + "</" + tagName + ">" + closingTag;
 				} else {
 					replacement = newOpeningTag + content + closingTag;
 				}
@@ -1886,7 +1898,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @return data- attribute annotations
 	 * @throws NodeException
 	 */
-	protected String renderTagAnnotations(com.gentics.contentnode.object.Page page, Tag tag) throws NodeException {
+	protected static String renderTagAnnotations(com.gentics.contentnode.object.Page page, Tag tag) throws NodeException {
 		StringBuffer annotations = new StringBuffer();
 
 		if (page != null) {

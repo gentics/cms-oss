@@ -82,7 +82,7 @@ test.describe('Preview of an S1 session', () => {
     });
 });
 
-// A page as the CMS renders it read-only with COPY_TAGS: marked parts (a text inside a section) and
+// A page as the CMS renders it with tagmarkers=true: marked parts (a text inside a section) and
 // unmarked structure around them. `withText` false leaves the text part out, as after the AI removed it.
 function markedPage(withText = true): string {
     const text = withText

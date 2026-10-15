@@ -51,6 +51,28 @@ export function resolvePendingFileSources(parts: UserMessagePart[], fileIds: str
         return { ...part, source: fileId ?? 'user' };
     });
 }
+
+/**
+ * The references of `parts` (`reference` parts, e.g. an @-mention), in order and each object once:
+ * what a new session's `SessionContext.references` holds, so the session keeps them for every run.
+ */
+export function partReferences(parts: UserMessagePart[]): ContextReference[] {
+    const references = new Map<string, ContextReference>();
+
+    for (const part of parts) {
+        if (part.type !== 'reference') {
+            continue;
+        }
+
+        const key = `${part.ref.type}:${part.ref.node_id ?? ''}:${part.ref.id}`;
+
+        if (!references.has(key)) {
+            references.set(key, part.ref);
+        }
+    }
+
+    return [...references.values()];
+}
 /** The attribute that marks a passage's element in the field (its node view). */
 export const VERBATIM_ATTRIBUTE = 'data-verbatim';
 const HARD_BREAK_NODE = 'hardBreak';

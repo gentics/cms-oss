@@ -286,6 +286,40 @@ describe('GenAIx query hooks', () => {
             });
         });
 
+        it('puts what the first message references into the session context', async () => {
+            const ref = { type: 'page' as const, id: '8871', node_id: 3, label: 'Product launch 2025' };
+            const referencing = [{ type: 'text' as const, text: 'Summarise ' }, { type: 'reference' as const, ref }];
+            const fetchMock = stubFetch(Response.json({ id: 's-1', status: 'active', run_id: 'r-1', message_id: 'm-1' }, { status: 201 }));
+
+            const { result } = renderHook(() => useStartSession(), { wrapper });
+
+            act(() => result.current.mutate({ parts: referencing, files: [] }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({
+                context: { references: [ref], guidelines: [], connection_ids: [] },
+                message: { parts: referencing },
+                authorizations: [AUTHORIZATION],
+            });
+        });
+
+        it('with files puts what the message references into the context of the session it creates first', async () => {
+            const ref = { type: 'folder' as const, id: '42', node_id: 3, label: 'Campaigns' };
+            const fetchMock = stubFetch(
+                Response.json({ id: 's-1', status: 'active' }, { status: 201 }),
+                Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }),
+            );
+
+            stubUploads([{ status: 201, body: { id: 'f-1' } }]);
+
+            const { result } = renderHook(() => useStartSession(), { wrapper });
+
+            act(() => result.current.mutate({ parts: [{ type: 'reference', ref }], files: [{ file: new File(['a'], 'brief.pdf'), mode: 'source' }] }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ context: { references: [ref], guidelines: [], connection_ids: [] }, authorizations: [AUTHORIZATION] });
+        });
+
         it('puts the created session into the cache that useSession reads', async () => {
             // Only the POST is answered: useSession's own GET stays pending, so its data can only come
             // from the cache entry the mutation writes.

@@ -1,6 +1,6 @@
 import { skipToken, useInfiniteQuery, useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
+import { partReferences, resolvePendingFileSources } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
 import {
@@ -190,6 +190,10 @@ export interface StartSessionInput {
 // with a `file_ref` part per file (contract, `SessionCreate`). Either way the session is created with
 // its CMS credential (`newSessionCmsAuthorization`), which GenAIx verifies before creating anything,
 // and without a `workflow`: the session agent answers or drafts a plan under the module it picks (rc.4).
+// What the first message references (@-mentions) also goes into the session's `context.references`,
+// so the session keeps it beyond that message (contract, `SessionContext`). `guidelines` and
+// `connection_ids` are sent as their contract default, `[]`: none, and the user's default connection
+// (integration guide: set `connection_ids` only when the user holds more than one connection of a type).
 // The run the first message started is awaited (`awaitRun`), so the session view shows it working.
 // Uploads the files into the session, one after the other, and returns a `file_ref` part per file
 // for the message that refers to them.
@@ -207,9 +211,11 @@ async function uploadFileParts(sessionId: string, files: StartFile[], onFileProg
 
 async function startSession({ parts, files, onFileProgress }: StartSessionInput): Promise<Session> {
     const authorizations = [await newSessionCmsAuthorization()];
+    const references = partReferences(parts);
+    const context = references.length > 0 ? { context: { references, guidelines: [], connection_ids: [] } } : {};
 
     if (files.length === 0) {
-        const created = await createSession({ message: { parts }, authorizations });
+        const created = await createSession({ ...context, message: { parts }, authorizations });
 
         if (created.run_id) {
             useWorkspaceEventStore.getState().awaitRun(created.id, created.run_id);
@@ -218,7 +224,7 @@ async function startSession({ parts, files, onFileProgress }: StartSessionInput)
         return created;
     }
 
-    const session = await createSession({ authorizations });
+    const session = await createSession({ ...context, authorizations });
     const fileParts = await uploadFileParts(session.id, files, onFileProgress);
     const fileIds = fileParts.map((part) => part.file_id);
     const accepted = await postMessage(session.id, { parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });

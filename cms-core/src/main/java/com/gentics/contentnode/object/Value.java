@@ -362,7 +362,7 @@ public abstract class Value extends AbstractContentObject implements GCNRenderab
 			try {
 				// If we are in aloha mode and have an inline editable part we add the aloha id 
 				// to the renderResult so that AlohaRenderer can render the editables
-				boolean partAlohaEditable = (editMode == RenderType.EM_ALOHA && getPart().isInlineEditable() && type.isLiveEditorCapable()
+				boolean partAlohaEditable = (RenderType.isAlohaEditMode(editMode) && getPart().isInlineEditable() && type.isLiveEditorCapable()
 						&& container instanceof Tag && ((Tag) container).isEditable()); 
 
 				if (container instanceof Tag && !((Tag) container).isEnabled() && !forceOutput) {

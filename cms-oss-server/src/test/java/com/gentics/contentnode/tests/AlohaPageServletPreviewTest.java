@@ -247,7 +247,8 @@ public class AlohaPageServletPreviewTest {
 
 	/**
 	 * When rendering the page read-only with the tag markers requested ({@code tagmarkers=true}), the page is
-	 * rendered like in edit mode, but without the Aloha Editor scripts and without being locked.
+	 * rendered in the preview mode for Aloha ({@code RenderType.EM_ALOHA_PREVIEW}): like in edit mode, but without
+	 * the Aloha Editor scripts and without being locked.
 	 * @throws Exception
 	 */
 	@Test

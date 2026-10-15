@@ -282,13 +282,6 @@ public class AlohaRenderer implements TemplateRenderer {
 	public final static String MARK_TAG = "aloha_block_marked";
 
 	/**
-	 * Name of the rendertype parameter, which (if set to true) marks a page rendered in edit mode for a preview
-	 * without Aloha Editor (e.g. for a preview that needs to find the tags in the page): the editables are
-	 * annotated with data-gcn-* attributes like the blocks.
-	 */
-	public final static String TAG_MARKERS = "tagmarkers";
-
-	/**
 	 * The last action that was performed before this page has loaded
 	 */
 	public final static String LAST_ACTION = null;
@@ -1104,7 +1097,8 @@ public class AlohaRenderer implements TemplateRenderer {
 		Object actual = renderType.getStack().peek();
 
 		// Only run when in aloha mode and the actual rendered object is the root object
-		if ((renderType.getEditMode() == RenderType.EM_ALOHA || renderType.getEditMode() == RenderType.EM_ALOHA_READONLY) && rootObject.equals(actual)
+		if ((renderType.getEditMode() == RenderType.EM_ALOHA || renderType.getEditMode() == RenderType.EM_ALOHA_READONLY
+				|| renderType.getEditMode() == RenderType.EM_ALOHA_PREVIEW) && rootObject.equals(actual)
 				&& rootObject instanceof com.gentics.contentnode.object.Page) {
 			com.gentics.contentnode.object.Page page = (com.gentics.contentnode.object.Page) rootObject;
 			Node node = page.getFolder().getNode();
@@ -1119,6 +1113,11 @@ public class AlohaRenderer implements TemplateRenderer {
 			}
 
 			if (!isRenderSettings(renderType)) {
+				return template;
+			}
+
+			// the preview mode renders without Aloha Editor
+			if (renderType.getEditMode() == RenderType.EM_ALOHA_PREVIEW) {
 				return template;
 			}
 
@@ -1395,7 +1394,7 @@ public class AlohaRenderer implements TemplateRenderer {
 			ContentTag tag = (ContentTag) parserTag;
 			Content content = (Content) tag.getContainer();
 
-			if (editMode == RenderType.EM_ALOHA && tag.isEditable() && tag.isAlohaBlock() && content.getPages().contains(page)) {
+			if (RenderType.isAlohaEditMode(editMode) && tag.isEditable() && tag.isAlohaBlock() && content.getPages().contains(page)) {
 				// save eventually contained plinks
 				Map<String, String> savedPLinks = savePLinks(code);
 
@@ -1604,7 +1603,7 @@ public class AlohaRenderer implements TemplateRenderer {
 		// shall we annotate the editables with classes?
 		boolean annotate = t.getNodeConfig().getDefaultPreferences().isFeature(Feature.ALOHA_ANNOTATE_EDITABLES);
 		// shall we annotate the editables with data- attributes (like the blocks)?
-		boolean tagMarkers = t.getRenderType() != null && Boolean.TRUE.equals(t.getRenderType().getParameter(TAG_MARKERS));
+		boolean tagMarkers = t.getRenderType() != null && t.getRenderType().getEditMode() == RenderType.EM_ALOHA_PREVIEW;
 		com.gentics.contentnode.object.Page rootPage = null;
 
 		if (tagMarkers && t.getRenderType().getRenderedRootObject() instanceof com.gentics.contentnode.object.Page) {
@@ -1664,7 +1663,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				}
 			}
 
-			// the data- attribute annotations of the editable's tag (if requested)
+			// the data- attribute annotations of the editable's tag (in the preview mode)
 			String annotationsAttr = tagMarkers && tag != null ? " " + renderTagAnnotations(rootPage, tag) : "";
 
 			// check for liveedit_per_construct setting to retrieve tag specific html tag setting

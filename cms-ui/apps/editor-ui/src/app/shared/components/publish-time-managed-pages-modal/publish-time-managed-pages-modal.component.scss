@@ -1,0 +1,12 @@
+@import "flex-modal";
+
+@include flex-modal;
+
+.notice {
+    display: block;
+    font-size: 13px;
+}
+
+.modal-footer {
+    padding-top: 1rem;
+}

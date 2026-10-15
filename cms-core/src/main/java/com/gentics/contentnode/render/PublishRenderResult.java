@@ -178,7 +178,15 @@ public class PublishRenderResult extends RenderResult {
 	public void configureErrorHandling(Map errorhandling) {
 		this.errorhandling = errorhandling;
 	}
-    
+
+	/**
+	 * Check the publisher for being interrupted.
+	 * 
+	 * Attention: Since `java.util.concurrent.Lock` implementations, used in the publisher, may call `Thread.interrupted()`, 
+	 * which _resets_ the interrupted status, this method may return false negative!
+	 * 
+	 * @throws PublishInterruptedException
+	 */
 	public static void checkInterrupted() throws PublishInterruptedException {
 		if (Thread.currentThread().isInterrupted()) {
 			throw new PublishInterruptedException("Publish process has been interrupted (stopped ?)");

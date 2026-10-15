@@ -11,7 +11,7 @@ import {
 } from '@gentics/cms-models';
 import { Observable, of } from 'rxjs';
 import { map, publishReplay, refCount, switchMap, takeUntil, tap } from 'rxjs/operators';
-import { detailLoading, FormGroupTabHandle, FormTabHandle, GroupDetailTabs, NULL_FORM_TAB_HANDLE, PermissionsTreeType } from '../../../../common';
+import { detailLoading, FormGroupTabHandle, FormTabHandle, GroupDetailTabs, NULL_FORM_TAB_HANDLE } from '../../../../common';
 import {
     BREADCRUMB_RESOLVER,
     EditorTabTrackerService,
@@ -38,7 +38,7 @@ import { AppStateService } from '../../../../state/providers/app-state/app-state
 })
 export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOperations> implements OnInit {
 
-    public readonly PermissionsTreeType = PermissionsTreeType;
+    public readonly AccessControlledType = AccessControlledType;
     public readonly GroupDetailTabs = GroupDetailTabs;
 
     entityIdentifier: NormalizableEntityType = 'group';

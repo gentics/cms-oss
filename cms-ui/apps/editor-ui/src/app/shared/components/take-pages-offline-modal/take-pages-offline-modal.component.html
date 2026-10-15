@@ -1,0 +1,40 @@
+<div class="modal-title">
+    <h5>{{ 'modal.take_pages_offline_title' | gtxI18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-table
+        [rows]="rows"
+        [columns]="columns"
+        [paginated]="false"
+        [selectable]="false"
+        [renderers]="{
+            languages: languagesRenderer
+        }"
+    />
+
+    <ng-template #languagesRenderer let-value="value">
+        <page-language-selector
+            [page]="value"
+            [variants]="pageLanguageVariants[value.id]"
+            [selected]="selectedLanguageVariants[value.id]"
+            (selectionChange)="onLanguageSelectionChange(value.id, $event)"
+        />
+    </ng-template>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+
+    <gtx-button
+        type="warning"
+        data-action="confirm"
+        [disabled]="finalIds.length < 1"
+        (click)="closeFn(finalIds)"
+    >{{ 'modal.take_offline_button' | gtxI18n }}</gtx-button>
+</div>

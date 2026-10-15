@@ -936,14 +936,15 @@ export class FolderActionsService {
                 const loadedFolders = this.appState.now.entities.folder;
 
                 for (const item of collection) {
+                    const itemNodeId = (item as Page).channelId || item.masterNodeId;
                     if (
                         (loadedFolders[item.folderId] == null
                           || loadedFolders[item.folderId].permissionsMap == null
                         )
                         // Dont add the same load multiple times
-                        && !foldersToLoad.some((toLoad) => toLoad.id === item.folderId && toLoad.nodeId === item.masterNodeId)
+                        && !foldersToLoad.some((toLoad) => toLoad.id === item.folderId && toLoad.nodeId === itemNodeId)
                     ) {
-                        foldersToLoad.push({ id: item.folderId, nodeId: item.masterNodeId });
+                        foldersToLoad.push({ id: item.folderId, nodeId: itemNodeId });
                     }
                 }
 
@@ -2814,16 +2815,9 @@ export class FolderActionsService {
         this.appState.dispatch(new StartListSavingAction(type));
 
         return this.client.file.uploadTo(fileId, file, fileName, options).pipe(
-            switchMap(() => {
-                if (type === 'file') {
-                    return this.client.file.get(fileId);
-                } else {
-                    return this.client.image.get(fileId);
-                }
-            }),
             map((loadRes) => {
-                const item = (loadRes as FileResponse).file || (loadRes as ImageResponse).image;
-                const normalized = normalize({ ...item }, getNormalizrSchema(type));
+                const item: CMSFile | Image = loadRes.file || (loadRes as any).image;
+                const normalized = normalize({ ...item }, getNormalizrSchema(item.type));
                 this.appState.dispatch(new AddEntitiesAction(normalized));
                 this.appState.dispatch(new ListSavingSuccessAction(type));
 
@@ -2831,6 +2825,7 @@ export class FolderActionsService {
                     successfull: true,
                     item: item,
                     file: file,
+                    response: loadRes,
                 };
             }),
             catchError((err) => {

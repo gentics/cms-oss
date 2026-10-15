@@ -10,6 +10,7 @@ import {
     clickModalAction,
     clickNotificationAction,
     EntityImporter,
+    EXT_FORM_ONE,
     findNotification,
     FORM_ONE,
     FORM_THREE,
@@ -40,6 +41,7 @@ import {
     editorAction,
     expectItemOffline,
     expectItemPublished,
+    fgAddBlock,
     fgAddControl,
     fgFindDropContainer,
     fgFindEditSidebar,
@@ -394,6 +396,129 @@ test.describe('Form Editing', () => {
             // The original/first page should now be empty
             await firstPageTabLabel.click();
             await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(0);
+        });
+    });
+
+    test.describe('External Forms', () => {
+        test.beforeEach(async () => {
+            const node = IMPORTER.get(NODE_MINIMAL);
+            await IMPORTER.client.form.assignConfiguration('external', node.id).send();
+            await IMPORTER.importData([EXT_FORM_ONE]);
+        });
+
+        test('controls may not edit label or descriptions', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20301',
+            }],
+        }, async ({ page }) => {
+            const EDITING_FORM = IMPORTER.get(EXT_FORM_ONE);
+
+            await setupWithPermissions(page, [
+                {
+                    type: AccessControlledType.NODE,
+                    instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                    subObjects: true,
+                    perms: [
+                        { type: GcmsPermission.READ, value: true },
+                        { type: GcmsPermission.VIEW_FORM, value: true },
+                        { type: GcmsPermission.UPDATE_FORM, value: true },
+                    ],
+                },
+            ]);
+
+            await test.step('Open Editor', async () => {
+                const list = findList(page, ITEM_TYPE_FORM);
+                const item = findItem(list, EDITING_FORM.id);
+                await itemAction(item, 'edit');
+            });
+
+            await test.step('Validate control translations', async () => {
+                const grid = page.locator('content-frame gtx-form-grid');
+                const el = fgFindElement(grid, 'input1');
+
+                await expect(el).toBeVisible();
+                await el.click();
+                await expect(el).toContainClass('is-selected');
+
+                const editSidebar = fgFindEditSidebar(grid);
+                await expect(editSidebar).toBeVisible();
+
+                const translationTab = await fgSelectElementTab(editSidebar, 'translations');
+
+                await expect(translationTab.locator('[data-control="label"] input')).toBeDisabled();
+                await expect(translationTab.locator('[data-control="description"] input')).toBeDisabled();
+                // Other translations should still be editable
+                await expect(translationTab.locator('[data-control="summary"] input')).toBeEnabled();
+            });
+        });
+
+        test('blocks may edit label or descriptions', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20301',
+            }],
+        }, async ({ page }) => {
+            const EDITING_FORM = IMPORTER.get(EXT_FORM_ONE);
+            const LABEL_TEXT = 'Hello World';
+            const DESCRIPTION_TEXT = 'Foo Bar Content!';
+
+            await setupWithPermissions(page, [
+                {
+                    type: AccessControlledType.NODE,
+                    instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                    subObjects: true,
+                    perms: [
+                        { type: GcmsPermission.READ, value: true },
+                        { type: GcmsPermission.VIEW_FORM, value: true },
+                        { type: GcmsPermission.UPDATE_FORM, value: true },
+                    ],
+                },
+            ]);
+
+            await test.step('Open Editor', async () => {
+                const list = findList(page, ITEM_TYPE_FORM);
+                const item = findItem(list, EDITING_FORM.id);
+                await itemAction(item, 'edit');
+            });
+
+            await test.step('Edit Form', async () => {
+                const grid = page.locator('content-frame gtx-form-grid');
+                const el = await fgAddBlock(grid, 'text', {});
+
+                await expect(el).toBeVisible();
+                await el.click();
+                await expect(el).toContainClass('is-selected');
+
+                const editSidebar = fgFindEditSidebar(grid);
+                await expect(editSidebar).toBeVisible();
+
+                const elLabel = el.locator('.element-container .element-title');
+                const translationTab = await fgSelectElementTab(editSidebar, 'translations');
+                const labelCtrl = translationTab.locator('[data-control="label"] input');
+                const descriptionCtrl = translationTab.locator('[data-control="description"] input');
+
+                await expect(labelCtrl).toBeEnabled();
+                await expect(descriptionCtrl).toBeEnabled();
+
+                await labelCtrl.fill(LABEL_TEXT);
+                await expect(elLabel).toHaveText(LABEL_TEXT);
+                await descriptionCtrl.fill(DESCRIPTION_TEXT);
+            });
+
+            await test.step('Save and Validate', async () => {
+                const saveReq = page.waitForResponse(matchRequest('PUT', '/rest/form/*'));
+                await editorAction(page, 'save');
+                const res = await saveReq;
+                const req: FormSaveRequest = res.request().postDataJSON();
+
+                const elements = req.data['ui-schema']?.pages?.[0]?.elements || [];
+                const block = elements.find((el) => el.label?.[LANGUAGE_EN] === LABEL_TEXT);
+                expect(block).toBeDefined();
+                expect(block.description).toEqual({
+                    [LANGUAGE_EN]: DESCRIPTION_TEXT,
+                });
+            });
         });
     });
 });

@@ -19,6 +19,3 @@ export interface DeactivationConfig {
     alwaysDisabled: boolean;
 }
 
-export enum PermissionsTreeType {
-    CONTENT = 'content',
-}

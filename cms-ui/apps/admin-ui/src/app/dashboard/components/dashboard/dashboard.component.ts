@@ -1,11 +1,12 @@
-import { AdminUIModuleRoutes } from '@admin-ui/common';
-import { AdminHandlerService, AuthOperations, PermissionsService, ScheduleHandlerService } from '@admin-ui/core';
-import { AppStateService, CloseEditor, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccessControlledType, Feature, GcmsPermission, PublishInfo, SchedulerStatus, Variant } from '@gentics/cms-models';
-import { Observable, Subscription, combineLatest, forkJoin, interval, of } from 'rxjs';
+import { NEVER, Observable, Subscription, combineLatest, forkJoin, interval, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { AdminUIModuleRoutes } from '../../../common';
+import { AdminHandlerService, AuthOperations, PermissionsService, ScheduleHandlerService } from '../../../core';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
+import { CloseEditor, SetUIFocusEntity } from '../../../state/ui/ui.actions';
 
 @Component({
     selector: 'gtx-dashboard',
@@ -64,7 +65,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.CONTENT_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.contentRepositoriesModuleEnabled = enabled;
             this.foldersModuleEnabled = enabled;
             this.changeDetector.markForCheck();
@@ -73,7 +74,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.USER_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.usersModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -81,7 +82,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.GROUP_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.groupsModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -89,7 +90,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.ROLE,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.rolesModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -97,7 +98,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.LANGUAGE_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.languagesModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -105,7 +106,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.ACTION_LOG,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.logsModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -113,7 +114,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.CONTENT,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.nodesModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -121,41 +122,41 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.DATA_SOURCE_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.dataSourcesModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.features.global[Feature.DEVTOOLS]),
+            this.appState.select((state) => state.features.global[Feature.DEVTOOLS]),
             this.permissions.checkPermissions({
                 type: AccessControlledType.DEVTOOL_ADMIN,
                 permissions: GcmsPermission.READ,
             }),
         ]).pipe(
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
-        ).subscribe(enabled => {
+        ).subscribe((enabled) => {
             this.packagesModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.features.global[Feature.ELASTICSEARCH]),
+            this.appState.select((state) => state.features.global[Feature.ELASTICSEARCH]),
             this.permissions.checkPermissions({
                 type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
                 permissions: GcmsPermission.READ,
             }),
         ]).pipe(
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
-        ).subscribe(enabled => {
+        ).subscribe((enabled) => {
             this.searchMaintenanceModuleEnabled = enabled;
             this.changeDetector.markForCheck();
-        }))
+        }));
 
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.CR_FRAGMENT_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.crFragmentsModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -163,7 +164,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.templatesModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -173,7 +174,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             type: AccessControlledType.SCHEDULER,
             permissions: GcmsPermission.READ,
         }).pipe(
-            switchMap(canOpen => {
+            switchMap((canOpen) => {
                 if (!canOpen) {
                     return of(canOpen);
                 }
@@ -191,7 +192,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                     map(([schedules, tasks]) => schedules || tasks),
                 );
             }),
-        ).subscribe(enabled => {
+        ).subscribe((enabled) => {
             this.schedulerModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -199,7 +200,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.OBJECT_PROPERTY_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.objectPropertiesModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -207,20 +208,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.CONSTRUCT_ADMIN,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.constructsModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.features.global[Feature.CONTENT_STAGING]),
+            this.appState.select((state) => state.features.global[Feature.CONTENT_STAGING]),
             this.permissions.checkPermissions({
                 type: AccessControlledType.CONTENT_STAGING_ADMIN,
                 permissions: GcmsPermission.READ,
             }),
         ]).pipe(
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
-        ).subscribe(enabled => {
+        ).subscribe((enabled) => {
             this.contentStagingModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -228,7 +229,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.MAINTENANCE,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.contentMaintenanceModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -236,33 +237,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.permissions.checkPermissions({
             type: AccessControlledType.SYSTEM_MAINTANANCE,
             permissions: GcmsPermission.READ,
-        }).subscribe(enabled => {
+        }).subscribe((enabled) => {
             this.maintenancemodeModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.features.global[Feature.MESH_CR]),
+            this.appState.select((state) => state.features.global[Feature.MESH_CR]),
             this.permissions.checkPermissions({
                 type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
                 permissions: GcmsPermission.READ,
             }),
         ]).pipe(
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
-        ).subscribe(enabled => {
+        ).subscribe((enabled) => {
             this.meshBrowserModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.ui.cmpVersion),
+            this.appState.select((state) => state.ui.cmpVersion),
             this.permissions.checkPermissions({
                 type: AccessControlledType.LICENSING,
                 permissions: GcmsPermission.READ,
             }),
         ]).pipe(
             map(([version, hasPermission]) => version?.variant === Variant.ENTERPRISE && hasPermission),
-        ).subscribe(enabled => {
+        ).subscribe((enabled) => {
             this.licenseModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
@@ -273,17 +274,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.appState.dispatch(new CloseEditor());
 
         // Schedule automatic refresh of the publish data all 10s
-        this.subscriptions.push(
-            interval(10_000).pipe(
-                switchMap(() => this.loadPublishProcessData()),
-            ).subscribe());
+        this.subscriptions.push(this.appState.select((state) => state.auth.isLoggedIn).pipe(
+            switchMap((loggedIn) => loggedIn ? interval(10_000) : NEVER),
+            switchMap(() => this.loadPublishProcessData()),
+        ).subscribe());
 
         // Load the data right from the beginning as well
         this.subscriptions.push(this.loadPublishProcessData().subscribe());
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     onLogoutClick(): void {

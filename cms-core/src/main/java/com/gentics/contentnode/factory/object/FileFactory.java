@@ -2426,7 +2426,7 @@ public class FileFactory extends AbstractFactory {
 				java.io.File tmpFile = null;
 				java.io.File targetBackupFile = null;
 				try {
-					tmpFile = new java.io.File(System.getProperty("java.io.tmpdir"), file.getId() + ".tmp");
+					tmpFile = new java.io.File(ConfigurationValue.TMP_PATH.get(), file.getId() + ".tmp");
 					java.io.File targetFile = new java.io.File(dbFilesDir, file.getId() + ".bin");
 
 					logger.debug("Write content from MD5InputStream into dbfile with id { " + file.getId() + " } -> " + targetFile.getAbsolutePath());
@@ -2456,7 +2456,7 @@ public class FileFactory extends AbstractFactory {
 					// Check was successful - now swap the files for real
 					if (!isNew) {
 						// First: move the old dbfile to a save place
-						targetBackupFile = new java.io.File(System.getProperty("java.io.tmpdir"), file.getId() + ".org");
+						targetBackupFile = new java.io.File(ConfigurationValue.TMP_PATH.get(), file.getId() + ".org");
 
 						try {
 							Files.move(targetFile.toPath(), targetBackupFile.toPath(), REPLACE_EXISTING);

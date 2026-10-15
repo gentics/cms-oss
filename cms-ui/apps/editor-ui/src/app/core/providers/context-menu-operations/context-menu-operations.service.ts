@@ -18,7 +18,6 @@ import {
     Folder,
     FolderItemType,
     Form,
-    I18nString,
     Image,
     InheritableItem,
     InheritanceRequest,
@@ -29,11 +28,10 @@ import {
     NodeFeature,
     Page,
     Raw,
-	ItemPermissions,
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual, omit, pick } from 'lodash-es';
+import { isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, take, takeUntil } from 'rxjs/operators';
 import { EditorPermissions, StageableItem } from '../../../common/models';
@@ -68,7 +66,6 @@ import { FormListLoaderService } from '../form-list-loader/form-list-loader.serv
 import { LocalizationMap } from '../localizations/localizations.service';
 import { NavigationInstruction, NavigationService } from '../navigation/navigation.service';
 import { PermissionService } from '../permissions/permission.service';
-import { DataSourceApi } from '@gentics/cms-rest-clients-angular';
 
 /**
  * Encapsulates the logic for the various context-menu functions which are shared amongst a number of context menus.
@@ -588,7 +585,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         const timeManagedPages: Page[] = [];
         const nonTimeManagedPages: Page[] = [];
         pages.forEach((page) => {
-            if (PublishableStateUtil.statePlannedOnline(page) || PublishableStateUtil.stateInQueue(page)) {
+            if (
+                PublishableStateUtil.statePlannedOnline(page)
+                // Only if the page is queued for publishing in the future
+                || (PublishableStateUtil.stateInQueue(page) && page.timeManagement?.queuedPublish?.at > 0)
+            ) {
                 timeManagedPages.push(page);
             } else {
                 nonTimeManagedPages.push(page);
@@ -675,24 +676,31 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     localize(item: InheritableItem, activeNodeId: number): void {
         const localizingEditedItem = item.id === this.state.now.editor.itemId;
+        const localizingActiveFolder = item.type === 'folder' && this.state.now.folder.activeFolder === item.id;
         const nodeFeatures = this.state.now.features.nodeFeatures[activeNodeId] || [];
         const partialLocalizeEnabled = nodeFeatures.includes(NodeFeature.PARTIAL_MULTICHANNELLING);
 
         if (!partialLocalizeEnabled || item.type !== 'page') {
             this.folderActions.localizeItem(item.type, item.id, activeNodeId)
-                .then((item: InheritableItem) => {
-                    this.folderActions.refreshList(item.type);
+                .then((localizedItem: InheritableItem) => {
+                    // Edge case, for when you localize the active folder
+                    if (localizingActiveFolder) {
+                        this.navigationService.list(activeNodeId, localizedItem.id).navigate();
+                    } else {
+                        this.folderActions.refreshList(localizedItem.type);
+                    }
+
                     if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
-                        this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
+                        this.navigationService.detailOrModal(activeNodeId, localizedItem.type, localizedItem.id, EditMode.PREVIEW).navigate();
                     }
                 });
             return;
         }
 
-		const body = this.i18n.instant(['modal.choose_localization_type_body','modal.localization_type_description']) as any;
+        const body = this.i18n.instant(['modal.choose_localization_type_body', 'modal.localization_type_description']) as any;
         this.modalService.dialog({
             title: this.i18n.instant('modal.choose_localization_type_title'),
-            body: Object.keys(body).map(key => body[key]).join('<br>'),
+            body: Object.keys(body).map((key) => body[key]).join('<br>'),
             buttons: [
                 {
                     id: 'cancel',
@@ -727,17 +735,21 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                         return Promise.resolve([null, null]);
                 }
             })
-            .then(([item, type]: [Page | null, 'full' | 'partial' | null]) => {
-                if (item == null) {
+            .then(([localizedItem, type]: [Page | null, 'full' | 'partial' | null]) => {
+                if (localizedItem == null) {
                     return;
                 }
 
-                this.folderActions.refreshList(item.type);
+                if (localizingActiveFolder) {
+                    this.navigationService.list(activeNodeId, localizedItem.id).navigate();
+                } else {
+                    this.folderActions.refreshList(localizedItem.type);
+                }
 
                 if (type === 'partial') {
-                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.EDIT_INHERITANCE).navigate();
+                    this.navigationService.detailOrModal(activeNodeId, localizedItem.type, localizedItem.id, EditMode.EDIT_INHERITANCE).navigate();
                 } else if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
-                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
+                    this.navigationService.detailOrModal(activeNodeId, localizedItem.type, localizedItem.id, EditMode.PREVIEW).navigate();
                 }
             });
     }
@@ -1071,7 +1083,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     private pushFolderToMaster(itemType: FolderItemType, folderResponse: ChannelSyncRequest): Observable<any> {
         if (folderResponse) {
-            return this.folderActions.pushItemsToMaster('folder' as FolderItemType | any, folderResponse as ChannelSyncRequest | any);
+            return this.folderActions.pushItemsToMaster('folder', folderResponse);
         } else {
             return of();
         }
@@ -1109,6 +1121,40 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     private isDeleted(item: Item): boolean {
         if (item) {
             return EntityStateUtil.stateDeleted(item);
+        }
+    }
+
+    private removeLanguagesFromObject(object: object, languages: string[]): void {
+        Object.keys(object).forEach((propertyName: string) => {
+            const property = object[propertyName];
+
+            if (propertyName.endsWith('_i18n')) {
+                if (!property || typeof property !== 'object') {
+                    return;
+                }
+
+                for (const language of languages) {
+                    delete property[language];
+                }
+
+                return;
+            }
+
+            if (!!property && typeof property === 'object') {
+                this.removeLanguagesFromObject(property, languages);
+            } else if (!!property && Array.isArray(property)) {
+                this.removeLanguagesFromArray(property, languages);
+            }
+        });
+    }
+
+    private removeLanguagesFromArray(array: any[], languages: string[]): void {
+        for (const entry of array) {
+            if (!!entry && typeof entry === 'object') {
+                this.removeLanguagesFromObject(entry, languages);
+            } else if (!!entry && Array.isArray(entry)) {
+                this.removeLanguagesFromArray(entry, languages);
+            }
         }
     }
 }

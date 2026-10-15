@@ -276,6 +276,12 @@ export const FIXTURE_IMAGE_JPEG2: FixtureFile = {
     type: 'image/jpeg',
 };
 
+/** Same as `FIXTURE_IMAGE_JPEG2`, but with the `.jpeg` extension */
+export const FIXTURE_IMAGE_JPEG3: FixtureFile = {
+    fixturePath: 'fixtures/ivan-tsaregorodtsev-bx0e0iHWnlI-unsplash.jpeg',
+    type: 'image/jpeg',
+};
+
 export const FIXTURE_IMAGE_PNG1: FixtureFile = {
     fixturePath: 'fixtures/honbike-R1iV6Vi14vA-unsplash.png',
     type: 'image/png',
@@ -529,7 +535,7 @@ export const FORM_TWO: FormImportData = {
 
 export const FORM_THREE: FormImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_FORM,
-    [IMPORT_ID]: 'formTwo',
+    [IMPORT_ID]: 'formThree',
 
     nodeId: NODE_MINIMAL[IMPORT_ID],
     folderId: NODE_MINIMAL[IMPORT_ID],
@@ -619,6 +625,64 @@ export const FORM_THREE: FormImportData = {
                                     ],
                                 },
                             ],
+                        },
+                    ],
+                },
+                {
+                    pagename: {
+                        de: 'Leere Seite',
+                        en: 'Empty Page',
+                    },
+                    elements: [],
+                },
+            ],
+        },
+    },
+};
+
+export const EXT_FORM_ONE: FormImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FORM,
+    [IMPORT_ID]: 'extFormOne',
+
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
+
+    languages: [LANGUAGE_EN],
+
+    name: 'Ext Form One',
+    description: 'Test Ext Form one',
+    formType: 'external',
+    data: {
+        schema: {
+            key: '',
+            version: '',
+            properties: {
+                input1: {
+                    type: 'string',
+                },
+            },
+        },
+        "ui-schema": {
+            key: '',
+            version: '',
+            pages: [
+                {
+                    pagename: {
+                        de: 'Beispiel',
+                        en: 'Example',
+                    },
+                    elements: [
+                        {
+                            id: 'input1',
+                            label: {
+                                de: 'Eingabefeld 1',
+                                en: 'Input field 1',
+                            },
+                            type: 'property',
+                            uiSchemaPage: 0,
+                            formGridOptions: {
+                                type: 'string',
+                            },
                         },
                     ],
                 },

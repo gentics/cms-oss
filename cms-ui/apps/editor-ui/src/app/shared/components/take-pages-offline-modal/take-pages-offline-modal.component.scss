@@ -1,0 +1,19 @@
+@import "flex-modal";
+
+@include flex-modal;
+
+.notice {
+    display: block;
+    font-size: 13px;
+}
+
+page-language-selector::ng-deep {
+    .language-select,
+    .one_language_text {
+        margin: 0;
+    }
+}
+
+.modal-footer {
+    padding-top: 1rem;
+}

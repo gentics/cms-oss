@@ -1400,15 +1400,19 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 			if (channelSet.containsKey(master.getId())) {
 				Integer id = channelSet.get(master.getId());
 				NodeObject objectToHide = t.getObject(t.getClass(objectType), id, false, false, true);
+				DependencyObject depObj = new DependencyObject(objectToHide);
 
 				for (Node subChannel : subChannels) {
 					int channelId = ObjectTransformer.getInt(subChannel.getId(), 0);
 					ActionLogger.logCmd(ActionLogger.MC_HIDE, objectType, id, channelId,
 							"inherited object overwritten by localized copy " + oId + " in channel " + channelId);
 					PublishQueue.dirtObject(objectToHide, Action.HIDE, channelId);
-					DependencyObject depObj = new DependencyObject(objectToHide);
+
 					objectToHide.triggerEvent(depObj, new String[]{"online"}, Events.UPDATE, 0, channelId);
 				}
+
+				// trigger all properties on the object to hide in all channels
+				objectToHide.triggerEvent(depObj, null, Events.UPDATE, 0, 0);
 			}
 		}
 
@@ -1417,14 +1421,17 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		NodeObject objectToHide = t.getObject(t.getClass(objectType), id, false, false, true);
 
 		if (objectToHide != null) {
+			DependencyObject depObj = new DependencyObject(objectToHide);
 			for (Node subChannel : subChannels) {
 				int channelId = ObjectTransformer.getInt(subChannel.getId(), 0);
 				ActionLogger.logCmd(ActionLogger.MC_HIDE, objectType, id, subChannel.getId(),
 						"inherited object overwritten by localized copy " + oId + " in channel " + channelId);
 				PublishQueue.dirtObject(objectToHide, Action.HIDE, ObjectTransformer.getInt(subChannel.getId(), 0));
-				DependencyObject depObj = new DependencyObject(objectToHide);
 				objectToHide.triggerEvent(depObj, new String[]{"online"}, Events.UPDATE, 0, channelId);
 			}
+
+			// trigger all properties on the object to hide in all channels
+			objectToHide.triggerEvent(depObj, null, Events.UPDATE, 0, 0);
 		}
 	}
 

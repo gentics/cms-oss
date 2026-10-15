@@ -1,8 +1,5 @@
-import { LOAD_FLATTENED, masterLoading } from '@admin-ui/common';
-import { EntityManagerService, GroupOperations, UserOperations } from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     Group,
@@ -15,9 +12,11 @@ import {
     User,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { forkJoin, Observable, of, OperatorFunction } from 'rxjs';
 import { first, map, switchMap } from 'rxjs/operators';
+import { LOAD_FLATTENED, masterLoading } from '../../../common';
+import { EntityManagerService, GroupOperations, UserOperations } from '../../../core';
+import { AppStateService } from '../../../state';
 import { EditPermissionsModalComponent } from '../../components/edit-permissions-modal/edit-permissions-modal.component';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
 
@@ -95,7 +94,9 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
 
         try {
             const modal = await this.modalService.fromComponent(EditPermissionsModalComponent, {}, {
-                group: denormalizedGroup, permSet, groupPermsByCategory,
+                group: denormalizedGroup,
+                permSet,
+                groupPermsByCategory,
             });
             changes = await modal.open();
         } catch (err) {
@@ -109,21 +110,20 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
             return false;
         }
 
-        let req$: Observable<Group<Normalized>>;
+        let req$: Observable<void>;
         if (typeof permSet.id === 'number') {
-            req$ = this.entityOperations.setGroupInstancePermissions(group.id, permSet.type, permSet.id, changes);
+            req$ = this.entityOperations.setGroupInstancePermissions(group.id, group.name, permSet.type, permSet.id, changes);
         } else {
-            req$ = this.entityOperations.setGroupTypePermissions(group.id, permSet.type, changes);
+            req$ = this.entityOperations.setGroupTypePermissions(group.id, group.name, permSet.type, changes);
         }
 
-        return await req$.pipe(
+        return req$.pipe(
             // detailLoading(this.state, 'shared.loading_update_group_permissions'),
             map(() => ({
                 subGroups: changes.subGroups,
                 subObjects: changes.subObjects,
             })),
-        )
-            .toPromise();
+        ).toPromise();
     }
 
     protected getLoadingOperator<U>(): OperatorFunction<U, U> {

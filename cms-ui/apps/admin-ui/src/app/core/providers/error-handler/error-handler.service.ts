@@ -3,14 +3,17 @@ import { Router } from '@angular/router';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { LogoutSuccess } from '@gentics/cms-components/auth';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
+import { ResponseCode } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { BehaviorSubject, Observable } from 'rxjs';
 import { AdminUIModuleRoutes } from '../../../common';
 import { ServiceBase } from '../../../shared/providers/service-base/service.base';
 import { AppStateService } from '../../../state';
-import { ResponseCode } from '@gentics/cms-models';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+
+function isSessionErrorMessage(msg: string): boolean {
+    return msg === 'invalid sid' || msg === 'missing sid';
+}
 
 /**
  * A central error handler that shows a notification for occuring errors,
@@ -43,12 +46,8 @@ import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 @Injectable()
 export class ErrorHandler extends ServiceBase {
 
-    /** Emits a list of all caught errors when an error is caught. */
-    caughtErrors$: Observable<Error[]>;
-
     private lastError: Error;
     private lastErrorTime: number;
-    private errorList = new BehaviorSubject<Error[]>([]);
 
     constructor(
         private appState: AppStateService,
@@ -58,7 +57,6 @@ export class ErrorHandler extends ServiceBase {
         private notification: I18nNotificationService,
     ) {
         super();
-        this.caughtErrors$ = this.errorList.asObservable();
     }
 
     /**
@@ -72,7 +70,7 @@ export class ErrorHandler extends ServiceBase {
         }
 
         let returnValue: string;
-        let suppressConsoleError = error && ((error as any).reason === 'auth' || (error as any).statusCode === 401 || (error as any).responseCode === 401);
+        const suppressConsoleError = error && ((error as any).reason === 'auth' || (error as any).statusCode === 401 || (error as any).responseCode === 401);
         if (!suppressConsoleError) {
             console.error('Error details: ', error);
         }
@@ -113,7 +111,6 @@ export class ErrorHandler extends ServiceBase {
 
         this.lastError = error;
         this.lastErrorTime = Date.now();
-        this.errorList.next(this.errorList.value.concat(error));
 
         return returnValue;
     };
@@ -126,8 +123,10 @@ export class ErrorHandler extends ServiceBase {
             case 'permissions': {
                 // when the response code is 401, the session is invalid
                 const isInvalidSession = error.statusCode === 401;
+                const msg = (error.response?.responseInfo?.responseMessage || error.response?.toString?.() || '').toLowerCase();
+                const isInvalidSid = isSessionErrorMessage(msg);
 
-                if (showNotification && !isInvalidSession) {
+                if (showNotification && !isInvalidSid && !isInvalidSession) {
                     this.notification.show({
                         message: error.message || error.toString(),
                         type: 'alert',
@@ -138,7 +137,7 @@ export class ErrorHandler extends ServiceBase {
                 // If the user has been signed out (usually due to activating the maintanance-mode),
                 // but the state still isn't updated yet, then we do this now.
                 // Additionally, send the User back to the Login with the proper return URL.
-                if (isInvalidSession && this.appState.now.auth.isLoggedIn) {
+                if ((isInvalidSid || isInvalidSession) && this.appState.now.auth.isLoggedIn) {
                     this.userWasLoggedOut();
                 }
 
@@ -191,8 +190,13 @@ export class ErrorHandler extends ServiceBase {
             default: {
                 // when the response code is 401, the session is invalid
                 const isInvalidSession = error.responseCode === 401;
+                // All other codes have the message simply in them
+                // Invalid SID always display the login screen, or tries to login with SSO
+                // So it can mislead the user, therefore we not display it.
+                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || error.rawBody || '').toLowerCase();
+                const isInvalidSid = isSessionErrorMessage(msg);
 
-                if (showNotification && !isInvalidSession) {
+                if (showNotification && !isInvalidSid && !isInvalidSession) {
                     (error.data?.messages || [])
                         .forEach((msg) => this.catch(new Error(msg.message), { notification: true }));
                 }
@@ -200,7 +204,7 @@ export class ErrorHandler extends ServiceBase {
                 // If the user has been signed out (usually due to activating the maintanance-mode),
                 // but the state still isn't updated yet, then we do this now.
                 // Additionally, send the User back to the Login with the proper return URL.
-                if (isInvalidSession && this.appState.now.auth.isLoggedIn) {
+                if ((isInvalidSid || isInvalidSession) && this.appState.now.auth.isLoggedIn) {
                     this.userWasLoggedOut();
                 }
 
@@ -232,7 +236,7 @@ export class ErrorHandler extends ServiceBase {
             window.location.reload();
             return;
         } else {
-        	this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+            this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
         }
 
         this.modalService.dialog({

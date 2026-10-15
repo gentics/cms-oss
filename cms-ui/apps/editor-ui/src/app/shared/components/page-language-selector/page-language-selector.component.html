@@ -4,6 +4,7 @@
             [value]="selected"
             [placeholder]="'common.select_placeholder' | gtxI18n"
             (valueChange)="onSelectChange($event)"
+            data-control="language-select"
             multiple="true"
         >
             @for (item of variants; track item.id) {
@@ -17,6 +18,7 @@
             size="small"
             class="show-on-hover"
             type="secondary"
+            [attr.data-action]="!allVariantsSelected() ? 'select-all' : 'deselect-all'"
             [title]="toggleTitle | gtxI18n: { current: ('lang.' + page.language | gtxI18n) }"
             (click)="toggleLanguageVariantSelection()"
         >

@@ -27,11 +27,16 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.PrefixedThreadFactory;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.messaging.MessageSender;
+import com.gentics.contentnode.rest.exceptions.CannotModifySubpackageException;
+import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
@@ -197,6 +202,9 @@ public class Operator {
 	/**
 	 * Submit the given callable to the executor. If timeout is non-zero, the calling thread will wait up to the given timeout (in ms) for the result.
 	 * If the callable takes longer (or is executed later), a notification is sent to the user, if done.
+	 * Errors, which occur while the calling thread waits, are thrown (and not returned as response):
+	 * exceptions, for which an exception mapper exists, are thrown unchanged, all other exceptions are wrapped into a {@link RestMappedException}
+	 * (with HTTP status 500), which contains the message of the cause in its response.
 	 * @param description Job description (must be i18n). This will be used in generic notification messages to the user.
 	 * @param timeout timeout in ms. If 0, the calling thread will wait, until the callable is executed.
 	 * @param callable callable to execute
@@ -216,6 +224,7 @@ public class Operator {
 	 * @param callable callable to execute
 	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @return response
+	 * @throws NodeException
 	 */
 	public static <T extends GenericResponse> T executeLockedRethrowing(String description, long timeout, Lock lock, Callable<T> callable, Function<GenericResponse, T> responseTransformer) throws NodeException {
 		try {
@@ -233,17 +242,33 @@ public class Operator {
 				futureResult.whenComplete(handleInBackground(wrapper));
 				return continueInBackground(description, responseTransformer);
 			}
-		} catch (NodeException e) {
-			throw e;
 		} catch (Exception e) {
-			if (e.getCause() instanceof NodeException ne) {
-				throw ne;
+			// for ExecutionExceptions, we are more interested in the causing exception
+			Throwable cause = e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
+			if (cause instanceof WebApplicationException webApplicationException) {
+				throw webApplicationException;
 			}
-			logger.error("Error while " + description, e);
+			if (cause instanceof NodeException nodeException && hasExceptionMapper(nodeException)) {
+				throw nodeException;
+			}
+			logger.error("Error while " + description, cause);
 			I18nString message = new CNI18nString("rest.general.error");
-			return responseTransformer.apply(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
-					+ description + ": " + e.getLocalizedMessage())));
+			RestMappedException wrapped = new RestMappedException(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while " + description + ": " + cause.getLocalizedMessage())));
+			wrapped.initCause(cause);
+			throw wrapped;
 		}
+	}
+
+	/**
+	 * Check whether an exception mapper exists for the given exception (see the exception mappers registered in {@link com.gentics.contentnode.rest.configuration.RESTApplication}),
+	 * which will generate a specific response
+	 * @param e exception
+	 * @return true, iff an exception mapper exists
+	 */
+	private static boolean hasExceptionMapper(NodeException e) {
+		return e instanceof RestMappedException || e instanceof EntityNotFoundException || e instanceof InsufficientPrivilegesException
+				|| e instanceof ReadOnlyException || e instanceof DuplicateEntityException || e instanceof CannotModifySubpackageException;
 	}
 
 	/**

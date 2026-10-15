@@ -1,4 +1,17 @@
-import { Feature, Response as CMSResponse, Variant } from '@gentics/cms-models';
+import {
+    AccessControlledType,
+    Page as CMSPage,
+    Response as CMSResponse,
+    Feature,
+    Folder,
+    FolderResponse,
+    GcmsPermission,
+    Node,
+    NodePageLanguageCode,
+    NodeUrlMode,
+    PermissionResponse,
+    Variant,
+} from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     dismissNotifications,
@@ -6,13 +19,14 @@ import {
     FolderImportData,
     IMPORT_ID,
     IMPORT_TYPE,
+    IMPORT_TYPE_NODE,
     isVariant,
     ITEM_TYPE_FOLDER,
     ITEM_TYPE_PAGE, LANGUAGE_EN,
     loginWithForm,
-    matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    NodeImportData,
     PageImportData,
     TestSize, wait, waitForResponseFrom,
 } from '@gentics/e2e-utils';
@@ -77,6 +91,37 @@ const PAGE_TEST_LONG: PageImportData = {
     templateId: BASIC_TEMPLATE_ID,
 
     language: LANGUAGE_EN,
+};
+
+const CHANNEL_IMPORT_DATA: NodeImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_NODE,
+    [IMPORT_ID]: 'searchChannelNode',
+
+    node: {
+        name: 'Search Channel',
+        masterId: NODE_MINIMAL[IMPORT_ID],
+        publishDir: '',
+        binaryPublishDir: '',
+        pubDirSegment: true,
+        publishImageVariants: false,
+        host: 'search-channel.localhost',
+        publishFs: false,
+        publishFsPages: false,
+        publishFsFiles: false,
+        publishContentMap: true,
+        publishContentMapPages: true,
+        publishContentMapFiles: true,
+        publishContentMapFolders: true,
+        urlRenderWayPages: NodeUrlMode.AUTOMATIC,
+        urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
+        omitPageExtension: false,
+        pageLanguageCode: NodePageLanguageCode.FILENAME,
+        meshPreviewUrlProperty: '',
+    },
+    description: 'channel of "minimal"',
+
+    languages: [],
+    templates: [],
 };
 
 test.describe('Search', () => {
@@ -313,6 +358,100 @@ test.describe('Search', () => {
             await expect(toasts.locator('.message')).toContainText(publishBody.messages[0].message);
 
             await expectItemPublished(item);
+        });
+    });
+
+    // -------------------------------
+    // with Multichannelling (Enterprise)
+    // -------------------------------
+    test.describe('with Multichannelling', () => {
+        test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
+        let channelNode: Node;
+
+        test.beforeEach(async ({ page }) => {
+            await IMPORTER.setupFeatures({
+                [Feature.ELASTICSEARCH]: false,
+                [Feature.MULTICHANNELLING]: true,
+            });
+            await IMPORTER.importData([CHANNEL_IMPORT_DATA]);
+            channelNode = IMPORTER.get(CHANNEL_IMPORT_DATA);
+
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+            await selectNode(page, channelNode.id);
+            setupBasicLocators(page);
+        });
+
+        test('should load permissions of localized folders in search results', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20413',
+            }],
+        }, async ({ page }) => {
+            const MASTER_FOLDER = IMPORTER.get(FOLDER_TEST_FOUR);
+            const MASTER_PAGE = IMPORTER.get(PAGE_TEST_LONG);
+            const SEARCH_TERM = 'Finally a page';
+
+            let localizedFolder: Folder;
+            let localizedPage: CMSPage;
+
+            await test.step('Localize folder and page', async () => {
+                await IMPORTER.client.folder.localize(MASTER_FOLDER.id, { channelId: channelNode.id }).send();
+                await IMPORTER.client.page.localize(MASTER_PAGE.id, { channelId: channelNode.id }).send();
+
+                localizedFolder = (await IMPORTER.client.folder.get(MASTER_FOLDER.id, { nodeId: channelNode.id }).send()).folder;
+                expect(localizedFolder.inherited).toBe(false);
+                expect(localizedFolder.id).not.toEqual(MASTER_FOLDER.id);
+
+                localizedPage = (await IMPORTER.client.page.get(MASTER_PAGE.id, { nodeId: channelNode.id }).send()).page;
+                expect(localizedPage.inherited).toBe(false);
+                expect(localizedPage.folderId).toEqual(localizedFolder.id);
+            });
+
+            await test.step('Search for the page', async () => {
+                await searchInput.fill(SEARCH_TERM);
+
+                const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*', {
+                    params: {
+                        search: SEARCH_TERM,
+                    },
+                });
+                const folderReq = waitForResponseFrom(page, 'GET', `/rest/folder/load/${localizedFolder.id}`, {
+                    params: {
+                        nodeId: `${channelNode.id}`,
+                    },
+                });
+                const permReq = waitForResponseFrom(page, 'GET', `/rest/perm/${AccessControlledType.FOLDER}/${localizedFolder.id}`, {
+                    params: {
+                        nodeId: `${channelNode.id}`,
+                    },
+                });
+
+                await dismissNotifications(page);
+                await searchButton.click();
+                await searchReq;
+
+                const folderRes = await folderReq;
+                const folderBody = await folderRes.json() as FolderResponse;
+                expect(folderBody.folder.id).toEqual(localizedFolder.id);
+
+                const permRes = await permReq;
+                const permBody = await permRes.json() as PermissionResponse;
+                expect(permBody.permissionsMap.permissions[GcmsPermission.PUBLISH_PAGES]).toBe(true);
+            });
+
+            await test.step('Publish page from search results', async () => {
+                const list = findList(page, ITEM_TYPE_PAGE);
+                const item = findItem(list, localizedPage.id);
+                await expect(item).toBeVisible();
+
+                const publishReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${localizedPage.id}`, {
+                    skipStatus: true,
+                });
+                await itemAction(item, 'publish');
+                await publishReq;
+            });
         });
     });
 

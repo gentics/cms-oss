@@ -283,8 +283,8 @@ public class AlohaRenderer implements TemplateRenderer {
 
 	/**
 	 * Name of the rendertype parameter, which (if set to true) lets the readonly mode annotate the tags
-	 * of the page (data-gcn-* attributes on the tag's root element) like the feature copy_tags does,
-	 * without the feature being active (e.g. for a preview that needs to find the tags in the page)
+	 * of the page that would be editable in edit mode (data-gcn-* attributes), e.g. for a preview that needs
+	 * to find the tags in the page. No element is inserted (see {@link TagMarkers}).
 	 */
 	public final static String TAG_MARKERS = "tagmarkers";
 
@@ -1118,6 +1118,11 @@ public class AlohaRenderer implements TemplateRenderer {
 				}
 			}
 
+			// move the annotations of tags, which rendered only text, to the elements around them
+			if (Boolean.TRUE.equals(renderType.getParameter(TAG_MARKERS))) {
+				template = TagMarkers.resolve(template);
+			}
+
 			if (!isRenderSettings(renderType)) {
 				return template;
 			}
@@ -1391,7 +1396,6 @@ public class AlohaRenderer implements TemplateRenderer {
 		}
 
 		// render the tag as block if either aloha edit mode or aloha readonly (preview) and the feature copy_tags is on
-		// or the tag markers are requested (rendertype parameter TAG_MARKERS)
 		if (parserTag instanceof ContentTag) {
 			ContentTag tag = (ContentTag) parserTag;
 			Content content = (Content) tag.getContainer();
@@ -1516,8 +1520,12 @@ public class AlohaRenderer implements TemplateRenderer {
 
 				// finally restore the plinks
 				code = restorePLinks(code, savedPLinks);
-			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY
-					&& (prefs.isFeature(Feature.COPY_TAGS, node) || Boolean.TRUE.equals(renderType.getParameter(TAG_MARKERS))))) {
+			} else if (!tag.isLocalizable() && editMode == RenderType.EM_ALOHA_READONLY && Boolean.TRUE.equals(renderType.getParameter(TAG_MARKERS))) {
+				// annotate the tags, which would be editable in edit mode
+				if (tag.isEditable() && content.getPages().contains(page)) {
+					code = TagMarkers.mark(code, renderTagAnnotations(page, tag));
+				}
+			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY && prefs.isFeature(Feature.COPY_TAGS, node))) {
 				var needWrapper = tag.isLocalizable() && editMode != RenderType.EM_PUBLISH && editMode != RenderType.EM_PREVIEW;
 				Matcher matcher = rootTagPattern.matcher(code);
 

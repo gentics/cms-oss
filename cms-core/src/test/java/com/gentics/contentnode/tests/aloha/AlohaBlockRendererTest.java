@@ -247,12 +247,18 @@ public class AlohaBlockRendererTest {
 	}
 	/**
 	 * Will do the same as {@link #readOnlyBlockCopyTags()}, but with the feature copy_tags off and the rendertype
-	 * parameter {@link AlohaRenderer#TAG_MARKERS} set instead. The tags must be annotated the same way.
+	 * parameter {@link AlohaRenderer#TAG_MARKERS} set instead. Unlike copy_tags, every top-level element is annotated, so
+	 * the results differing from those of copy_tags are in package "com.gentics.tests.contentnode.aloha.tagmarkerresults",
+	 * all other results are the same as in package "com.gentics.tests.contentnode.aloha.roblockresults".
 	 */
 	@Test
 	public void readOnlyBlockTagMarkers() throws Exception {
 		InputStream inputStream = this.getClass().getResourceAsStream("blockinputs/" + filename);
-		InputStream resultStream = this.getClass().getResourceAsStream("roblockresults/" + filename);
+		InputStream resultStream = this.getClass().getResourceAsStream("tagmarkerresults/" + filename);
+
+		if (resultStream == null) {
+			resultStream = this.getClass().getResourceAsStream("roblockresults/" + filename);
+		}
 
 		String template = IOUtils.toString(inputStream);
 		String result = IOUtils.toString(resultStream);

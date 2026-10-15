@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isImagePart, markedElementOf, partTextOf, previewElementOf } from './usePreviewElements';
 
-// A page as the CMS renders it in read-only mode with COPY_TAGS: a marked text part inside a marked
+// A page as the CMS renders it in read-only mode with tagmarkers=true: a marked text part inside a marked
 // container part, and unmarked page structure around them.
 function page() {
     document.body.innerHTML = `

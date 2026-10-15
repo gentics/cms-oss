@@ -8,17 +8,9 @@ import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { usePlanState } from '@/hooks/useGenaixQueries';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
-import type { PlanState } from '@/services/apiService/genaix/types';
-import { type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { livePreviewOf, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './ReviewPage.module.css';
-
-// The plan's latest preview as the preview column takes it; `seq` 0, below every live update.
-function previewOf(state: PlanState | undefined): LivePreview | undefined {
-    const preview = state?.preview;
-
-    return preview ? { seq: 0, cms_ref: preview.cms_ref, preview_url: preview.preview_url, mode: preview.mode, changed_elements: preview.changed_elements } : undefined;
-}
 
 /**
  * The review page (`/sessions/$id/review`, design.md §11 "Review"): the plan `?plan=` names (an older
@@ -27,7 +19,8 @@ function previewOf(state: PlanState | undefined): LivePreview | undefined {
  * and the review panel on the right, the checklist and the actions that release and publish it
  * (`ReviewPanel`). It follows the session's event stream, which also replays the plans, so a live
  * `preview.updated` replaces the plan's stored preview and the plan is read again as it changes. The
- * preview only shows the page here; working on it happens in the chat.
+ * preview only shows the page here, with a page select when there are several; working on it happens
+ * in the chat.
  */
 export function ReviewPage() {
     const { t } = useTranslation();
@@ -40,7 +33,11 @@ export function ReviewPage() {
     // The router keeps a search value as given, so an empty `?plan=` arrives as `''`: the newest plan then.
     const state = usePlanState(id, planId || newestPlanId);
     const livePreview = useWorkspaceEventStore((store) => selectSession(id)(store).preview);
-    const preview = livePreview ?? previewOf(state.data);
+    const livePreviews = useWorkspaceEventStore((store) => selectSession(id)(store).previews);
+    // The live previews, else the plan's stored ones: its latest, and the latest of each page it wrote.
+    const storedPreview = state.data?.preview;
+    const preview = livePreview ?? (storedPreview ? livePreviewOf(storedPreview) : undefined);
+    const previews = livePreview ? livePreviews : state.data?.previews?.map(livePreviewOf);
 
     let panel;
 
@@ -69,7 +66,7 @@ export function ReviewPage() {
             <main className={styles.main}>
                 <div className={styles.preview}>
                     {preview
-                        ? <PreviewColumn preview={preview} />
+                        ? <PreviewColumn preview={preview} previews={previews} />
                         : <p className={styles.noPreview}>{t('review.noPreview')}</p>}
                 </div>
                 <aside className={styles.panel}>{panel}</aside>

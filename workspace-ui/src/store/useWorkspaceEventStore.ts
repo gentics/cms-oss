@@ -12,6 +12,7 @@ import type {
     MessageRole,
     Plan,
     PlanState,
+    Preview,
     Problem,
     Publication,
     RunStatus,
@@ -101,6 +102,25 @@ export interface LiveConfirmation extends StreamAnchor {
 /** The CMS preview of the page the session produced, as the last `preview.updated` sent it. */
 export type LivePreview = Pick<Extract<GenaixEvent, { type: 'preview.updated' }>, 'seq' | 'cms_ref' | 'preview_url' | 'mode' | 'changed_elements'>;
 
+/** A stored preview (`PlanState.preview`, `previews`) as the preview column takes it; `seq` 0, below every live update. */
+export function livePreviewOf({ cms_ref, preview_url, mode, changed_elements }: Preview): LivePreview {
+    return { seq: 0, cms_ref, preview_url, mode, changed_elements };
+}
+
+/** The page a preview shows, as one string: its CMS object, with the connection that reached it (`CmsObjectRef.connection_id`). */
+export function previewKey({ cms_ref: { connection_id: connectionId, type, id } }: LivePreview): string {
+    return `${connectionId ?? ''}:${type}:${id}`;
+}
+
+// `previews` with `preview` as its page's latest: in place of the page's entry, or added after the others.
+function withPreview(previews: LivePreview[] = [], preview: LivePreview): LivePreview[] {
+    const key = previewKey(preview);
+
+    return previews.some((live) => previewKey(live) === key)
+        ? previews.map((live) => (previewKey(live) === key ? preview : live))
+        : [...previews, preview];
+}
+
 /**
  * The live state of one session: what is not in `GET /sessions/{session_id}/messages` yet. The
  * history itself stays in TanStack Query.
@@ -150,6 +170,12 @@ export interface SessionLiveState {
     planSeqs?: Record<string, number>;
     /** The CMS preview; absent until the first `preview.updated`. */
     preview?: LivePreview;
+    /**
+     * The latest preview of every page the session wrote, one per page (`previewKey`), in the order
+     * they first came: a later `preview.updated` of a page replaces its entry in place. Absent until
+     * the first `preview.updated`.
+     */
+    previews?: LivePreview[];
     /**
      * The session's open plan (`drafting` to `released`) and its executing one (`accepted`, `running`), as
      * the last `session.updated` said (rc.4 `Session.open_plan_id`, `executing_plan_id`); `null` for none,
@@ -487,6 +513,7 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
         const { seq, cms_ref, preview_url, mode, changed_elements } = event;
 
         next.preview = { seq, cms_ref, preview_url, mode, changed_elements };
+        next.previews = withPreview(session.previews, next.preview);
     }
 
     if (event.type === 'interaction.resolved' && event.message_id) {
@@ -560,11 +587,26 @@ function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq
 
     // The preview of the newest plan that has one, as the last `preview.updated` would have said it.
     const latest = session.preview ? undefined : fresh.findLast((state) => state.preview)?.preview;
-    const preview = latest
-        ? { seq: 0, cms_ref: latest.cms_ref, preview_url: latest.preview_url, mode: latest.mode, changed_elements: latest.changed_elements }
-        : session.preview;
+    const preview = latest ? livePreviewOf(latest) : session.preview;
+    // Each plan's latest preview per page (`PlanState.previews`), for the pages the stream has none of yet.
+    const previews = fresh
+        .flatMap((state) => state.previews ?? [])
+        .map(livePreviewOf)
+        .reduce((all, page) => (all.some((live) => previewKey(live) === previewKey(page)) ? all : [...all, page]), session.previews ?? []);
 
-    return { ...session, plans, steps, publications, checks, derivedSettings, approvalChains, interactions, interactionPlans, preview };
+    return {
+        ...session,
+        plans,
+        steps,
+        publications,
+        checks,
+        derivedSettings,
+        approvalChains,
+        interactions,
+        interactionPlans,
+        preview,
+        ...(previews.length > 0 && { previews }),
+    };
 }
 
 export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
@@ -635,6 +677,7 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         publications: undefined,
         planSeqs: undefined,
         preview: undefined,
+        previews: undefined,
         openPlanId: undefined,
         executingPlanId: undefined,
         checks: undefined,

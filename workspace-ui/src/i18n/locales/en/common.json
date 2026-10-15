@@ -34,6 +34,10 @@
         "mobile": "Mobile · 390 px",
         "fullScreen": "Full screen",
         "leaveFullScreen": "Leave full screen",
+        "pages": {
+            "label": "Pages",
+            "unnamed": "Page {{id}}"
+        },
         "selection": {
             "selected": "Selected: {{name}}",
             "clear": "Clear selection",

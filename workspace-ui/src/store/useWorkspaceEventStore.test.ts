@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { GenaixEvent } from '@/services/apiService/genaix/types';
+import type { GenaixEvent, PlanState } from '@/services/apiService/genaix/types';
 
 import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from './useWorkspaceEventStore';
 
@@ -399,6 +399,58 @@ describe('useWorkspaceEventStore', () => {
             useWorkspaceEventStore.getState().resetSession(SESSION);
 
             expect(session().preview).toBeUndefined();
+            expect(session().previews).toBeUndefined();
+        });
+
+        describe('of several pages', () => {
+            const other = { type: 'page', id: 9150, node_id: 3 };
+            const otherUrl = 'https://cms.example.com/alohapage?realid=9150&nodeid=3&mode=view';
+
+            it('keeps the latest preview of each page in the order the pages first came', () => {
+                apply(
+                    event(1, 'preview.updated', { cms_ref: ref, preview_url: url, mode: 'view' }),
+                    event(2, 'preview.updated', { cms_ref: other, preview_url: otherUrl, mode: 'view' }),
+                    event(3, 'preview.updated', { cms_ref: ref, preview_url: url, mode: 'view', changed_elements: ['content_1'] }),
+                );
+
+                expect(session().previews).toEqual([
+                    { seq: 3, cms_ref: ref, preview_url: url, mode: 'view', changed_elements: ['content_1'] },
+                    { seq: 2, cms_ref: other, preview_url: otherUrl, mode: 'view', changed_elements: undefined },
+                ]);
+                expect(session().preview?.seq).toBe(3);
+            });
+
+            it('tells the same page in another CMS connection apart', () => {
+                apply(
+                    event(1, 'preview.updated', { cms_ref: { ...ref, connection_id: 'c-1' }, preview_url: url, mode: 'view' }),
+                    event(2, 'preview.updated', { cms_ref: { ...ref, connection_id: 'c-2' }, preview_url: url, mode: 'view' }),
+                );
+
+                expect(session().previews).toHaveLength(2);
+            });
+
+            it('hydratePlans adds the plans\' previews of the pages the stream has none of', () => {
+                // Only the fields the store reads; a real `PlanState` has more.
+                const state = (planId: string, previews: unknown[]) => ({
+                    plan: { id: planId },
+                    steps: [],
+                    checks: [],
+                    approval_chain: [],
+                    preview: previews.at(-1),
+                    previews,
+                }) as unknown as PlanState;
+
+                apply(event(1, 'preview.updated', { cms_ref: ref, preview_url: url, mode: 'view' }));
+                useWorkspaceEventStore.getState().hydratePlans(SESSION, [
+                    state('p-1', [{ cms_ref: ref, preview_url: `${url}&stale`, mode: 'view' }, { cms_ref: other, preview_url: otherUrl, mode: 'view' }]),
+                ], 1);
+
+                expect(session().previews).toEqual([
+                    { seq: 1, cms_ref: ref, preview_url: url, mode: 'view', changed_elements: undefined },
+                    { seq: 0, cms_ref: other, preview_url: otherUrl, mode: 'view', changed_elements: undefined },
+                ]);
+                expect(session().preview?.seq).toBe(1);
+            });
         });
     });
 

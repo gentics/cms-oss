@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.gentics.contentnode.mcp.util.PartValues;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.rest.model.Construct;
 import com.gentics.contentnode.rest.model.ConstructCategory;
@@ -121,23 +122,37 @@ public record ConstructInfo(ObjectRef ref, String keyword, Map<String, String> n
 	 * @param defaultValue default value of a text or checkbox part
 	 * @param datasourceId datasource of a select part
 	 * @param globalId global ID
+	 * @param value JSON schema of the value update_page_tags writes into the part, null if it cannot be written
 	 */
 	@JsonInclude(Include.NON_NULL)
 	public record PartInfo(String keyword, Map<String, String> nameI18n, int typeId, Property.Type type,
 			boolean editable, boolean liveEditable, boolean mandatory, boolean hidden, Integer partOrder,
-			Object defaultValue, Integer datasourceId, String globalId) {
+			Object defaultValue, Integer datasourceId, String globalId, Map<String, Object> value) {
 		/**
 		 * Map the REST part
 		 * @param part REST part
+		 * @param options option values by datasource ID, may be null
 		 * @return part info
 		 */
-		public static PartInfo of(com.gentics.contentnode.rest.model.Part part) {
-			Integer datasourceId = part.getSelectSettings() != null && part.getSelectSettings().getDatasourceId() > 0
-					? part.getSelectSettings().getDatasourceId()
+		public static PartInfo of(com.gentics.contentnode.rest.model.Part part, Map<Integer, List<String>> options) {
+			Integer datasourceId = datasourceId(part);
+			Map<String, Object> value = part.isEditable()
+					? PartValues.valueSchema(part.getType(), options != null ? options.get(datasourceId) : null)
 					: null;
 			return new PartInfo(part.getKeyword(), part.getNameI18n(), part.getTypeId(), part.getType(),
 					part.isEditable(), part.isLiveEditable(), part.isMandatory(), part.isHidden(), part.getPartOrder(),
-					defaultValue(part.getDefaultProperty()), datasourceId, part.getGlobalId());
+					defaultValue(part.getDefaultProperty()), datasourceId, part.getGlobalId(), value);
+		}
+
+		/**
+		 * Get the datasource of a select part
+		 * @param part REST part
+		 * @return datasource ID, null for other parts
+		 */
+		public static Integer datasourceId(com.gentics.contentnode.rest.model.Part part) {
+			return part.getSelectSettings() != null && part.getSelectSettings().getDatasourceId() > 0
+					? part.getSelectSettings().getDatasourceId()
+					: null;
 		}
 
 		/**
@@ -174,6 +189,9 @@ public record ConstructInfo(ObjectRef ref, String keyword, Map<String, String> n
 			properties.put("defaultValue", Map.of("description", "Default value of a text or checkbox part."));
 			properties.put("datasourceId", schema("integer", "Datasource of a select part."));
 			properties.put("globalId", schema("string", null));
+			properties.put("value", Map.of("type", "object", "description",
+					"JSON schema of the value update_page_tags writes into this part. Absent when the part cannot "
+							+ "be written."));
 			return schema("object", null, "properties", properties);
 		}
 	}
@@ -232,6 +250,17 @@ public record ConstructInfo(ObjectRef ref, String keyword, Map<String, String> n
 	 * @return construct info
 	 */
 	public static ConstructInfo of(Construct construct) {
+		return of(construct, null);
+	}
+
+	/**
+	 * Map the REST construct, with the option values of its select parts. The first Handlebars part becomes the
+	 * template.
+	 * @param construct REST construct
+	 * @param options option values by datasource ID, may be null
+	 * @return construct info
+	 */
+	public static ConstructInfo of(Construct construct, Map<Integer, List<String>> options) {
 		Template template = null;
 		List<PartInfo> parts = new ArrayList<>();
 		if (construct.getParts() != null) {
@@ -241,7 +270,7 @@ public record ConstructInfo(ObjectRef ref, String keyword, Map<String, String> n
 							: null;
 					template = new Template(part.getKeyword(), source, Part.HANDLEBARS, TEMPLATE_REPORTED_TYPE);
 				} else {
-					parts.add(PartInfo.of(part));
+					parts.add(PartInfo.of(part, options));
 				}
 			}
 		}

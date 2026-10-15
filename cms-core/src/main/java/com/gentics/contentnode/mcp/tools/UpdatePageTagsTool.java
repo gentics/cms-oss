@@ -3,7 +3,6 @@ package com.gentics.contentnode.mcp.tools;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,17 +14,20 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
-import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.PageInfo;
 import com.gentics.contentnode.mcp.model.TagInfo;
 import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.Constructs;
 import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.mcp.util.PartValues;
 import com.gentics.contentnode.mcp.util.Writes;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.Datasource;
+import com.gentics.contentnode.object.DatasourceEntry;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.rest.model.SelectOption;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
@@ -75,12 +77,6 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 	 * Maximum size of all values, in UTF-8 bytes
 	 */
 	static final int MAX_VALUE_BYTES = 200 * 1024;
-
-	/**
-	 * Part types whose values can be written
-	 */
-	static final Set<Property.Type> SUPPORTED_TYPES = EnumSet.of(Property.Type.STRING, Property.Type.RICHTEXT,
-			Property.Type.BOOLEAN, Property.Type.PAGE, Property.Type.FILE, Property.Type.IMAGE, Property.Type.FOLDER);
 
 	/**
 	 * Values to write into one tag
@@ -163,9 +159,9 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 	/**
 	 * Construct of a tag to create
 	 * @param constructId construct ID
-	 * @param parts part types by part keyword
+	 * @param parts empty properties by part keyword, with the options of select parts
 	 */
-	record NewTag(int constructId, Map<String, Property.Type> parts) {
+	record NewTag(int constructId, Map<String, Property> parts) {
 	}
 
 	/**
@@ -200,8 +196,8 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 				"Required only when createMissing is true and the tag does not exist yet.", "maxLength",
 				MAX_NAME_LENGTH));
 		tagProperties.put("properties", schema("object",
-				"partKeyword -> value. Strings for text and rich-text parts, booleans for checkboxes, integer ids for "
-						+ "page, file, image and folder parts. Other part types cannot be written.",
+				"partKeyword -> value. get_construct and add_page_tag give the schema of each part's value. "
+						+ PartValues.VALUE_SHAPES,
 				"minProperties", 1, "maxProperties", MAX_ITEMS, "additionalProperties", true));
 
 		Map<String, Object> properties = new LinkedHashMap<>();
@@ -255,10 +251,11 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 		Map<String, Map<String, Object>> beforeValues = flatten(before);
 		List<String> deleted = request.deleteTags().stream().distinct().filter(before::containsKey).toList();
 
+		Map<String, Tag> written = restTags(before, request, UpdatePageTagsTool::construct);
 		saveOrReleaseLock(com.gentics.contentnode.object.Page.class, id, "Page %s was not saved".formatted(id), () -> {
 			Page page = new Page();
 			page.setId(request.pageId());
-			page.setTags(restTags(before, request, UpdatePageTagsTool::construct));
+			page.setTags(written);
 			PageSaveRequest save = new PageSaveRequest(page);
 			save.setUnlock(true);
 			save.setCreateVersion(request.createVersion());
@@ -268,7 +265,7 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 
 		Page after = Writes.readBack(pageResource, request.pageId(),
 				intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE));
-		List<String> differences = differences(request.tags(), tags(after));
+		List<String> differences = differences(written, tags(after));
 		if (!differences.isEmpty()) {
 			throw new IllegalStateException("Page %s was saved, but these values read back differently: %s"
 					.formatted(id, String.join("; ", differences)));
@@ -304,7 +301,7 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 					if (property == null) {
 						throw unknownPart(name, value.getKey(), parts.keySet());
 					}
-					set(name, value.getKey(), property, value.getValue());
+					PartValues.write(name, value.getKey(), property, value.getValue());
 					properties.put(value.getKey(), property);
 				}
 			} else {
@@ -318,13 +315,14 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 				tag.setConstructId(construct.constructId());
 				tag.setActive(true);
 				for (Map.Entry<String, Object> value : entry.getValue().properties().entrySet()) {
-					Property.Type type = construct.parts().get(value.getKey());
-					if (type == null) {
+					Property part = construct.parts().get(value.getKey());
+					if (part == null) {
 						throw unknownPart(name, value.getKey(), construct.parts().keySet());
 					}
 					Property property = new Property();
-					property.setType(type);
-					set(name, value.getKey(), property, value.getValue());
+					property.setType(part.getType());
+					property.setOptions(part.getOptions());
+					PartValues.write(name, value.getKey(), property, value.getValue());
 					properties.put(value.getKey(), property);
 				}
 			}
@@ -335,75 +333,21 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 	}
 
 	/**
-	 * Set a value into a property, by the property's type
-	 * @param tag tag name
-	 * @param part part keyword
-	 * @param property property
-	 * @param value value
-	 * @throws IllegalArgumentException if the type is not supported or the value does not fit it
-	 */
-	static void set(String tag, String part, Property property, Object value) {
-		Property.Type type = property.getType();
-		if (!SUPPORTED_TYPES.contains(type)) {
-			throw new IllegalArgumentException(
-					"Part '%s' of tag '%s' has the type %s, which cannot be written".formatted(part, tag, type));
-		}
-		switch (type) {
-		case STRING:
-		case RICHTEXT:
-			if (!(value instanceof String string)) {
-				throw wrongType(tag, part, type, "a string", value);
-			}
-			property.setStringValue(string);
-			break;
-		case BOOLEAN:
-			if (!(value instanceof Boolean bool)) {
-				throw wrongType(tag, part, type, "a boolean", value);
-			}
-			property.setBooleanValue(bool);
-			break;
-		default:
-			if (!(value instanceof Integer objectId) || objectId < 1) {
-				throw wrongType(tag, part, type, "a positive integer ID", value);
-			}
-			switch (type) {
-			case PAGE:
-				property.setPageId(objectId);
-				break;
-			case FILE:
-				property.setFileId(objectId);
-				break;
-			case IMAGE:
-				property.setImageId(objectId);
-				break;
-			default:
-				property.setFolderId(objectId);
-				break;
-			}
-		}
-	}
-
-	/**
 	 * Compare the written values with the values read back
-	 * @param written written values by tag name
+	 * @param written written tags by name, with only the written parts
 	 * @param after tags after the save by name
 	 * @return differences, empty if every value was read back unchanged
 	 */
-	static List<String> differences(Map<String, TagValues> written, Map<String, Tag> after) {
+	static List<String> differences(Map<String, Tag> written, Map<String, Tag> after) {
 		List<String> differences = new ArrayList<>();
-		for (Map.Entry<String, TagValues> tag : written.entrySet()) {
+		for (Map.Entry<String, Tag> tag : written.entrySet()) {
 			Tag saved = after.get(tag.getKey());
-			for (Map.Entry<String, Object> part : tag.getValue().properties().entrySet()) {
+			for (Map.Entry<String, Property> part : tag.getValue().getProperties().entrySet()) {
 				Property property = saved != null && saved.getProperties() != null
 						? saved.getProperties().get(part.getKey())
 						: null;
-				Object actual = TagInfo.value(property);
-				Object expected = part.getValue();
-				boolean same = actual instanceof ObjectRef ref
-						? expected instanceof Integer objectId && ref.id() == objectId
-						: Objects.equals(expected, actual);
-				if (!same) {
-					differences.add("%s.%s is %s".formatted(tag.getKey(), part.getKey(), actual));
+				if (!PartValues.same(part.getValue(), property)) {
+					differences.add("%s.%s is %s".formatted(tag.getKey(), part.getKey(), TagInfo.value(property)));
 				}
 			}
 		}
@@ -461,16 +405,28 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 	/**
 	 * Look up a construct by keyword, in its own transaction
 	 * @param keyword construct keyword
-	 * @return construct ID and part types
+	 * @return construct ID and empty properties of its parts
 	 * @throws Exception if there is no such construct
 	 */
 	private static NewTag construct(String keyword) throws Exception {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Construct construct = Constructs.byKeyword(keyword);
-			Map<String, Property.Type> parts = new LinkedHashMap<>();
+			Map<String, Property> parts = new LinkedHashMap<>();
 			for (Part part : construct.getParts()) {
 				if (part.getKeyname() != null && !part.getKeyname().isBlank()) {
-					parts.put(part.getKeyname(), Property.Type.get(part.getPartTypeId()));
+					Property property = new Property();
+					property.setType(Property.Type.get(part.getPartTypeId()));
+					if (property.getType() == Property.Type.SELECT || property.getType() == Property.Type.MULTISELECT) {
+						Datasource datasource = trx.getTransaction().getObject(Datasource.class, part.getInfoInt());
+						List<SelectOption> options = new ArrayList<>();
+						if (datasource != null) {
+							for (DatasourceEntry entry : datasource.getEntries()) {
+								options.add(DatasourceEntry.TRANSFORM2REST_SELECTOPTION.apply(entry));
+							}
+						}
+						property.setOptions(options);
+					}
+					parts.put(part.getKeyname(), property);
 				}
 			}
 			trx.success();
@@ -480,12 +436,6 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 
 	private static IllegalArgumentException unknownPart(String tag, String part, Set<String> parts) {
 		return new IllegalArgumentException("Tag '%s' has no part '%s', its parts are %s".formatted(tag, part, parts));
-	}
-
-	private static IllegalArgumentException wrongType(String tag, String part, Property.Type type, String expected,
-			Object value) {
-		return new IllegalArgumentException("Part '%s' of tag '%s' has the type %s and needs %s, not %s"
-				.formatted(part, tag, type, expected, value));
 	}
 
 	/**

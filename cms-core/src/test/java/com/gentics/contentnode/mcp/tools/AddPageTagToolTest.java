@@ -8,14 +8,17 @@ import static com.gentics.contentnode.mcp.tools.ToolAssertions.assertValidOutput
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.junit.Test;
 
+import com.gentics.contentnode.mcp.model.ConstructInfo;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.TagInfo;
 import com.gentics.contentnode.mcp.tools.AddPageTagTool.Request;
+import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Tag;
 
 /**
@@ -79,10 +82,24 @@ public class AddPageTagToolTest {
 		tag.setActive(true);
 		tag.setType(Tag.Type.CONTENTTAG);
 
+		com.gentics.contentnode.rest.model.Part img = new com.gentics.contentnode.rest.model.Part();
+		img.setKeyword("img");
+		img.setTypeId(6);
+		img.setType(Property.Type.IMAGE);
+		img.setEditable(true);
+
 		Map<String, Object> json = assertValidOutput(tool, new AddPageTagTool.Result(
-				TagInfo.of(tag, Map.of(12, "hero"), false), ObjectRef.of(ObjectRef.Type.PAGE, 4711)));
+				TagInfo.of(tag, Map.of(12, "hero"), false), ObjectRef.of(ObjectRef.Type.PAGE, 4711),
+				List.of(ConstructInfo.PartInfo.of(img, null)), "<node hero3>"));
 		assertThat((Map<String, Object>) json.get("tag")).containsEntry("name", "hero3")
 				.containsEntry("constructKeyword", "hero");
+		assertThat(json).containsEntry("embedAs", "<node hero3>");
+		assertThat((List<Map<String, Object>>) json.get("parts")).singleElement()
+				.satisfies(part -> assertThat(part).containsKey("value"));
+
+		// a construct that may not be a subtag has no embedAs
+		assertThat(assertValidOutput(tool, new AddPageTagTool.Result(TagInfo.of(tag, Map.of(12, "hero"), false),
+				ObjectRef.of(ObjectRef.Type.PAGE, 4711), List.of(), null))).doesNotContainKey("embedAs");
 	}
 
 	private static void assertRequestRejected(Map<String, Object> arguments, String message) {

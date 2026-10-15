@@ -52,7 +52,12 @@ public class GetConstructTool extends AbstractMcpTool {
 						+ "This is the mandatory first step before update_construct, because an update replaces the "
 						+ "whole part list and you need to know what is there. The template is returned under "
 						+ "template, not among parts: REST reports its type as RICHTEXT, so you cannot identify it by "
-						+ "type alone. Pass exactly one of id or keyword.")
+						+ "type alone. Each part says under value what update_page_tags writes into it; a part without "
+						+ "value cannot be written. To put content of this construct on a page: add_page_tag, then "
+						+ "update_page_tags with the parts' values. A tag of a construct with mayBeSubtag is shown "
+						+ "where its <node TAGNAME> stands in a RICHTEXT part of another tag whose construct has "
+						+ "mayContainSubtags (the page's text, or a container's area). Pass exactly one of id or "
+						+ "keyword.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties).required(List.of())
 						.additionalProperties(false).build())
 				.outputSchema(outputSchema())
@@ -67,7 +72,8 @@ public class GetConstructTool extends AbstractMcpTool {
 		ConstructLoadResponse response = RestPermissions.guard(ConstructResource.class, new ConstructResourceImpl())
 				.get(Integer.toString(id), new EmbedParameterBean().withEmbed(embedCategory ? "category" : null));
 		requireOk(response, "Construct %d could not be loaded".formatted(id));
-		return new Result(ConstructInfo.of(response.getConstruct()), Constructs.nodeRefs(id));
+		return new Result(ConstructInfo.of(response.getConstruct(), Constructs.optionValues(response.getConstruct())),
+				Constructs.nodeRefs(id));
 	}
 
 	/**

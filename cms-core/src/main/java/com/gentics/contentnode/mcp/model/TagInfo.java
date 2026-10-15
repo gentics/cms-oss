@@ -2,6 +2,7 @@ package com.gentics.contentnode.mcp.model;
 
 import static com.gentics.contentnode.mcp.McpSchemas.schema;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +17,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
+import com.gentics.contentnode.mcp.util.PartValues;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.SelectOption;
@@ -23,7 +25,7 @@ import com.gentics.contentnode.rest.model.Tag;
 
 /**
  * A tag of a page or template, as returned by MCP tools, with its properties flattened to plain values per part
- * keyword. Fields that are not set are omitted on serialization.
+ * keyword ({@link PartValues} writes the same shapes). Fields that are not set are omitted on serialization.
  * @param name tag name
  * @param constructId construct ID
  * @param constructKeyword construct keyword
@@ -62,8 +64,8 @@ public record TagInfo(String name, Integer constructId, String constructKeyword,
 	/**
 	 * Get the plain value of a property by its type: text as string, boolean, page/file/image/folder/form/node URLs as
 	 * {@link ObjectRef} (an external page URL as string), lists as string list, a select as the selected value, a
-	 * multiselect as list of selected values, a tag link as map of its IDs. Other types (e.g. overviews) have no plain
-	 * value.
+	 * multiselect as list of selected values, a tag link as map of its IDs, datasource entries as list of key and value,
+	 * an overview as described in {@link PartValues#VALUE_SHAPES}. Other types have no plain value.
 	 * @param property REST property
 	 * @return value or null
 	 */
@@ -87,6 +89,7 @@ public record TagInfo(String name, Integer constructId, String constructKeyword,
 		case FOLDER:
 			return ref(Type.FOLDER, property.getFolderId());
 		case FORM:
+			return property.getStringValue();
 		case CMSFORM:
 			return ref(Type.FORM, property.getFormId());
 		case NODE:
@@ -109,6 +112,20 @@ public record TagInfo(String name, Integer constructId, String constructKeyword,
 			putIfSet(link, "templateId", property.getTemplateId());
 			putIfSet(link, "templateTagId", property.getTemplateTagId());
 			return link.isEmpty() ? null : link;
+		case DATASOURCE:
+			if (property.getOptions() == null) {
+				return null;
+			}
+			List<Map<String, String>> entries = new ArrayList<>();
+			for (SelectOption option : property.getOptions()) {
+				Map<String, String> entry = new LinkedHashMap<>();
+				entry.put("key", option.getKey());
+				entry.put("value", option.getValue());
+				entries.add(entry);
+			}
+			return entries;
+		case OVERVIEW:
+			return PartValues.overviewValue(property.getOverview());
 		default:
 			return null;
 		}

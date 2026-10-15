@@ -2,15 +2,20 @@ package com.gentics.contentnode.mcp.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.mcp.model.ConstructInfo;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.Datasource;
+import com.gentics.contentnode.object.DatasourceEntry;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -96,6 +101,39 @@ public final class Constructs {
 			trx.success();
 			return refs;
 		}
+	}
+
+	/**
+	 * Get the option values of the select parts of a construct, in an own transaction. A select's options are not
+	 * secret: anyone who may fill the part sees them in the editor.
+	 * @param construct REST construct
+	 * @return option values by datasource ID
+	 * @throws NodeException
+	 */
+	public static Map<Integer, List<String>> optionValues(com.gentics.contentnode.rest.model.Construct construct)
+			throws NodeException {
+		Map<Integer, List<String>> options = new HashMap<>();
+		if (construct.getParts() == null) {
+			return options;
+		}
+		try (Trx trx = ContentNodeHelper.trx()) {
+			for (com.gentics.contentnode.rest.model.Part part : construct.getParts()) {
+				Integer datasourceId = ConstructInfo.PartInfo.datasourceId(part);
+				if (datasourceId == null || options.containsKey(datasourceId)) {
+					continue;
+				}
+				Datasource datasource = trx.getTransaction().getObject(Datasource.class, datasourceId);
+				if (datasource != null) {
+					List<String> values = new ArrayList<>();
+					for (DatasourceEntry entry : datasource.getEntries()) {
+						values.add(entry.getValue());
+					}
+					options.put(datasourceId, values);
+				}
+			}
+			trx.success();
+		}
+		return options;
 	}
 
 	/**

@@ -24,6 +24,7 @@ import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool.Request;
 import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool.TagValues;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.rest.model.SelectOption;
 import com.gentics.contentnode.rest.model.Tag;
 
 /**
@@ -122,12 +123,12 @@ public class UpdatePageTagsToolTest {
 	@Test
 	public void testRestTagsRejections() {
 		Map<String, Tag> loaded = Map.of("content1", tag("content1", true, property(Property.Type.STRING, "old"),
-				property(Property.Type.MULTISELECT, null)));
+				property(Property.Type.VELOCITY, null)));
 
 		assertRestTagsRejected(loaded, request(false, "content1", null, "txet", "x"), "has no part 'txet'");
 		assertRestTagsRejected(loaded, request(false, "content1", null, "text", 5), "needs a string");
 		assertRestTagsRejected(loaded, request(false, "content1", null, "flag", List.of("a")),
-				"MULTISELECT, which cannot be written");
+				"VELOCITY, which cannot be written");
 		assertRestTagsRejected(loaded, request(false, "hero1", "hero", "text", "x"), "has no tag 'hero1'");
 		assertRestTagsRejected(loaded, request(true, "hero1", null, "text", "x"), "has no tag 'hero1'");
 		assertRestTagsRejected(loaded, request(true, "object.x", "hero", "text", "x"), "has no tag 'object.x'");
@@ -137,10 +138,13 @@ public class UpdatePageTagsToolTest {
 	public void testCreateMissing() throws Exception {
 		ConstructLookup constructs = keyword -> {
 			assertThat(keyword).isEqualTo("hero");
-			return new NewTag(12, Map.of("text", Property.Type.STRING));
+			Property select = new Property();
+			select.setType(Property.Type.SELECT);
+			select.setOptions(List.of(option(1, "a", "Alpha")));
+			return new NewTag(12, Map.of("text", property(Property.Type.STRING, null), "choice", select));
 		};
 		Map<String, Tag> rest = UpdatePageTagsTool.restTags(Map.of(), request(true, "genaix_hero_1", "hero", "text",
-				"Hello"), constructs);
+				"Hello", "choice", "Alpha"), constructs);
 
 		Tag tag = rest.get("genaix_hero_1");
 		assertThat(tag.getName()).isEqualTo("genaix_hero_1");
@@ -148,6 +152,8 @@ public class UpdatePageTagsToolTest {
 		assertThat(tag.getActive()).isTrue();
 		assertThat(tag.getProperties().get("text").getType()).isEqualTo(Property.Type.STRING);
 		assertThat(tag.getProperties().get("text").getStringValue()).isEqualTo("Hello");
+		assertThat(tag.getProperties().get("choice").getSelectedOptions()).extracting(SelectOption::getId)
+				.containsExactly(1);
 
 		assertThatThrownBy(() -> UpdatePageTagsTool.restTags(Map.of(),
 				request(true, "genaix_hero_1", "hero", "txet", "Hello"), constructs))
@@ -159,12 +165,15 @@ public class UpdatePageTagsToolTest {
 		Map<String, Tag> after = Map.of("content1", tag("content1", true, property(Property.Type.STRING, "a b"),
 				pageProperty(17)));
 
-		assertThat(UpdatePageTagsTool.differences(Map.of("content1", values("text", "a b", "flag", 17)), after))
-				.isEmpty();
-		assertThat(UpdatePageTagsTool.differences(Map.of("content1", values("text", "a b", "flag", 18)), after))
-				.containsExactly("content1.text is a b",
+		assertThat(UpdatePageTagsTool.differences(
+				Map.of("content1", tag("content1", true, property(Property.Type.STRING, "a b"), pageProperty(17))),
+				after)).isEmpty();
+		assertThat(UpdatePageTagsTool.differences(
+				Map.of("content1", tag("content1", true, property(Property.Type.STRING, "a b"), pageProperty(18))),
+				after)).containsExactly("content1.text is a b",
 						"content1.flag is %s".formatted(ObjectRef.of(ObjectRef.Type.PAGE, 17)));
-		assertThat(UpdatePageTagsTool.differences(Map.of("missing", values("text", "x")), after))
+		assertThat(UpdatePageTagsTool.differences(
+				Map.of("missing", tag("missing", true, property(Property.Type.STRING, "x"))), after))
 				.containsExactly("missing.text is null");
 	}
 
@@ -240,6 +249,14 @@ public class UpdatePageTagsToolTest {
 		property.setType(type);
 		property.setStringValue(value);
 		return property;
+	}
+
+	private static SelectOption option(int id, String key, String value) {
+		SelectOption option = new SelectOption();
+		option.setId(id);
+		option.setKey(key);
+		option.setValue(value);
+		return option;
 	}
 
 	private static Property pageProperty(int pageId) {

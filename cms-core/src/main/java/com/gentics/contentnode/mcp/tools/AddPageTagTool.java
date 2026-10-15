@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
+import com.gentics.contentnode.mcp.model.ConstructInfo;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.TagInfo;
 import com.gentics.contentnode.mcp.util.Args;
@@ -19,10 +22,14 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.request.ContentTagCreateRequest;
+import com.gentics.contentnode.rest.model.response.ConstructLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.TagCreateResponse;
+import com.gentics.contentnode.rest.resource.ConstructResource;
 import com.gentics.contentnode.rest.resource.PageResource;
+import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
@@ -52,8 +59,11 @@ public class AddPageTagTool extends AbstractMcpTool {
 	 * Result of the tool
 	 * @param tag the new tag
 	 * @param pageRef reference to the page
+	 * @param parts parts of the tag's construct, each with the value update_page_tags writes into it
+	 * @param embedAs element that shows the tag inside a rich-text part, null if its construct may not be a subtag
 	 */
-	public record Result(TagInfo tag, ObjectRef pageRef) {
+	@JsonInclude(Include.NON_NULL)
+	public record Result(TagInfo tag, ObjectRef pageRef, List<ConstructInfo.PartInfo> parts, String embedAs) {
 	}
 
 	/**
@@ -133,7 +143,9 @@ public class AddPageTagTool extends AbstractMcpTool {
 
 		return Tool.builder().name(NAME).title("Add page tag")
 				.description("Adds one new content block of a given construct to a page and returns its generated tag "
-						+ "name, which you then fill with update_page_tags. Check with list_constructs that the "
+						+ "name, which you then fill with update_page_tags, and the construct's parts with the values "
+						+ "they take. A tag the template has no place for is shown where you write the returned "
+						+ "embedAs element into a rich-text part, e.g. the page's text. Check with list_constructs that the "
 						+ "construct is available in the page's node first. Calling this twice adds two blocks, so do "
 						+ "not retry it blindly after a timeout: read the page with get_page_tags instead. Pass exactly "
 						+ "one of constructKeyword or constructId, or copyFrom; anything else is refused as "
@@ -175,8 +187,14 @@ public class AddPageTagTool extends AbstractMcpTool {
 			releaseLock(Page.class, id);
 		}
 
+		ConstructLoadResponse construct = RestPermissions.guard(ConstructResource.class, new ConstructResourceImpl())
+				.get(Integer.toString(tag.getConstructId()), new EmbedParameterBean());
+		requireOk(construct, "The construct of tag %s could not be loaded".formatted(tag.getName()));
+		ConstructInfo info = ConstructInfo.of(construct.getConstruct(),
+				Constructs.optionValues(construct.getConstruct()));
 		return new Result(TagInfo.of(tag, TagInfo.constructKeywords(List.of(tag)), false),
-				ObjectRef.of(ObjectRef.Type.PAGE, request.pageId()));
+				ObjectRef.of(ObjectRef.Type.PAGE, request.pageId()), info.parts(),
+				Boolean.TRUE.equals(info.mayBeSubtag()) ? "<node %s>".formatted(tag.getName()) : null);
 	}
 
 	/**
@@ -205,6 +223,12 @@ public class AddPageTagTool extends AbstractMcpTool {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put("tag", TagInfo.jsonSchema());
 		properties.put("pageRef", ObjectRef.jsonSchema("The page."));
+		properties.put("parts", schema("array",
+				"Parts of the tag's construct; fill them with update_page_tags, each with a value as its schema says.",
+				"items", ConstructInfo.PartInfo.jsonSchema()));
+		properties.put("embedAs", schema("string",
+				"Write this element into a RICHTEXT part of another tag (whose construct has mayContainSubtags) "
+						+ "where the tag is to appear. Absent when the construct may not be a subtag."));
 		return schema("object", null, "properties", properties, "required", List.of("tag"));
 	}
 }

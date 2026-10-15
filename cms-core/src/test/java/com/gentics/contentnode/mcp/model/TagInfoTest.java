@@ -88,6 +88,17 @@ public class TagInfoTest {
 	}
 
 	@Test
+	public void testDatasourceAndForm() {
+		SelectOption entry = new SelectOption();
+		entry.setId(3);
+		entry.setKey("q1");
+		entry.setValue("Answer");
+		assertThat(TagInfo.value(property(Property.Type.DATASOURCE, p -> p.setOptions(List.of(entry)))))
+				.isEqualTo(List.of(Map.of("key", "q1", "value", "Answer")));
+		assertThat(TagInfo.value(property(Property.Type.FORM, p -> p.setStringValue("uuid-1")))).isEqualTo("uuid-1");
+	}
+
+	@Test
 	public void testNoPlainValue() {
 		assertThat(TagInfo.value(property(Property.Type.OVERVIEW, p -> {
 		}))).isNull();

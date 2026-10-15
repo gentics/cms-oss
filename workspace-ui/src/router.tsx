@@ -24,10 +24,18 @@ const sessionRoute = createRoute({
 });
 
 // `?plan=<plan id>` opens that plan; without it the review page shows the session's newest plan.
+// `?page=<page id>` shows that one of the plan's pages, when it wrote several.
 const sessionReviewRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/sessions/$id/review',
-    validateSearch: (search: Record<string, unknown>): { plan?: string } => (typeof search.plan === 'string' && search.plan ? { plan: search.plan } : {}),
+    validateSearch: (search: Record<string, unknown>): { plan?: string; page?: number } => {
+        const page = Number(search.page);
+
+        return {
+            ...(typeof search.plan === 'string' && search.plan ? { plan: search.plan } : {}),
+            ...(Number.isSafeInteger(page) && page > 0 ? { page } : {}),
+        };
+    },
     component: ReviewPage,
 });
 

@@ -156,8 +156,8 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
 }
 
 /**
- * The preview of one session's page (`PreviewColumn`): a part of it goes into the chat composer, and
- * feedback on a part is sent as a turn of its own, as the page plus the part named in the text
+ * The preview of one session's pages (`PreviewColumn`, with a page select when it wrote several): a
+ * part of it goes into the chat composer, and feedback on a part is sent as a turn of its own, as the page plus the part named in the text
  * (`pageElementParts`). New text written for a part by hand is sent the same way, as the page, a text
  * asking to replace the part's text, and the new text as a `verbatim` part (`pageElementEditParts`), and
  * so is a CMS image picked for a part, as a `reference` part (`pageElementImageParts`). Changed page
@@ -169,6 +169,7 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
     const { t } = useTranslation();
     const sendTurn = useSendTurn(sessionId);
     const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
+    const previews = useWorkspaceEventStore((state) => selectSession(sessionId)(state).previews);
 
     async function send(parts: UserMessagePart[]) {
         try {
@@ -183,6 +184,7 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
     return (
         <PreviewColumn
             preview={preview}
+            previews={previews}
             onReferenceInChat={(element, text) => composerRef.current?.insertPageElement(element, text)}
             onSendFeedback={(element, text) => send(pageElementParts({ ...element, text: pageElementNaming(t, element) }, text))}
             onSendEdit={(element, text) => send(pageElementEditParts({ ...element, text: pageElementReplaceNaming(t, element) }, text))}

@@ -35,10 +35,9 @@ describe('PreviewColumn', () => {
         expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', READ_ONLY_9142);
     });
 
-    it('always shows the read-only URL and a link that opens it in a new tab', () => {
+    it('always shows a link that opens the read-only URL in a new tab', () => {
         render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
 
-        expect(screen.getByText(READ_ONLY_9142)).toBeInTheDocument();
         const open = screen.getByRole('link', { name: 'Open' });
 
         expect(open).toHaveAttribute('href', READ_ONLY_9142);
@@ -148,5 +147,73 @@ describe('PreviewColumn', () => {
 
             expect(screen.getByRole('button', { name: 'Full screen' })).toHaveAttribute('aria-pressed', 'false');
         });
+    });
+});
+
+describe('PreviewColumn with several pages', () => {
+    const HOME_URL = 'https://cms.example.com/alohapage?realid=1&nodeid=3&mode=view';
+    const NEWS_URL = 'https://cms.example.com/alohapage?realid=2&nodeid=3&mode=view';
+
+    function page(seq: number, id: number, name: string, previewUrl: string): LivePreview {
+        return { seq, cms_ref: { type: 'page', id, node_id: 3, name }, preview_url: previewUrl, mode: 'view' };
+    }
+
+    function frameUrl(): string | null {
+        return screen.getByTitle('Preview of the page in the CMS').getAttribute('src');
+    }
+
+    async function pick(user: ReturnType<typeof userEvent.setup>, name: string) {
+        await user.click(screen.getByRole('combobox', { name: 'Pages' }));
+        await user.click(await screen.findByRole('option', { name }));
+    }
+
+    it('has no page select for a single page', () => {
+        const home = page(1, 1, 'Home', HOME_URL);
+
+        render(<PreviewColumn {...noActions} preview={home} previews={[home]} />, { wrapper: UiProvider });
+
+        expect(screen.queryByRole('combobox', { name: 'Pages' })).not.toBeInTheDocument();
+    });
+
+    it('shows the latest page and switches to another one picked in the select', async () => {
+        const user = userEvent.setup();
+        const home = page(1, 1, 'Home', HOME_URL);
+        const news = page(2, 2, 'News', NEWS_URL);
+
+        render(<PreviewColumn {...noActions} preview={news} previews={[home, news]} />, { wrapper: UiProvider });
+
+        expect(screen.getByRole('combobox', { name: 'Pages' })).toHaveTextContent('News');
+        expect(frameUrl()).toContain('realid=2');
+
+        await pick(user, 'Home');
+
+        expect(screen.getByRole('combobox', { name: 'Pages' })).toHaveTextContent('Home');
+        expect(frameUrl()).toContain('realid=1');
+    });
+
+    it('names a page without a name by its id', () => {
+        const home = page(1, 1, 'Home', HOME_URL);
+        const unnamed: LivePreview = { seq: 2, cms_ref: { type: 'page', id: 2, node_id: 3 }, preview_url: NEWS_URL, mode: 'view' };
+
+        render(<PreviewColumn {...noActions} preview={unnamed} previews={[home, unnamed]} />, { wrapper: UiProvider });
+
+        expect(screen.getByRole('combobox', { name: 'Pages' })).toHaveTextContent('Page 2');
+    });
+
+    it('shows the page of a newer preview again', async () => {
+        const user = userEvent.setup();
+        const home = page(1, 1, 'Home', HOME_URL);
+        const news = page(2, 2, 'News', NEWS_URL);
+        const { rerender } = render(<PreviewColumn {...noActions} preview={news} previews={[home, news]} />, { wrapper: UiProvider });
+
+        await pick(user, 'Home');
+        expect(frameUrl()).toContain('realid=1');
+
+        const newerNews = page(3, 2, 'News', NEWS_URL);
+
+        rerender(<PreviewColumn {...noActions} preview={newerNews} previews={[home, newerNews]} />);
+
+        expect(screen.getByRole('combobox', { name: 'Pages' })).toHaveTextContent('News');
+        expect(frameUrl()).toContain('realid=2');
     });
 });

@@ -1,4 +1,4 @@
-import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
+import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, EyeIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,13 +9,14 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverClose, PopoverContent, PopoverTitle } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import type { PageSettingsChange } from '@/helper/composerParts/composerParts';
 import { type ElementBox, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
 import type { ContextReference } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
-import type { LivePreview } from '@/store/useWorkspaceEventStore';
+import { type LivePreview, previewKey } from '@/store/useWorkspaceEventStore';
 
 import styles from './PreviewColumn.module.css';
 
@@ -94,15 +95,18 @@ export interface PreviewActions {
     canSendFeedback: boolean;
 }
 
-/** The preview, with all of `PreviewActions` (the session's chat) or none of them (only showing the page, as on the review page). */
-export type PreviewColumnProps = { preview: LivePreview } & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
+/**
+ * The preview, with all of `PreviewActions` (the session's chat) or none of them (only showing the page, as on the review page).
+ * `preview` is the latest one (the last `preview.updated`); `previews` the latest of each page, when there may be several.
+ */
+export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[] } & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
 
 /**
  * The right column: the CMS preview of the page the session produced, framed on the preview stage
  * (design.md §11 "Vorschau-Bühne"), always read-only (`readOnlyPreviewUrl`), so that showing it
  * never opens the page for editing. The browser loads the URL with its own CMS session. A CMS that
- * forbids framing leaves the frame blank, so the URL and a link to open it are always shown next to
- * it (integration guide §5). Each `preview.updated` remounts the frame, which reloads it even when
+ * forbids framing leaves the frame blank, so a link to open it is always shown next to it (integration
+ * guide §5). Each `preview.updated` remounts the frame, which reloads it even when
  * the URL stayed the same. The header switches the width between desktop and mobile (390 px) and
  * shows the column in full screen, which Escape leaves (final_draft.html "preview widths").
  *
@@ -130,12 +134,25 @@ export type PreviewColumnProps = { preview: LivePreview } & (PreviewActions | { 
  *
  * Without `PreviewActions` the preview only shows the page: no part is selected, outlined or offered a
  * menu, and there are no page settings; the changed parts are still tinted.
+ *
+ * With `previews` of more than one page, a select next to the title switches between them: the page of the latest `preview` is shown
+ * until another page is picked, and again once a newer `preview` comes. Another page clears the
+ * selection and closes the menu, the cards and the page settings, which were for the page before.
  */
 export function PreviewColumn(props: PreviewColumnProps) {
-    const { preview } = props;
+    const { preview: latest, previews = [] } = props;
+    // The page picked, and the latest preview when it was picked: a newer one shows its own page again.
+    const [picked, setPicked] = useState<{ key: string; seq: number } | null>(null);
+    const preview = (picked?.seq === latest.seq && previews.find((page) => previewKey(page) === picked.key)) || latest;
+    const pageKey = previewKey(preview);
     const actions: PreviewActions | undefined = props.onReferenceInChat ? props : undefined;
     const canSendFeedback = actions?.canSendFeedback ?? false;
     const { t } = useTranslation();
+    // By `previewKey`, each page's name for the page select.
+    const pageNames = Object.fromEntries(previews.map((page) => [
+        previewKey(page),
+        page.cms_ref.name || t('preview.pages.unnamed', { id: page.cms_ref.id }),
+    ]));
     const titleId = useId();
     const url = readOnlyPreviewUrl(preview.preview_url);
     const [isMobile, setIsMobile] = useState(false);
@@ -170,6 +187,19 @@ export function PreviewColumn(props: PreviewColumnProps) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const settingsRef = useRef<HTMLElement>(null);
     const settingsButtonRef = useRef<HTMLButtonElement>(null);
+    const [shownPageKey, setShownPageKey] = useState(pageKey);
+
+    // Another page: what was selected or open belonged to the page before. Adjusted while rendering rather than in an effect.
+    if (pageKey !== shownPageKey) {
+        setShownPageKey(pageKey);
+        setSelected(null);
+        setIsMenuOpen(false);
+        setIsFeedbackOpen(false);
+        setIsEditOpen(false);
+        setIsImageOpen(false);
+        setIsSettingsOpen(false);
+    }
+
     const { onFrameLoad, hovered, selectedBox, changedBoxes, textOf, hasImage } = usePreviewElements(frameRef, selected?.tagName ?? null, (element) => {
         // A click on a part selects it and opens its menu; Escape clears both. Only with actions to offer.
         if (!actions) {
@@ -365,8 +395,24 @@ export function PreviewColumn(props: PreviewColumnProps) {
     return (
         <section className={`${styles.column} ${isFullScreen ? styles.fullScreen : ''}`} aria-labelledby={titleId}>
             <header className={styles.head}>
-                <h2 id={titleId} className={styles.title}>{t('preview.title')}</h2>
-                <span className={styles.url} title={url}>{url}</span>
+                <div className={styles.lead}>
+                    <h2 id={titleId} className={styles.title}>
+                        <EyeIcon size={16} className={styles.titleIcon} aria-hidden="true" />
+                        {t('preview.title')}
+                    </h2>
+                    {previews.length > 1 && (
+                        <div className={styles.pages}>
+                            <Select items={pageNames} value={pageKey} onValueChange={(key) => key !== null && setPicked({ key, seq: latest.seq })}>
+                                <SelectTrigger aria-label={t('preview.pages.label')}>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(pageNames).map(([key, name]) => <SelectItem key={key} value={key}>{name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                </div>
                 {/* A link in the look of a button, as "New" in the left column. */}
                 <Button
                     size="sm"
@@ -416,7 +462,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     />
                 )}
                 <div className={styles.page}>
-                    <iframe key={preview.seq} ref={frameRef} className={styles.frame} src={url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
+                    <iframe key={`${pageKey}@${preview.seq}`} ref={frameRef} className={styles.frame} src={url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
                     <div className={styles.overlay} aria-hidden="true">
                         {isFeedbackOpen && selectedBox && dimBands(selectedBox).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
                         {changedBoxes.map(({ tagName, box }) => <div key={tagName} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}

@@ -34,6 +34,10 @@
         "mobile": "Mobil · 390 px",
         "fullScreen": "Vollbild",
         "leaveFullScreen": "Vollbild verlassen",
+        "pages": {
+            "label": "Seiten",
+            "unnamed": "Seite {{id}}"
+        },
         "selection": {
             "selected": "Ausgewählt: {{name}}",
             "clear": "Auswahl aufheben",
@@ -478,6 +482,12 @@
             "published": "Veröffentlicht",
             "review_requested": "Prüfung angefordert",
             "failed": "Fehlgeschlagen"
+        },
+        "page": {
+            "issues_one": "{{count}} offener Punkt",
+            "issues_other": "{{count}} offene Punkte",
+            "canPublish": "Sie dürfen diese Seite veröffentlichen.",
+            "needsReview": "Braucht eine Prüfung: Sie dürfen diese Seite nicht veröffentlichen."
         },
         "actions": {
             "release": "Freigeben",

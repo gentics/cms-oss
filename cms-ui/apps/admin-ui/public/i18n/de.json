@@ -1253,7 +1253,8 @@
         "manage_user_token_title": "API Token von \"{{ user }}\"",
         "token_expires": "Ablaufdatum",
         "token_issued": "Erstelldatum",
-        "token_valid": "Valide"
+        "token_valid": "Valide",
+		"token_unlimited": "Unablaufbar"
     },
     "object_property": {
         "objectProperty_plural": "Objekteigenschaften",

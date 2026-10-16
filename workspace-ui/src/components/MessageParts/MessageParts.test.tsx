@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
@@ -125,12 +126,20 @@ describe('PartRenderer', () => {
         expect(screen.getByRole('cell', { name: 'Create construct' })).toBeInTheDocument();
     });
 
-    it('renders a citation with its marker and the highlighted passage as text, not as HTML', () => {
+    it('renders a citation collapsed to "Sources", opened with its marker and the highlighted passage as text, not as HTML', async () => {
         const { container } = renderPart({
             type: 'citation',
             refs: [{ marker: '[1]', ref: { type: 'page', id: '8871', label: 'Garantiebedingungen' }, snippet: 'ab einem Warenwert von <em>35 Euro</em> <img src=x onerror=alert(1)>kostenfrei' }],
         });
+        const toggle = screen.getByRole('button', { name: 'Sources' });
 
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.getByText('Garantiebedingungen')).not.toBeVisible();
+
+        await userEvent.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByText('Garantiebedingungen')).toBeVisible();
         expect(screen.getByText('[1]')).toBeInTheDocument();
         expect(screen.getByText('Garantiebedingungen')).toBeInTheDocument();
         expect(container.querySelector('mark')).toHaveTextContent('35 Euro');

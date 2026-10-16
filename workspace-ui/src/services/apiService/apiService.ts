@@ -340,10 +340,10 @@ export function getPlanState(sessionId: string, planId: string): Promise<PlanSta
     return genaixRequest<PlanState>(`/sessions/${encodeURIComponent(sessionId)}/plans/${encodeURIComponent(planId)}`);
 }
 
-// POST /sessions/{session_id}/plans/{plan_id}/transitions: release, reopen, publish, request_review or
-// discard one plan (rc.4). `200` with the plan when the status changed at once; `202` with
-// `{run_id, plan, session}` when a run does the work (`publish`, `request_review`), its outcome on
-// the event stream. `409 quality_gate_failed` lists the failing checks; the non-blocking ones go back
+// POST /sessions/{session_id}/plans/{plan_id}/transitions: release, publish, request_review or discard
+// one plan (rc.4; rc.5 removed reopen, a revision replaces it). `200` with the plan when the status
+// changed at once; `202` with `{run_id, plan, session}` when a run does the work (`publish`,
+// `request_review`), its outcome on the event stream. `409 quality_gate_failed` lists the failing checks; the non-blocking ones go back
 // in `acknowledge_checks` to get past them.
 export function transitionPlan(sessionId: string, planId: string, body: TransitionRequest): Promise<Plan | TransitionAccepted> {
     return genaixRequest<Plan | TransitionAccepted>(`/sessions/${encodeURIComponent(sessionId)}/plans/${encodeURIComponent(planId)}/transitions`, {

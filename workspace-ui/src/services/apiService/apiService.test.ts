@@ -325,7 +325,7 @@ describe('routes', () => {
     });
 
     it('listPlans returns the page of GET /sessions/{session_id}/plans', async () => {
-        const plan = { id: 'pl-1', workflow: 'content_create', status: 'done', version: 1, summary: '', created_at: '2026-10-13T09:00:00Z' };
+        const plan = { id: 'pl-1', workflows: ['content_create'], status: 'done', version: 1, summary: '', created_at: '2026-10-13T09:00:00Z' };
         const fetchMock = stubFetch(Response.json({ items: [plan] }));
 
         await expect(listPlans('s-1')).resolves.toEqual({ items: [plan] });
@@ -333,7 +333,7 @@ describe('routes', () => {
     });
 
     it('getPlanState loads the state of one plan', async () => {
-        const fetchMock = stubFetch(Response.json({ workflow: 'content_create', plan: { id: 'pl-1' } }));
+        const fetchMock = stubFetch(Response.json({ workflows: [{ id: 'content_create', version: '1.0.0' }], plan: { id: 'pl-1' } }));
 
         await expect(getPlanState('s-1', 'pl-1')).resolves.toMatchObject({ plan: { id: 'pl-1' } });
         expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/plans/pl-1');

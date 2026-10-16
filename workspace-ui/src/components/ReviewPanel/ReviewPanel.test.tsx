@@ -56,9 +56,9 @@ const page: Publication = {
 
 function planState(status: PlanStatus, extra: Partial<PlanState> = {}): PlanState {
     return {
-        workflow: 'content_create',
+        workflows: [{ id: 'content_create', version: '1.0.0' }],
         state: 'done',
-        plan: { id: PLAN_ID, workflow: 'content_create', status, version: 2, summary: 'New terms page in Richtlinien.', items: [] },
+        plan: { id: PLAN_ID, workflows: [{ id: 'content_create', version: '1.0.0' }], status, version: 2, summary: 'New terms page in Richtlinien.', items: [] },
         steps: [],
         checks: [tone, altText],
         gates: [],
@@ -115,7 +115,12 @@ function stubRoutes({ transition, onDiscard = 'keep', permissions = {} }: {
         }
 
         if (url.endsWith('/workflows')) {
-            return Response.json({ items: [{ id: 'content_create', version: '1.2.0', title: 'Create', description: '', roles: [], steps_template: [], plan_policy: { concurrency: 'exclusive', on_discard: onDiscard } }] });
+            return Response.json({
+                items: [
+                    { id: 'content_create', version: '1.2.0', title: 'Create', description: '', roles: [], steps_template: [], plan_policy: { on_discard: onDiscard } },
+                    { id: 'content_edit', version: '1.0.0', title: 'Edit', description: '', roles: [], steps_template: [], plan_policy: { on_discard: 'restore' } },
+                ],
+            });
         }
 
         if (url.endsWith(`/sessions/${SESSION}/messages`)) {
@@ -218,9 +223,10 @@ describe('ReviewPanel', () => {
         ['accepted', ['Release']],
         ['running', ['Release']],
         ['done', ['Discard', 'Release']],
-        ['released', ['Discard', 'Reopen', 'Request review', 'Publish']],
-        ['published', ['Reopen']],
-        ['review_requested', ['Reopen']],
+        // rc.5 removed `reopen`: a published plan is changed with a message (contract §4.4).
+        ['released', ['Discard', 'Request review', 'Publish']],
+        ['published', []],
+        ['review_requested', []],
         ['discarded', []],
         ['superseded', []],
     ])('offers in status %s: %j', async (status, actions) => {
@@ -252,7 +258,7 @@ describe('ReviewPanel', () => {
             await renderPanel(planState('released', { cms_objects: [writtenPage(9142)] }));
 
             await waitFor(() => expect(permissionUrls).toEqual(['/rest/perm/publish/page/9142?nodeId=3']));
-            expect(actionNames()).toEqual(['Discard', 'Reopen', 'Request review']);
+            expect(actionNames()).toEqual(['Discard', 'Request review']);
         });
 
         it('offers no Publish when the user may publish only some of the plan\'s pages', async () => {
@@ -261,7 +267,7 @@ describe('ReviewPanel', () => {
             await renderPanel(planState('released', { cms_objects: [writtenPage(9142), writtenPage(9143, 'updated')] }));
 
             await waitFor(() => expect(permissionUrls).toHaveLength(2));
-            expect(actionNames()).toEqual(['Discard', 'Reopen', 'Request review']);
+            expect(actionNames()).toEqual(['Discard', 'Request review']);
         });
 
         it('offers Publish when the user may publish every page the plan wrote, and does not ask for pages it only read', async () => {
@@ -512,15 +518,24 @@ describe('ReviewPanel', () => {
         expect(await screen.findByText('The plan is closed and the pages it changed go back to their version from before it.')).toBeInTheDocument();
     });
 
-    it('reopens a published plan', async () => {
+    it('takes the strictest discard policy of the plan\'s modules (rc.5)', async () => {
         const user = userEvent.setup();
-        const { sent } = stubRoutes();
+        const state = planState('done');
+
+        stubRoutes();
+        await renderPanel({ ...state, plan: { ...state.plan, workflows: [{ id: 'content_create', version: '1.2.0' }, { id: 'content_edit', version: '1.0.0' }] } });
+        await user.click(screen.getByRole('button', { name: 'Discard' }));
+
+        expect(await screen.findByText('The plan is closed and the pages it changed go back to their version from before it.')).toBeInTheDocument();
+    });
+
+    it('offers no reopen on a published plan (rc.5: a revision replaces it, from the chat)', async () => {
+        stubRoutes();
 
         await renderPanel(planState('published', { publications: [page] }));
         expect(screen.getByRole('contentinfo')).toHaveTextContent('Published');
-        await user.click(screen.getByRole('button', { name: 'Reopen' }));
-
-        await waitFor(() => expect(sent).toEqual([{ action: 'reopen' }]));
+        expect(screen.queryByRole('button', { name: 'Reopen' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
     });
 
     it('shows a discarded plan read-only: its status, no actions and no fixes', async () => {

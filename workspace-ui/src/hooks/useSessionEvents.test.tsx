@@ -36,7 +36,7 @@ function stubGenaix(eventResponses: (() => Response)[] = []) {
         }
 
         if (String(url).includes('/plans/')) {
-            return Promise.resolve(Response.json({ workflow: 'content_create', plan: { id: 'pl-1' } }));
+            return Promise.resolve(Response.json({ workflows: [{ id: 'content_create', version: '1.0.0' }], plan: { id: 'pl-1' } }));
         }
 
         const next = eventResponses.shift();

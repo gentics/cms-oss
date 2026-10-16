@@ -1,5 +1,5 @@
-import { CircleCheckIcon, CircleQuestionMarkIcon, SlidersHorizontalIcon, TimerOffIcon } from 'lucide-react';
-import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { CheckIcon, CircleCheckIcon, CircleQuestionMarkIcon, MessageSquareIcon, SlidersHorizontalIcon, SparklesIcon, TimerOffIcon, XIcon } from 'lucide-react';
+import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PartCard } from '@/components/MessageParts/PartCard';
@@ -13,6 +13,7 @@ import type { Interaction, InteractionAnswer, UserSettingPart } from '@/services
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 
+import { interactionCardId } from './focusInteractionCard';
 import { type Option, OptionSelect } from './OptionSelect';
 import { SettingField, type SettingRow } from './SettingField';
 
@@ -55,24 +56,76 @@ function AskUser({ interaction, onSubmit, disabled }: KindProps) {
     );
 }
 
-// `choice`: one option, several when `multi` (contract `ChoiceAnswer`, at least one id).
+// The option ids GenAIx recommends that the choice offers, one unless `multi` (rc.5 addition).
+function recommendedOf(interaction: Interaction): string[] {
+    const offered = new Set((interaction.options ?? []).map(({ id }) => id));
+    const recommended = (interaction.recommended ?? []).filter((id) => offered.has(id));
+
+    return interaction.multi ? recommended : recommended.slice(0, 1);
+}
+
+// `choice`: one option, several when `multi` (contract `ChoiceAnswer`). Like the settings review (rc.5
+// addition): what GenAIx recommends first, preselected, with a "Recommended" badge, and every option with
+// why it is offered (`reason`). With `other_allowed`, "Something else" takes the user's own text, sent as
+// `other`: instead of the option in a single choice (`selected` then empty), besides those chosen in a
+// multiple one.
 function Choice({ interaction, onSubmit, disabled }: KindProps) {
     const { t } = useTranslation();
-    const [selected, setSelected] = useState<string[]>([]);
+    const recommended = useMemo(() => recommendedOf(interaction), [interaction]);
+    const items = useMemo(() => {
+        const options = (interaction.options ?? []).map((option) => ({
+            ...option,
+            ...(recommended.includes(option.id) && { badge: t('chat.interaction.recommended') }),
+        }));
 
-    useDraft(interaction.id, useMemo(() => (selected.length > 0 ? { selected } : undefined), [selected]));
+        return [...options.filter(({ id }) => recommended.includes(id)), ...options.filter(({ id }) => !recommended.includes(id))];
+    }, [interaction, recommended, t]);
+    const [selected, setSelected] = useState<string[]>(recommended);
+    const [isOther, setIsOther] = useState(false);
+    const [otherText, setOtherText] = useState('');
+    const isMulti = interaction.multi ?? false;
+    const other = interaction.other_allowed && isOther ? otherText.trim() : '';
+    const answer = useMemo(() => {
+        if (other) {
+            return { selected, other };
+        }
+
+        return selected.length > 0 ? { selected } : undefined;
+    }, [selected, other]);
+
+    useDraft(interaction.id, answer);
+
+    function selectOther(isSelected: boolean) {
+        setIsOther(isSelected);
+
+        if (isSelected && !isMulti) {
+            setSelected([]);
+        }
+    }
 
     return (
         <div className={styles.fields}>
             <SelectableList
-                items={interaction.options ?? []}
-                multi={interaction.multi ?? false}
+                items={items}
+                multi={isMulti}
                 value={selected}
                 onChange={setSelected}
                 label={interaction.prompt}
+                other={interaction.other_allowed
+                    ? {
+                        label: t('chat.interaction.other'),
+                        fieldLabel: t('chat.interaction.otherAnswer'),
+                        placeholder: t('chat.interaction.otherPlaceholder'),
+                        isSelected: isOther,
+                        text: otherText,
+                        onSelect: selectOther,
+                        onTextChange: setOtherText,
+                        disabled,
+                    }
+                    : undefined}
             />
             <div className={styles.actions}>
-                <Button variant="primary" size="sm" disabled={disabled || selected.length === 0} onClick={() => onSubmit({ selected })}>
+                <Button variant="primary" size="sm" disabled={disabled || !answer} onClick={() => answer && onSubmit(answer)}>
                     {t('chat.interaction.send')}
                 </Button>
             </div>
@@ -80,11 +133,23 @@ function Choice({ interaction, onSubmit, disabled }: KindProps) {
     );
 }
 
-// `confirm`: yes or no, with an optional comment (contract `ConfirmAnswer`).
+// `confirm`: yes or no (contract `ConfirmAnswer`), as two buttons in their full size on the right, yes
+// last, as the main action of a card's foot (design.md §12 "Chat-Karte"). The optional
+// comment is asked for only when the user wants to add one ("Add a comment"), which opens its field
+// above them; yes or no then send it along.
 function Confirm({ interaction, onSubmit, disabled }: KindProps) {
     const { t } = useTranslation();
     const [comment, setComment] = useState('');
+    const [isCommenting, setIsCommenting] = useState(false);
+    const commentRef = useRef<HTMLTextAreaElement>(null);
     const id = `interaction-${interaction.id}-comment`;
+
+    // The opened field takes the focus, for the user to write right away.
+    useEffect(() => {
+        if (isCommenting) {
+            commentRef.current?.focus();
+        }
+    }, [isCommenting]);
 
     function answer(approved: boolean) {
         onSubmit(comment.trim() ? { approved, comment: comment.trim() } : { approved });
@@ -92,13 +157,27 @@ function Confirm({ interaction, onSubmit, disabled }: KindProps) {
 
     return (
         <div className={styles.fields}>
-            <label className={styles.field} htmlFor={id}>
-                <span className={styles.fieldLabel}>{t('chat.interaction.comment')}</span>
-                <input id={id} className={styles.input} value={comment} maxLength={4000} onChange={(event) => setComment(event.target.value)} disabled={disabled} />
-            </label>
-            <div className={styles.actions}>
-                <Button variant="secondary" size="sm" disabled={disabled} onClick={() => answer(false)}>{t('chat.interaction.reject')}</Button>
-                <Button variant="primary" size="sm" disabled={disabled} onClick={() => answer(true)}>{t('chat.interaction.approve')}</Button>
+            {isCommenting && (
+                <label className={styles.field} htmlFor={id}>
+                    <span className={styles.fieldLabel}>{t('chat.interaction.comment')}</span>
+                    <textarea ref={commentRef} id={id} className={styles.input} value={comment} maxLength={4000} onChange={(event) => setComment(event.target.value)} disabled={disabled} />
+                </label>
+            )}
+            <div className={styles.decision}>
+                {!isCommenting && (
+                    <Button variant="quiet" size="text" disabled={disabled} onClick={() => setIsCommenting(true)}>
+                        <MessageSquareIcon size={12} />
+                        {t('chat.interaction.addComment')}
+                    </Button>
+                )}
+                <Button variant="secondary" disabled={disabled} onClick={() => answer(false)}>
+                    <XIcon size={16} />
+                    {t('chat.interaction.reject')}
+                </Button>
+                <Button variant="primary" disabled={disabled} onClick={() => answer(true)}>
+                    <CheckIcon size={16} />
+                    {t('chat.interaction.approve')}
+                </Button>
             </div>
         </div>
     );
@@ -211,8 +290,11 @@ function Form({ interaction, onSubmit, disabled }: KindProps) {
 }
 
 // `settings_review` (contract §9.1): every `proposed` setting prefilled, every `missing` one to fill or
-// preselected with what GenAIx recommends, answered with one `setting` part per key. Each setting is
-// chosen in its own field (`SettingField`). A different folder keeps the chosen template; its field then
+// preselected with what GenAIx recommends, answered with one `setting` part per key. Always the same list,
+// one setting per row: its name, with "Selection required" beside it while it has no value; its field
+// (`SettingField`: a select for what is chosen, a text field for what is typed; the recommended option
+// says so in its select, `OptionSelect`); and under a proposed value where it came from. Confirm is enabled once every setting has a value; until then the
+// foot says which are still to choose. A different folder keeps the chosen template; its field then
 // offers the new folder's templates beside it.
 function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
     const { t } = useTranslation();
@@ -242,8 +324,9 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
             return initial ? [[row.key, { value: initial.value, label: initial.label, ref: initial.ref }]] : [];
         }),
     ));
-
-    const isComplete = rows.every((row) => (values[row.key]?.value ?? '') !== '');
+    const nameOf = (row: SettingRow) => row.name || t(`chat.interaction.setting.${row.key}`, { defaultValue: row.key });
+    const toChoose = rows.filter((row) => (values[row.key]?.value ?? '') === '');
+    const isComplete = toChoose.length === 0;
     const answer = useMemo(() => ({
         settings: rows.map((row): UserSettingPart => ({ type: 'setting', key: row.key, value: values[row.key]?.value ?? '', label: values[row.key]?.label ?? '' })),
     }), [rows, values]);
@@ -254,6 +337,33 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
         setValues((current) => ({ ...current, [row.key]: option }));
     }
 
+    // One setting: its name and state, its field, and where a proposed value came from.
+    function settingRow(row: SettingRow) {
+        const id = `interaction-${interaction.id}-${row.key}`;
+        const value = values[row.key];
+        const isMissing = !value?.value;
+        // Where the proposed value came from, while it is still that value.
+        const source = row.source && value?.value === row.proposed?.value
+            ? `${t(`chat.interaction.source.${row.source}`)}${row.evidence ? ` · „${row.evidence}“` : ''}`
+            : undefined;
+
+        return (
+            <div key={row.key} className={styles.setting}>
+                <div className={styles.settingHead}>
+                    <label className={styles.settingName} htmlFor={id}>{nameOf(row)}</label>
+                    {isMissing && <span className={styles.requiredBadge}>{t('chat.interaction.required')}</span>}
+                </div>
+                <SettingField id={id} row={row} value={value} onChange={(option) => choose(row, option)} disabled={disabled} folder={values.folder} />
+                {source && (
+                    <span className={styles.source}>
+                        <SparklesIcon size={12} aria-hidden />
+                        {source}
+                    </span>
+                )}
+            </div>
+        );
+    }
+
     function handleSubmit(event: FormEvent) {
         event.preventDefault();
         onSubmit(answer);
@@ -261,35 +371,11 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
 
     return (
         <form onSubmit={handleSubmit} className={styles.fields}>
-            {rows.map((row) => {
-                const id = `interaction-${interaction.id}-${row.key}`;
-
-                return (
-                    <div key={row.key} className={styles.field}>
-                        <label className={styles.fieldLabel} htmlFor={id}>
-                            {row.name || t(`chat.interaction.setting.${row.key}`, { defaultValue: row.key })}
-                            {!row.proposed && <span className={styles.required} aria-hidden>*</span>}
-                        </label>
-                        <SettingField
-                            id={id}
-                            row={row}
-                            value={values[row.key]}
-                            onChange={(option) => choose(row, option)}
-                            disabled={disabled}
-                            folder={values.folder}
-                        />
-                        {/* Where a value came from and why GenAIx recommends it, only while it is still that value. */}
-                        {row.source && values[row.key]?.value === row.proposed?.value && (
-                            <span className={styles.hint}>
-                                {t(`chat.interaction.source.${row.source}`)}
-                                {row.evidence && ` · „${row.evidence}“`}
-                            </span>
-                        )}
-                        {row.reason && values[row.key]?.value === row.recommended?.value && <span className={styles.hint}>{row.reason}</span>}
-                    </div>
-                );
-            })}
-            <div className={styles.actions}>
+            <div className={styles.settings}>{rows.map(settingRow)}</div>
+            <div className={styles.foot}>
+                <span className={styles.footCaption}>
+                    {!isComplete && t('chat.interaction.stillToChoose', { names: toChoose.map(nameOf).join(', ') })}
+                </span>
                 <Button type="submit" variant="primary" size="sm" disabled={disabled || !isComplete}>{t('chat.interaction.confirm')}</Button>
             </div>
         </form>
@@ -400,14 +486,16 @@ export function InteractionCard({ interaction, sessionId }: { interaction: Inter
         return null;
     }
 
+    // Focusable from script only, for "Answer" on the plan (`focusInteractionCard`).
     return (
-        <div className={styles.card}>
+        <div id={interactionCardId(interaction.id)} className={styles.card} tabIndex={-1}>
             <PartCard
                 icon={interaction.kind === 'settings_review' ? SlidersHorizontalIcon : CircleQuestionMarkIcon}
                 title={t(`chat.interaction.title.${interaction.kind}`)}
                 footer={lock === 'answered' || lock === 'expired' ? <LockStatus lock={lock} /> : undefined}
             >
-                <p className={styles.prompt}>{interaction.prompt}</p>
+                {/* A settings review is its fields alone; its prompt is not shown. */}
+                {interaction.kind !== 'settings_review' && <p className={styles.prompt}>{interaction.prompt}</p>}
                 <Kind interaction={interaction} onSubmit={submit} disabled={Boolean(lock)} />
             </PartCard>
         </div>

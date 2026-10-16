@@ -500,7 +500,7 @@ describe('GenAIx query hooks', () => {
     });
     describe('usePlanState', () => {
         it('loads the state of one plan, and nothing without a plan', async () => {
-            const fetchMock = stubFetch(Response.json({ workflow: 'content_create', plan: { id: 'pl-1', status: 'done' }, checks: [] }));
+            const fetchMock = stubFetch(Response.json({ workflows: [{ id: 'content_create', version: '1.0.0' }], plan: { id: 'pl-1', status: 'done' }, checks: [] }));
             const { result, rerender } = renderHook(({ planId }: { planId?: string }) => usePlanState('s-1', planId), { wrapper, initialProps: {} });
 
             expect(result.current.fetchStatus).toBe('idle');

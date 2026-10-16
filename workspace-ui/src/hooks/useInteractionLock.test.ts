@@ -8,7 +8,7 @@ import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { lockAfterFailure, useInteractionLock } from './useInteractionLock';
 
 function interaction(expiresAt: string): Interaction {
-    return { id: 'i-1', kind: 'confirm', prompt: 'Publish now?', multi: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:23:16Z', expires_at: expiresAt };
+    return { id: 'i-1', kind: 'confirm', prompt: 'Publish now?', multi: false, other_allowed: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:23:16Z', expires_at: expiresAt };
 }
 
 function refusal(status: number, code: GenaixCode) {

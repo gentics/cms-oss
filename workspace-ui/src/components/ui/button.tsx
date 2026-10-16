@@ -16,6 +16,8 @@ const buttonVariants = cva(
                 danger: 'border-err/30 bg-surface text-err not-data-disabled:hover:border-err not-data-disabled:hover:bg-errbg',
                 'ghost-danger': 'text-slate not-data-disabled:hover:bg-errbg not-data-disabled:hover:text-err',
                 solid: 'bg-solid text-white',
+                // Meta text that opens more (design.md §5.1 `--fg-muted`, 400), e.g. the sources of an answer.
+                quiet: 'font-normal text-muted not-data-disabled:hover:text-slate aria-expanded:text-slate',
             },
             size: {
                 default: 'px-12 py-8',
@@ -25,6 +27,8 @@ const buttonVariants = cva(
                 'icon-lg': 'size-34 rounded-lg p-0',
                 'icon-xl': 'size-72 rounded-full p-0',
                 brand: 'gap-9 py-4 pr-8 pl-4',
+                // Inline with text, no padding of its own (meta text, `--font-size-xs`).
+                text: 'gap-4 rounded-xs p-0 text-xs',
             },
         },
         defaultVariants: {

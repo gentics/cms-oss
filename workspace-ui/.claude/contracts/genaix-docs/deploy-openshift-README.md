@@ -69,31 +69,34 @@ pages, because the web tier reads those from disk per request. A change to `open
 to `examples/`, to `mcp/tools.json` or to a mock's source needs the restart, because each
 mock loads the contracts once at startup.
 
-## The previous contract version under /rc3/
+## A further contract version under /rc4/
 
-The root URLs serve the current contract, `1.0.0-rc.4` (agreed 2026-10-12). The previous
-release candidate, `1.0.0-rc.3`, stays available under a path prefix: `/rc3/` (`/rc3/docs/`,
-`/rc3/html/`, `/rc3/client/`, `/rc3/openapi.yaml`, and its own API mock at `/rc3/api/v1`).
-Every HTML page carries a small **Contract** dropdown in its bottom right corner that switches
-to the same page in the other version. Absolute links of the second version's landing page and
-`llms.txt` are rewritten to stay under the prefix; the CMS MCP mock (`/mcp`) is shared and
-follows the root version.
+The root URLs serve the current contract, `1.0.0-rc.5` (agreed 2026-10-15). Further versions
+are served under a path prefix each, with their own sources, built site and API mock:
 
-Sync it from a checkout of that version. The tag `contract-1.0.0-rc.3` predates the slot
-support of `sync.sh`; use the last rc.3 commit of `main`, `8bb6a39`, which carries both:
+| Prefix | Version | API mock |
+|---|---|---|
+| `/rc4/` | `1.0.0-rc.4`, the previous release candidate | container `genaix-mock-rc4`, port 8081 |
+
+Each has `/<prefix>/docs/`, `/<prefix>/html/`, `/<prefix>/client/`, `/<prefix>/openapi.yaml`
+and its own API mock at `/<prefix>/api/v1`. Every HTML page carries a small **Contract**
+dropdown in its bottom right corner that switches to the same page in another version.
+Absolute links of a further version's landing page and `llms.txt` are rewritten to stay
+under its prefix; the CMS MCP mock (`/mcp`) is shared and follows the root version.
+
+The versions are configured in the web container's `HANDOUT_SLOTS`
+(`prefix|label|API mock URL`, comma-separated, in switcher order). A version is published by
+syncing a checkout of its branch into its slot:
 
 ```bash
-git worktree add /tmp/contract-rc3 8bb6a39
-/tmp/contract-rc3/stage1/deploy/openshift/sync.sh --slot rc3
+git worktree add /tmp/contract-rc4 contract-1.0.0-rc.4
+/tmp/contract-rc4/stage1/deploy/openshift/sync.sh --slot rc4
 ```
 
-It copies the checkout to `/data/rc3/stage1`, builds `/data/rc3/site` and the
-`genaix-rc3` virtualenv, and restarts only the `genaix-mock-rc3` container, so the root
-version stays up. That container has no readiness probe and waits until the slot is
-synced, so the root version is in service whether or not `/rc3/` exists. The dropdown
-appears once `/data/rc3/site` has been built. The web tier's switches are the
-`HANDOUT_SLOT*` variables of the `web` container; an empty `HANDOUT_SLOT` turns the
-second version off.
+A slot sync restarts only that version's API mock. The web tier, the manifests and the root
+version come from the root sync (`sync.sh` without `--slot`), so a change to `serve.py` or
+`genaix-handout.yaml` is deployed from the root version's checkout (`oc apply` for the
+manifest).
 
 ## Logs and state
 

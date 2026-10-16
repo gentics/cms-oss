@@ -42,7 +42,7 @@
   padding: 6px 6px 6px 12px;
 }
 
-/* In the foot of a chat card (`ChatPlanCard`), which has its padding already. */
+/* In a panel (`ReviewPanel`), which has its padding already. */
 .head.inCard {
   flex: 1;
   min-width: 0;
@@ -73,6 +73,12 @@
 .status {
   color: var(--fg-primary);
   font-weight: 500;
+}
+
+/* The plan at a glance while the bar is collapsed, in the numbers' own width (design.md §5). */
+.glance {
+  color: var(--fg-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .actions {

@@ -13,9 +13,9 @@ const page9142 = { type: 'page', id: 9142, node_id: 3, name: 'Neue Nutzungsbedin
 // The plan's state in `status`; once it is published, its page is too.
 function planState(status: string) {
     return {
-        workflow: 'content_create',
+        workflows: [{ id: 'content_create', version: '1.0.0' }],
         state: status === 'published' ? 'done' : status === 'released' ? 'awaiting_approval' : 'done',
-        plan: { id: PLAN, workflow: 'content_create', status, version: 2, summary: 'New terms page in Richtlinien.', items: [] },
+        plan: { id: PLAN, workflows: [{ id: 'content_create', version: '1.0.0' }], status, version: 2, summary: 'New terms page in Richtlinien.', items: [] },
         steps: [],
         checks: [{ id: 'chk-1', label: 'Formal address', severity: 'pass', blocking: false, message: 'Fine.', source: { type: 'guideline', label: 'Tone & Address' } }],
         gates: [],
@@ -56,7 +56,7 @@ async function stubReview(page: Page) {
         json: { id: SESSION, status: 'active', open_plan_id: PLAN, authorizations: [{ connection_id: 'c-1', status: 'authorized' }] },
     }));
     await page.route((url) => url.pathname === `${BASE}/plans`, (route) => route.fulfill({
-        json: { items: [{ id: PLAN, workflow: 'content_create', status, version: 2, summary: '', created_at: '2026-10-13T09:00:00Z' }] },
+        json: { items: [{ id: PLAN, workflows: ['content_create'], status, version: 2, summary: '', created_at: '2026-10-13T09:00:00Z' }] },
     }));
     await page.route((url) => url.pathname === `${BASE}/plans/${PLAN}`, (route) => route.fulfill({ json: planState(status) }));
     await page.route((url) => url.pathname === `${BASE}/plans/${PLAN}/transitions`, (route) => {

@@ -7,12 +7,21 @@ export interface StepView {
     status: Step['status'];
 }
 
+/** One module of a plan with its `steps_template` (`GET /workflows`). */
+export interface ModuleSteps {
+    workflow: string;
+    steps: StepTemplate[];
+}
+
 /**
- * The workflow's main steps for the chat: `steps_template` of the session's module (`GET /workflows`)
- * in its order, every step `pending` until `step.updated` reports it. Reported steps the template does
- * not name follow at the end (the session can run an older module version than `GET /workflows` lists).
+ * The plan's main steps for the chat: the `steps_template` of each of its modules (`GET /workflows`),
+ * in the plan's module order, every step `pending` until `step.updated` reports it. A reported step's
+ * id is always `<workflow>/<id>` (rc.5), the template's is the module's own, so the template ids are
+ * prefixed before they are matched. Reported steps no template names follow at the end: a step of no
+ * module (`plan/<id>`), or one of a module version older than `GET /workflows` lists.
  */
-export function mergeSteps(template: StepTemplate[], live: Record<string, Step> = {}): StepView[] {
+export function mergeSteps(modules: ModuleSteps[], live: Record<string, Step> = {}): StepView[] {
+    const template = modules.flatMap(({ workflow, steps }) => steps.map(({ id, label }) => ({ id: `${workflow}/${id}`, label })));
     const known = new Set(template.map(({ id }) => id));
     const view = ({ id, label }: { id: string; label: string }): StepView => ({
         id,

@@ -211,6 +211,27 @@ describe('useWorkspaceEventStore', () => {
             expect(session().notices).toEqual([{ seq: 2, runId: 'r-1', kind: 'cancelled' }]);
         });
 
+        it('keeps the side runs, also after they ended, but no other run (rc.5)', () => {
+            apply(
+                event(1, 'run.started', { run_id: 'r-1', plan_id: 'plan-1', run: { id: 'r-1', status: 'running', plan_id: 'plan-1', mode: 'execute' } }),
+                event(2, 'run.started', { run_id: 'r-2', run: { id: 'r-2', status: 'running', mode: 'side' } }),
+                event(3, 'run.completed', { run_id: 'r-2', run: { id: 'r-2', status: 'completed', mode: 'side' } }),
+            );
+
+            expect(session().sideRunIds).toEqual(['r-2']);
+            expect(session().runs?.map(({ id }) => id)).toEqual(['r-1']);
+        });
+
+        it('ends a run a message redirected without a Stopped notice (rc.5)', () => {
+            apply(
+                event(1, 'run.started', { run_id: 'r-1', plan_id: 'plan-1', run: { id: 'r-1', status: 'running', plan_id: 'plan-1', mode: 'execute' } }),
+                event(2, 'run.cancelled', { run_id: 'r-1', plan_id: 'plan-1', run: { id: 'r-1', status: 'cancelled', plan_id: 'plan-1', cancel_reason: 'redirected' } }),
+            );
+
+            expect(session().run).toBeNull();
+            expect(session().notices).toBeUndefined();
+        });
+
         it('records failures, recoverable errors and auth.required as notices, but not an unrecoverable error', () => {
             apply(
                 event(1, 'error', { run_id: 'r-1', error: problem, recoverable: true }),
@@ -290,7 +311,7 @@ describe('useWorkspaceEventStore', () => {
     });
 
     describe('plans', () => {
-        const plan = { id: 'p-1', workflow: 'page_create', status: 'proposed', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+        const plan = { id: 'p-1', workflows: [{ id: 'page_create', version: '1.0.0' }], status: 'proposed', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
 
         it('keeps each plan with the agent message and the number of its parts it first came after', () => {
             apply(

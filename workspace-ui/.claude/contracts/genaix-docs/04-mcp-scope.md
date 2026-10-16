@@ -1,6 +1,8 @@
 # CMS MCP layer scope (cms-mcp)
 
-Companion machine-readable specification: `mcp/tools.json` (version `1.0.0-rc.4`), reading guide in
+Companion machine-readable specification: `mcp/tools.json` (version `1.0.0-rc.5`, agreed by all parties
+on 2026-10-15: living plans on the GenAIx side, part values and tags inside text on the CMS side,
+§4.4), reading guide in
 `mcp/README.md`. This document describes the CMS MCP server: the tools it exposes, its transport,
 authentication, error mapping and the requirements its implementation has to meet. How a particular client
 stores credentials or drives a workflow is integration, covered in `09-integration-guide.md`.
@@ -502,7 +504,7 @@ target folder; the CMS decides per object.
 | `create_page` | Create an **offline draft** page in a folder from a template (S1 step "create unpublished draft") | `{ folderId, templateId, name, language, nodeId?, fileName?, description?, niceUrl?, failOnDuplicate?: true, idempotencyKey? }` | `{ page: {...as get_page...}, created: true }` | `POST /page/create` (`PageCreateRequest {folderId, templateId, pageName, language, nodeId, fileName, description, niceUrl, failOnDuplicate}`) | **W** | CC |
 | `create_folder` | Create a folder below a parent folder, in the parent's node, when the user asks for one that does not exist yet (S1: a folder for the new pages or files). Since `1.0.0-rc.4` | `{ parentFolderId, name, publishDir?, description?, idempotencyKey? }` | `{ folder: {ref, parentFolderId, publishDir, description}, created: true }` | `POST /folder/create` (`FolderCreateRequest {motherId, nodeId, name, publishDir, description, failOnDuplicate: true}`) | **W** | CC |
 | `update_page_tags` | Fill or change the content blocks of a page in one call: load with lock, set the named parts, save, unlock | `{ pageId, nodeId?, tags: {tagName: {constructKeyword?, properties: {partKeyword: value}}}, createMissing?: true, deleteTags?: [name], createVersion?: true, idempotencyKey? }` | `{ page, changedTags: [name], createdTags: [name], deletedTags: [name] }` | `GET /page/load/{id}?update=true` then `POST /page/save/{id}` (`PageSaveRequest {page, unlock: true, createVersion, delete}`) | **W** | CC |
-| `add_page_tag` | Add one new content block of a given construct to a page, returning its generated tag name | `{ pageId, constructKeyword?, constructId?, tagName?, copyFrom?: {pageId, tagName}, idempotencyKey? }` | `{ tag: {name, constructId, constructKeyword, properties}, pageRef }` | `POST /page/newtag/{id}?constructId=\|keyword=` (`ContentTagCreateRequest`), `POST /page/newtags/{id}` for several | **W** | CC |
+| `add_page_tag` | Add one new content block of a given construct to a page, returning its generated tag name | `{ pageId, constructKeyword?, constructId?, tagName?, copyFrom?: {pageId, tagName}, idempotencyKey? }` | `{ tag: {name, constructId, constructKeyword, properties}, pageRef, parts: [part with value], embedAs? }` | `POST /page/newtag/{id}?constructId=\|keyword=` (`ContentTagCreateRequest`), `POST /page/newtags/{id}` for several | **W** | CC |
 | `update_page_properties` | Change page metadata without touching content: name, filename, description, nice URL, priority, template | `{ pageId, nodeId?, name?, fileName?, description?, niceUrl?, priority?, templateId?, deriveFileName?, idempotencyKey? }` | `{ page }` | `GET /page/load/{id}?update=true` then `POST /page/save/{id}` | **W** | CC |
 | `publish_page` | Publish now or at a time, and report whether the CMS published directly or queued the page for approval | `{ pageId, nodeId?, at?, allLanguages?, message?, keepVersion?, idempotencyKey? }` | `{ ref, result: published\|queued_for_approval\|scheduled, publishAt?, approval: {required, queuedSince?, message?, groups?: [ObjectRef]}, online }` | `POST /page/publish/{id}` (`PagePublishRequest {message, alllang, at, keepVersion}`); approval state read back via `GET /page/load/{id}?workflow=true` and `GET /page/pubqueue` | **W** | CC |
 | `take_offline` | Unpublish a page now or at a time | `{ pageId, at?, allLanguages?, idempotencyKey? }` | `{ ref, online: false, offlineAt? }` | `POST /page/takeOffline/{id}` (`PageOfflineRequest {alllang, at}`) | **W** | CC |
@@ -517,6 +519,20 @@ Notes.
   endpoint: changing a tag value means loading the whole `Page`, mutating
   `page.tags[name].properties[part]` and POSTing the whole object back, so `cms-mcp` does the round-trip
   internally and the agent names only the tags and parts it wants changed.
+- **Part values** (`1.0.0-rc.5`). `update_page_tags` writes every part type `get_page` and `get_page_tags`
+  read a value for, in the shape they read it, so a value read can be written back unchanged. Object
+  references are an id or the ref the read tools return; a select is written by option value, and a value
+  that is not an option is `invalid-data` listing the options; an overview is
+  `{listType, selectType, orderBy, orderDirection, maxItems, recursive, items}` and members left out keep
+  their value. Velocity, table, breadcrumb, navigation and local-file parts cannot be written.
+  `get_construct` gives each writable part its `value`, the JSON schema of what `update_page_tags` accepts
+  there, with a select's options as `enum`. The CMS version is the guide: a client takes the shapes from
+  it, never from a list of its own.
+- **Tags inside text** (`1.0.0-rc.5`). A construct the template has no tag for is placed inside a rich-text
+  part, as editors do in the CMS: `add_page_tag` creates the tag and returns its construct's `parts` and
+  `embedAs`, the `<node TAGNAME>` element that shows it; writing that element into the rich-text part
+  of another tag (the page's text, or a container's area, nested too) places it there. `embedAs` is present
+  when the construct has `mayBeSubtag`; a containing construct needs `mayContainSubtags`.
 - **There is no review-request tool** (`1.0.0-rc.2`). `publish_page` is the one call on the publishing path:
   when the acting user lacks `publishpages` on the folder the CMS queues the page for approval and the tool
   reports `queued_for_approval`; for a user who may publish directly there is nothing in the CMS that enqueues a
@@ -558,7 +574,7 @@ with construct `view`, so a content creation flow can check which constructs a t
 | Tool | Purpose | Input (summary) | Output (summary) | CMS endpoint(s) | R/W | Roles |
 | --- | --- | --- | --- | --- | --- | --- |
 | `list_constructs` | Find existing constructs before creating a new one: keyword collision check and similarity shortlist | `{ nodeId?, pageId?, categoryId?, partTypeIds?, q?, size?, from?, changeable? }` | `{ total, items: [{ ref, keyword, nameI18n, descriptionI18n?, category?, partKeywords: [string], mayBeSubtag, mayContainSubtags }] }` | `GET /construct` (`q`, `nodeId`, `pageId`, `category`, `partTypeId[]`, `page`, `pageSize`, `embed=category`) | R | Chief CC, CC |
-| `get_construct` | Read a construct in full, including every part and the Handlebars template source — the mandatory pre-step to any update | `{ id?, keyword?, embedCategory? }` | `{ construct: {ref, keyword, nameI18n, descriptionI18n, categoryId?, mayBeSubtag, mayContainSubtags, autoEnable, editorControlStyle, template?: {partKeyword, source}, parts: [{keyword, nameI18n, typeId, type, editable, liveEditable, mandatory, hidden, partOrder, defaultValue?}] }, nodeRefs: [ObjectRef] }` | `GET /construct/{id}` or `GET /construct/load/{constructId}`, `GET /construct/{id}/nodes` | R | Chief CC, CC |
+| `get_construct` | Read a construct in full, including every part and the Handlebars template source — the mandatory pre-step to any update | `{ id?, keyword?, embedCategory? }` | `{ construct: {ref, keyword, nameI18n, descriptionI18n, categoryId?, mayBeSubtag, mayContainSubtags, autoEnable, editorControlStyle, template?: {partKeyword, source}, parts: [{keyword, nameI18n, typeId, type, editable, liveEditable, mandatory, hidden, partOrder, defaultValue?, datasourceId?, value?}] }, nodeRefs: [ObjectRef] }` | `GET /construct/{id}` or `GET /construct/load/{constructId}`, `GET /construct/{id}/nodes` | R | Chief CC, CC |
 | `create_construct` | Create a Tier 1 Handlebars construct with its editable parts and assign it to nodes, in one CMS call | `{ keyword, name: {de, en, ...}, description?, categoryId?, nodeIds (required, min 1), handlebarsTemplate, templatePartKeyword?: "handlebars", parts?: [{keyword, name, typeId, editable?, mandatory?, liveEditable?, partOrder?, defaultValue?}], mayBeSubtag?, mayContainSubtags?, autoEnable?, editorControlStyle?, allowExisting?: false, idempotencyKey? }` | `{ construct, created: true, nodeRefs, templatePart: {keyword, typeId: 43, reportedType: "RICHTEXT"} }` | `POST /construct?nodeId=<id>[&nodeId=…]` | **W** | Chief CC |
 | `update_construct` | Change a construct: full part-list replacement done safely, by reading first and merging inside the tool | `{ id?, keyword?, name?, description?, categoryId?, handlebarsTemplate?, parts?: [...full list...], nodeIds?, mayBeSubtag?, mayContainSubtags?, autoEnable?, editorControlStyle?, idempotencyKey? }` | `{ construct, changedFields: [string], replacedParts: bool, nodeRefs }` | `GET /construct/{id}` then `PUT /construct/{id}?nodeId=…` | **W** | Chief CC |
 | `ensure_construct_category` | Get a category id by name, creating the category if it does not exist (the CMS create path takes ids only) | `{ name: {de, en, ...}, sortOrder? }` | `{ category: {id, nameI18n, sortOrder}, created: bool }` | `GET /construct/category` then `POST /construct/category` when absent | **W** | Chief CC |

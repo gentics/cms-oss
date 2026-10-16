@@ -11,11 +11,14 @@ function Select<Value, Multiple extends boolean | undefined = false>(props: Sele
     return <SelectPrimitive.Root {...props} />;
 }
 
-function SelectTrigger({ className, children, ...props }: SelectPrimitive.Trigger.Props) {
+/** `fullWidth`: as wide as its container, as a text field is (e.g. in a settings review). */
+function SelectTrigger({ className, children, fullWidth = false, ...props }: SelectPrimitive.Trigger.Props & { fullWidth?: boolean }) {
     return (
         <SelectPrimitive.Trigger
             data-slot="select-trigger"
+            data-width={fullWidth ? 'full' : undefined}
             className={cn(
+                fullWidth && 'w-full',
                 'inline-flex h-32 min-w-[160px] cursor-pointer items-center justify-between gap-8 rounded-md border border-line-field bg-surface px-8 py-6 text-base leading-normal text-ink transition-colors',
                 'focus-visible:border-azure focus-visible:shadow-[0_0_0_3px_rgba(var(--interactive-rgb),.16)] data-popup-open:border-azure',
                 'aria-invalid:border-err/55 aria-invalid:bg-errbg data-invalid:border-err/55 data-invalid:bg-errbg',

@@ -3,16 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
 import { AgentSender, ChatMessage } from '@/components/ChatMessage/ChatMessage';
-import { ChatPlanCard } from '@/components/ChatPlanCard/ChatPlanCard';
 import { ConfirmedSettingsCard, InteractionCard } from '@/components/InteractionCard/InteractionCard';
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
 import { useSessionMessages } from '@/hooks/useGenaixQueries';
-import { useOpenPlan } from '@/hooks/useOpenPlan';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import type { MessagePart, MessageRole, UserMessagePart, UserSettingPart } from '@/services/apiService/genaix/types';
-import { isSessionWorking, type LiveMessage, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, type StreamAnchor, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { isSessionWorking, type LiveMessage, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './ChatStream.module.css';
 
@@ -148,32 +146,21 @@ function confirmationEntry(id: string, runId: string | undefined, parts: Parts):
     return { key: id, runId, node: <ConfirmedSettingsCard settings={settings} /> };
 }
 
-// Where a plan shows: after the message it first came after (`after`), else before its run's first
-// agent message (`before`), else at the end (-1 for both).
-function planPlace(entries: Entry[], { runId, afterMessageId }: Pick<StreamAnchor, 'afterMessageId'> & { runId?: string }): { after: number; before: number } {
-    const after = afterMessageId ? entries.findIndex((entry) => entry.key === afterMessageId) : -1;
-
-    if (after >= 0 || !runId) {
-        return { after, before: -1 };
-    }
-
-    return { after: -1, before: entries.findIndex((entry) => entry.runId === runId && entry.isAgent) };
-}
-
 /**
  * The conversation of a session: the history (`GET …/messages`, every page), then what the event
  * stream added since (`useWorkspaceEventStore`), each message once. A message the stream has is shown
  * as streamed, also where the history lists it already while it is still in progress, until the
  * refetched history replaces it (`useSessionEvents`). Where the agent is in its workflow
- * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. Every
- * plan but the open one (`ChatPlanCard`) stands where its first `plan.updated` came, and a confirmed
- * settings review (`ConfirmedSettingsCard`) where its `interaction.resolved` came; an agent message that
- * went on streaming after them is shown split there (`splitMessage`).
- * How a run ended (`RunNotice`) follows the last message of that run. At the end: the pending
+ * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. A
+ * confirmed settings review (`ConfirmedSettingsCard`) stands where its `interaction.resolved` came; an
+ * agent message that went on streaming after it is shown split there (`splitMessage`).
+ * How a run ended (`RunNotice`) follows the last message of that run; the answer of a side run (a message
+ * GenAIx's router took as a question while a plan executes, rc.5) is followed by a note saying so. At the end: the pending
  * interaction to answer and, while the agent works, the thinking indicator with its latest status.
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
- * its steps, plans and thinking. Follows new content while scrolled to the end. The open plan is in the
- * plan bar above the composer (`PlanBar`, `useOpenPlan`), not in the conversation.
+ * its steps and thinking. Follows new content while scrolled to the end. Plans are not in the
+ * conversation: the open one is in the plan bar above the composer (`PlanBar`, `useOpenPlan`), the
+ * others are not shown.
  *
  * While the history loads, or while `isLoading` (the session is loaded whole first, `useSessionEvents`),
  * skeletons stand where the conversation will, so it appears at once rather than piece by piece.
@@ -181,11 +168,12 @@ function planPlace(entries: Entry[], { runId, afterMessageId }: Pick<StreamAncho
 export function ChatStream({ sessionId, isLoading = false }: { sessionId: string; isLoading?: boolean }) {
     const { t } = useTranslation();
     const history = useSessionMessages(sessionId);
-    const openPlan = useOpenPlan(sessionId);
-    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
+    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations, executingPlanId, sideRunIds } = useWorkspaceEventStore(useShallow((state) => {
         const session = selectSession(sessionId)(state);
 
         return {
+            executingPlanId: session.executingPlanId,
+            sideRunIds: session.sideRunIds,
             messages: session.messages,
             run: session.run,
             awaitedRunIds: session.awaitedRunIds,
@@ -227,6 +215,8 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
             .map((message) => (message.kind === 'sent'
                 ? {
                     key: messageKey(message),
+                    // Its run once sent, so a notice of that run stands after it, not at the end.
+                    runId: message.runId,
                     hasOwnSender: true,
                     node: (
                         <ChatMessage
@@ -261,36 +251,26 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
             : [];
     });
 
-    // Each plan but the open one, where its first `plan.updated` came (rc.4: one card per plan, a closed
-    // one included), once it is more than a draft (`drafting`, no items yet). A plan read with
-    // `GET …/plans/{plan_id}` has no place and stands at the end.
-    const placedPlans = (plans ?? [])
-        .filter(({ plan }) => plan.id !== openPlan?.id && plan.status !== 'drafting')
-        .map((livePlan) => ({
-            ...planPlace(entries, livePlan),
-            seq: livePlan.seq,
-            afterPart: livePlan.afterPart,
-            item: { key: `plan-${livePlan.plan.id}`, node: <ChatPlanCard plan={livePlan.plan} sessionId={sessionId} /> },
-        }));
-    const placedCards = placedPlans;
-    const cutsAfter = (index: number): Cut[] => [...placedCards, ...confirmationCuts].filter(({ after }) => after === index);
+    const cutsAfter = (index: number): Cut[] => confirmationCuts.filter(({ after }) => after === index);
 
     // Each notice after the last message of its run, else at the end.
     const placed: Item[] = [];
     const unplaced: Notice[] = [...(notices ?? [])];
 
     entries.forEach((entry, index) => {
-        placedCards.filter(({ before }) => before === index).forEach(({ item }) => placed.push(item));
         placed.push(...splitMessage(entry, cutsAfter(index), sessionId));
 
         if (entry.runId && !entries.slice(index + 1).some((next) => next.runId === entry.runId)) {
+            // A side run's answer: GenAIx took the message as a question, and the plan went on (rc.5).
+            if (entry.isAgent && sideRunIds?.includes(entry.runId)) {
+                placed.push({ key: `side-${entry.runId}`, node: <p className={styles.sideNote}>{t('chat.sideRun')}</p> });
+            }
+
             unplaced
                 .filter((notice) => notice.runId === entry.runId)
                 .forEach((notice) => placed.push({ key: `notice-${notice.seq}`, node: <RunNotice notice={notice} /> }));
         }
     });
-
-    placedCards.filter(({ after, before }) => after < 0 && before < 0).forEach(({ item }) => placed.push(item));
 
     const anchoredRuns = new Set(entries.map((entry) => entry.runId).filter(Boolean));
 
@@ -303,7 +283,12 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
         node: <InteractionCard interaction={interaction} sessionId={sessionId} />,
     }));
 
-    if (isSessionWorking({ run, messages, awaitedRunIds })) {
+    // An accepted plan runs one execute run per segment of one module's items (rc.5): between one
+    // segment's `run.completed` and the next one's `run.started` no run is active, but the plan is still
+    // `running`. Whether it is done comes from its status, never from `run.completed`.
+    const isBetweenSegments = !run && (plans ?? []).some(({ plan }) => plan.id === executingPlanId && plan.status === 'running');
+
+    if (isSessionWorking({ run, messages, awaitedRunIds }) || isBetweenSegments) {
         placed.push({ key: 'thinking', node: <ThinkingIndicator text={run?.statusText} /> });
     }
 

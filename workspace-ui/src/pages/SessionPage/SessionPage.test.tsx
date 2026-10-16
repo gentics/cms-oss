@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
+import type { GenaixEvent, Plan } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useHandOffStore } from '@/store/useHandOffStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
@@ -363,7 +364,7 @@ describe('SessionPage', () => {
                 session_id: 's-1',
                 run_id: 'r-1',
                 type: 'interaction.requested',
-                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'Which audience?', multi: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:00:01Z', expires_at: expiresAt, run_id: 'r-1' },
+                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'Which audience?', multi: false, other_allowed: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:00:01Z', expires_at: expiresAt, run_id: 'r-1' },
             });
         }
 
@@ -433,6 +434,99 @@ describe('SessionPage', () => {
             ]));
             expect(useInteractionDraftStore.getState().locks['i-1']).toBe('expired');
             expect(field).toHaveTextContent('Existing customers');
+        });
+    });
+
+    describe('changing a plan (rc.5)', () => {
+        function showPlan(status: Plan['status']) {
+            const plan: Plan = {
+                id: 'p-1',
+                workflows: [{ id: 'content_create', version: '1.0.0' }],
+                status,
+                version: 1,
+                summary: 'Invitation page PNDemo',
+                items: [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'done' }],
+            };
+
+            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-14T14:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
+        }
+
+        // Sends the messages to `posts`; every read goes to `reads`: a plan's state (`GET …/plans/p-1`) without
+        // objects, every list (the modules, the plans) empty.
+        function stubPosts(response: () => Response = accepted) {
+            const posts = vi.fn<typeof fetch>(async () => response());
+            const reads = vi.fn<typeof fetch>(async (input) => (String(input).endsWith('/sessions/s-1/plans/p-1')
+                ? Response.json({ cms_objects: [] })
+                : Response.json({ items: [], next_cursor: null })));
+
+            vi.stubGlobal('fetch', withEmptySessionList(async (input, init) => (init?.method === 'POST' ? posts(input, init) : reads(input, init))));
+
+            return Object.assign(posts, { reads });
+        }
+
+        it('offers no "Ask for a change" on a finished plan: a follow-up is a plain message, which GenAIx tells apart', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts();
+
+            showPlan('done');
+
+            const { field } = await renderPage();
+
+            // Whether a message revises the plan, GenAIx's session agent decides (contract §4.4).
+            expect(screen.queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
+
+            await user.click(field);
+            await user.keyboard('Make it more colourful{Enter}');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Make it more colourful' }] });
+        });
+
+        it('sends a plain message while a plan executes, for GenAIx to tell a question from a redirect', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts();
+
+            showPlan('running');
+
+            const { field } = await renderPage();
+
+            // No switch and no "Stop and change": the router decides (09-integration-guide.md, "Stop and change").
+            expect(screen.queryByRole('button', { name: 'Ask a question' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Change course' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Stop and change' })).not.toBeInTheDocument();
+
+            await user.click(field);
+            await user.keyboard('Use red instead{Enter}');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Use red instead' }] });
+        });
+
+        it('stops the plan\'s run from the plan\'s head, with one Stop only', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts(() => Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+
+            showPlan('running');
+            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
+                seq: 2,
+                ts: '2026-10-14T14:00:01Z',
+                session_id: 's-1',
+                run_id: 'r-1',
+                plan_id: 'p-1',
+                type: 'run.started',
+                run: { id: 'r-1', status: 'running', plan_id: 'p-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 },
+            } as GenaixEvent));
+
+            await renderPage();
+
+            expect(screen.getAllByRole('button', { name: 'Stop' })).toHaveLength(1);
+            // A turn beside the plan's run is a side run: send stays.
+            expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(String(posts.mock.calls[0]![0])).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
         });
     });
 

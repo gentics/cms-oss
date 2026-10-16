@@ -186,6 +186,33 @@
   white-space: nowrap;
 }
 
+/* An object a plan item will create (`PlannedToken`): shaped like `.ref`, read-only (design.md §8 "Nur
+   lesen": `--bg-subtle`, `--fg-secondary`, `--border-subtle`), as it does not exist yet. */
+.planned {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 360px;
+  padding: 0 5px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-sm);
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  vertical-align: baseline;
+}
+
+.planned > svg {
+  flex: none;
+  color: var(--fg-muted);
+}
+
+.plannedPath {
+  color: var(--fg-muted);
+  font-weight: 400;
+}
+
 /* `tree_view` (09-workspace-complete `.tree`, `.tnode`, `.tkids`). */
 .tree,
 .treeKids {
@@ -275,6 +302,31 @@
 .rowDescription {
   color: var(--fg-muted);
   font-size: var(--font-size-xs);
+}
+
+/* What GenAIx recommends, after the option's name (design.md §12 "Badge", success family as in the draft). */
+.rowBadge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--corner-sm);
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+/* "Something else": its row, then the field for the user's own text, indented to the row's text. */
+.otherRow {
+  display: flex;
+  flex-direction: column;
+}
+
+.otherField {
+  padding: 0 6px 6px 30px;
 }
 
 /* `properties_list` (draft `.propcard`, `.prow`, `.pk`). */
@@ -541,26 +593,25 @@
 }
 
 /* `citation`: the sources of an answer, as quiet meta text (design.md §5.1 `--font-size-xs`,
-   `--fg-muted`), no card, set off from the text by an indent along a line. */
+   `--fg-muted`), no card: "Sources" with a chevron, opened set off from the text by an indent along a line. */
 .sources {
-  margin-top: 12px;
-  padding-left: 10px;
-  border-left: 2px solid var(--border-subtle);
+  margin-top: 8px;
   color: var(--fg-muted);
   font-size: var(--font-size-xs);
-}
-
-.sourcesTitle {
-  margin-bottom: 2px;
 }
 
 .citations {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 0;
-  padding: 0;
+  margin: 4px 0 0;
+  padding: 0 0 0 10px;
+  border-left: 2px solid var(--border-subtle);
   list-style: none;
+
+  &[hidden] {
+    display: none;
+  }
 }
 
 .citation {

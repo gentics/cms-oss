@@ -13,7 +13,9 @@ export interface PlanStepInput {
  * saw, in `execute` mode. Since rc.4 only this part accepts a plan; a plain message goes to the session
  * agent (contract, `UserPlanPart`). Accepted as proposed, it carries no `items`. Adjusted, it carries
  * the steps in their new order: one with the `id` of a proposed step keeps that step, one without an
- * `id` is new, a proposed step left out is removed.
+ * `id` is new, a proposed step left out is removed. Since rc.5 a step finished in an earlier version is
+ * kept whatever the part says (it is sent unchanged), and the `id` of a step the revision removed brings
+ * it back, so a removed step is sent only once the user restored it (`PlanCard`).
  */
 export function planMessage(plan: Plan, steps?: PlanStepInput[]): MessageCreateBody {
     const items = steps?.map(({ id, label, target }): UserPlanItem => ({

@@ -195,7 +195,8 @@
                 "waiting": "Wartet auf Sie",
                 "done": "Erledigt",
                 "skipped": "Übersprungen",
-                "failed": "Fehlgeschlagen"
+                "failed": "Fehlgeschlagen",
+                "removed": "Entfernt"
             }
         },
         "file": "Datei",
@@ -222,11 +223,9 @@
             "choose": "Auswählen…",
             "chooseFolder": "Ordner wählen…",
             "otherFolder": "Anderer Ordner…",
-            "noFolderChosen": "Kein Ordner gewählt",
             "chooseFolderFirst": "Zuerst einen Ordner wählen",
             "loadingOptions": "Wird geladen…",
             "send": "Senden",
-            "confirm": "Bestätigen",
             "confirmed": "Bestätigt",
             "answered": "Beantwortet",
             "expired": "Abgelaufen",
@@ -240,14 +239,26 @@
                 "template": "Template",
                 "language": "Sprache",
                 "filename": "Dateiname",
-                "publish_at": "Veröffentlichen am"
+                "publish_at": "Veröffentlichen am",
+                "file_folder": "Ordner für Dateien",
+                "image_folder": "Ordner für Bilder"
             },
             "source": {
                 "text": "Aus Ihrem Text",
                 "context": "Aus der Sitzung",
                 "default": "Standard"
-            }
-        }
+            },
+            "recommended": "Empfohlen",
+            "other": "Etwas anderes",
+            "otherAnswer": "Ihre eigene Antwort",
+            "otherPlaceholder": "Beschreiben Sie, was Sie brauchen",
+            "addComment": "Kommentar hinzufügen",
+            "required": "Auswahl erforderlich",
+            "enterValue": "Wert eingeben…",
+            "stillToChoose": "Noch zu wählen: {{names}}",
+            "confirm": "Bestätigen"
+        },
+        "sideRun": "Neben dem laufenden Plan beantwortet"
     },
     "planBar": {
         "label": "Offener Plan",
@@ -255,7 +266,6 @@
         "collapse": "Plan ausblenden",
         "actions": {
             "release": "Freigeben",
-            "reopen": "Wieder öffnen",
             "publish": "Veröffentlichen",
             "request_review": "Prüfung anfordern",
             "discard": "Verwerfen"
@@ -264,7 +274,6 @@
             "release": "Wird freigegeben…",
             "publish": "Wird veröffentlicht…",
             "request_review": "Prüfung wird angefordert…",
-            "reopen": "Wird wieder geöffnet…",
             "discard": "Wird verworfen…"
         },
         "count": {
@@ -392,6 +401,8 @@
             "cancel": "Abbrechen",
             "done": "Fertig",
             "status": {
+                "drafting": "Wird entworfen",
+                "revising": "Wird überarbeitet",
                 "proposed": "Vorgeschlagen",
                 "accepted": "Angenommen",
                 "running": "Läuft",
@@ -401,7 +412,25 @@
                 "review_requested": "Wartet auf Prüfung",
                 "discarded": "Verworfen",
                 "superseded": "Durch einen neueren Plan ersetzt"
-            }
+            },
+            "restore": "Wiederherstellen",
+            "change": {
+                "added": "Neu",
+                "changed": "Geändert"
+            },
+            "invalid": {
+                "caption": "Passen Sie die markierten Schritte an",
+                "dependency_order": "Steht vor einem Schritt, den er braucht",
+                "other": "Dieser Schritt kann so nicht geändert werden"
+            },
+            "glance": "Auf einen Blick",
+            "needsYou": {
+                "title": "Wartet auf Sie",
+                "answer": "Antworten"
+            },
+            "substeps_one": "{{count}} Schritt",
+            "substeps_other": "{{count}} Schritte",
+            "maxItems": "Höchstens {{count}} Schritte"
         },
         "citation": {
             "title": "Quellen"
@@ -495,7 +524,6 @@
             "publish": "Veröffentlichen",
             "publishRemaining": "Rest veröffentlichen",
             "request_review": "Prüfung anfordern",
-            "reopen": "Wieder öffnen",
             "discard": "Verwerfen"
         },
         "gate": {
@@ -562,7 +590,9 @@
             "iconXl": "Großer runder Icon-Button",
             "speak": "Sprechen",
             "link": "Als Link",
-            "linkText": "Zu den Buttons"
+            "linkText": "Zu den Buttons",
+            "quiet": "Leiser Text-Button",
+            "sources": "Quellen"
         },
         "checkbox": {
             "title": "Checkbox",
@@ -590,7 +620,8 @@
             "placeholder": "Seite wählen",
             "home": "Startseite",
             "news": "Aktuelles",
-            "contact": "Kontakt"
+            "contact": "Kontakt",
+            "fullWidth": "Volle Breite"
         },
         "tabs": {
             "title": "Tabs",
@@ -732,7 +763,9 @@
             "model_error": "Das KI-Modell hat einen Fehler gemeldet.",
             "model_rate_limited": "Das KI-Modell ist ausgelastet. Bitte versuchen Sie es gleich noch einmal.",
             "rate_limited": "Zu viele Anfragen. Bitte versuchen Sie es gleich noch einmal.",
-            "service_unavailable": "Der KI-Dienst ist derzeit nicht verfügbar."
+            "service_unavailable": "Der KI-Dienst ist derzeit nicht verfügbar.",
+            "plan_not_revisable": "Dieser Plan ist endgültig abgeschlossen und kann nicht mehr geändert werden.",
+            "dependency_order": "Ein Schritt steht vor einem Schritt, von dem er abhängt."
         },
         "cms": {
             "AUTHREQUIRED": "Bitte melden Sie sich im CMS an.",
@@ -789,5 +822,33 @@
         "copy": "JSON von Event {{seq}} ({{type}}) kopieren",
         "copied": "Event {{seq}} kopiert",
         "copyFailed": "Das Event konnte nicht kopiert werden."
+    },
+    "planGlance": {
+        "create_folder_one": "Ordner",
+        "create_folder_other": "Ordner",
+        "create_page_one": "neue Seite",
+        "create_page_other": "neue Seiten",
+        "create_file_one": "Datei",
+        "create_file_other": "Dateien",
+        "create_image_one": "Bild",
+        "create_image_other": "Bilder",
+        "create_construct_one": "Baustein",
+        "create_construct_other": "Bausteine",
+        "create_one": "neues Objekt",
+        "create_other": "neue Objekte",
+        "update_page_one": "Seite bearbeitet",
+        "update_page_other": "Seiten bearbeitet",
+        "update_one": "Objekt bearbeitet",
+        "update_other": "Objekte bearbeitet",
+        "link_one": "Verweis",
+        "link_other": "Verweise",
+        "translate_one": "Übersetzung",
+        "translate_other": "Übersetzungen",
+        "publish_page_one": "Seite zu veröffentlichen",
+        "publish_page_other": "Seiten zu veröffentlichen",
+        "publish_one": "Objekt zu veröffentlichen",
+        "publish_other": "Objekte zu veröffentlichen",
+        "construct_one": "Baustein",
+        "construct_other": "Bausteine"
     }
 }

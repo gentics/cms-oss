@@ -195,7 +195,8 @@
                 "waiting": "Waiting for you",
                 "done": "Done",
                 "skipped": "Skipped",
-                "failed": "Failed"
+                "failed": "Failed",
+                "removed": "Removed"
             }
         },
         "file": "File",
@@ -222,11 +223,9 @@
             "choose": "Choose…",
             "chooseFolder": "Choose folder…",
             "otherFolder": "Other folder…",
-            "noFolderChosen": "No folder chosen",
             "chooseFolderFirst": "Choose a folder first",
             "loadingOptions": "Loading…",
             "send": "Send",
-            "confirm": "Confirm",
             "confirmed": "Confirmed",
             "answered": "Answered",
             "expired": "Expired",
@@ -240,14 +239,26 @@
                 "template": "Template",
                 "language": "Language",
                 "filename": "File name",
-                "publish_at": "Publish at"
+                "publish_at": "Publish at",
+                "file_folder": "Folder for files",
+                "image_folder": "Folder for images"
             },
             "source": {
                 "text": "From your text",
                 "context": "From the session",
                 "default": "Default"
-            }
-        }
+            },
+            "recommended": "Recommended",
+            "other": "Something else",
+            "otherAnswer": "Your own answer",
+            "otherPlaceholder": "Describe what you need",
+            "addComment": "Add a comment",
+            "required": "Selection required",
+            "enterValue": "Enter a value…",
+            "stillToChoose": "Still to choose: {{names}}",
+            "confirm": "Confirm"
+        },
+        "sideRun": "Answered beside the running plan"
     },
     "planBar": {
         "label": "Open plan",
@@ -255,7 +266,6 @@
         "collapse": "Hide plan",
         "actions": {
             "release": "Release",
-            "reopen": "Reopen",
             "publish": "Publish",
             "request_review": "Request review",
             "discard": "Discard"
@@ -264,7 +274,6 @@
             "release": "Releasing…",
             "publish": "Publishing…",
             "request_review": "Requesting review…",
-            "reopen": "Reopening…",
             "discard": "Discarding…"
         },
         "count": {
@@ -392,6 +401,8 @@
             "cancel": "Cancel",
             "done": "Done",
             "status": {
+                "drafting": "Being drafted",
+                "revising": "Being revised",
                 "proposed": "Proposed",
                 "accepted": "Accepted",
                 "running": "Running",
@@ -401,7 +412,25 @@
                 "review_requested": "Waiting for review",
                 "discarded": "Discarded",
                 "superseded": "Replaced by a newer plan"
-            }
+            },
+            "restore": "Restore",
+            "change": {
+                "added": "New",
+                "changed": "Changed"
+            },
+            "invalid": {
+                "caption": "Adjust the highlighted steps",
+                "dependency_order": "Comes before a step it needs",
+                "other": "This step cannot be changed like this"
+            },
+            "glance": "At a glance",
+            "needsYou": {
+                "title": "Needs you",
+                "answer": "Answer"
+            },
+            "substeps_one": "{{count}} step",
+            "substeps_other": "{{count}} steps",
+            "maxItems": "At most {{count}} steps"
         },
         "citation": {
             "title": "Sources"
@@ -495,7 +524,6 @@
             "publish": "Publish",
             "publishRemaining": "Publish remaining",
             "request_review": "Request review",
-            "reopen": "Reopen",
             "discard": "Discard"
         },
         "gate": {
@@ -562,7 +590,9 @@
             "iconXl": "Large round icon button",
             "speak": "Speak",
             "link": "As a link",
-            "linkText": "To the buttons"
+            "linkText": "To the buttons",
+            "quiet": "Quiet text button",
+            "sources": "Sources"
         },
         "checkbox": {
             "title": "Checkbox",
@@ -590,7 +620,8 @@
             "placeholder": "Choose a page",
             "home": "Home",
             "news": "News",
-            "contact": "Contact"
+            "contact": "Contact",
+            "fullWidth": "Full width"
         },
         "tabs": {
             "title": "Tabs",
@@ -732,7 +763,9 @@
             "model_error": "The AI model returned an error.",
             "model_rate_limited": "The AI model is busy. Please try again shortly.",
             "rate_limited": "Too many requests. Please try again shortly.",
-            "service_unavailable": "The AI service is currently unavailable."
+            "service_unavailable": "The AI service is currently unavailable.",
+            "plan_not_revisable": "This plan is closed for good and can no longer be changed.",
+            "dependency_order": "A step comes before a step it depends on."
         },
         "cms": {
             "AUTHREQUIRED": "Please log in to the CMS.",
@@ -789,5 +822,33 @@
         "copy": "Copy the JSON of event {{seq}} ({{type}})",
         "copied": "Event {{seq}} copied",
         "copyFailed": "The event could not be copied."
+    },
+    "planGlance": {
+        "create_folder_one": "folder",
+        "create_folder_other": "folders",
+        "create_page_one": "new page",
+        "create_page_other": "new pages",
+        "create_file_one": "file",
+        "create_file_other": "files",
+        "create_image_one": "image",
+        "create_image_other": "images",
+        "create_construct_one": "construct",
+        "create_construct_other": "constructs",
+        "create_one": "new object",
+        "create_other": "new objects",
+        "update_page_one": "page edited",
+        "update_page_other": "pages edited",
+        "update_one": "object edited",
+        "update_other": "objects edited",
+        "link_one": "link",
+        "link_other": "links",
+        "translate_one": "translation",
+        "translate_other": "translations",
+        "publish_page_one": "page to publish",
+        "publish_page_other": "pages to publish",
+        "publish_one": "object to publish",
+        "publish_other": "objects to publish",
+        "construct_one": "construct",
+        "construct_other": "constructs"
     }
 }

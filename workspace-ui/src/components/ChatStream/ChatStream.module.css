@@ -87,3 +87,10 @@
     background-position: -100% 0;
   }
 }
+
+/* Under the answer of a side run: that the plan went on meanwhile (meta text, design.md §5.1). */
+.sideNote {
+  margin: -6px 0 0 var(--chat-indent);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}

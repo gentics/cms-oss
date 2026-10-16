@@ -61,9 +61,9 @@ export function useMe() {
     return useQuery({ queryKey: genaixKeys.me(), queryFn: getMe, ...retryOptions });
 }
 
-/** GET /workflows, "once, cached" (session lifecycle, §1a). */
-export function useWorkflows() {
-    return useQuery({ queryKey: genaixKeys.workflows(), queryFn: listWorkflows, staleTime: Infinity, ...retryOptions });
+/** GET /workflows, "once, cached" (session lifecycle, §1a); not asked for without `enabled`. */
+export function useWorkflows(enabled = true) {
+    return useQuery({ queryKey: genaixKeys.workflows(), queryFn: listWorkflows, staleTime: Infinity, enabled, ...retryOptions });
 }
 
 /** The files uploaded into a session (`listSessionUploads`); off without a session. */
@@ -160,7 +160,7 @@ export function useSendMessage(sessionId: string) {
             return { localId };
         },
         onSuccess: (accepted, _body, context) => {
-            useWorkspaceEventStore.getState().markMessageSent(sessionId, context.localId, accepted.message_id);
+            useWorkspaceEventStore.getState().markMessageSent(sessionId, context.localId, accepted.message_id, accepted.run_id);
             useWorkspaceEventStore.getState().awaitRun(sessionId, accepted.run_id);
         },
         onError: (error, _body, context) => {

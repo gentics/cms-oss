@@ -6,7 +6,7 @@ The Workspace calls GenAIx only through the CMS custom proxy, at the same-origin
 
 In development the Vite dev server plays the proxy in direct mode (`server.proxy` in `vite.config.ts`), for a GenAIx installation without a CMS key such as the mock. It forwards `/rest/proxy/genaix/*` to `GENAIX_API_URL`, removes the browser's `Cookie` and `X-GenAIx-Installation` (which would switch the request into proxied mode), and overwrites `Authorization` with the installation token and `X-GCMS-Subject` with a fixed subject.
 
-1. Check out `git@git.gentics.com:psc/genaix/api-contract.git` next to `cmp`, so that it is at `../../../api-contract` from this folder.
+1. Check out `git@git.gentics.com:psc/genaix/api-contract.git` next to `cmp`, so that it is at `../../../api-contract` from this folder. The UI follows contract `1.0.0-rc.5` (agreed 2026-10-15, with its addition of the same day), which is on `main`: `git checkout main && git pull`.
 2. Start the GenAIx mock (Python 3.11+; creates `.venv` on first run): `npm run mock:genaix`. It serves `http://localhost:8123/api/v1`, the port of the hand-out's docker compose stack (`.claude/contracts/genaix-docs/deploy-README.md`), so either one can be used.
 3. Start the app in a second terminal: `npm run dev`. For debugging, `npm run dev:debug` (Vite mode `debug`) starts the same dev server and shows the session's events beside the chat, one row per event with its type and a button that copies its JSON.
 4. Call `http://localhost:5173/rest/proxy/genaix/me` from the browser or with `curl`.

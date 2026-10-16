@@ -7,7 +7,8 @@ import type { RunNotice as Notice } from '@/store/useWorkspaceEventStore';
 import styles from './RunNotice.module.css';
 
 /**
- * A run's ending or error in the stream: Stopped (`run.cancelled`), failed with its problem
+ * A run's ending or error in the stream: Stopped as a quiet line (`run.cancelled`, not when a message
+ * redirected the plan, which `useWorkspaceEventStore` keeps out of the notices), failed with its problem
  * (`run.failed`), a recoverable `error`, or the MCP connection it could not use (`auth.required`,
  * whose `how_to_fix` the contract marks as safe to show).
  */
@@ -17,9 +18,9 @@ export function RunNotice({ notice }: { notice: Notice }) {
     switch (notice.kind) {
         case 'cancelled':
             return (
-                <div className={styles.notice} role="note">
-                    <CircleXIcon size={16} aria-hidden />
-                    <span className={styles.title}>{t('chat.notice.cancelled')}</span>
+                <div className={styles.stopped} role="note">
+                    <CircleXIcon size={13} aria-hidden />
+                    {t('chat.notice.cancelled')}
                 </div>
             );
         case 'failed':

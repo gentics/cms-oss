@@ -4,9 +4,11 @@
 contract the CMS team hosts in the cms-mcp module, ioflair implements as tools inside it, and any MCP client consumes. The prose companion, with rationale, scenario coverage,
 exclusions and the requirements towards the CMS implementation, is `../04-mcp-scope.md`.
 
-Current version: `1.0.0-rc.4` (`create_folder`, the normative URL source of `upload_file`, and the
-GenAIx-side tools), aligned with `../openapi.yaml`, agreed by all parties on 2026-10-12 and frozen for
-development. The
+Current version: `1.0.0-rc.5` (the GenAIx-side tools follow living plans: `draft_plan` takes optional
+`workflows`, `revise_plan` is new, both with input schemas; the CMS tools describe and write every part
+value: `get_construct` gives each part's `value` schema, `update_page_tags` writes every part type it
+reads, `add_page_tag` returns `parts` and `embedAs`), aligned with `../openapi.yaml`, agreed by all
+parties on 2026-10-15 and frozen for development. The
 `changelog` array records what moved between drafts. Specification owner ioflair, implementation owner
 Gentics.
 
@@ -19,7 +21,7 @@ Top-level keys:
 | `version`, `date`, `status`, `owner` | Contract identity. `version` moves to `1.0.0` at the demo-readiness checkpoint. |
 | `roles` | Four suggested role profiles a CMS administrator may map to groups, with the CMS permissions each implies. **Planning metadata**: roles and groups are created dynamically in a CMS installation, so the annotation never names one and the CMS does not generate this field. |
 | `scenarios` | The four showcase scenarios S1 to S4, and which of them are mandatory. **Planning metadata**, used to prove coverage; not part of the annotation. |
-| `genaix_side_tools` | Agent tools that are **not** part of this server, listed so the split is unambiguous. |
+| `genaix_side_tools` | Agent tools that are **not** part of this server, listed so the split is unambiguous. Since `1.0.0-rc.5` its `schemas` holds the input schemas of `draft_plan` and `revise_plan`, the session agent's tools for new work and for a revision of an existing plan. |
 | `implementation_model` | How the server is built: one `@McpTool(name, group, access, permissions)` annotation scanned at start-up, what the scanner derives from the annotated method, the `naming` rule (`camelCase` field names taken straight from the REST models, no transformation), where permissions are evaluated, which fields here are planning metadata rather than annotation input, the generated versus composite split, the three rules, and the conformance test both sides run. |
 | `transport` | Endpoint, authentication, headers, statelessness, dynamic tool listing, the CMS-to-MCP error mapping, and the result conventions. `url_template` is `{cms_base_url}/mcp`: the path is decided, the MCP server being its own servlet rather than part of the Jersey REST servlet. Treat it as the default an installation may override through `MCP_PATH`, never as a fixed address. `transport.implementation_state` records what the CMS already implements and the authentication gap that blocks everything. |
 | `groups` | The seven tool groups. Each has `id`, `title`, `description`, `roles` and `tools`. |

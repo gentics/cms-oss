@@ -55,11 +55,6 @@ interface ComposerProps {
      * submitted meanwhile (a second message would be `409 run_already_active`).
      */
     isRunning?: boolean;
-    /**
-     * Chat, with `isRunning`: the run is a plan's, so a turn sent meanwhile is a read-only side run
-     * (rc.4). Stop then stands beside send instead of taking its place.
-     */
-    canSendMeanwhile?: boolean;
     /** Chat: Stop was pressed and the run is stopping; Stop is disabled. */
     isStopping?: boolean;
     onStop?: () => void;
@@ -79,10 +74,9 @@ const TEXT_KEYS = {
  * with passages locked as verbatim, files attached as a source or verbatim, and the send button.
  * Enter or the send button submits the message parts and the files; a dictation only fills the
  * field. On phones it puts voice first. Sending is the caller's. While a run is working
- * (`isRunning`), Stop replaces send and calls `onStop`; beside send while the run lets the user go on
- * asking (`canSendMeanwhile`).
+ * (`isRunning`), Stop replaces send and calls `onStop`.
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, canSendMeanwhile = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -183,13 +177,11 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         textInput().focus();
     }
 
-    // Nothing is submitted while a run holds the chat, only beside a plan's run.
-    const isHeld = isRunning && !canSendMeanwhile;
-
     function submit() {
         const input = readInput();
 
-        if (isSubmitting || isHeld || !input) {
+        // Nothing is submitted while a run holds the chat (a plan's run does not, `SessionComposer`).
+        if (isSubmitting || isRunning || !input) {
             return;
         }
 
@@ -211,7 +203,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         attachments: attachments.map(({ id, file }) => ({ value: attachmentSource(id), label: file.name })),
         sessionId,
     };
-    const canSubmit = !isSubmitting && !isHeld && (!isEmpty || attachments.length > 0);
+    const canSubmit = !isSubmitting && !isRunning && (!isEmpty || attachments.length > 0);
     // Mobile, voice first: until the user types or dictates, only the big mic shows.
     const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
     // The submitted files are the attachments in their order: while sending they cannot be removed,
@@ -232,7 +224,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
 
             {isRunning && onStop && (
                 <IconButton
-                    variant={canSendMeanwhile ? 'secondary' : 'primary'}
+                    variant="primary"
                     size={isChat ? 'icon' : 'icon-lg'}
                     label={t('chat.stop')}
                     disabled={isStopping}
@@ -241,7 +233,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                     <SquareIcon size={isChat ? 14 : undefined} />
                 </IconButton>
             )}
-            {(!isRunning || !onStop || canSendMeanwhile) && (
+            {(!isRunning || !onStop) && (
                 <IconButton
                     variant="primary"
                     size={isChat ? 'icon' : 'icon-lg'}

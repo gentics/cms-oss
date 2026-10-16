@@ -62,6 +62,8 @@ import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.ConfigModifier;
 import com.gentics.contentnode.testutils.GCNFeature;
 
+import jakarta.ws.rs.core.Response.Status;
+
 /**
  * Test cases for staging forms
  */
@@ -253,7 +255,7 @@ public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> i
 			return I18NHelper.get("content.staging.import.errors", packageName, "1");
 		});
 
-		tryImportContentPackage(packageName, ResponseCode.FAILURE, null, new Message(Message.Type.CRITICAL, message));
+		tryImportContentPackage(packageName, Status.INTERNAL_SERVER_ERROR, ResponseCode.FAILURE, null, new Message(Message.Type.CRITICAL, message));
 	}
 
 	@Override

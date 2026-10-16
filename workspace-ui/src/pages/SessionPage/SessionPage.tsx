@@ -9,29 +9,22 @@ import { EventLog } from '@/components/EventLog/EventLog';
 import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
 import { PlanBar } from '@/components/PlanBar/PlanBar';
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
-import { RevisePlanBanner } from '@/components/RevisePlanBanner/RevisePlanBanner';
 import { pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
-import { isRevisable, revisionOf } from '@/helper/planActions/planActions';
-import { reloadPlans } from '@/helper/planReload/planReload';
-import { type SendTurnInput, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
+import { previewPages } from '@/helper/previewPages/previewPages';
+import { type SendTurnInput, type StartSessionInput, useCancelRun, usePlanState, useSendTurn } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
 import { useOpenPlan } from '@/hooks/useOpenPlan';
+import { usePlanPresence } from '@/hooks/usePlanPresence';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
-import { GenaixApiError } from '@/services/apiService/apiService';
-import type { InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
+import type { InteractionAnswer, Preview, UserMessagePart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { isEventLogEnabled, useEventLogStore } from '@/store/useEventLogStore';
 import { useHandOffStore } from '@/store/useHandOffStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
-import { useRevisePlanStore } from '@/store/useRevisePlanStore';
 import { type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './SessionPage.module.css';
-
-// The codes of a revision that named a plan which cannot be revised (any more) or the session does not
-// have: the mode ends and the plans are read again (rc.5).
-const REVISE_REFUSALS: ReadonlySet<string> = new Set(['plan_not_revisable', 'plan_not_found']);
 
 // The written text of a turn, as the answer to an `ask_user` question that the card holds none for.
 function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
@@ -44,32 +37,28 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
  * The chat composer of one session. Enter or send posts the turn (`useSendTurn`); on success the
  * field is emptied, on failure an error is shown and the input stays. `SessionPage` keys it by the
  * session, so going on to another session from the left column starts with an empty composer.
- * While a run is working, Stop cancels it (`POST …/runs/{run_id}/cancel`): a run of the session agent
- * or a side run first, else the plan's run. Only the first two hold the composer; beside a plan's own
- * run a turn is a read-only side run (rc.4), so send stays next to Stop. While a run waits for an
- * answer, a turn answers the pending interaction (`reply_to_interaction`) with what its card holds, or
- * for `ask_user` with the turn's text; with nothing to answer, it asks for the card first. Once the
- * interaction is answered, from the card or here, or has expired (`useInteractionLock`), the run counts
- * as working again: no second answer is sent, and Stop is offered.
+ * While a run of the session agent or a side run is working, it holds the composer and Stop cancels it
+ * (`POST …/runs/{run_id}/cancel`). A plan's own run is stopped from the plan's head (`PlanHead`), so
+ * there is one Stop for it; beside it a turn is a read-only side run (rc.4), so send stays. While a run
+ * waits for an answer, a turn answers the pending interaction (`reply_to_interaction`) with what its
+ * card holds, or for `ask_user` with the turn's text; with nothing to answer, it asks for the card
+ * first. Once the interaction is answered, from the card or here, or has expired
+ * (`useInteractionLock`), the run counts as working again: no second answer is sent, and Stop is offered.
  *
  * "Edit these" in a result card (`useHandOffStore`) puts the selected objects into the field. The
  * next message is an ordinary turn of this session, whose session agent drafts a plan for them (rc.4).
  *
- * "Ask for a change" or "Stop and change" on a plan (`useRevisePlanStore`) put the composer into revising
- * that plan: a banner at the top of the box says so (`RevisePlanBanner`), and the next turn goes out with
- * `options: { mode: 'revise', plan_id }` (rc.5), which redirects the plan while it executes. Sent, or
- * left with × or Esc, the mode ends; it holds only while the plan can be revised, and not for a turn
- * that answers a pending interaction. Refused because the plan cannot be revised or is unknown
- * (`409 plan_not_revisable`, `404 plan_not_found`), it ends and the plans are read again.
+ * While a plan executes, a turn is a plain message: GenAIx's router decides whether it is a question,
+ * answered by a side run while the plan goes on, or a redirection of the plan (09-integration-guide.md,
+ * "Stop and change"); the conversation shows which it was. Whether a turn revises a plan that finished its
+ * work, GenAIx's session agent decides (contract §4.4).
  */
 function SessionComposer({ sessionId, composerRef }: { sessionId: string; composerRef: RefObject<ComposerHandle | null> }) {
     const sendTurn = useSendTurn(sessionId);
     const cancelRun = useCancelRun(sessionId);
     // The latest run without a plan (the session agent's, or a side run beside a plan's run), which holds
-    // the composer, and the latest plan's run, which does not.
-    const sessionRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => !live.planId));
-    const planRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => Boolean(live.planId)));
-    const run = sessionRun ?? planRun;
+    // the composer; a plan's run does not, and is stopped from the plan's head (`PlanHead`).
+    const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => !live.planId));
     const pending = useWorkspaceEventStore((state) => selectSession(sessionId)(state).interactions?.at(-1));
     const pendingRunStatus = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.find((live) => live.id === pending?.run_id)?.status);
     // What "Edit these" handed over, until it is in the field.
@@ -78,9 +67,6 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
     const isWaiting = pendingRunStatus === 'waiting_for_input' && Boolean(pending) && !pendingLock;
     // Upload progress of the files sent, by their position, for the composer's attachment list.
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);
-    const revisePlanId = useRevisePlanStore((state) => state.planIds[sessionId]);
-    const revisePlan = useWorkspaceEventStore((state) => selectSession(sessionId)(state).plans?.find(({ plan }) => plan.id === revisePlanId)?.plan);
-    const revising = revisePlan && isRevisable(revisePlan.status) ? revisePlan : undefined;
 
     function reportUploadProgress(index: number, fraction: number) {
         setUploadProgress((current) => {
@@ -102,17 +88,6 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
         useHandOffStore.getState().end(sessionId);
     }, [composerRef, handOff, sessionId]);
 
-    // The field takes the focus once a plan is to be revised, for the user to say what should change.
-    useEffect(() => {
-        if (revisePlanId) {
-            composerRef.current?.focus();
-        }
-    }, [composerRef, revisePlanId]);
-
-    function endRevision() {
-        useRevisePlanStore.getState().end(sessionId);
-    }
-
     function handleSubmit(input: StartSessionInput) {
         let replyTo: SendTurnInput['replyTo'];
 
@@ -129,24 +104,18 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
             useInteractionDraftStore.getState().lock(pending.id, 'sending');
         }
 
-        const revisedPlanId = replyTo ? undefined : revising?.id;
-
         // The interaction still locked as `sending`, unless `interaction.resolved` came first and took it away.
         const repliedTo = () => (replyTo && useInteractionDraftStore.getState().locks[replyTo.interaction_id] ? replyTo.interaction_id : undefined);
 
         setUploadProgress([]);
         // The promise, not `mutate` callbacks: those are dropped once the user has gone on to another
         // session, and a failed send would go unreported.
-        sendTurn.mutateAsync({ ...input, replyTo, revisePlanId: revisedPlanId, onFileProgress: reportUploadProgress }).then(
+        sendTurn.mutateAsync({ ...input, replyTo, onFileProgress: reportUploadProgress }).then(
             () => {
                 const interactionId = repliedTo();
 
                 if (interactionId) {
                     useInteractionDraftStore.getState().lock(interactionId, 'answered');
-                }
-
-                if (revisedPlanId) {
-                    endRevision();
                 }
 
                 composerRef.current?.reset();
@@ -156,11 +125,6 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
 
                 if (interactionId) {
                     lockAfterFailure(interactionId, error);
-                }
-
-                if (revisedPlanId && error instanceof GenaixApiError && error.genaixCode && REVISE_REFUSALS.has(error.genaixCode)) {
-                    endRevision();
-                    reloadPlans(sessionId).catch((reloadError: unknown) => console.warn('Reading the plans again failed', reloadError));
                 }
 
                 useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
@@ -189,11 +153,8 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
             uploadProgress={uploadProgress}
             sessionId={sessionId}
             isRunning={Boolean(run) && !isWaiting}
-            canSendMeanwhile={!sessionRun}
             isStopping={run?.status === 'cancelling' || cancelRun.isPending}
             onStop={handleStop}
-            header={revising && <RevisePlanBanner plan={revising} revision={revisionOf(revising.status) === 'stop' ? 'stop' : 'ask'} onCancel={endRevision} />}
-            onEscape={revising ? endRevision : undefined}
         />
     );
 }
@@ -207,11 +168,22 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
  * settings go as the page, a text asking to change them, and each new value (`pageSettingsParts`). None needs a run
  * to be working or waiting: a second message would be refused (`409 run_already_active`), and none is an
  * answer to the run's question.
+ *
+ * The open plan's pages (`PlanState.previews`, read again on every `preview.updated`) are offered in the
+ * preview's page menu, grouped by the kind of item (`previewPages`, rc.5 addition). A page chosen there
+ * is shown until the next `preview.updated`, which shows its page again.
  */
 function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string; preview: LivePreview; composerRef: RefObject<ComposerHandle | null> }) {
     const { t } = useTranslation();
     const sendTurn = useSendTurn(sessionId);
     const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
+    const openPlan = useOpenPlan(sessionId);
+    const planState = usePlanState(sessionId, openPlan?.id);
+    // The page chosen in the page menu, with the `seq` of the preview it was chosen over.
+    const [chosen, setChosen] = useState<{ seq: number; preview: Preview }>();
+    const shown: LivePreview = chosen?.seq === preview.seq
+        ? { seq: preview.seq, cms_ref: chosen.preview.cms_ref, preview_url: chosen.preview.preview_url, mode: chosen.preview.mode, changed_elements: chosen.preview.changed_elements }
+        : preview;
 
     async function send(parts: UserMessagePart[]) {
         try {
@@ -225,7 +197,9 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
 
     return (
         <PreviewColumn
-            preview={preview}
+            preview={shown}
+            pages={previewPages(planState.data?.previews ?? [], openPlan?.items ?? [])}
+            onPageChange={(page) => setChosen({ seq: preview.seq, preview: page })}
             onReferenceInChat={(element, text) => composerRef.current?.insertPageElement(element, text)}
             onSendFeedback={(element, text) => send(pageElementParts({ ...element, text: pageElementNaming(t, element) }, text))}
             onSendEdit={(element, text) => send(pageElementEditParts({ ...element, text: pageElementReplaceNaming(t, element) }, text))}
@@ -253,8 +227,9 @@ export function SessionPage() {
     const composerRef = useRef<ComposerHandle>(null);
     const preview = useWorkspaceEventStore((state) => (id ? selectSession(id)(state).preview : undefined));
     // The plan the bar above the composer is for, if any; the stream keeps room for the bar meanwhile,
-    // as high as it is, expanded or not.
-    const openPlan = useOpenPlan(id ?? '');
+    // as high as it is, expanded or not. None for a plan with nothing left to show (`planPresence`).
+    const barPlan = useOpenPlan(id ?? '');
+    const openPlan = usePlanPresence(id ?? '', barPlan) === 'none' ? undefined : barPlan;
     const [planBarHeight, setPlanBarHeight] = useState(0);
     const chatStyle = openPlan ? ({ '--plan-bar-space': `${planBarHeight}px` } as CSSProperties) : undefined;
 

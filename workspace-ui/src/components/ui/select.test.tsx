@@ -64,6 +64,19 @@ describe('Select', () => {
         expect(trigger).toHaveFocus();
     });
 
+    it('is as wide as its container with fullWidth', () => {
+        render(
+            <Select items={{ news: 'News' }} defaultValue="news">
+                <SelectTrigger aria-label="Page" fullWidth>
+                    <SelectValue />
+                </SelectTrigger>
+            </Select>,
+            { wrapper: UiProvider },
+        );
+
+        expect(screen.getByRole('combobox', { name: 'Page' })).toHaveAttribute('data-width', 'full');
+    });
+
     it('closes with Escape and returns focus to the trigger', async () => {
         const user = userEvent.setup();
 

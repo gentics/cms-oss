@@ -11,11 +11,27 @@ function Select<Value, Multiple extends boolean | undefined = false>(props: Sele
     return <SelectPrimitive.Root {...props} />;
 }
 
-function SelectTrigger({ className, children, ...props }: SelectPrimitive.Trigger.Props) {
+/**
+ * The select's own chevron (design.md §12 "Eingabefelder": two 5 px triangles), in `currentColor`; also for a
+ * control that opens into a select, so that it does not change when the select takes its place.
+ */
+function SelectChevron() {
+    return (
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+            <path d="M5 1 9.5 5.5h-9z" />
+            <path d="M5 13 .5 8.5h9z" />
+        </svg>
+    );
+}
+
+/** `fullWidth`: as wide as its container, as a text field is (e.g. in a settings review). */
+function SelectTrigger({ className, children, fullWidth = false, ...props }: SelectPrimitive.Trigger.Props & { fullWidth?: boolean }) {
     return (
         <SelectPrimitive.Trigger
             data-slot="select-trigger"
+            data-width={fullWidth ? 'full' : undefined}
             className={cn(
+                fullWidth && 'w-full',
                 'inline-flex h-32 min-w-[160px] cursor-pointer items-center justify-between gap-8 rounded-md border border-line-field bg-surface px-8 py-6 text-base leading-normal text-ink transition-colors',
                 'focus-visible:border-azure focus-visible:shadow-[0_0_0_3px_rgba(var(--interactive-rgb),.16)] data-popup-open:border-azure',
                 'aria-invalid:border-err/55 aria-invalid:bg-errbg data-invalid:border-err/55 data-invalid:bg-errbg',
@@ -26,10 +42,7 @@ function SelectTrigger({ className, children, ...props }: SelectPrimitive.Trigge
         >
             {children}
             <SelectPrimitive.Icon className="text-slate">
-                <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
-                    <path d="M5 1 9.5 5.5h-9z" />
-                    <path d="M5 13 .5 8.5h9z" />
-                </svg>
+                <SelectChevron />
             </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
     );
@@ -85,4 +98,4 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
     );
 }
 
-export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };
+export { Select, SelectChevron, SelectContent, SelectItem, SelectTrigger, SelectValue };

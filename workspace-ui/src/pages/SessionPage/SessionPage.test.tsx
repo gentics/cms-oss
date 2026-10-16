@@ -354,6 +354,48 @@ describe('SessionPage', () => {
         expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view&real=view&tagmarkers=true');
     });
 
+    it('shows a page chosen in the preview\'s page menu until the next preview.updated (rc.5 addition)', async () => {
+        const user = userEvent.setup();
+        const url = (id: number) => `https://cms.example.com/alohapage?realid=${id}&nodeid=3&mode=view`;
+        const previewOf = (id: number, name: string) => ({ cms_ref: { type: 'page', id, node_id: 3, name }, preview_url: url(id), mode: 'view' });
+        const plan: Plan = {
+            id: 'p-1',
+            workflows: [{ id: 'content_edit', version: '1.0.0' }],
+            status: 'done',
+            version: 1,
+            summary: 'Both pages edited.',
+            items: [{ id: 'p1', label: 'Edit both pages', kind: 'update', workflow: 'content_edit', status: 'done' }],
+        };
+
+        vi.stubGlobal('fetch', withEmptySessionList(async (input) => (String(input).endsWith('/sessions/s-1/plans/p-1')
+            ? Response.json({ plan, workflows: plan.workflows, state: 'done', steps: [], checks: [], gates: [], approval_chain: [], cms_objects: [], previews: [previewOf(9142, 'Neue Nutzungsbedingungen ab Q3'), previewOf(8644, 'Versand und Lieferung')] })
+            : Response.json({ items: [], next_cursor: null }))));
+
+        const showPreview = (seq: number) => act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
+            seq,
+            ts: '2026-10-15T09:00:01Z',
+            session_id: 's-1',
+            plan_id: 'p-1',
+            type: 'preview.updated',
+            cms_ref: { type: 'page', id: 9142, node_id: 3, name: 'Neue Nutzungsbedingungen ab Q3' },
+            preview_url: url(9142),
+            mode: 'view',
+        }));
+
+        act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-15T09:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
+        showPreview(2);
+        await renderPage();
+
+        await user.click(await screen.findByRole('button', { name: /Neue Nutzungsbedingungen ab Q3\s*1 of 2/ }));
+        await user.click(await screen.findByRole('menuitemradio', { name: 'Versand und Lieferung' }));
+
+        expect(screen.getByTitle('Preview of the page in the CMS').getAttribute('src')).toContain('realid=8644');
+
+        showPreview(3);
+
+        expect(screen.getByTitle('Preview of the page in the CMS').getAttribute('src')).toContain('realid=9142');
+    });
+
     describe('answering the question the run waits on', () => {
         // A run that waits on an `ask_user` question expiring `expiresAt`, by default in 10 minutes.
         function waitOnQuestion(expiresAt = new Date(Date.now() + 10 * 60_000).toISOString()) {
@@ -366,7 +408,7 @@ describe('SessionPage', () => {
                 session_id: 's-1',
                 run_id: 'r-1',
                 type: 'interaction.requested',
-                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'Which audience?', multi: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:00:01Z', expires_at: expiresAt, run_id: 'r-1' },
+                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'Which audience?', multi: false, other_allowed: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:00:01Z', expires_at: expiresAt, run_id: 'r-1' },
             });
         }
 
@@ -486,7 +528,7 @@ describe('SessionPage', () => {
             await waitFor(() => expect(screen.queryByText('Change this plan')).not.toBeInTheDocument());
         });
 
-        it('says that sending stops an executing plan, and leaves the mode with Esc', async () => {
+        it('sends a plain message while a plan executes, for GenAIx to tell a question from a redirect', async () => {
             const user = userEvent.setup();
             const posts = stubPosts();
 
@@ -494,19 +536,43 @@ describe('SessionPage', () => {
 
             const { field } = await renderPage();
 
-            await user.click(screen.getByRole('button', { name: 'Stop and change' }));
+            // No switch and no "Stop and change": the router decides (09-integration-guide.md, "Stop and change").
+            expect(screen.queryByRole('button', { name: 'Ask a question' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Change course' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Stop and change' })).not.toBeInTheDocument();
 
-            expect(screen.getByText('Sending stops the current work and changes the plan.')).toBeInTheDocument();
-            await waitFor(() => expect(field).toHaveFocus());
-
-            await user.keyboard('{Escape}');
-
-            expect(screen.queryByText('Change this plan')).not.toBeInTheDocument();
-
-            await user.keyboard('Is the page online?{Enter}');
+            await user.click(field);
+            await user.keyboard('Use red instead{Enter}');
 
             await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
-            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Is the page online?' }] });
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Use red instead' }] });
+        });
+
+        it('stops the plan\'s run from the plan\'s head, with one Stop only', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts(() => Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+
+            showPlan('running');
+            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
+                seq: 2,
+                ts: '2026-10-14T14:00:01Z',
+                session_id: 's-1',
+                run_id: 'r-1',
+                plan_id: 'p-1',
+                type: 'run.started',
+                run: { id: 'r-1', status: 'running', plan_id: 'p-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 },
+            } as GenaixEvent));
+
+            await renderPage();
+
+            expect(screen.getAllByRole('button', { name: 'Stop' })).toHaveLength(1);
+            // A turn beside the plan's run is a side run: send stays.
+            expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(String(posts.mock.calls[0]![0])).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
         });
 
         it('leaves the mode and reads the plans again when the plan cannot be revised (409 plan_not_revisable)', async () => {

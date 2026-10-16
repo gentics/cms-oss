@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
+import type { PreviewPageGroup } from '@/helper/previewPages/previewPages';
+import type { Preview } from '@/services/apiService/genaix/types';
 import type { LivePreview } from '@/store/useWorkspaceEventStore';
 
 import { PreviewColumn } from './PreviewColumn';
@@ -147,6 +149,43 @@ describe('PreviewColumn', () => {
             await user.keyboard('{Escape}');
 
             expect(screen.getByRole('button', { name: 'Full screen' })).toHaveAttribute('aria-pressed', 'false');
+        });
+    });
+
+    describe('the plan\'s pages (rc.5 addition)', () => {
+        function page(id: number, name: string): Preview {
+            return { cms_ref: { type: 'page', id, node_id: 3, name }, preview_url: `https://cms.example.com/alohapage?realid=${id}&nodeid=3&mode=view`, mode: 'view' };
+        }
+
+        const terms = page(9142, 'Neue Nutzungsbedingungen ab Q3');
+        const shipping = page(8644, 'Versand und Lieferung');
+        const warranty = page(8871, 'Garantiebedingungen');
+        const pages: PreviewPageGroup[] = [
+            { kind: 'create', previews: [terms] },
+            { kind: 'update', previews: [shipping, warranty] },
+        ];
+
+        it('names the page shown and its place among the plan\'s pages, and lists them by kind', async () => {
+            const user = userEvent.setup();
+            const onPageChange = vi.fn();
+
+            render(<PreviewColumn {...noActions} preview={{ ...preview(1), cms_ref: terms.cms_ref }} pages={pages} onPageChange={onPageChange} />, { wrapper: UiProvider });
+
+            await user.click(screen.getByRole('button', { name: /Neue Nutzungsbedingungen ab Q3\s*1 of 3/ }));
+
+            expect(await screen.findByText('New pages · 1')).toBeInTheDocument();
+            expect(screen.getByText('Edited pages · 2')).toBeInTheDocument();
+            expect(screen.getByRole('menuitemradio', { name: 'Neue Nutzungsbedingungen ab Q3' })).toHaveAttribute('aria-checked', 'true');
+
+            await user.click(screen.getByRole('menuitemradio', { name: 'Garantiebedingungen' }));
+
+            expect(onPageChange).toHaveBeenCalledWith(warranty);
+        });
+
+        it('has no page menu with one page', () => {
+            render(<PreviewColumn {...noActions} preview={preview(1)} pages={[{ kind: 'create', previews: [terms] }]} onPageChange={vi.fn()} />, { wrapper: UiProvider });
+
+            expect(screen.queryByRole('button', { name: /1 of 1/ })).not.toBeInTheDocument();
         });
     });
 });

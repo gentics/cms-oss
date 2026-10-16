@@ -5,12 +5,6 @@
   font-size: var(--font-size-base);
 }
 
-.summary {
-  margin: 0 0 8px;
-  color: var(--fg-secondary);
-  font-size: var(--font-size-sm);
-}
-
 .items {
   margin: 0;
   padding: 0;
@@ -163,7 +157,12 @@
 }
 
 .add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 4px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
 }
 
 @keyframes pulse {
@@ -224,4 +223,100 @@
   gap: 4px;
   color: var(--error);
   font-size: var(--font-size-xs);
+}
+
+/* Sub-steps folded under their item (rc.5 addition), indented to the item's text. */
+.substeps {
+  margin: 0 0 2px 26px;
+  padding: 0;
+  list-style: none;
+}
+
+.substep {
+  padding: 3px 2px;
+  font-size: var(--font-size-sm);
+}
+
+.substep .marker {
+  font-size: var(--font-size-overline);
+}
+
+/* The plan at a glance (design.md §12 "KPI-Kachel": `--border-subtle`, `--corner-lg`, value 23 px/500
+   `tabular-nums`, label 11 px `--fg-muted`). */
+.glance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-lg);
+}
+
+.tileValue {
+  color: var(--fg-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.tile[data-complete] .tileValue {
+  color: var(--success);
+}
+
+.tileLabel {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* What waits for the user (the run's question), with "Answer" on the right (§12 "Chat-Karte": caption
+   left, actions right). */
+.needsYou {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-lg);
+  background: var(--bg-subtle);
+}
+
+.needsYouText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.needsYouTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-primary);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+
+  & svg {
+    color: var(--interactive);
+  }
+}
+
+/* The question in at most two lines; its card holds the whole of it. */
+.needsYouPrompt {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--fg-primary);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }

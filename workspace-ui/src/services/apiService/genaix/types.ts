@@ -35,7 +35,6 @@ export type MessageRole = GenaixSchema<'MessageRole'>;
 export type MessageCreate = GenaixSchema<'MessageCreate'>;
 export type MessageAccepted = GenaixSchema<'MessageAccepted'>;
 export type ContextReference = GenaixSchema<'ContextReference'>;
-export type InteractionAnswer = GenaixSchema<'InteractionAnswer'>;
 export type MessagePart = GenaixSchema<'MessagePart'>;
 export type PartType = GenaixSchema<'PartType'>;
 export type UnknownPart = GenaixSchema<'UnknownPart'>;
@@ -76,6 +75,18 @@ export type Run = GenaixSchema<'Run'>;
 export type RunStatus = GenaixSchema<'RunStatus'>;
 export type Interaction = GenaixSchema<'Interaction'>;
 export type InteractionKind = GenaixSchema<'InteractionKind'>;
+
+// `InteractionAnswer` is generated as `unknown` since the rc.5 addition: `ChoiceAnswer`'s `anyOf` branches
+// carry only `required`, and a union with `unknown` collapses to `unknown`. These are its members as
+// generated in `schema.d.ts`, with `ChoiceAnswer`'s `anyOf` (at least one selected id, or `other`) as a union.
+/** The answer to a `choice`: the selected option ids, or with `other_allowed` the user's own text (`other`). */
+export type ChoiceAnswer = { selected?: string[]; other?: string; comment?: string } & ({ selected: string[] } | { other: string });
+export type InteractionAnswer =
+    | { text: string }
+    | ChoiceAnswer
+    | { approved: boolean; comment?: string }
+    | { values: Record<string, unknown> }
+    | { settings: UserSettingPart[]; comment?: string };
 
 // `MessageCreate` is generated as `unknown`: its `anyOf` branches carry only `required`, and a union
 // with `unknown` collapses to `unknown`. These are its properties as generated in `schema.d.ts`, with
@@ -127,4 +138,6 @@ export type Publication = GenaixSchema<'Publication'>;
 export type ApprovalStep = GenaixSchema<'ApprovalStep'>;
 export type Check = GenaixSchema<'Check'>;
 export type PlanItem = GenaixSchema<'PlanItem'>;
+export type PlannedObject = GenaixSchema<'PlannedObject'>;
+export type Preview = GenaixSchema<'Preview'>;
 export type DerivedSettings = GenaixSchema<'DerivedSettings'>;

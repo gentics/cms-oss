@@ -80,6 +80,19 @@
             "language": "Sprache",
             "created": "Erstellt",
             "edited": "Zuletzt bearbeitet"
+        },
+        "pages": {
+            "position": "{{index}} von {{count}}",
+            "unnamed": "Seite {{id}}",
+            "groups": {
+                "create": "Neue Seiten · {{count}}",
+                "update": "Bearbeitete Seiten · {{count}}",
+                "translate": "Übersetzungen · {{count}}",
+                "link": "Seiten mit neuen Verweisen · {{count}}",
+                "publish": "Zu veröffentlichende Seiten · {{count}}",
+                "construct": "Seiten mit Bausteinen · {{count}}",
+                "other": "Weitere Seiten · {{count}}"
+            }
         }
     },
     "workspace": {
@@ -163,14 +176,6 @@
         "pageSettings": {
             "change": " – ändere seine Seiteneinstellungen:",
             "empty": "leeren"
-        },
-        "revise": {
-            "title": "Diesen Plan ändern",
-            "hint": {
-                "ask": "Ihre nächste Nachricht ändert diesen Plan.",
-                "stop": "Senden stoppt die laufende Arbeit und ändert den Plan."
-            },
-            "cancel": "Plan nicht ändern"
         }
     },
     "chat": {
@@ -226,11 +231,9 @@
             "choose": "Auswählen…",
             "chooseFolder": "Ordner wählen…",
             "otherFolder": "Anderer Ordner…",
-            "noFolderChosen": "Kein Ordner gewählt",
             "chooseFolderFirst": "Zuerst einen Ordner wählen",
             "loadingOptions": "Wird geladen…",
             "send": "Senden",
-            "confirm": "Bestätigen",
             "confirmed": "Bestätigt",
             "answered": "Beantwortet",
             "expired": "Abgelaufen",
@@ -252,8 +255,18 @@
                 "text": "Aus Ihrem Text",
                 "context": "Aus der Sitzung",
                 "default": "Standard"
-            }
-        }
+            },
+            "recommended": "Empfohlen",
+            "other": "Etwas anderes",
+            "otherAnswer": "Ihre eigene Antwort",
+            "otherPlaceholder": "Beschreiben Sie, was Sie brauchen",
+            "addComment": "Kommentar hinzufügen",
+            "required": "Auswahl erforderlich",
+            "enterValue": "Wert eingeben…",
+            "stillToChoose": "Noch zu wählen: {{names}}",
+            "confirm": "Bestätigen"
+        },
+        "sideRun": "Neben dem laufenden Plan beantwortet"
     },
     "planBar": {
         "label": "Offener Plan",
@@ -312,10 +325,6 @@
             "failed": "Veröffentlichen fehlgeschlagen",
             "cancelled": "Das Veröffentlichen wurde abgebrochen.",
             "close": "Schließen"
-        },
-        "revise": {
-            "ask": "Änderung anfragen",
-            "stop": "Stoppen und ändern"
         }
     },
     "handOff": {
@@ -421,7 +430,15 @@
                 "caption": "Passen Sie die markierten Schritte an",
                 "dependency_order": "Steht vor einem Schritt, den er braucht",
                 "other": "Dieser Schritt kann so nicht geändert werden"
-            }
+            },
+            "glance": "Auf einen Blick",
+            "needsYou": {
+                "title": "Wartet auf Sie",
+                "answer": "Antworten"
+            },
+            "substeps_one": "{{count}} Schritt",
+            "substeps_other": "{{count}} Schritte",
+            "maxItems": "Höchstens {{count}} Schritte"
         },
         "citation": {
             "title": "Quellen"
@@ -575,7 +592,12 @@
             "iconXl": "Großer runder Icon-Button",
             "speak": "Sprechen",
             "link": "Als Link",
-            "linkText": "Zu den Buttons"
+            "linkText": "Zu den Buttons",
+            "quiet": "Leiser Text-Button",
+            "sources": "Quellen",
+            "value": "Wert als Feld",
+            "valueText": "Richtlinien · /Richtlinien/",
+            "choose": "Auswählen…"
         },
         "checkbox": {
             "title": "Checkbox",
@@ -603,7 +625,8 @@
             "placeholder": "Seite wählen",
             "home": "Startseite",
             "news": "Aktuelles",
-            "contact": "Kontakt"
+            "contact": "Kontakt",
+            "fullWidth": "Volle Breite"
         },
         "tabs": {
             "title": "Tabs",
@@ -804,5 +827,33 @@
         "copy": "JSON von Event {{seq}} ({{type}}) kopieren",
         "copied": "Event {{seq}} kopiert",
         "copyFailed": "Das Event konnte nicht kopiert werden."
+    },
+    "planGlance": {
+        "create_folder_one": "Ordner",
+        "create_folder_other": "Ordner",
+        "create_page_one": "neue Seite",
+        "create_page_other": "neue Seiten",
+        "create_file_one": "Datei",
+        "create_file_other": "Dateien",
+        "create_image_one": "Bild",
+        "create_image_other": "Bilder",
+        "create_construct_one": "Baustein",
+        "create_construct_other": "Bausteine",
+        "create_one": "neues Objekt",
+        "create_other": "neue Objekte",
+        "update_page_one": "Seite bearbeitet",
+        "update_page_other": "Seiten bearbeitet",
+        "update_one": "Objekt bearbeitet",
+        "update_other": "Objekte bearbeitet",
+        "link_one": "Verweis",
+        "link_other": "Verweise",
+        "translate_one": "Übersetzung",
+        "translate_other": "Übersetzungen",
+        "publish_page_one": "Seite zu veröffentlichen",
+        "publish_page_other": "Seiten zu veröffentlichen",
+        "publish_one": "Objekt zu veröffentlichen",
+        "publish_other": "Objekte zu veröffentlichen",
+        "construct_one": "Baustein",
+        "construct_other": "Bausteine"
     }
 }

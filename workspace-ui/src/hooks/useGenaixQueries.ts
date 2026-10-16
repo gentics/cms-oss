@@ -160,7 +160,7 @@ export function useSendMessage(sessionId: string) {
             return { localId };
         },
         onSuccess: (accepted, _body, context) => {
-            useWorkspaceEventStore.getState().markMessageSent(sessionId, context.localId, accepted.message_id);
+            useWorkspaceEventStore.getState().markMessageSent(sessionId, context.localId, accepted.message_id, accepted.run_id);
             useWorkspaceEventStore.getState().awaitRun(sessionId, accepted.run_id);
         },
         onError: (error, _body, context) => {
@@ -245,30 +245,24 @@ export function useStartSession() {
     });
 }
 
-/**
- * A turn from the chat composer; `replyTo` answers the run's pending interaction with it, `revisePlanId`
- * makes it a revision of that plan.
- */
+/** A turn from the chat composer; `replyTo` answers the run's pending interaction with it. */
 export interface SendTurnInput extends StartSessionInput {
     replyTo?: { interaction_id: string; answer: InteractionAnswer };
-    revisePlanId?: string;
 }
 
 /**
  * Sends a turn from the session's chat composer: uploads its files, then posts the message through
  * `useSendMessage`, which records the turn in `useWorkspaceEventStore`. With `replyTo` the message
  * carries `reply_to_interaction`: it answers the question the run waits on and joins that run, the one
- * message accepted while a run is active (contract, `MessageCreate.reply_to_interaction`). With
- * `revisePlanId` it goes out with `options: { mode: 'revise', plan_id }`: it revises that plan, and
- * redirects it while it executes (rc.5). Never retried, like `useSendMessage`: a repeat would upload and
- * send twice.
+ * message accepted while a run is active (contract, `MessageCreate.reply_to_interaction`). Never
+ * retried, like `useSendMessage`: a repeat would upload and send twice.
  */
 export function useSendTurn(sessionId: string) {
     const queryClient = useQueryClient();
     const { mutateAsync: sendMessage } = useSendMessage(sessionId);
 
     return useMutation({
-        mutationFn: async ({ parts, files, onFileProgress, replyTo, revisePlanId }: SendTurnInput) => {
+        mutationFn: async ({ parts, files, onFileProgress, replyTo }: SendTurnInput) => {
             const fileParts = await uploadFileParts(sessionId, files, onFileProgress);
             const fileIds = fileParts.map((part) => part.file_id);
 
@@ -280,7 +274,6 @@ export function useSendTurn(sessionId: string) {
             return sendMessage({
                 parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts],
                 ...(replyTo && { reply_to_interaction: replyTo }),
-                ...(revisePlanId && { options: { mode: 'revise', plan_id: revisePlanId } }),
             });
         },
         retry: false,

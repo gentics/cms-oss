@@ -1,4 +1,4 @@
-import { ArrowUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon, XIcon } from 'lucide-react';
+import { ArrowUpIcon, ChevronDownIcon, ChevronUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon, XIcon } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverClose, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/ui/popover';
 import { Radio, RadioGroup } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectChevron, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -201,6 +201,26 @@ export function Catalogue() {
                                 <XIcon size={12} />
                             </Button>
                         </State>
+                        <State label={t('catalogue.buttons.quiet')}>
+                            <Button variant="quiet" size="text" aria-expanded={false}>
+                                {t('catalogue.buttons.sources')}
+                                <ChevronDownIcon size={12} />
+                            </Button>
+                            <Button variant="quiet" size="text" aria-expanded>
+                                {t('catalogue.buttons.sources')}
+                                <ChevronUpIcon size={12} />
+                            </Button>
+                        </State>
+                        <State label={t('catalogue.buttons.value')}>
+                            <Button variant="input" size="field">
+                                {t('catalogue.buttons.valueText')}
+                                <SelectChevron />
+                            </Button>
+                            <Button variant="input" size="field" data-attention="">
+                                {t('catalogue.buttons.choose')}
+                                <SelectChevron />
+                            </Button>
+                        </State>
                         <State label={t('catalogue.buttons.pressed')}>
                             <Button variant="ghost" size="sm" aria-pressed>
                                 <QuoteIcon size={16} />
@@ -337,6 +357,23 @@ export function Catalogue() {
                                 </div>
                             </State>
                         ))}
+                        <State label={t('catalogue.select.fullWidth')}>
+                            <div className={styles.field}>
+                                <Label htmlFor="catalogue-select-full">{t('catalogue.select.label')}</Label>
+                                <Select items={pageItems} defaultValue="news">
+                                    <SelectTrigger id="catalogue-select-full" fullWidth>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(pageItems).map(([value, label]) => (
+                                            <SelectItem key={value} value={value}>
+                                                {label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </State>
                     </div>
                 </Section>
 

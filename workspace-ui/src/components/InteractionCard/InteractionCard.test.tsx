@@ -7,12 +7,14 @@ import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { createWrapper } from '@/test/renderWithProviders';
 
+import { focusInteractionCard } from './focusInteractionCard';
 import { ConfirmedSettingsCard, InteractionCard } from './InteractionCard';
 
 function interaction(overrides: Partial<Interaction> & Pick<Interaction, 'kind' | 'prompt'>): Interaction {
     return {
         id: 'i-1',
         multi: false,
+        other_allowed: false,
         blocking: true,
         status: 'pending',
         requested_at: new Date().toISOString(),
@@ -74,16 +76,28 @@ describe('InteractionCard', () => {
             missing: [{ key: 'template', label: 'Template', other_allowed: false, options: [{ value: '17', label: 'Kampagnen-Landingpage' }, { value: '21', label: 'Themenseite' }] }],
         }));
 
-        expect(screen.getByText('Ich habe diese Einstellungen abgeleitet.')).toBeInTheDocument();
-        expect(screen.getByText(/From your text · „auf Deutsch“/)).toBeInTheDocument();
+        // Only the settings; the prompt is not shown.
+        expect(screen.queryByText('Ich habe diese Einstellungen abgeleitet.')).not.toBeInTheDocument();
+        // Every setting is a value in the look of a field; a proposed one says under it where it came from.
+        expect(screen.getByRole('button', { name: 'Folder Richtlinien' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Language Deutsch' })).toBeInTheDocument();
+        expect(screen.getByText('From your text · „auf Deutsch“')).toBeInTheDocument();
+        expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 
+        // The missing template: "Choose…", "Selection required", and Confirm waits for it.
+        const template = screen.getByRole('button', { name: 'Template Choose…' });
         const confirm = screen.getByRole('button', { name: 'Confirm' });
 
-        // The missing template has no value yet.
+        expect(template).toHaveAttribute('data-attention');
+        expect(template).toHaveAccessibleDescription('Selection required');
         expect(confirm).toBeDisabled();
+        expect(screen.getByText('Still to choose: Template')).toBeInTheDocument();
 
-        await user.click(screen.getByRole('combobox', { name: 'Template' }));
+        // A click opens its list at once.
+        await user.click(template);
         await user.click(await screen.findByRole('option', { name: 'Kampagnen-Landingpage' }));
+
+        await waitFor(() => expect(screen.queryByText('Still to choose: Template')).not.toBeInTheDocument());
         await user.click(confirm);
 
         expect(await sentAnswer(fetchMock)).toEqual({
@@ -95,7 +109,7 @@ describe('InteractionCard', () => {
         });
     });
 
-    it('asks the folder for an upload as a folder picker, the recommended folder preselected (rc.5 file_folder)', async () => {
+    it('preselects the recommended folder for an upload, says so only while it is chosen, and lists the others on a click (rc.5 file_folder)', async () => {
         const user = userEvent.setup();
         const fetchMock = stubAnswer();
 
@@ -115,13 +129,25 @@ describe('InteractionCard', () => {
             }],
         }));
 
-        expect(screen.getByRole('combobox', { name: /Ordner fuer das PDF/ })).toHaveTextContent('Downloads');
-        expect(screen.getByText('Downloads ist der Standard-Dateiordner des Knotens.')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Other folder…' })).toBeInTheDocument();
+        // The value, "Recommended" in its field with the reason as its tooltip, and no button of its own.
+        const folder = screen.getByRole('button', { name: 'Ordner fuer das PDF Downloads · /Downloads/' });
+
+        expect(folder).toHaveAccessibleDescription('Recommended');
+        expect(screen.getByText('Recommended')).toHaveAttribute('title', 'Downloads ist der Standard-Dateiordner des Knotens.');
+        expect(screen.queryByRole('button', { name: 'Other folder…' })).not.toBeInTheDocument();
+
+        // A click lists GenAIx's folders, and "Other folder…" for the folder search.
+        await user.click(folder);
+
+        expect(await screen.findByRole('option', { name: 'Other folder…' })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('option', { name: /Veranstaltungen/ }));
+
+        await waitFor(() => expect(screen.queryByText('Recommended')).not.toBeInTheDocument());
 
         await user.click(screen.getByRole('button', { name: 'Confirm' }));
 
-        expect(await sentAnswer(fetchMock)).toEqual({ settings: [{ type: 'setting', key: 'file_folder', value: '88', label: 'Downloads' }] });
+        expect(await sentAnswer(fetchMock)).toEqual({ settings: [{ type: 'setting', key: 'file_folder', value: '57', label: 'Veranstaltungen' }] });
     });
 
     it('answers a settings review with a corrected free-text value', async () => {
@@ -130,8 +156,12 @@ describe('InteractionCard', () => {
 
         renderCard(interaction({ kind: 'settings_review', prompt: 'Passt das?', proposed: [{ key: 'filename', value: 'a.html', label: 'a.html', source: 'text' }] }));
 
+        // The value opens its field with a click, which then has the focus.
+        await user.click(screen.getByRole('button', { name: 'File name a.html' }));
+
         const field = screen.getByRole('textbox', { name: 'File name' });
 
+        expect(field).toHaveFocus();
         await user.clear(field);
         await user.type(field, 'terms.html');
         await user.click(screen.getByRole('button', { name: 'Confirm' }));
@@ -139,23 +169,44 @@ describe('InteractionCard', () => {
         expect(await sentAnswer(fetchMock)).toEqual({ settings: [{ type: 'setting', key: 'filename', value: 'terms.html', label: 'terms.html' }] });
     });
 
-    it('answers a confirm with yes and the comment', async () => {
+    it('opens the folder search with a click on a folder without options, with no button of its own', async () => {
+        const user = userEvent.setup();
+
+        stubAnswer();
+        renderCard(interaction({ kind: 'settings_review', prompt: 'Passt das?', proposed: [{ key: 'folder', value: '42', label: 'Richtlinien', source: 'context' }] }));
+
+        expect(screen.queryByRole('button', { name: /Choose folder/ })).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Folder Richtlinien' }));
+
+        expect(await screen.findByRole('dialog', { name: 'Choose a folder' })).toBeInTheDocument();
+    });
+
+    it('answers a confirm with yes and a comment the user chose to add', async () => {
         const user = userEvent.setup();
         const fetchMock = stubAnswer();
 
         renderCard(interaction({ kind: 'confirm', prompt: 'Create the construct terms_change_table?' }));
 
-        await user.type(screen.getByRole('textbox', { name: 'Comment' }), 'Go ahead');
+        await user.click(screen.getByRole('button', { name: 'Add a comment' }));
+
+        expect(screen.getByRole('textbox', { name: 'Comment' })).toHaveFocus();
+        expect(screen.queryByRole('button', { name: 'Add a comment' })).not.toBeInTheDocument();
+
+        await user.keyboard('Go ahead');
         await user.click(screen.getByRole('button', { name: 'Yes' }));
 
         expect(await sentAnswer(fetchMock)).toEqual({ approved: true, comment: 'Go ahead' });
     });
 
-    it('answers a confirm with no', async () => {
+    it('answers a confirm with no, offering yes and no without a comment field', async () => {
         const user = userEvent.setup();
         const fetchMock = stubAnswer();
 
         renderCard(interaction({ kind: 'confirm', prompt: 'Publish now?' }));
+
+        expect(screen.queryByRole('textbox', { name: 'Comment' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeInTheDocument();
 
         await user.click(screen.getByRole('button', { name: 'No' }));
 
@@ -182,6 +233,102 @@ describe('InteractionCard', () => {
         await user.click(send);
 
         expect(await sentAnswer(fetchMock)).toEqual({ selected: ['p-2', 'p-1'] });
+    });
+
+    describe('a choice with what GenAIx recommends (rc.5 addition)', () => {
+        // S7's run 8: where the FAQ page goes, Service recommended, the user's own answer allowed.
+        const faqFolder = interaction({
+            kind: 'choice',
+            prompt: 'Wo soll die FAQ-Seite liegen?',
+            options: [
+                { id: 'folder-18', label: 'Aktuelles', reason: 'Dort erscheint die Seite in der Uebersicht der Neuigkeiten.' },
+                { id: 'folder-71', label: 'Service', reason: 'Dort liegen die anderen Hilfeseiten.' },
+            ],
+            recommended: ['folder-71'],
+            other_allowed: true,
+        });
+
+        it('puts the recommended option first, preselected and badged, each option with its reason', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubAnswer();
+
+            renderCard(faqFolder);
+
+            const [first, second] = screen.getAllByRole('radio');
+
+            expect(first).toHaveAccessibleName(/Service/);
+            expect(first).toBeChecked();
+            expect(second).toHaveAccessibleName(/Aktuelles/);
+            expect(screen.getByText('Recommended')).toBeInTheDocument();
+            expect(screen.getByText('Dort liegen die anderen Hilfeseiten.')).toBeInTheDocument();
+            expect(screen.getByText('Dort erscheint die Seite in der Uebersicht der Neuigkeiten.')).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+
+            expect(await sentAnswer(fetchMock)).toEqual({ selected: ['folder-71'] });
+        });
+
+        it('sends the user\'s own text as `other`, with nothing selected, from "Something else"', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubAnswer();
+
+            renderCard(faqFolder);
+
+            await user.click(screen.getByRole('radio', { name: 'Something else' }));
+
+            // Chosen, but nothing written yet.
+            expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+
+            await user.type(screen.getByRole('textbox', { name: 'Your own answer' }), 'Lieber als News-Meldung');
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+
+            expect(await sentAnswer(fetchMock)).toEqual({ selected: [], other: 'Lieber als News-Meldung' });
+        });
+
+        it('chooses "Something else" by typing into its field', async () => {
+            const user = userEvent.setup();
+
+            stubAnswer();
+            renderCard(faqFolder);
+
+            await user.type(screen.getByRole('textbox', { name: 'Your own answer' }), 'Hilfe');
+
+            expect(screen.getByRole('radio', { name: 'Something else' })).toBeChecked();
+            expect(screen.getByRole('radio', { name: /Service/ })).not.toBeChecked();
+        });
+
+        it('sends the user\'s own text besides the options chosen in a multiple choice', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubAnswer();
+
+            renderCard({ ...faqFolder, multi: true, recommended: ['folder-71', 'folder-18'] });
+
+            expect(screen.getByRole('checkbox', { name: /Service/ })).toBeChecked();
+            expect(screen.getByRole('checkbox', { name: /Aktuelles/ })).toBeChecked();
+
+            await user.type(screen.getByRole('textbox', { name: 'Your own answer' }), 'und Hilfe');
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+
+            expect(await sentAnswer(fetchMock)).toEqual({ selected: ['folder-71', 'folder-18'], other: 'und Hilfe' });
+        });
+
+        it('offers no answer of the user\'s own without `other_allowed`, and preselects one option only in a single choice', () => {
+            renderCard({ ...faqFolder, other_allowed: false, recommended: ['folder-71', 'folder-18'] });
+
+            expect(screen.queryByRole('radio', { name: 'Something else' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+            expect(screen.getByRole('radio', { name: /Service/ })).toBeChecked();
+            expect(screen.getByRole('radio', { name: /Aktuelles/ })).not.toBeChecked();
+        });
+    });
+
+    it('is scrolled to and focused by `focusInteractionCard`', () => {
+        renderCard(interaction({ kind: 'ask_user', prompt: 'Which audience?' }));
+
+        expect(focusInteractionCard('i-1')).toBe(true);
+        expect(document.activeElement).toHaveAttribute('id', 'interaction-card-i-1');
+        expect(document.activeElement).toContainElement(screen.getByText('Which audience?'));
+        expect(focusInteractionCard('unknown')).toBe(false);
     });
 
     it('answers a form with typed values, the required ones first', async () => {

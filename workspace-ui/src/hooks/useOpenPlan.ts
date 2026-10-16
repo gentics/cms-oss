@@ -5,7 +5,7 @@ import { type LivePlan, selectSession, type SessionLiveState, useWorkspaceEventS
 // The statuses in which the plan is being revised, waits for the user, or has something to release,
 // publish or change (09-integration-guide.md, "The plan card"). A revision is `drafting` with the items
 // of its current version (rc.5) and stays in view; a first draft has nothing to show yet
-// (`isFirstDraft`). A discarded or superseded plan is over and stays in the chat (`ChatPlanCard`).
+// (`isFirstDraft`). A discarded or superseded plan is over and is not shown (plans are not in the chat).
 const BAR_STATUSES: ReadonlySet<PlanStatus> = new Set(['drafting', 'proposed', 'accepted', 'running', 'done', 'released', 'published', 'review_requested']);
 
 // The plan the bar is for: the executing one, else the open one, as `session.updated` names them (rc.4);

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Plan } from '@/services/apiService/genaix/types';
+import type { Plan, Workflow } from '@/services/apiService/genaix/types';
 
-import { hasGatedActions, isFirstDraft, isRevisable, planActions, revisionOf } from './planActions';
+import { hasGatedActions, isAcceptedOnCard, isFirstDraft, planActions, planPresence } from './planActions';
 
 describe('planActions', () => {
     it('leaves the gated transitions out unless asked for them (the review page)', () => {
@@ -26,21 +26,6 @@ describe('planActions', () => {
     });
 });
 
-describe('revisionOf', () => {
-    it('asks for a change once the work is done, and stops and changes an executing plan', () => {
-        expect(['done', 'released', 'published', 'review_requested'].map((status) => revisionOf(status as never))).toEqual(['ask', 'ask', 'ask', 'ask']);
-        expect(revisionOf('accepted')).toBe('stop');
-        expect(revisionOf('running')).toBe('stop');
-        expect(['drafting', 'proposed', 'discarded', 'superseded'].map((status) => revisionOf(status as never))).toEqual([undefined, undefined, undefined, undefined]);
-    });
-
-    it('knows the final statuses cannot be revised', () => {
-        expect(isRevisable('published')).toBe(true);
-        expect(isRevisable('discarded')).toBe(false);
-        expect(isRevisable('superseded')).toBe(false);
-    });
-});
-
 describe('isFirstDraft', () => {
     const plan = (status: Plan['status'], itemCount: number): Plan => ({
         id: 'plan-1',
@@ -55,5 +40,49 @@ describe('isFirstDraft', () => {
         expect(isFirstDraft(plan('drafting', 0))).toBe(true);
         expect(isFirstDraft(plan('drafting', 2))).toBe(false);
         expect(isFirstDraft(plan('proposed', 0))).toBe(false);
+    });
+});
+
+describe('isAcceptedOnCard', () => {
+    function workflow(id: string, planApproval: boolean): Workflow {
+        return { id, version: '1.0.0', title: id, description: '', roles: [], optional: false, steps_template: [], plan_approval: planApproval };
+    }
+
+    const quickEdit: Plan = { id: 'pl-1', workflows: [{ id: 'content_quick_edit', version: '1.0.0' }], status: 'proposed', version: 2, summary: '', items: [] };
+    const catalogue = [workflow('content_edit', true), workflow('content_quick_edit', false)];
+
+    it('is true when a module of the plan waits for the acceptance on its card (plan_approval)', () => {
+        expect(isAcceptedOnCard({ ...quickEdit, workflows: [{ id: 'content_quick_edit', version: '1.0.0' }, { id: 'content_edit', version: '1.0.0' }] }, catalogue)).toBe(true);
+    });
+
+    it('is false for a plan its run confirms in the chat, and while the modules are not known', () => {
+        expect(isAcceptedOnCard(quickEdit, catalogue)).toBe(false);
+        expect(isAcceptedOnCard(quickEdit, undefined)).toBe(false);
+    });
+});
+
+describe('planPresence', () => {
+    const catalogue: Workflow[] = [
+        { id: 'content_edit', version: '1.0.0', title: 'content_edit', description: '', roles: [], optional: false, steps_template: [], plan_approval: true },
+        { id: 'content_quick_edit', version: '1.0.0', title: 'content_quick_edit', description: '', roles: [], optional: false, steps_template: [], plan_approval: false },
+    ];
+    const quick = (status: Plan['status']): Plan => ({ id: 'pl-1', workflows: [{ id: 'content_quick_edit', version: '1.0.0' }], status, version: 1, summary: '', items: [] });
+    const page = { cms_ref: { type: 'page' as const, id: 41, node_id: 1 }, status: 'pending' as const, approval_chain: [] };
+
+    it('shows the card of a plan accepted on it, and while the modules are not known', () => {
+        expect(planPresence({ ...quick('proposed'), workflows: [{ id: 'content_edit', version: '1.0.0' }] }, catalogue, undefined)).toBe('card');
+        expect(planPresence(quick('proposed'), undefined, undefined)).toBe('card');
+        expect(planPresence({ ...quick('proposed'), workflows: [{ id: 'unknown', version: '1.0.0' }] }, catalogue, undefined)).toBe('card');
+    });
+
+    it('shows only the head of a plan confirmed in the chat while it is under way, closed, or has pages', () => {
+        expect(['drafting', 'proposed', 'accepted', 'running', 'discarded', 'superseded'].map((status) => planPresence(quick(status as Plan['status']), catalogue, undefined))).toEqual(['head', 'head', 'head', 'head', 'head', 'head']);
+        expect(planPresence(quick('done'), catalogue, [page])).toBe('head');
+        expect(planPresence(quick('published'), catalogue, [{ ...page, status: 'published' }])).toBe('head');
+    });
+
+    it('shows nothing of such a plan once it is done without a page to publish', () => {
+        expect(planPresence(quick('done'), catalogue, undefined)).toBe('none');
+        expect(planPresence(quick('done'), catalogue, [])).toBe('none');
     });
 });

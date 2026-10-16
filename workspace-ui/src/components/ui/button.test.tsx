@@ -71,6 +71,25 @@ describe('Button', () => {
         expect(screen.getByRole('button', { name: 'Gentics Workspace' })).toHaveAttribute('data-size', 'brand');
     });
 
+    it('has a quiet variant in a text size, as meta text that opens more', () => {
+        render(<Button variant="quiet" size="text" aria-expanded={false}>Sources</Button>, { wrapper: UiProvider });
+
+        const button = screen.getByRole('button', { name: 'Sources' });
+
+        expect(button).toHaveAttribute('data-variant', 'quiet');
+        expect(button).toHaveAttribute('data-size', 'text');
+    });
+
+    it('has an input variant in a field size, a value in the look of a field that opens its choice', () => {
+        render(<Button variant="input" size="field" data-attention="">Choose…</Button>, { wrapper: UiProvider });
+
+        const button = screen.getByRole('button', { name: 'Choose…' });
+
+        expect(button).toHaveAttribute('data-variant', 'input');
+        expect(button).toHaveAttribute('data-size', 'field');
+        expect(button).toHaveAttribute('data-attention');
+    });
+
     it('has a mini icon size for chips and passages', () => {
         render(<Button variant="ghost" size="icon-xs" aria-label="Remove">×</Button>, { wrapper: UiProvider });
 

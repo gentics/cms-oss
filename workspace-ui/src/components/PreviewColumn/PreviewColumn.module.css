@@ -38,6 +38,21 @@
   font-weight: 500;
 }
 
+/* The page menu's trigger: the page's name, then its place among the plan's pages in meta text. */
+.pageName {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pagePosition {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
 .url {
   flex: 1;
   min-width: 0;

@@ -211,6 +211,17 @@ describe('useWorkspaceEventStore', () => {
             expect(session().notices).toEqual([{ seq: 2, runId: 'r-1', kind: 'cancelled' }]);
         });
 
+        it('keeps the side runs, also after they ended, but no other run (rc.5)', () => {
+            apply(
+                event(1, 'run.started', { run_id: 'r-1', plan_id: 'plan-1', run: { id: 'r-1', status: 'running', plan_id: 'plan-1', mode: 'execute' } }),
+                event(2, 'run.started', { run_id: 'r-2', run: { id: 'r-2', status: 'running', mode: 'side' } }),
+                event(3, 'run.completed', { run_id: 'r-2', run: { id: 'r-2', status: 'completed', mode: 'side' } }),
+            );
+
+            expect(session().sideRunIds).toEqual(['r-2']);
+            expect(session().runs?.map(({ id }) => id)).toEqual(['r-1']);
+        });
+
         it('ends a run a message redirected without a Stopped notice (rc.5)', () => {
             apply(
                 event(1, 'run.started', { run_id: 'r-1', plan_id: 'plan-1', run: { id: 'r-1', status: 'running', plan_id: 'plan-1', mode: 'execute' } }),

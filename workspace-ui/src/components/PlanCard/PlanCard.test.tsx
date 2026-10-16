@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { InteractionCard } from '@/components/InteractionCard/InteractionCard';
 import { ensureSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
-import type { Plan, PlanItem } from '@/services/apiService/genaix/types';
+import type { Interaction, Plan, PlanItem } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { createWrapper } from '@/test/renderWithProviders';
@@ -120,6 +121,26 @@ describe('PlanCard', () => {
             options: { mode: 'execute' },
         });
     });
+    it('offers Accept again on a revision proposed after the user accepted an earlier version (rc.5)', async () => {
+        const user = userEvent.setup();
+
+        stubFetch();
+
+        const v1 = { ...PLAN, version: 1 };
+        const { rerender } = render(<PlanCard plan={v1} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+
+        await user.click(screen.getByRole('button', { name: 'Accept plan' }));
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Accept plan' })).not.toBeInTheDocument());
+
+        // Executed and done, then "Ask for a change": drafted at the same version, proposed at the next one.
+        rerender(<PlanCard plan={{ ...v1, status: 'done', accepted_version: 1 }} sessionId="s-1" canAnswer />);
+        rerender(<PlanCard plan={{ ...v1, status: 'drafting', accepted_version: 1 }} sessionId="s-1" canAnswer />);
+        rerender(<PlanCard plan={{ ...v1, status: 'proposed', version: 2, accepted_version: 1, reason: 'Revised: shorter intro' }} sessionId="s-1" canAnswer />);
+
+        expect(screen.getByRole('button', { name: 'Accept plan' })).toBeEnabled();
+        expect(screen.getByRole('button', { name: 'Adjust' })).toBeEnabled();
+    });
+
     it('marks what a proposed revision added, and strikes a removed step through (rc.5)', () => {
         render(<PlanCard plan={REVISION} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
 
@@ -228,5 +249,199 @@ describe('PlanCard', () => {
         expect(screen.getAllByRole('listitem')[1]).toHaveTextContent('Comes before a step it needs');
         expect(screen.getByText('Adjust the highlighted steps')).toBeInTheDocument();
         expect(useErrorNotificationStore.getState().errors).toEqual([]);
+    });
+
+    describe('plans at a glance (rc.5 addition)', () => {
+        // S1's proposal with the addition's members: p1 creates the page in Richtlinien (its target), p2 and
+        // p3 fill its tags, p6 links to it from another page.
+        const FOLDER = { type: 'folder' as const, id: '42', node_id: 3, label: 'Richtlinien' };
+        const WARRANTY = { type: 'page' as const, id: '8871', node_id: 3, label: 'Garantiebedingungen' };
+        const GLANCE: Plan = {
+            ...PLAN,
+            version: 1,
+            items: [
+                { id: 'p1', label: 'Create the page', kind: 'create', workflow: 'content_create', status: 'pending', target: FOLDER, creates: { type: 'page', label: 'Neue Nutzungsbedingungen ab Q3', path: '/Richtlinien/' } },
+                { id: 'p2', label: 'Hero', kind: 'construct', workflow: 'content_create', status: 'pending', parent: 'p1', depends_on: ['p1'] },
+                { id: 'p3', label: 'Cancellation policy (verbatim)', kind: 'construct', workflow: 'content_create', status: 'pending', parent: 'p1' },
+                { id: 'p6', label: 'Link from Garantiebedingungen', kind: 'link', workflow: 'content_create', status: 'pending', target: WARRANTY },
+            ],
+        };
+
+        it('folds the sub-steps under their item, opened with its "n steps"', async () => {
+            const user = userEvent.setup();
+
+            render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+
+            expect(screen.getAllByRole('listitem')).toHaveLength(2);
+            expect(screen.queryByText('Hero')).not.toBeVisible();
+
+            await user.click(screen.getByRole('button', { name: '2 steps' }));
+
+            expect(screen.getByRole('button', { name: '2 steps' })).toHaveAttribute('aria-expanded', 'true');
+            expect(screen.getAllByRole('listitem')).toHaveLength(4);
+            expect(screen.getByText('Hero')).toBeVisible();
+        });
+
+        it('lists the sub-steps of a plan with one item on one level with it, numbered in order', () => {
+            render(<PlanCard plan={{ ...GLANCE, items: GLANCE.items.filter(({ id }) => id !== 'p6') }} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+
+            const items = screen.getAllByRole('listitem');
+
+            expect(items).toHaveLength(3);
+            expect(items[0]).toHaveTextContent(/^1Create the page/);
+            expect(items[1]).toHaveTextContent(/^2Hero/);
+            expect(items[2]).toHaveTextContent(/^3Cancellation policy/);
+            expect(screen.queryByRole('button', { name: '2 steps' })).not.toBeInTheDocument();
+        });
+
+        it('shows what an item will create, then what it created', () => {
+            const { rerender } = render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            const [p1] = screen.getAllByRole('listitem');
+
+            // What it creates, with where; its target, the parent folder, is in that path.
+            expect(p1).toHaveTextContent('Neue Nutzungsbedingungen ab Q3 · /Richtlinien/');
+
+            const created = { type: 'page' as const, id: '9142', node_id: 3, label: 'Neue Nutzungsbedingungen ab Q3' };
+
+            rerender(<PlanCard plan={{ ...GLANCE, status: 'running', items: GLANCE.items.map((item) => (item.id === 'p1' ? { ...item, status: 'done', created } : item)) }} sessionId="s-1" canAnswer />);
+
+            expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Neue Nutzungsbedingungen ab Q3');
+            expect(screen.getAllByRole('listitem')[0]).not.toHaveTextContent('/Richtlinien/');
+        });
+
+        it('keeps the sub-steps read-only while adjusting, and moves them with their item', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch();
+
+            render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            await user.click(screen.getByRole('button', { name: 'Adjust' }));
+
+            // A field for p1 and p6 only; the sub-steps are shown under p1.
+            expect(screen.getAllByRole('textbox')).toHaveLength(2);
+            expect(screen.getByText('Hero')).toBeInTheDocument();
+
+            await user.click(screen.getAllByRole('button', { name: 'Move step up' })[1]!);
+            await user.click(screen.getByRole('button', { name: 'Done' }));
+            await user.click(screen.getByRole('button', { name: 'Accept plan' }));
+
+            expect(await postedBody(fetchMock)).toMatchObject({
+                parts: [{
+                    plan: {
+                        items: [
+                            { id: 'p6', label: 'Link from Garantiebedingungen', target: WARRANTY },
+                            { id: 'p1', label: 'Create the page', target: FOLDER },
+                            { id: 'p2', label: 'Hero' },
+                            { id: 'p3', label: 'Cancellation policy (verbatim)' },
+                        ],
+                    },
+                }],
+            });
+        });
+
+        it('removes the sub-steps with their item', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch();
+
+            render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            await user.click(screen.getByRole('button', { name: 'Adjust' }));
+            await user.click(screen.getAllByRole('button', { name: 'Remove step' })[0]!);
+
+            expect(screen.queryByText('Hero')).not.toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Done' }));
+            await user.click(screen.getByRole('button', { name: 'Accept plan' }));
+
+            expect(await postedBody(fetchMock)).toMatchObject({
+                parts: [{ plan: { items: [{ id: 'p6', label: 'Link from Garantiebedingungen', target: WARRANTY }] } }],
+            });
+        });
+
+        it('adds no step past 200', async () => {
+            const user = userEvent.setup();
+            const items: PlanItem[] = Array.from({ length: 200 }, (_, i) => ({ id: `p${i}`, label: `Step ${i}`, kind: 'update', workflow: 'content_edit', status: 'pending' }));
+
+            render(<PlanCard plan={{ ...PLAN, items }} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            await user.click(screen.getByRole('button', { name: 'Adjust' }));
+
+            expect(screen.getByRole('button', { name: 'Add a step' })).toBeDisabled();
+            expect(screen.getByText('At most 200 steps')).toBeInTheDocument();
+        });
+
+        it('counts the top-level items as tiles, "+n" while proposed and "done/total" once accepted', () => {
+            const { rerender } = render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            const glance = screen.getByRole('group', { name: 'At a glance' });
+
+            expect(glance).toHaveTextContent('+1 new page');
+            expect(glance).toHaveTextContent('1 link');
+
+            rerender(<PlanCard plan={{ ...GLANCE, status: 'running', items: GLANCE.items.map((item) => (item.id === 'p1' ? { ...item, status: 'done' } : item)) }} sessionId="s-1" canAnswer />);
+
+            expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('1/1 new page');
+            expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('0/1 link');
+        });
+
+        describe('Needs you', () => {
+            const question: Interaction = {
+                id: 'i-1',
+                kind: 'choice',
+                prompt: 'Which template should the page use?',
+                options: [{ id: 'tpl-17', label: 'Kampagnen-Landingpage' }],
+                multi: false,
+                other_allowed: false,
+                blocking: true,
+                status: 'pending',
+                requested_at: new Date().toISOString(),
+                expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
+                run_id: 'r-1',
+            };
+
+            function ask(planId: string) {
+                useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-15T09:00:00Z', session_id: 's-1', run_id: 'r-1', plan_id: planId, type: 'interaction.requested', interaction: question });
+            }
+
+            it('says what the plan\'s run waits on, and "Answer" takes the user to the question', async () => {
+                const user = userEvent.setup();
+
+                ask(GLANCE.id);
+                render(
+                    <>
+                        <PlanCard plan={GLANCE} sessionId="s-1" canAnswer />
+                        <InteractionCard interaction={question} sessionId="s-1" />
+                    </>,
+                    { wrapper: createWrapper() },
+                );
+
+                const needsYou = screen.getByRole('region', { name: 'Needs you' });
+
+                expect(needsYou).toHaveTextContent('Which template should the page use?');
+
+                await user.click(within(needsYou).getByRole('button', { name: 'Answer' }));
+
+                // The question's card, not a control in it.
+                expect(document.activeElement).toHaveAttribute('id', 'interaction-card-i-1');
+                expect(document.activeElement).toContainElement(screen.getByRole('radiogroup', { name: 'Which template should the page use?' }));
+            });
+
+            it('offers no Accept or Adjust while the question is open', () => {
+                ask(GLANCE.id);
+                render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+
+                expect(screen.queryByRole('button', { name: 'Accept plan' })).not.toBeInTheDocument();
+                expect(screen.queryByRole('button', { name: 'Adjust' })).not.toBeInTheDocument();
+            });
+
+            it('says nothing for a question of another plan, nor once the plan is accepted', () => {
+                ask('another-plan');
+                const { rerender } = render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+
+                expect(screen.queryByRole('region', { name: 'Needs you' })).not.toBeInTheDocument();
+
+                useWorkspaceEventStore.setState({ sessions: {} });
+                ask(GLANCE.id);
+                rerender(<PlanCard plan={{ ...GLANCE, status: 'running' }} sessionId="s-1" canAnswer />);
+
+                expect(screen.queryByRole('region', { name: 'Needs you' })).not.toBeInTheDocument();
+            });
+        });
     });
 });

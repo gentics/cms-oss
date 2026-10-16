@@ -4029,7 +4029,7 @@ export interface components {
             based_on_version: number;
             /** @description The plan summary as the user wants it. Absent keeps the current one. */
             summary?: string;
-            /** @description The steps in the order of work. Absent accepts the plan as proposed (since `1.0.0-rc.4`), or runs a `done` plan again within its accepted scope. */
+            /** @description The steps in the order of work. Absent accepts the plan as proposed (since `1.0.0-rc.4`), or runs a `done` plan again within its accepted scope. At most 200 items (100 before the `1.0.0-rc.5` addition, 2026-10-15). */
             items?: components["schemas"]["UserPlanItem"][];
         };
         /**
@@ -4056,6 +4056,10 @@ export interface components {
             workflow?: string;
             /** @description The ids of the items this step needs (since `1.0.0-rc.5`), each listed before it. Absent keeps the current item's dependencies. */
             depends_on?: string[];
+            /** @description What the step brings into being (since `1.0.0-rc.5` addition, 2026-10-15). Absent keeps the current item's; on a new step GenAIx fills it. */
+            creates?: components["schemas"]["PlannedObject"];
+            /** @description The id of the item whose object this step works on (since `1.0.0-rc.5` addition, 2026-10-15). Absent keeps the current item's. Removing a parent removes its sub-steps. */
+            parent?: string;
         };
         /**
          * Workflow
@@ -4641,7 +4645,32 @@ export interface components {
              *     ]
              */
             depends_on?: string[];
+            /** @description The object this item brings into being (since `1.0.0-rc.5` addition, 2026-10-15), for `kind` `create` and `translate` (a language variant), and `construct` when it defines a new construct. GenAIx sets it on every such item it proposes. `target` stays what it was: the object the item acts on or in, for a create the parent folder, which is its write scope. */
+            creates?: components["schemas"]["PlannedObject"];
+            /** @description The object the item created, once its write completed (since `1.0.0-rc.5` addition, 2026-10-15): the result of the call through the module's `creates` binding (`08` write targets). Absent until then, kept when the item is `done`. One item creates at most one object. */
+            created?: components["schemas"]["ContextReference"];
+            /**
+             * @description The id of the item whose object this item works on (since `1.0.0-rc.5` addition, 2026-10-15): filling the tags of the page its parent creates, or verifying it. An item with a `parent` writes no object of its own and is not counted in a glance; a client may fold it under its parent. A parent is never itself a sub-step (one level), comes before its sub-steps, and is `done` only when they are. Every item without a `parent` that writes (`create`, `update`, `link`, `translate`, `publish`, `construct`) concerns exactly one CMS object: its `creates`, else its `target`.
+             * @example p1
+             */
+            parent?: string;
             detail?: string;
+        };
+        /**
+         * PlannedObject
+         * @description An object a plan item will create (since `1.0.0-rc.5` addition, 2026-10-15). It has no id yet, so it is not a `ContextReference`. A tag fill is not a planned object: it is a sub-step (`parent`) of the item that creates or edits the page.
+         */
+        PlannedObject: {
+            /** @enum {string} */
+            type: "folder" | "page" | "file" | "image" | "construct";
+            /** @description The name it will get, as the user will see it. */
+            label: string;
+            /** @description Where it will appear, for display, e.g. `/Acme GmbH Website/Events 2027/`. */
+            path?: string;
+            /** @description For a page or a language variant, the language code (a translation creates the variant). */
+            language?: string;
+            /** @description For a language variant, the page it is a variant of. */
+            of?: components["schemas"]["ContextReference"];
         };
         /**
          * Step
@@ -4685,6 +4714,10 @@ export interface components {
              * @example content_create
              */
             workflow?: string;
+            /** @description The plan version the check was raised against (since `1.0.0-rc.5` addition, 2026-10-15). A finding the proposing run reports is about the proposal at this version; a gate check carries the version its run executed. A client shows the findings of the current version before acceptance and treats older ones as history. */
+            plan_version?: number;
+            /** @description The plan items the check concerns, when it concerns some (since `1.0.0-rc.5` addition, 2026-10-15). */
+            item_ids?: string[];
             label: string;
             /** @enum {string} */
             severity: "pass" | "info" | "warn" | "fail";
@@ -5009,6 +5042,8 @@ export interface components {
                 id: string;
                 label: string;
                 description?: string;
+                /** @description Why GenAIx offers this option (since `1.0.0-rc.5` addition, 2026-10-15), as for a `settings_review` option. */
+                reason?: string;
                 ref?: components["schemas"]["ContextReference"];
             }[];
             /**
@@ -5016,6 +5051,13 @@ export interface components {
              * @default false
              */
             multi: boolean;
+            /** @description For `choice`: the option ids GenAIx recommends, one unless `multi` (since `1.0.0-rc.5` addition, 2026-10-15). A client preselects them; the user still answers. An array, where a `settings_review` entry's `recommended` is a single value. */
+            recommended?: string[];
+            /**
+             * @description For `choice`: the answer may be the user's own text (`other`) instead of, or besides, the options (since `1.0.0-rc.5` addition, 2026-10-15).
+             * @default false
+             */
+            other_allowed: boolean;
             /** @description For kind `form`, a JSON Schema (draft 2020-12) the `values` object must validate against. Keep it flat: one property is one answer field. */
             schema?: {
                 [key: string]: unknown;
@@ -5102,7 +5144,7 @@ export interface components {
          *     | kind | member |
          *     |---|---|
          *     | `ask_user` | `{"text": "..."}` |
-         *     | `choice` | `{"selected": [...]}` |
+         *     | `choice` | `{"selected": [...], "other"?: "..."}` |
          *     | `confirm` | `{"approved": bool, "comment"?: "..."}` |
          *     | `form` | `{"values": {...}}` |
          *     | `settings_review` | `{"settings": [...], "comment"?: "..."}` |
@@ -5114,10 +5156,14 @@ export interface components {
          */
         InteractionAnswer: {
             text: string;
-        } | {
-            selected: string[];
+        } | ({
+            selected?: string[];
+            /** @description The user's own answer, only where `other_allowed` (since `1.0.0-rc.5` addition, 2026-10-15). */
+            other?: string;
             comment?: string;
         } | {
+            selected: unknown;
+        } | unknown) | {
             approved: boolean;
             comment?: string;
         } | {

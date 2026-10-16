@@ -80,6 +80,19 @@
             "language": "Language",
             "created": "Created",
             "edited": "Last edited"
+        },
+        "pages": {
+            "position": "{{index}} of {{count}}",
+            "unnamed": "Page {{id}}",
+            "groups": {
+                "create": "New pages · {{count}}",
+                "update": "Edited pages · {{count}}",
+                "translate": "Translations · {{count}}",
+                "link": "Pages with new links · {{count}}",
+                "publish": "Pages to publish · {{count}}",
+                "construct": "Pages with constructs · {{count}}",
+                "other": "Other pages · {{count}}"
+            }
         }
     },
     "workspace": {
@@ -163,14 +176,6 @@
         "pageSettings": {
             "change": " – change its page settings:",
             "empty": "empty it"
-        },
-        "revise": {
-            "title": "Change this plan",
-            "hint": {
-                "ask": "Your next message changes this plan.",
-                "stop": "Sending stops the current work and changes the plan."
-            },
-            "cancel": "Don't change the plan"
         }
     },
     "chat": {
@@ -226,11 +231,9 @@
             "choose": "Choose…",
             "chooseFolder": "Choose folder…",
             "otherFolder": "Other folder…",
-            "noFolderChosen": "No folder chosen",
             "chooseFolderFirst": "Choose a folder first",
             "loadingOptions": "Loading…",
             "send": "Send",
-            "confirm": "Confirm",
             "confirmed": "Confirmed",
             "answered": "Answered",
             "expired": "Expired",
@@ -252,8 +255,18 @@
                 "text": "From your text",
                 "context": "From the session",
                 "default": "Default"
-            }
-        }
+            },
+            "recommended": "Recommended",
+            "other": "Something else",
+            "otherAnswer": "Your own answer",
+            "otherPlaceholder": "Describe what you need",
+            "addComment": "Add a comment",
+            "required": "Selection required",
+            "enterValue": "Enter a value…",
+            "stillToChoose": "Still to choose: {{names}}",
+            "confirm": "Confirm"
+        },
+        "sideRun": "Answered beside the running plan"
     },
     "planBar": {
         "label": "Open plan",
@@ -312,10 +325,6 @@
             "failed": "Publishing failed",
             "cancelled": "Publishing was stopped.",
             "close": "Close"
-        },
-        "revise": {
-            "ask": "Ask for a change",
-            "stop": "Stop and change"
         }
     },
     "handOff": {
@@ -421,7 +430,15 @@
                 "caption": "Adjust the highlighted steps",
                 "dependency_order": "Comes before a step it needs",
                 "other": "This step cannot be changed like this"
-            }
+            },
+            "glance": "At a glance",
+            "needsYou": {
+                "title": "Needs you",
+                "answer": "Answer"
+            },
+            "substeps_one": "{{count}} step",
+            "substeps_other": "{{count}} steps",
+            "maxItems": "At most {{count}} steps"
         },
         "citation": {
             "title": "Sources"
@@ -575,7 +592,12 @@
             "iconXl": "Large round icon button",
             "speak": "Speak",
             "link": "As a link",
-            "linkText": "To the buttons"
+            "linkText": "To the buttons",
+            "quiet": "Quiet text button",
+            "sources": "Sources",
+            "value": "Value as a field",
+            "valueText": "Richtlinien · /Richtlinien/",
+            "choose": "Choose…"
         },
         "checkbox": {
             "title": "Checkbox",
@@ -603,7 +625,8 @@
             "placeholder": "Choose a page",
             "home": "Home",
             "news": "News",
-            "contact": "Contact"
+            "contact": "Contact",
+            "fullWidth": "Full width"
         },
         "tabs": {
             "title": "Tabs",
@@ -804,5 +827,33 @@
         "copy": "Copy the JSON of event {{seq}} ({{type}})",
         "copied": "Event {{seq}} copied",
         "copyFailed": "The event could not be copied."
+    },
+    "planGlance": {
+        "create_folder_one": "folder",
+        "create_folder_other": "folders",
+        "create_page_one": "new page",
+        "create_page_other": "new pages",
+        "create_file_one": "file",
+        "create_file_other": "files",
+        "create_image_one": "image",
+        "create_image_other": "images",
+        "create_construct_one": "construct",
+        "create_construct_other": "constructs",
+        "create_one": "new object",
+        "create_other": "new objects",
+        "update_page_one": "page edited",
+        "update_page_other": "pages edited",
+        "update_one": "object edited",
+        "update_other": "objects edited",
+        "link_one": "link",
+        "link_other": "links",
+        "translate_one": "translation",
+        "translate_other": "translations",
+        "publish_page_one": "page to publish",
+        "publish_page_other": "pages to publish",
+        "publish_one": "object to publish",
+        "publish_other": "objects to publish",
+        "construct_one": "construct",
+        "construct_other": "constructs"
     }
 }

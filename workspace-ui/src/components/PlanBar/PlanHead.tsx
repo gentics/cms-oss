@@ -1,14 +1,15 @@
-import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, PencilIcon, RefreshCwIcon, RocketIcon, RouteIcon, TriangleAlertIcon, XIcon } from 'lucide-react';
+import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RefreshCwIcon, RocketIcon, RouteIcon, SquareIcon, TriangleAlertIcon, XIcon } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { errorMessageKey, problemMessageKey } from '@/helper/errorMapper/errorMapper';
-import { isFirstDraft, planActions, revisionOf } from '@/helper/planActions/planActions';
-import { gateRefusalOf, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
+import { isFirstDraft, planActions } from '@/helper/planActions/planActions';
+import { glanceText, isWorthAGlance, planGlance, showsProgress } from '@/helper/planGlance/planGlance';
+import { gateRefusalOf, useCancelRun, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
 import type { Plan, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
-import { useRevisePlanStore } from '@/store/useRevisePlanStore';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import { PublishDialog, type PublishPhase } from './PublishDialog';
@@ -67,16 +68,17 @@ function countByStatus(publications: Publication[]): Partial<Record<PublicationS
 interface PlanHeadProps {
     sessionId: string;
     plan: Plan;
-    /** In a chat card's foot (`ChatPlanCard`) rather than the plan bar: no padding of its own. */
+    /** In a panel (`ReviewPanel`) rather than the plan bar: no padding of its own. */
     isInCard?: boolean;
     /**
      * On the review page's panel: also offers the gated transitions (`GATED_ACTIONS` in `planActions`), and what
-     * to do about a transition the gates refused. Elsewhere only discard, and "Ask for a change" or "Stop and
-     * change", which put the chat composer into revising the plan (there is no composer on the review page).
+     * to do about a transition the gates refused. Elsewhere only discard and Stop.
      */
     withGatedActions?: boolean;
     /** Whether the user may publish the plan's pages in the CMS; without it, publish is not offered (request review is). */
     canPublish?: boolean;
+    /** The plan at a glance after its status, in one line ("+3 folders · 2 pages edited"), while the plan itself is not shown. */
+    withGlance?: boolean;
     /** Controls after the actions, such as the plan bar's toggle. */
     children?: ReactNode;
 }
@@ -103,27 +105,35 @@ interface PlanHeadProps {
  * that can put pages online asks first in a dialog (`PublishDialog`), which then follows publishing to
  * its end: Publish, and after a refused publish "Publish anyway" and "Check again" (which repeats the
  * publish, as the gates only run with the transition). Discard asks first, saying what
- * happens to the pages by the modules' `plan_policy.on_discard` (`onDiscardOf`). Stopping a plan's run is the
- * composer's (`SessionComposer`).
+ * happens to the pages by the modules' `plan_policy.on_discard` (`onDiscardOf`).
  *
- * A plan is changed with a message, not a transition (rc.5 removed `reopen`): outside the review page,
- * "Ask for a change" on a plan that finished its work and "Stop and change" on one that executes
- * (`revisionOf`) put the chat composer into revising this plan (`useRevisePlanStore`), whose next
- * message goes out with `options.mode: revise` (`SessionComposer`). A revision being drafted shows as
- * such: `drafting`, but with the items of its current version.
+ * Outside the review page, while a run of the plan works (proposing, executing, publishing), Stop cancels
+ * it (`POST …/runs/{run_id}/cancel`); the composer stops only the session agent's runs and side runs
+ * (`SessionComposer`), so there is one Stop per run.
+ *
+ * A plan is changed with a message, not a transition (rc.5 removed `reopen`): GenAIx's session agent
+ * decides whether a message revises a plan, and while one executes its router whether it redirects it
+ * (contract §4.4, §4.5). A revision being drafted shows as such: `drafting`, but with the items of its
+ * current version.
+ *
+ * With `withGlance` the plan at a glance follows the status (`planGlance`), as the plan bar shows it
+ * while collapsed, but only while the plan is under way (drafting to running): from `done` on, the head
+ * says only the status and the publish outcome of its pages.
  */
-export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions = false, canPublish = true, children }: PlanHeadProps) {
+export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions = false, canPublish = true, withGlance = false, children }: PlanHeadProps) {
     const { t } = useTranslation();
     const transitionPlan = useTransitionPlan(sessionId);
+    const cancelRun = useCancelRun(sessionId);
     const { pending, latest } = usePlanTransition(sessionId, plan.id);
     const publications = useWorkspaceEventStore((state) => selectSession(sessionId)(state).publications?.[plan.id]);
     const hasRun = useWorkspaceEventStore((state) => Boolean(selectSession(sessionId)(state).run));
+    // The plan's own run in progress, which Stop cancels.
+    const planRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => live.planId === plan.id));
     const [isDiscardOpen, setIsDiscardOpen] = useState(false);
     // The publish dialog, while it is open.
     const [publishing, setPublishing] = useState<Publishing>();
     const notices = useWorkspaceEventStore((state) => selectSession(sessionId)(state).notices);
     const onDiscard = onDiscardOf(plan, useWorkflows().data);
-    const isRevising = useRevisePlanStore((state) => state.planIds[sessionId] === plan.id);
 
     // `isCheck` for "Check again", which has the gates check the plan rather than release it at the user's word.
     function transition(action: Action, { acknowledgeChecks, isCheck }: TransitionOptions = {}) {
@@ -189,7 +199,6 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     const tone = counts.failed ? styles.bad : isUnderWay || isClosed ? undefined : styles.ok;
     const Icon = counts.failed ? CircleAlertIcon : isUnderWay || isClosed ? RouteIcon : CircleCheckIcon;
     const actions = planActions(plan.status, withGatedActions).filter((action) => canPublish || action !== 'publish');
-    const revision = withGatedActions ? undefined : revisionOf(plan.status);
     // A revision is drafted with the items of the version it revises (rc.5); a first draft has none.
     const statusKey = plan.status === 'drafting' && !isFirstDraft(plan) ? 'revising' : plan.status;
     const publish = publishing && publishState(publishing);
@@ -199,6 +208,28 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
         : undefined;
     const acknowledgeable = refusal?.acknowledgeable_checks ?? [];
     const canAcknowledge = Boolean(refusal) && (refusal?.failing_gates ?? []).length === 0 && acknowledgeable.length > 0;
+    // Only while the plan is under way, and for more than one item; once done, the status and the pages
+    // to publish say enough.
+    const glanceEntries = withGlance && isUnderWay ? planGlance(plan.items ?? []) : [];
+    const glance = isWorthAGlance(glanceEntries)
+        ? glanceEntries.map((entry) => {
+            const { value, label } = glanceText(t, entry, showsProgress(plan.status));
+
+            return `${value} ${label}`;
+        }).join(' · ')
+        : '';
+
+    function stop() {
+        if (!planRun) {
+            return;
+        }
+
+        cancelRun.mutate(planRun.id, {
+            onError: (error) => {
+                useErrorNotificationStore.getState().addError({ messageKey: 'chat.stopFailed', detailKey: errorMessageKey(error) });
+            },
+        });
+    }
 
     // The buttons of one action: as offered, or for the refused one what can be done about it.
     function actionButtons(action: Action) {
@@ -254,21 +285,16 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                 <span className={styles.text}>
                     <span className={styles.status}>{t(`parts.plan.status.${statusKey}`)}</span>
                     {summary && ` · ${summary}`}
+                    {glance && <span className={styles.glance}>{` · ${glance}`}</span>}
                 </span>
                 <span className={styles.actions}>
-                    {actions.flatMap(actionButtons)}
-                    {revision && (
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            aria-pressed={isRevising}
-                            disabled={Boolean(pending)}
-                            onClick={() => useRevisePlanStore.getState().start(sessionId, plan.id)}
-                        >
-                            <PencilIcon size={14} />
-                            {t(`planBar.revise.${revision}`)}
+                    {planRun && !withGatedActions && (
+                        <Button variant="secondary" size="sm" disabled={planRun.status === 'cancelling' || cancelRun.isPending} onClick={stop}>
+                            <SquareIcon size={14} />
+                            {t('chat.stop')}
                         </Button>
                     )}
+                    {actions.flatMap(actionButtons)}
                     {children}
                 </span>
                 {publish && (

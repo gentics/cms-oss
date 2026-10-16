@@ -1,4 +1,5 @@
-import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
+import type { TFunction } from 'i18next';
+import { ArrowUpIcon, AtSignIcon, CheckIcon, ChevronDownIcon, ExternalLinkIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,14 +7,24 @@ import type { PageElementInput } from '@/components/Composer/Composer';
 import { ImagePicker } from '@/components/ImagePicker/ImagePicker';
 import { PageSettings } from '@/components/PageSettings/PageSettings';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverClose, PopoverContent, PopoverTitle } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import type { PageSettingsChange } from '@/helper/composerParts/composerParts';
+import type { PreviewPageGroup } from '@/helper/previewPages/previewPages';
 import { type ElementBox, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
-import type { ContextReference } from '@/services/apiService/genaix/types';
+import type { ContextReference, Preview } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
 import type { LivePreview } from '@/store/useWorkspaceEventStore';
 
@@ -93,8 +104,68 @@ export interface PreviewActions {
     canSendFeedback: boolean;
 }
 
+/** The plan's pages to switch the preview between: their previews by the kind of item, and what choosing one does. */
+export interface PreviewPages {
+    pages?: PreviewPageGroup[];
+    onPageChange?: (preview: Preview) => void;
+}
+
 /** The preview, with all of `PreviewActions` (the session's chat) or none of them (only showing the page, as on the review page). */
-export type PreviewColumnProps = { preview: LivePreview } & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
+export type PreviewColumnProps = { preview: LivePreview } & PreviewPages & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
+
+// A page's name in the page menu: its CMS name, else its id.
+function pageName(t: TFunction, preview: Pick<Preview, 'cms_ref'>): string {
+    return preview.cms_ref.name || t('preview.pages.unnamed', { id: preview.cms_ref.id });
+}
+
+/**
+ * The page menu in the header (rc.5 addition, 09-integration-guide.md "The plan at a glance"): the page
+ * shown with its place among the plan's pages, and every page of the plan to choose from, grouped by
+ * the kind of item that made or changed it (`previewPages`). Only with two pages or more.
+ */
+function PageMenu({ preview, pages, onPageChange }: { preview: LivePreview; pages: PreviewPageGroup[]; onPageChange: (preview: Preview) => void }) {
+    const { t } = useTranslation();
+    const all = pages.flatMap(({ previews }) => previews);
+    const current = String(preview.cms_ref.id);
+    const index = all.findIndex(({ cms_ref: ref }) => String(ref.id) === current);
+
+    if (all.length < 2) {
+        return null;
+    }
+
+    function choose(value: unknown) {
+        const chosen = all.find(({ cms_ref: ref }) => String(ref.id) === value);
+
+        if (chosen) {
+            onPageChange(chosen);
+        }
+    }
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+                <span className={styles.pageName}>{pageName(t, preview)}</span>
+                {' '}
+                {index >= 0 && <span className={styles.pagePosition}>{t('preview.pages.position', { index: index + 1, count: all.length })}</span>}
+                <ChevronDownIcon size={14} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                {pages.map(({ kind, previews }) => (
+                    <DropdownMenuGroup key={kind}>
+                        <DropdownMenuLabel>{t(`preview.pages.groups.${kind}`, { count: previews.length })}</DropdownMenuLabel>
+                        <DropdownMenuRadioGroup value={current} onValueChange={choose}>
+                            {previews.map((page) => (
+                                <DropdownMenuRadioItem key={String(page.cms_ref.id)} value={String(page.cms_ref.id)} closeOnClick>
+                                    {pageName(t, page)}
+                                </DropdownMenuRadioItem>
+                            ))}
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuGroup>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
 
 /**
  * The right column: the CMS preview of the page the session produced, framed on the preview stage
@@ -129,6 +200,9 @@ export type PreviewColumnProps = { preview: LivePreview } & (PreviewActions | { 
  *
  * Without `PreviewActions` the preview only shows the page: no part is selected, outlined or offered a
  * menu, and there are no page settings; the changed parts are still tinted.
+ *
+ * With `pages` of two or more, the header has a page menu (`PageMenu`): choosing a page hands its preview
+ * to `onPageChange`, which shows it.
  */
 export function PreviewColumn(props: PreviewColumnProps) {
     const { preview } = props;
@@ -365,6 +439,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         <section className={`${styles.column} ${isFullScreen ? styles.fullScreen : ''}`} aria-labelledby={titleId}>
             <header className={styles.head}>
                 <h2 id={titleId} className={styles.title}>{t('preview.title')}</h2>
+                {props.pages && props.onPageChange && <PageMenu preview={preview} pages={props.pages} onPageChange={props.onPageChange} />}
                 <span className={styles.url} title={url}>{url}</span>
                 {/* A link in the look of a button, as "New" in the left column. */}
                 <Button

@@ -7,6 +7,7 @@ import type {
     DerivedSettings,
     GenaixEvent,
     Interaction,
+    InteractionAnswer,
     MessageCreateBody,
     MessagePart,
     MessageRole,
@@ -27,6 +28,8 @@ export interface SentMessage {
     localId: string;
     /** The server's `message_id`, once the POST was accepted. */
     messageId?: string;
+    /** The run the message started or joined (`MessageAccepted.run_id`), once the POST was accepted. */
+    runId?: string;
     request: MessageCreateBody;
     status: 'sending' | 'sent' | 'send_failed';
     error?: unknown;
@@ -124,6 +127,11 @@ export interface SessionLiveState {
     awaitedRunIds?: string[];
     /** Every run the stream has told about, so a run whose events came before its `202` is not awaited. */
     seenRunIds?: string[];
+    /**
+     * The side runs the stream started (`run.mode: side`): the session agent answering a message while a
+     * plan executes, which GenAIx's router took as a question (rc.5). Kept after they end.
+     */
+    sideRunIds?: string[];
     notices?: RunNotice[];
     /** Interactions waiting for an answer (`interaction.requested`, not resolved yet). */
     interactions?: Interaction[];
@@ -162,7 +170,7 @@ export interface SessionLiveState {
 interface WorkspaceEventState {
     sessions: Record<string, SessionLiveState>;
     addSentMessage: (sessionId: string, localId: string, request: MessageCreateBody) => void;
-    markMessageSent: (sessionId: string, localId: string, messageId: string) => void;
+    markMessageSent: (sessionId: string, localId: string, messageId: string, runId?: string) => void;
     markSendFailed: (sessionId: string, localId: string, error: unknown) => void;
     /**
      * Applies one event of the session's stream. Events at or below `lastSeq` are ignored, so a
@@ -295,6 +303,12 @@ function withRun(message: ReceivedMessage, runId: string | null | undefined): Re
     return message.runId || !runId ? message : { ...message, runId };
 }
 
+// The answer of a `settings_review` (`{settings, comment?}`). `InteractionResolvedEvent.answer` is
+// generated as `unknown` since the rc.5 addition (see `InteractionAnswer` in `types.ts`).
+function isSettingsAnswer(answer: unknown): answer is Extract<InteractionAnswer, { settings: unknown }> {
+    return typeof answer === 'object' && answer !== null && 'settings' in answer && Array.isArray(answer.settings);
+}
+
 function applyToMessages(messages: LiveMessage[], event: GenaixEvent): LiveMessage[] {
     switch (event.type) {
         case 'message.started':
@@ -314,7 +328,7 @@ function applyToMessages(messages: LiveMessage[], event: GenaixEvent): LiveMessa
             // A confirmed `settings_review`: GenAIx stored the answer's `settings` as a user message.
             const { message_id: messageId, answer } = event;
 
-            if (!messageId || !answer || !('settings' in answer)) {
+            if (!messageId || !isSettingsAnswer(answer)) {
                 return messages;
             }
 
@@ -508,6 +522,10 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
         ? event.run.id
         : event.run_id;
 
+    if (event.type === 'run.started' && event.run.mode === 'side' && !session.sideRunIds?.includes(event.run.id)) {
+        next.sideRunIds = [...(session.sideRunIds ?? []), event.run.id];
+    }
+
     if (eventRunId && !session.seenRunIds?.includes(eventRunId)) {
         next.seenRunIds = [...(session.seenRunIds ?? []), eventRunId];
         next.awaitedRunIds = session.awaitedRunIds?.filter((id) => id !== eventRunId);
@@ -577,9 +595,9 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         messages: [...session.messages, { kind: 'sent', localId, request, status: 'sending' }],
     }))),
 
-    markMessageSent: (sessionId, localId, messageId) => set((state) => updateSession(state.sessions, sessionId, (session) => ({
+    markMessageSent: (sessionId, localId, messageId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => ({
         ...session,
-        messages: updateSent(session.messages, localId, (message) => ({ ...message, messageId, status: 'sent' })),
+        messages: updateSent(session.messages, localId, (message) => ({ ...message, messageId, ...(runId && { runId }), status: 'sent' })),
     }))),
 
     markSendFailed: (sessionId, localId, error) => set((state) => updateSession(state.sessions, sessionId, (session) => ({
@@ -628,6 +646,7 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         lastSeq: 0,
         runs: undefined,
         run: undefined,
+        sideRunIds: undefined,
         notices: undefined,
         interactions: undefined,
         steps: undefined,

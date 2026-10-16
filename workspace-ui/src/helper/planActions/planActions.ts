@@ -1,10 +1,10 @@
-import type { Plan, PlanStatus, TransitionRequest } from '@/services/apiService/genaix/types';
+import type { Plan, PlanStatus, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
 
 export type PlanAction = TransitionRequest['action'];
 
 // What the user can do with the plan in each status (09-integration-guide.md, "The plan card"), the
 // main action last. A proposed plan is accepted from the plan itself, with a message (`planMessage`);
-// a plan is changed with a message too (`revisionOf`), never a transition (rc.5 removed `reopen`).
+// a plan is changed with a message too, never a transition (rc.5 removed `reopen`).
 const ACTIONS: Partial<Record<PlanStatus, PlanAction[]>> = {
     drafting: ['discard'],
     proposed: ['discard'],
@@ -27,29 +27,39 @@ export function hasGatedActions(status: PlanStatus): boolean {
     return (ACTIONS[status] ?? []).some((action) => GATED_ACTIONS.has(action));
 }
 
-/** How the user changes a plan with a message (`options.mode: revise`, rc.5). */
-export type Revision = 'ask' | 'stop';
-
-// "Ask for a change" on a plan that finished its work, "Stop and change" on one that executes, which
-// the message redirects (contract §4.4, §4.5). A proposed plan is changed in the card (Adjust) or by
-// writing; a drafting one is being revised already; a final one never changes again.
-const REVISIONS: Partial<Record<PlanStatus, Revision>> = {
-    accepted: 'stop',
-    running: 'stop',
-    done: 'ask',
-    released: 'ask',
-    published: 'ask',
-    review_requested: 'ask',
-};
-
-/** How the plan can be changed with a message in its status, if at all. */
-export function revisionOf(status: PlanStatus): Revision | undefined {
-    return REVISIONS[status];
+/**
+ * Whether the plan is accepted on its card: one of its modules has `plan_approval: true`
+ * (08-workflow-modules.md §6.5). Otherwise its run asks the one confirmation in the chat (a module that
+ * writes) or it needs none (one that only reads). `false` while the modules are not known.
+ */
+export function isAcceptedOnCard(plan: Plan, workflows: Workflow[] | undefined): boolean {
+    return (plan.workflows ?? []).some(({ id }) => workflows?.find((workflow) => workflow.id === id)?.plan_approval === true);
 }
 
-/** Whether the plan can still be revised: every status but the final ones (`409 plan_not_revisable`). */
-export function isRevisable(status: PlanStatus): boolean {
-    return status !== 'discarded' && status !== 'superseded';
+/** How much of a plan the UI shows: its whole card, only its head line, or nothing. */
+export type PlanPresence = 'card' | 'head' | 'none';
+
+// The statuses of a plan whose work is under way, from its draft to its run.
+const UNDER_WAY: ReadonlySet<PlanStatus> = new Set<PlanStatus>(['drafting', 'proposed', 'accepted', 'running']);
+
+/**
+ * How much of a plan to show (`PlanPresence`). A plan accepted on its card (`isAcceptedOnCard`) shows its
+ * card. Every other one is confirmed in the chat or needs no acceptance, so its steps are left out: its
+ * head alone, for what the user may still do (Stop while it works, "Review & release" for its pages,
+ * the per-page outcome once published, a closed plan as closed, 09-integration-guide.md "The Workspace
+ * UI"), and nothing once it is done without a page to publish. While the modules are not known, its
+ * card.
+ */
+export function planPresence(plan: Plan, workflows: Workflow[] | undefined, publications: Publication[] | undefined): PlanPresence {
+    const modules = (plan.workflows ?? []).map(({ id }) => workflows?.find((workflow) => workflow.id === id));
+
+    if (!workflows || modules.length === 0 || modules.some((module) => !module || module.plan_approval === true)) {
+        return 'card';
+    }
+
+    const isClosed = plan.status === 'discarded' || plan.status === 'superseded';
+
+    return UNDER_WAY.has(plan.status) || isClosed || (publications?.length ?? 0) > 0 ? 'head' : 'none';
 }
 
 /**

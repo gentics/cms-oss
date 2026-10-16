@@ -1,4 +1,4 @@
-import type { PlanStatus, TransitionRequest } from '@/services/apiService/genaix/types';
+import type { CmsObjectRef, PlanStatus, TransitionRequest } from '@/services/apiService/genaix/types';
 
 export type PlanAction = TransitionRequest['action'];
 
@@ -20,6 +20,15 @@ export const GATED_ACTIONS: ReadonlySet<PlanAction> = new Set<PlanAction>(['rele
 /** The transitions the plan's status allows; the gated ones only with `withGated` (on the review page). */
 export function planActions(status: PlanStatus, withGated: boolean): PlanAction[] {
     return (ACTIONS[status] ?? []).filter((action) => withGated || !GATED_ACTIONS.has(action));
+}
+
+// The operations of a page the plan wrote, the pages `publish` acts on (contract, plan transitions route:
+// `created` or `updated`, and `published`, which replaces them once the page went out).
+const WRITTEN: ReadonlySet<CmsObjectRef['operation']> = new Set(['created', 'updated', 'published']);
+
+/** The pages a plan wrote (`PlanState.cms_objects`): created, changed or published by it. */
+export function writtenPagesOf(cmsObjects: CmsObjectRef[]): CmsObjectRef[] {
+    return cmsObjects.filter(({ type, operation }) => type === 'page' && WRITTEN.has(operation));
 }
 
 /** Whether the plan's status allows a gated transition, which is made on the review page. */

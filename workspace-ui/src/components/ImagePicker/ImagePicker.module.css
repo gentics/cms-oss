@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
 }
 
 .status {
@@ -25,7 +26,7 @@
 .tile {
   position: relative;
   display: block;
-  overflow: hidden;
+  max-height: 80px;
   aspect-ratio: 16 / 10;
   border: 2px solid transparent;
   border-radius: var(--corner-lg);
@@ -49,4 +50,41 @@
   position: absolute;
   top: 4px;
   right: 4px;
+}
+
+/* design.md §12 "Bildraster": the upload tile, dashed `--border-strong` on `--bg-subtle`. */
+.upload {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-strong);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+
+  &:hover {
+    border-color: var(--interactive);
+  }
+
+  /* design.md §8: the keyboard focus of the hidden file input, shown on its tile. */
+  &:has(.fileInput:focus-visible) {
+    box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--interactive);
+  }
+}
+
+/* Hidden, but focusable and clickable through its tile. */
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.problem {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--font-size-sm);
 }

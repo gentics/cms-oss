@@ -80,4 +80,18 @@ describe('isImagePart', () => {
         expect(isImagePart(part('2'))).toBe(true);
         expect(isImagePart(part('3'))).toBe(false);
     });
+
+    it('is false for a text part whose only image belongs to a marked part inside it', () => {
+        // An image block added to a text editable: the image belongs to the block, not to the text.
+        document.body.innerHTML = `
+            <div data-gcn-tagid="890" data-gcn-tagname="pagecontent"><p>Text</p>
+                <div data-gcn-tagid="893" data-gcn-tagname="manimage_1" class="aloha-block">
+                    <figure><img src="/a.jpg" alt=""></figure>
+                </div>
+            </div>`;
+        const part = (tagId: string) => document.querySelector(`[data-gcn-tagid="${tagId}"]`)!;
+
+        expect(isImagePart(part('890'))).toBe(false);
+        expect(isImagePart(part('893'))).toBe(true);
+    });
 });

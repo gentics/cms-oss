@@ -621,6 +621,73 @@ describe('Composer', () => {
             });
         });
 
+        it('appends a take to the text already in the field', async () => {
+            vi.stubGlobal('SpeechRecognition', FakeRecognizer);
+
+            const user = userEvent.setup();
+            const { field } = renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Shorten the intro');
+            await user.click(screen.getByRole('button', { name: 'Dictate' }));
+            act(() => FakeRecognizer.last!.say('and add a teaser'));
+            await user.click(screen.getByRole('button', { name: 'Stop dictating' }));
+
+            expect(field).toHaveTextContent('Shorten the intro and add a teaser');
+        });
+
+        it('appends a second take to the first', async () => {
+            vi.stubGlobal('SpeechRecognition', FakeRecognizer);
+
+            const user = userEvent.setup();
+            const { field } = renderComposer();
+
+            await user.click(screen.getByRole('button', { name: 'Dictate' }));
+            act(() => FakeRecognizer.last!.say('Shorten the intro'));
+            await user.click(screen.getByRole('button', { name: 'Stop dictating' }));
+            await user.click(screen.getByRole('button', { name: 'Dictate' }));
+            act(() => FakeRecognizer.last!.say('and add'));
+            act(() => FakeRecognizer.last!.say('and add a teaser'));
+            await user.click(screen.getByRole('button', { name: 'Stop dictating' }));
+
+            expect(field).toHaveTextContent('Shorten the intro and add a teaser');
+        });
+
+        it('appends a take to the text typed after an earlier take', async () => {
+            vi.stubGlobal('SpeechRecognition', FakeRecognizer);
+
+            const user = userEvent.setup();
+            const { field } = renderComposer();
+
+            await user.click(screen.getByRole('button', { name: 'Dictate' }));
+            act(() => FakeRecognizer.last!.say('Shorten the intro'));
+            await user.click(screen.getByRole('button', { name: 'Stop dictating' }));
+            await user.click(field);
+            await user.keyboard(' to two sentences');
+            await user.click(screen.getByRole('button', { name: 'Dictate' }));
+            act(() => FakeRecognizer.last!.say('and add a teaser'));
+            await user.click(screen.getByRole('button', { name: 'Stop dictating' }));
+
+            expect(field).toHaveTextContent('Shorten the intro to two sentences and add a teaser');
+        });
+
+        it('throws only the current take away on Escape, keeping the text before it', async () => {
+            vi.stubGlobal('SpeechRecognition', FakeRecognizer);
+
+            const user = userEvent.setup();
+            const { field } = renderComposer();
+
+            await user.click(screen.getByRole('button', { name: 'Dictate' }));
+            act(() => FakeRecognizer.last!.say('Shorten the intro'));
+            await user.click(screen.getByRole('button', { name: 'Stop dictating' }));
+            await user.click(screen.getByRole('button', { name: 'Dictate' }));
+            act(() => FakeRecognizer.last!.say('Discard this'));
+            field.focus();
+            await user.keyboard('{Escape}');
+
+            expect(field).toHaveTextContent(/^Shorten the intro$/);
+        });
+
         it('throws the take away on Escape while listening', async () => {
             vi.stubGlobal('SpeechRecognition', FakeRecognizer);
 

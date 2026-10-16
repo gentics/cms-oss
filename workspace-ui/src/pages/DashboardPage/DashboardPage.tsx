@@ -7,13 +7,11 @@ import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
 import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
+import { useCmsUser } from '@/hooks/useCmsAuth';
 import { type StartSessionInput, useStartSession } from '@/hooks/useGenaixQueries';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 import styles from './DashboardPage.module.css';
-
-// TEMPORARY: GET /me knows no name, only an opaque subject. Replace once the user's name is available.
-const GREETING_NAME = 'Dominik';
 
 // The greeting by the hour, as in the draft (`greet`).
 function greetingKey(hour: number): string {
@@ -36,6 +34,9 @@ export function DashboardPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const startSession = useStartSession();
+    // The CMS user of the session (`LoginGate` shows the page only with one): first name, the login without one.
+    const cmsUser = useCmsUser({ refetchOnMount: false }).data;
+    const greetingName = cmsUser ? (cmsUser.firstName || cmsUser.login) : null;
 
     // Upload progress of the files sent, by their position, for the composer's attachment list.
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);
@@ -68,7 +69,7 @@ export function DashboardPage() {
             <div className={styles.body}>
                 <main className={styles.scroll}>
                     <div className={styles.content}>
-                        <h1 className={styles.greeting}>{t(greetingKey(new Date().getHours()), { name: GREETING_NAME })}</h1>
+                        {greetingName && <h1 className={styles.greeting}>{t(greetingKey(new Date().getHours()), { name: greetingName })}</h1>}
 
                         <Composer variant="start" onSubmit={handleSubmit} isSubmitting={startSession.isPending} uploadProgress={uploadProgress} />
 

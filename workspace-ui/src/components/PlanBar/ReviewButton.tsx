@@ -3,26 +3,34 @@ import { ClipboardCheckIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { usePlanTransition, useTransitionPlan } from '@/hooks/useGenaixQueries';
-import type { Plan } from '@/services/apiService/genaix/types';
+import { writtenPagesOf } from '@/helper/planActions/planActions';
+import { usePlanState, usePlanTransition, useTransitionPlan } from '@/hooks/useGenaixQueries';
+import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
 
 // The modules whose plans have nothing to review: `content_research` only reads and writes no page
-// (contract §4.1, "no CMS write tool").
+// (contract §4.1, "no CMS write tool"). Their state is not even asked for.
 const NOTHING_TO_REVIEW: ReadonlySet<string> = new Set(['content_research']);
 
+// The statuses of a plan whose run has finished (contract, `PlanStatus`): done, then released, then
+// sent out. While it is accepted or running there is nothing finished to review yet.
+const FINISHED: ReadonlySet<PlanStatus> = new Set(['done', 'released', 'published', 'review_requested']);
+
 /**
- * "Review & release": opens the plan on the review page. A `done` plan is released on the way, so the
- * quality gates check it while the review page opens, which shows that (`ReviewPanel`) and then the
- * checks, the refusal or publish. A plan whose run still works is not released here, since that would
- * stop the run (contract §4.2); the review page offers its release. A plan of a module that writes no
- * page (`NOTHING_TO_REVIEW`) gets no button.
+ * "Review & release": opens the plan on the review page, once the plan has finished (`FINISHED`) and
+ * wrote at least one page (`writtenPagesOf` on its `PlanState`, read again on every plan event); before
+ * that, and while its state is not known, there is no button. A `done` plan is released on the way, so
+ * the quality gates check it while the review page opens, which shows that (`ReviewPanel`) and then the
+ * checks, the refusal or publish. A plan of a module that writes no page (`NOTHING_TO_REVIEW`) gets no
+ * button.
  */
 export function ReviewButton({ sessionId, plan }: { sessionId: string; plan: Plan }) {
     const { t } = useTranslation();
     const transitionPlan = useTransitionPlan(sessionId);
     const { pending } = usePlanTransition(sessionId, plan.id);
+    const isReviewable = FINISHED.has(plan.status) && !NOTHING_TO_REVIEW.has(plan.workflow);
+    const state = usePlanState(sessionId, isReviewable ? plan.id : undefined);
 
-    if (NOTHING_TO_REVIEW.has(plan.workflow)) {
+    if (!isReviewable || !state.data || writtenPagesOf(state.data.cms_objects).length === 0) {
         return null;
     }
 

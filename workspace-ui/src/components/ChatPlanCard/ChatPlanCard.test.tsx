@@ -16,7 +16,12 @@ function plan(status: PlanStatus): Plan {
 describe('ChatPlanCard', () => {
     beforeEach(() => {
         useWorkspaceEventStore.setState({ sessions: {} });
-        vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => Response.json({ items: [], next_cursor: null })));
+        // The plan's state lists a page it wrote; every list answers empty.
+        vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => (
+            String(input).endsWith(`/sessions/${SESSION}/plans/pl-old`)
+                ? Response.json({ plan: plan('released'), cms_objects: [{ type: 'page', id: 9142, node_id: 3, operation: 'created' }] })
+                : Response.json({ items: [], next_cursor: null })
+        )));
     });
 
     afterEach(() => {

@@ -5,7 +5,7 @@ import jakarta.ws.rs.QueryParam;
 
 /**
  * Parameter bean for getting templates of a folder
- * 
+ *
  * @author plyhun
  *
  */
@@ -29,6 +29,13 @@ public class TemplateListParameterBean extends ReducedListParameterBean {
 	@QueryParam("checkPermission")
 	@DefaultValue("true")
 	public boolean checkPermission = true;
+
+	/**
+	 * true if the list should be reduced to the unique template occurrences only. valid only when {@link InFolderParameterBean#recursive} flag is set.
+	 */
+	@QueryParam("reduce")
+	@DefaultValue("false")
+	public boolean reduce = false;
 
 	public TemplateListParameterBean setFolderNodeId(Integer nodeId) {
 		this.nodeId = nodeId;

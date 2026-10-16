@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
@@ -30,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.ApiTokenSession;
+import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
@@ -55,6 +58,7 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;
 import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.StreamingOutput;
 import jakarta.ws.rs.core.UriInfo;
 
 /**
@@ -64,9 +68,32 @@ import jakarta.ws.rs.core.UriInfo;
 @Authenticated
 public class ProxyResource {
 	/**
-	 * Response header that shall not be forwarded
+	 * Hop-by-hop headers (RFC 9110, section 7.6.1), which apply to a single connection and must not be forwarded
 	 */
-	protected final static List<String> OMIT_RESPONSE_HEADERS = Arrays.asList("transfer-encoding");
+	protected final static List<String> HOP_BY_HOP_HEADERS = Arrays.asList("connection", "keep-alive", "proxy-authenticate",
+			"proxy-authorization", "proxy-connection", "te", "trailer", "transfer-encoding", "upgrade");
+
+	/**
+	 * Request headers that shall not be forwarded: hop-by-hop headers and headers the HTTP client sets for the proxied request itself
+	 */
+	protected final static Set<String> OMIT_REQUEST_HEADERS = Stream
+			.concat(HOP_BY_HOP_HEADERS.stream(), Stream.of("host", "content-length"))
+			.collect(Collectors.toUnmodifiableSet());
+
+	/**
+	 * Name of the Cookie header (in lower case)
+	 */
+	protected final static String COOKIE_HEADER = "cookie";
+
+	/**
+	 * Name of the Authorization header (in lower case)
+	 */
+	protected final static String AUTHORIZATION_HEADER = "authorization";
+
+	/**
+	 * Response headers that shall not be forwarded
+	 */
+	protected final static Set<String> OMIT_RESPONSE_HEADERS = Set.copyOf(HOP_BY_HOP_HEADERS);
 
 	/**
 	 * Value of the issuer claim
@@ -339,17 +366,39 @@ public class ProxyResource {
 		}).toArray(NameValuePair[]::new);
 		method.setQueryString(queryParams);
 
+		// headers listed in the Connection header are hop-by-hop headers as well
+		List<String> connectionValues = httpHeaders.getRequestHeader("Connection");
+		Set<String> connectionHeaders = (connectionValues == null ? List.<String>of() : connectionValues).stream()
+				.flatMap(value -> Arrays.stream(StringUtils.split(value, ','))).map(token -> token.trim().toLowerCase())
+				.collect(Collectors.toSet());
+
+		// when the client authenticated with an API token, the Authorization header contains the CMS credentials, which must not be forwarded
+		boolean omitAuthorization = ContentNodeHelper.getSession() instanceof ApiTokenSession;
+
 		for (Map.Entry<String, List<String>> headerEntry : httpHeaders.getRequestHeaders().entrySet()) {
-			// TODO filter headers to be added
 			String name = headerEntry.getKey();
+			String lowerName = name.toLowerCase();
+			if (OMIT_REQUEST_HEADERS.contains(lowerName) || connectionHeaders.contains(lowerName)) {
+				continue;
+			}
+			if (omitAuthorization && AUTHORIZATION_HEADER.equals(lowerName)) {
+				continue;
+			}
 			for (String value : headerEntry.getValue()) {
+				if (COOKIE_HEADER.equals(lowerName)) {
+					value = removeSessionSecretCookie(value);
+					if (StringUtils.isEmpty(value)) {
+						continue;
+					}
+				}
 				method.addRequestHeader(name, value);
 			}
 		}
 
+		// configured headers replace headers sent by the client
 		if (customProxy.getHeaders() != null) {
 			for (Map.Entry<String, String> headerEntry : customProxy.getHeaders().entrySet()) {
-				method.addRequestHeader(headerEntry.getKey(), headerEntry.getValue());
+				method.setRequestHeader(headerEntry.getKey(), headerEntry.getValue());
 			}
 		}
 
@@ -380,7 +429,7 @@ public class ProxyResource {
 					.setIssuer(JWT_ISSUER)
 					.setIssuedAt(new Date());
 				String encodedJwt = KeyProvider.sign(builder).compact();
-				method.addRequestHeader("Authorization", String.format("Bearer %s", encodedJwt));
+				method.setRequestHeader("Authorization", String.format("Bearer %s", encodedJwt));
 			} catch (Exception e) {
 				throw new NodeException(e);
 			}
@@ -403,6 +452,51 @@ public class ProxyResource {
 			}
 			responseBuilder.header(name, header.getValue());
 		}
-		return responseBuilder.entity(method.getResponseBodyAsStream()).build();
+
+		var responseBodyStream = method.getResponseBodyAsStream();
+
+		if (responseBodyStream == null) {
+			method.releaseConnection();
+
+			return responseBuilder.build();
+		}
+
+		StreamingOutput streamingBody = output -> {
+			boolean completed = false;
+			try {
+				var buffer = new byte[8192];
+				int read;
+
+				while ((read = responseBodyStream.read(buffer)) >= 0) {
+					if (read > 0) {
+						output.write(buffer, 0, read);
+						// flush every chunk, so that streamed responses reach the client without delay
+						output.flush();
+					}
+				}
+				responseBodyStream.close();
+				completed = true;
+			} finally {
+				if (!completed) {
+					// the client went away or the upstream failed: drop the connection instead of
+					// letting releaseConnection() read the (possibly endless) rest of the response
+					method.abort();
+				}
+				method.releaseConnection();
+			}
+		};
+
+		return responseBuilder.entity(streamingBody).build();
+	}
+
+	/**
+	 * Remove the session secret cookie (which contains the CMS credentials of the client) from the given Cookie header value
+	 * @param cookieHeader value of a Cookie header, e.g. "name1=value1; name2=value2"
+	 * @return value without the session secret cookie (may be empty)
+	 */
+	protected static String removeSessionSecretCookie(String cookieHeader) {
+		return Arrays.stream(StringUtils.split(cookieHeader, ';')).map(String::trim).filter(StringUtils::isNotEmpty)
+				.filter(cookie -> !SessionToken.SESSION_SECRET_COOKIE_NAME.equals(StringUtils.substringBefore(cookie, "=").trim()))
+				.collect(Collectors.joining("; "));
 	}
 }

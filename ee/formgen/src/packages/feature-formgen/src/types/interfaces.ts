@@ -375,17 +375,17 @@ export type reCaptchaMode = 'checkbox' | 'invisible'
  *
  * This is the model the captcha components work against
  *
- * @property provider Which captcha service to render: `'friendly'` (Friendly
+ * @property provider Which captcha service to render: `'friendlycaptcha'` (Friendly
  *   Captcha) or `'recaptcha'` (Google reCAPTCHA).
  * @property siteKey  Public site key of the configured provider.
  * @property mode     Optional widget mode; the allowed values depend on the
- *   provider (`FriendlyCaptchaMode` for `'friendly'`, `reCaptchaMode` for
+ *   provider (`FriendlyCaptchaMode` for `'friendlycaptcha'`, `reCaptchaMode` for
  *   `'recaptcha'`). Falls back to the provider's default when omitted.
  * @property language Optional UI language for the widget (e.g. `'de'`).
  * @property baseUrl  Optional base URL, used by the native reCAPTCHA renderer.
  */
 export interface CaptchaConfig {
-  provider: 'friendly' | 'recaptcha';
+  provider: 'friendlycaptcha' | 'recaptcha';
   siteKey: string;
   mode?: FriendlyCaptchaMode | reCaptchaMode;
   language?: string;
@@ -402,7 +402,7 @@ export interface CaptchaConfig {
  * internal `CaptchaConfig` type.
  */
 export interface RawCaptchaConfig {
-  provider: 'friendly' | 'recaptcha';
+  provider: 'friendlycaptcha' | 'recaptcha';
   sitekey: string;
   mode: FriendlyCaptchaMode | reCaptchaMode;
   baseUrl?: string;

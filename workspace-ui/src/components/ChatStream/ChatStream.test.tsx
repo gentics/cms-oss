@@ -1,0 +1,482 @@
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { GenaixEvent, Message } from '@/services/apiService/genaix/types';
+import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { createWrapper, renderWithProviders } from '@/test/renderWithProviders';
+
+import { ChatStream } from './ChatStream';
+
+const SESSION = 's-1';
+
+function event(seq: number, type: string, payload: Record<string, unknown> = {}): GenaixEvent {
+    return { seq, ts: '2026-10-07T09:00:00Z', session_id: SESSION, type, ...payload } as GenaixEvent;
+}
+
+function apply(...events: GenaixEvent[]) {
+    act(() => events.forEach((e) => useWorkspaceEventStore.getState().applyEvent(SESSION, e)));
+}
+
+function message(id: string, role: Message['role'], text: string, runId?: string): Message {
+    return {
+        id,
+        role,
+        run_id: runId,
+        created_at: '2026-10-07T09:00:00Z',
+        parts: role === 'user' ? [{ type: 'text', text }] : [{ type: 'text', format: 'plain', text }],
+        references: [],
+        files: [],
+    };
+}
+
+// Answers the session's message history with `history`, in one page.
+function stubHistory(history: Message[]) {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => Response.json({ items: history, next_cursor: null })));
+}
+
+// Answers by route: the session, the workflow catalogue with the steps of the module `workflow`, the history.
+function stubSession(workflow: string, stepsTemplate: { id: string; label: string }[], history: Message[]) {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+        const url = String(input);
+
+        if (url.endsWith('/workflows')) {
+            return Response.json({ items: [{ id: workflow, version: '1.0.0', title: workflow, description: '', roles: [], steps_template: stepsTemplate }] });
+        }
+
+        if (url.endsWith(`/sessions/${SESSION}`)) {
+            return Response.json({ id: SESSION });
+        }
+
+        return Response.json({ items: history, next_cursor: null });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    return fetchMock;
+}
+
+// The chat's own items, the steps card as `steps`.
+function chatItems() {
+    const [chat] = screen.getAllByRole('list');
+
+    return Array.from(chat!.children).map((item) => (
+        within(item as HTMLElement).queryByRole('group', { name: 'Steps' }) ? 'steps' : item.textContent
+    ));
+}
+
+// The chat list's items as rendered, also the agent's head (hidden from assistive technology).
+function listChildren() {
+    const [chat] = screen.getAllByRole('list');
+
+    return Array.from(chat!.children) as HTMLElement[];
+}
+
+const TEMPLATE = [{ id: 'st-1', label: 'Read source material' }, { id: 'st-2', label: 'Propose plan' }];
+
+// Since rc.4 the steps are those of a plan, under the plan's modules: this one is drafted under
+// `workflow`, so it has no card of its own. Its reported step ids are `<workflow>/<id>` (rc.5).
+function draftPlan(seq: number, workflow: string) {
+    apply(event(seq, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflows: [{ id: workflow, version: '1.0.0' }], status: 'drafting', version: 0, summary: '', items: [] } }));
+}
+
+function texts() {
+    return screen.getAllByRole('listitem').map((item) => item.textContent);
+}
+
+describe('ChatStream', () => {
+    beforeEach(() => {
+        useWorkspaceEventStore.setState({ sessions: {} });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('shows the history, then what the stream added, each message once', async () => {
+        stubHistory([message('m-1', 'user', 'Which pages are offline?', 'r-1'), message('m-2', 'assistant', 'Two pages are offline.', 'r-1')]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        await screen.findByText('Two pages are offline.');
+
+        // The replay brings the persisted answer again, then a new one.
+        apply(
+            event(1, 'message.started', { run_id: 'r-1', message_id: 'm-2', role: 'assistant' }),
+            event(2, 'part.completed', { run_id: 'r-1', message_id: 'm-2', part_index: 0, part: { type: 'text', format: 'plain', text: 'Two pages are offline.' } }),
+            event(3, 'message.started', { run_id: 'r-2', message_id: 'm-3', role: 'assistant' }),
+            event(4, 'part.started', { run_id: 'r-2', message_id: 'm-3', part_index: 0, part: { type: 'text', format: 'plain', text: 'Let me check' } }),
+        );
+
+        // The agent's avatar and name head its block once, above both of its messages.
+        expect(chatItems()).toEqual(['YouWhich pages are offline?', 'Assistant', 'Two pages are offline.', 'Let me check']);
+    });
+
+    it('shows the streamed copy of a message the history lists while it is still in progress', async () => {
+        // The history already lists the assistant message of the running turn, without its parts.
+        stubHistory([message('m-1', 'user', 'Create a landing page', 'r-1'), { ...message('m-2', 'assistant', '', 'r-1'), parts: [] }]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        await screen.findByText('Create a landing page');
+        apply(
+            event(1, 'message.started', { run_id: 'r-1', message_id: 'm-2', role: 'assistant' }),
+            event(2, 'part.started', { run_id: 'r-1', message_id: 'm-2', part_index: 0, part: { type: 'text', format: 'plain', text: 'Ich habe die Aktualisierung' } }),
+        );
+
+        expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'Ich habe die Aktualisierung']);
+    });
+
+    it('shows a turn being sent, and the thinking indicator with the latest status while the run works', async () => {
+        stubHistory([]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Create a landing page' }] }));
+
+        expect(await screen.findByRole('article', { name: 'You' })).toHaveTextContent('Create a landing page');
+        expect(screen.getByRole('status')).toHaveTextContent('Thinking');
+
+        apply(
+            event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running' } }),
+            event(2, 'status', { run_id: 'r-1', text: 'Reading the source material', kind: 'reading' }),
+        );
+        act(() => useWorkspaceEventStore.getState().markMessageSent(SESSION, 'local-1', 'm-1'));
+
+        expect(screen.getByRole('status')).toHaveTextContent('Reading the source material');
+
+        apply(event(3, 'run.completed', { run_id: 'r-1', run: { id: 'r-1', status: 'completed' } }));
+
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    it('keeps thinking between the execute runs of a plan\'s module segments, until the plan is done (rc.5)', async () => {
+        const plan = (status: string) => ({ id: 'p-1', workflows: [{ id: 'content_create', version: '1.0.0' }, { id: 'content_edit', version: '1.0.0' }], status, version: 3, summary: 'PNDemo', items: [] });
+
+        stubHistory([]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        apply(
+            event(1, 'run.started', { run_id: 'r-1', plan_id: 'p-1', run: { id: 'r-1', status: 'running', plan_id: 'p-1', workflow: 'content_create' } }),
+            event(2, 'plan.updated', { run_id: 'r-1', plan_id: 'p-1', plan: plan('running') }),
+            event(3, 'session.updated', { session: { id: SESSION, open_plan_id: 'p-1', executing_plan_id: 'p-1' } }),
+            event(4, 'run.completed', { run_id: 'r-1', plan_id: 'p-1', run: { id: 'r-1', status: 'completed', plan_id: 'p-1' } }),
+        );
+
+        await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Thinking'));
+
+        apply(
+            event(5, 'run.started', { run_id: 'r-2', plan_id: 'p-1', run: { id: 'r-2', status: 'running', plan_id: 'p-1', workflow: 'content_edit' } }),
+            event(6, 'plan.updated', { run_id: 'r-2', plan_id: 'p-1', plan: plan('done') }),
+            event(7, 'run.completed', { run_id: 'r-2', plan_id: 'p-1', run: { id: 'r-2', status: 'completed', plan_id: 'p-1' } }),
+        );
+
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    it('does not show a run a message redirected as stopped (rc.5)', async () => {
+        stubHistory([message('m-1', 'user', 'Create the page', 'r-1'), message('m-2', 'assistant', 'Uploading the PDF.', 'r-1')]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        await screen.findByText('Uploading the PDF.');
+        apply(event(1, 'run.cancelled', { run_id: 'r-1', plan_id: 'p-1', run: { id: 'r-1', status: 'cancelled', plan_id: 'p-1', cancel_reason: 'redirected' } }));
+
+        expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    });
+
+    it('shows no plan in the chat: not a revision being drafted, not a first draft (they live in the plan bar)', async () => {
+        const items = [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'done' }];
+
+        stubHistory([]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        apply(
+            event(1, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflows: [{ id: 'content_create', version: '1.0.0' }], status: 'drafting', version: 1, summary: 'PNDemo', items } }),
+            event(2, 'plan.updated', { plan_id: 'p-2', plan: { id: 'p-2', workflows: [], status: 'drafting', version: 0, summary: 'FAQ page', items: [] } }),
+            event(3, 'session.updated', { session: { id: SESSION, open_plan_id: 'p-2', executing_plan_id: null } }),
+        );
+
+        await waitFor(() => expect(useWorkspaceEventStore.getState().sessions[SESSION]?.plans).toHaveLength(2));
+        expect(screen.queryByText('Create page PNDemo')).not.toBeInTheDocument();
+        expect(screen.queryByText('Being revised')).not.toBeInTheDocument();
+        expect(screen.queryByText('FAQ page')).not.toBeInTheDocument();
+    });
+
+    it('hides the thinking indicator while the run waits for an answer, and shows the question instead', async () => {
+        stubHistory([]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        apply(
+            event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running' } }),
+            event(2, 'interaction.requested', {
+                run_id: 'r-1',
+                interaction: { id: 'i-1', kind: 'confirm', prompt: 'Create it as a draft?', blocking: true, status: 'pending', run_id: 'r-1' },
+            }),
+        );
+
+        expect(await screen.findByText('Create it as a draft?')).toBeInTheDocument();
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    it('says under a side run\'s answer that the plan went on, and nothing under another run\'s (rc.5)', async () => {
+        stubHistory([
+            message('m-1', 'user', 'Make it red', 'r-1'),
+            message('m-2', 'assistant', 'Plan revised.', 'r-1'),
+            message('m-3', 'user', 'Is the page online?', 'r-2'),
+            message('m-4', 'assistant', 'Not yet.', 'r-2'),
+        ]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        await screen.findByText('Not yet.');
+        apply(
+            event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running', mode: 'session' } }),
+            event(2, 'run.completed', { run_id: 'r-1', run: { id: 'r-1', status: 'completed', mode: 'session' } }),
+            event(3, 'run.started', { run_id: 'r-2', run: { id: 'r-2', status: 'running', mode: 'side' } }),
+            event(4, 'run.completed', { run_id: 'r-2', run: { id: 'r-2', status: 'completed', mode: 'side' } }),
+        );
+
+        expect(screen.getAllByText('Answered beside the running plan')).toHaveLength(1);
+        expect(texts().at(-1)).toBe('Answered beside the running plan');
+        expect(texts().at(-2)).toBe('Not yet.');
+    });
+
+    it('keeps Stopped after the turn whose run it stopped when the next turn comes, before the history is read again', async () => {
+        stubHistory([]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        const store = useWorkspaceEventStore.getState();
+
+        act(() => {
+            store.addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'First' }] });
+            store.markMessageSent(SESSION, 'local-1', 'm-1', 'r-1');
+        });
+        await screen.findByText('First');
+        apply(
+            event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running' } }),
+            event(2, 'run.cancelled', { run_id: 'r-1', run: { id: 'r-1', status: 'cancelled' } }),
+        );
+        act(() => store.addSentMessage(SESSION, 'local-2', { parts: [{ type: 'text', text: 'Second' }] }));
+
+        expect(texts().slice(0, 3)).toEqual(['YouFirst', 'Stopped', 'YouSecond']);
+    });
+
+    it('shows how a run ended after the last message of that run', async () => {
+        stubHistory([message('m-1', 'user', 'First', 'r-1'), message('m-2', 'assistant', 'Answer one', 'r-1'), message('m-3', 'user', 'Second', 'r-2')]);
+        render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+        await screen.findByText('Answer one');
+        apply(event(1, 'run.cancelled', { run_id: 'r-1', run: { id: 'r-1', status: 'cancelled' } }));
+
+        const items = screen.getAllByRole('listitem');
+
+        expect(within(items[2]!).getByRole('note')).toHaveTextContent('Stopped');
+        expect(items[3]).toHaveTextContent('Second');
+    });
+
+    describe('the agent\'s head', () => {
+        // Plans are not in the chat: the open one is in the plan bar, the others are not shown.
+        const plan = { id: 'p-1', workflows: [{ id: 'page_create', version: '1.0.0' }], status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+
+        it('shows first, before the thinking indicator, while the agent has not written yet, and no plan', async () => {
+            stubHistory([]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+            act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Create a landing page' }] }));
+            await screen.findByRole('article', { name: 'You' });
+            apply(
+                event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running' } }),
+                event(2, 'plan.updated', { run_id: 'r-1', plan }),
+            );
+
+            const items = listChildren();
+
+            expect(items.map((item) => item.textContent).slice(0, 2)).toEqual(['YouCreate a landing page', 'Assistant']);
+            expect(items[2]).toHaveTextContent('Thinking');
+            expect(screen.queryByText('Replaced by a newer plan')).not.toBeInTheDocument();
+        });
+
+        it('is left out of the list for assistive technology, each message naming its sender instead', async () => {
+            stubHistory([message('m-1', 'user', 'Which pages are offline?', 'r-1'), message('m-2', 'assistant', 'Two pages are offline.', 'r-1')]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+            await screen.findByText('Two pages are offline.');
+
+            expect(listChildren()[1]).toHaveAttribute('aria-hidden', 'true');
+            expect(texts()).toEqual(['YouWhich pages are offline?', 'Two pages are offline.']);
+            expect(screen.getByRole('article', { name: 'Assistant' })).toHaveTextContent('Two pages are offline.');
+        });
+    });
+
+    describe('stream order', () => {
+        // Plans are not in the chat: one coming while a message streams does not split it.
+        const plan = { id: 'p-1', workflows: [{ id: 'page_create', version: '1.0.0' }], status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+        const settings = [{ type: 'setting', key: 'template', value: '17', label: 'Kampagnen-Landingpage' }];
+
+        it('splits an agent message where a confirmation came while it was streaming, not where a plan came', async () => {
+            stubHistory([]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+            apply(
+                event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running' } }),
+                event(2, 'message.started', { run_id: 'r-1', message_id: 'm-1', role: 'assistant' }),
+                event(3, 'part.completed', { run_id: 'r-1', message_id: 'm-1', part_index: 0, part: { type: 'text', format: 'plain', text: 'I read the update.' } }),
+                event(4, 'interaction.resolved', { run_id: 'r-1', interaction_id: 'i-1', by: 'user', answer: { settings }, message_id: 'c-1' }),
+                event(5, 'plan.updated', { run_id: 'r-1', plan }),
+                event(6, 'part.completed', { run_id: 'r-1', message_id: 'm-1', part_index: 1, part: { type: 'text', format: 'plain', text: 'I create the page now.' } }),
+            );
+
+            await screen.findByText('I create the page now.');
+
+            const items = listChildren();
+
+            expect(items[0]).toHaveTextContent(/^Assistant$/);
+            expect(items[1]).toHaveTextContent(/^I read the update\.$/);
+            expect(within(items[2]!).getByRole('region', { name: 'Check settings' })).toHaveTextContent('Kampagnen-Landingpage');
+            expect(items[2]).toHaveTextContent('Confirmed');
+            expect(items[3]).toHaveTextContent(/^I create the page now\.$/);
+            expect(items[4]).toHaveTextContent('Thinking');
+            expect(screen.queryByText('Replaced by a newer plan')).not.toBeInTheDocument();
+            // The confirmation is no turn of the user's: no bubble, no second head, one card.
+            expect(screen.queryByRole('article', { name: 'You' })).not.toBeInTheDocument();
+            expect(items.filter((item) => item.getAttribute('aria-hidden') === 'true')).toHaveLength(1);
+            expect(screen.getAllByRole('region', { name: 'Check settings' })).toHaveLength(1);
+        });
+
+        it('keeps the split once the history holds the message and its confirmation', async () => {
+            const confirmation: Message = { ...message('c-1', 'user', '', 'r-1'), interaction_id: 'i-1', parts: settings as Message['parts'] };
+            const answer: Message = {
+                ...message('m-2', 'assistant', '', 'r-1'),
+                parts: [{ type: 'text', format: 'plain', text: 'I read the update.' }, { type: 'text', format: 'plain', text: 'I create the page now.' }],
+            };
+
+            // The history lists the confirmation after the whole answer.
+            stubHistory([message('m-1', 'user', 'Create a landing page', 'r-1'), answer, confirmation]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            await screen.findByText('I create the page now.');
+
+            // The replay of the stream says where the confirmation came; then the live copies go.
+            apply(
+                event(1, 'message.started', { run_id: 'r-1', message_id: 'm-2', role: 'assistant' }),
+                event(2, 'part.completed', { run_id: 'r-1', message_id: 'm-2', part_index: 0, part: { type: 'text', format: 'plain', text: 'I read the update.' } }),
+                event(3, 'interaction.resolved', { run_id: 'r-1', interaction_id: 'i-1', by: 'user', answer: { settings }, message_id: 'c-1' }),
+            );
+            act(() => useWorkspaceEventStore.getState().clearMessages(SESSION, ['m-2', 'c-1']));
+
+            const items = listChildren();
+
+            expect(items.map((item) => item.textContent).slice(0, 3)).toEqual(['YouCreate a landing page', 'Assistant', 'I read the update.']);
+            expect(items[3]).toHaveTextContent('Confirmed');
+            expect(items[4]).toHaveTextContent(/^I create the page now\.$/);
+            // Shown once: at its place from the stream, not again where the history lists it.
+            expect(screen.getAllByRole('region', { name: 'Check settings' })).toHaveLength(1);
+            expect(items).toHaveLength(5);
+        });
+
+        it('shows a confirmation from the history as the confirmed card in the agent\'s block, where it has no place from the stream', async () => {
+            const confirmation: Message = { ...message('c-1', 'user', '', 'r-1'), interaction_id: 'i-1', parts: settings as Message['parts'] };
+
+            stubHistory([message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the update.', 'r-1'), confirmation]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+
+            const card = await screen.findByRole('region', { name: 'Check settings' });
+
+            expect(card).toHaveTextContent('Kampagnen-Landingpage');
+            expect(chatItems().slice(0, 3)).toEqual(['YouCreate a landing page', 'Assistant', 'I read the update.']);
+            expect(screen.getAllByRole('article', { name: 'You' })).toHaveLength(1);
+            expect(listChildren().filter((item) => item.getAttribute('aria-hidden') === 'true')).toHaveLength(1);
+        });
+    });
+
+    describe('workflow steps', () => {
+        it('shows the current step right under the agent\'s head in its latest block, and moves it down with it', async () => {
+            stubSession('content_create', TEMPLATE, [message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the source.', 'r-1')]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
+
+            const steps = await screen.findByRole('group', { name: 'Steps' });
+
+            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'steps', 'I read the source.']);
+            expect(steps).toHaveTextContent('0 of 2 steps done');
+
+            apply(
+                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
+                event(3, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Propose plan', status: 'running' } }),
+                event(4, 'message.started', { run_id: 'r-2', message_id: 'm-4', role: 'assistant' }),
+                event(5, 'part.started', { run_id: 'r-2', message_id: 'm-4', part_index: 0, part: { type: 'text', format: 'plain', text: 'Here is the plan.' } }),
+            );
+            act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Go on' }] }));
+
+            // The turn just sent opens the agent's next block: the steps go with it, under its head.
+            expect(chatItems()).toEqual([
+                'YouCreate a landing page',
+                'Assistant',
+                'I read the source.',
+                'Here is the plan.',
+                'YouGo on',
+                'Assistant',
+                'steps',
+                'Thinking',
+            ]);
+            expect(screen.getByRole('group', { name: 'Steps' })).toHaveTextContent('Step 2 of 2: Propose plan');
+        });
+
+        it('shows the steps before the thinking indicator while the agent has not answered yet', async () => {
+            stubSession('content_create', TEMPLATE, []);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
+
+            act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Create a landing page' }] }));
+            await screen.findByRole('group', { name: 'Steps' });
+
+            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'steps', 'Thinking']);
+        });
+
+        it('opens the agent\'s next block with the steps once a sent turn is the last thing, before its run starts', async () => {
+            stubSession('content_create', TEMPLATE, [message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the source.', 'r-1')]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
+
+            await screen.findByRole('group', { name: 'Steps' });
+            act(() => {
+                useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Go on' }] });
+                useWorkspaceEventStore.getState().markMessageSent(SESSION, 'local-1', 'm-3');
+            });
+
+            expect(screen.queryByRole('status')).not.toBeInTheDocument();
+            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'I read the source.', 'YouGo on', 'Assistant', 'steps']);
+        });
+
+        it('shows no steps for a workflow without any', async () => {
+            const fetchMock = stubSession('content_research', [], [message('m-1', 'user', 'Hello', 'r-1'), message('m-2', 'assistant', 'Hi.', 'r-1')]);
+
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_research');
+
+            await screen.findByText('Hi.');
+            await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain('/rest/proxy/genaix/workflows'));
+
+            expect(chatItems()).toEqual(['YouHello', 'Assistant', 'Hi.']);
+        });
+    });
+
+    describe('result cards', () => {
+        // An answer with a research table of two pages.
+        const answer: Message = {
+            ...message('m-2', 'assistant', '', 'r-1'),
+            parts: [{
+                type: 'table',
+                label: 'Pages',
+                columns: [{ key: 'page', label: 'Page', type: 'ref' }],
+                rows: [
+                    { page: { type: 'page', id: '8871', node_id: 3, label: 'Garantiebedingungen' } },
+                    { page: { type: 'page', id: '8903', node_id: 3, label: 'Nutzungsbedingungen' } },
+                ],
+            }],
+        };
+
+        it('can hand their objects to the composer', async () => {
+            stubSession('content_research', [], [message('m-1', 'user', 'Which pages mention the terms?', 'r-1'), answer]);
+
+            renderWithProviders(<ChatStream sessionId={SESSION} />);
+
+            expect(await screen.findByRole('checkbox', { name: 'Select Garantiebedingungen' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Edit these' })).toBeInTheDocument();
+        });
+    });
+});

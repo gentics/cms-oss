@@ -1,0 +1,219 @@
+/* The review panel (design.md §11 "Review", §12 "Checkliste / Guidelines"): head, a scrolling body with
+   the shown page's outcome and the checklist, the actions at the bottom. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--bg-surface);
+}
+
+.head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.title {
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 14px 15px;
+  overflow-y: auto;
+}
+
+.summary {
+  margin: 0;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overline {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.empty {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* While the quality gates check the plan on its release (design.md §8 "Lädt", "Denkt"). */
+.checking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkGroup {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-xl);
+}
+
+.checkGroupHead {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.check {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+
+  &[data-severity="pass"] .checkIcon {
+    color: var(--success);
+  }
+
+  &[data-severity="info"] .checkIcon {
+    color: var(--fg-muted);
+  }
+
+  &[data-severity="warn"] .checkIcon {
+    color: var(--warning);
+  }
+
+  &[data-severity="fail"] .checkIcon {
+    color: var(--error);
+  }
+}
+
+.checkIcon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.checkText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.checkLabel {
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+.meta {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+.message {
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.fix {
+  margin-top: 4px;
+}
+
+.publication {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-lg);
+
+  &[data-status="failed"] {
+    border-color: rgba(var(--error-rgb), .30);
+    border-left: 3px solid var(--error);
+  }
+}
+
+.publicationHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pageName {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.publicationStatus {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-xs);
+
+  [data-status="published"] & {
+    color: var(--success);
+  }
+
+  [data-status="review_requested"] & {
+    color: var(--warning);
+  }
+
+  [data-status="failed"] & {
+    color: var(--error);
+  }
+}
+
+.error {
+  color: var(--error);
+  font-size: var(--font-size-sm);
+}
+
+/* The plan's head (`PlanHead`): its status and actions, at the bottom of the panel. */
+.foot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 15px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}

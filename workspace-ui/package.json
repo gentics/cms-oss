@@ -1,0 +1,102 @@
+{
+  "name": "Workspace UI",
+  "private": true,
+  "version": "9.0.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=26.4.0",
+    "npm": ">=11"
+  },
+  "scripts": {
+    "start": "vite --open",
+    "dev": "vite --open",
+    "dev:debug": "vite --open --mode debug",
+    "catalogue": "vite --config vite.catalogue.config.ts --open",
+    "mock:genaix": "GENAIX_MOCK_PORT=8123 ../../api-contract/mocks/genaix-mock/run.sh",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "generate:api": "openapi-typescript .claude/contracts/openapi.yaml -o src/services/apiService/genaix/schema.d.ts",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "eslint . --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "check": "npm run typecheck && npm run lint && npm run test:run && npm run build"
+  },
+  "author": "Gentics PSC",
+  "contributors": [
+    {
+      "name": "Dominik Schatz",
+      "url": "https://github.com/dominikschatz"
+    },
+    {
+      "name": "David Barbu",
+      "url": "https://github.com/Davyd-crypto"
+    }
+  ],
+  "dependencies": {
+    "@base-ui/react": "^1.8.0",
+    "@tanstack/react-query": "^5.103.2",
+    "@tanstack/react-query-devtools": "^5.103.2",
+    "@tanstack/react-router": "^1.170.40",
+    "@tiptap/core": "^3.31.4",
+    "@tiptap/extension-document": "^3.31.4",
+    "@tiptap/extension-hard-break": "^3.31.4",
+    "@tiptap/extension-text": "^3.31.4",
+    "@tiptap/extensions": "^3.31.4",
+    "@tiptap/pm": "^3.31.4",
+    "@tiptap/react": "^3.31.4",
+    "@tiptap/suggestion": "^3.31.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "i18next": "^26.4.2",
+    "keycloak-js": "^26.2.4",
+    "lucide-react": "^1.49.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-i18next": "^17.0.15",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.7.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/eslint-plugin-query": "^5.103.2",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^5.0.1",
+    "eslint": "^10.0.1",
+    "eslint-plugin-playwright": "^2.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "globals": "^17.12.0",
+    "jsdom": "^30.1.0",
+    "openapi-typescript": "^7.13.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  }
+}

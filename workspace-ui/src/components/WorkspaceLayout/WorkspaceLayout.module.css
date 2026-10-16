@@ -1,0 +1,141 @@
+/* Three columns with draggable splitters (design.md §6.2, §11; maybe_final_draft.html "Shell").
+   `--w-left` / `--w-right` are set by WorkspaceLayout.tsx once a column was resized. */
+.layout {
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: var(--w-left, 292px) 9px minmax(320px, 1fr) 9px var(--w-right, 46%);
+  min-height: 0;
+  overflow: clip;
+  isolation: isolate;
+  background: var(--bg-canvas);
+}
+
+.layout.leftHidden {
+  grid-template-columns: 0 0 minmax(320px, 1fr) 9px var(--w-right, 46%);
+}
+
+/* No preview yet: the right column and its splitter take no room (draft `.layout.nopv`). */
+.layout.rightHidden {
+  grid-template-columns: var(--w-left, 292px) 9px minmax(320px, 1fr) 0 0;
+}
+
+.layout.leftHidden.rightHidden {
+  grid-template-columns: 0 0 minmax(320px, 1fr) 0 0;
+}
+
+.layout.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* The columns reach 4 px under the splitters, so lines in their content meet the splitter line.
+   Only designated zones inside a column scroll, so the column itself does not. */
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  margin-inline: -4px;
+  overflow: hidden;
+  background: var(--bg-canvas);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.left {
+  grid-column: 1;
+  background: var(--bg-surface);
+}
+
+.splitterLeft {
+  grid-column: 2;
+}
+
+.center {
+  grid-column: 3;
+}
+
+.splitterRight {
+  grid-column: 4;
+}
+
+.right {
+  grid-column: 5;
+  background: var(--bg-surface);
+}
+
+/* Narrow windows: the columns get tighter, nothing becomes an overlay. */
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: var(--w-left, 228px) 9px minmax(280px, 1fr) 9px var(--w-right, 42%);
+  }
+
+  .layout.leftHidden {
+    grid-template-columns: 0 0 minmax(280px, 1fr) 9px var(--w-right, 42%);
+  }
+
+  .layout.rightHidden {
+    grid-template-columns: var(--w-left, 228px) 9px minmax(280px, 1fr) 0 0;
+  }
+
+  .layout.leftHidden.rightHidden {
+    grid-template-columns: 0 0 minmax(280px, 1fr) 0 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: var(--w-left, 200px) 9px minmax(240px, 1fr) 9px var(--w-right, 40%);
+  }
+
+  .layout.leftHidden {
+    grid-template-columns: 0 0 minmax(240px, 1fr) 9px var(--w-right, 40%);
+  }
+
+  .layout.rightHidden {
+    grid-template-columns: var(--w-left, 200px) 9px minmax(240px, 1fr) 0 0;
+  }
+
+  .layout.leftHidden.rightHidden {
+    grid-template-columns: 0 0 minmax(240px, 1fr) 0 0;
+  }
+}
+
+/* Phones: one column at a time. A side column shown with the topbar's toggle (not `.leftHidden` /
+   `.rightHidden`) takes the full width instead of the center; AppShell shows only one at a time, and
+   should both be shown, the left one wins. The breakpoint of the composer's voice first
+   (Composer.module.css) and of `PHONE_QUERY` in AppShell.tsx. */
+@media (max-width: 640px) {
+  .layout,
+  .layout.leftHidden,
+  .layout.rightHidden,
+  .layout.leftHidden.rightHidden {
+    grid-template-columns: 0 0 1fr 0 0;
+  }
+
+  .layout .splitterLeft,
+  .layout .splitterRight {
+    display: none;
+  }
+
+  .layout:not(.rightHidden) {
+    grid-template-columns: 0 0 0 0 1fr;
+
+    & .center {
+      display: none;
+    }
+  }
+
+  .layout:not(.leftHidden) {
+    grid-template-columns: 1fr 0 0 0 0;
+
+    & .center,
+    & .right {
+      display: none;
+    }
+  }
+}

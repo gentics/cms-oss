@@ -1,0 +1,99 @@
+/* The review page (design.md §11 "Review"): the preview on the left, flexible, on the preview stage;
+   the panel on the right, 400 px (340 px below 1180 px). A plan with several pages lists them left of
+   the preview (`ReviewPages`). On a phone they stack. */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.45;
+}
+
+.head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg-preview-stage);
+}
+
+.noPreview {
+  margin: auto;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+}
+
+.panel {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 400px;
+  min-height: 0;
+  border-left: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 26px 15px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+
+  & p {
+    margin: 0;
+  }
+}
+
+@media (max-width: 1180px) {
+  .panel {
+    width: 340px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .preview {
+    flex: none;
+    height: 60svh;
+  }
+
+  .panel {
+    width: auto;
+    border-top: 1px solid var(--border-subtle);
+    border-left: 0;
+  }
+}

@@ -1,0 +1,162 @@
+/* The plan bar right above the composer (design.md §11 "Chat": "die Release-Leiste sitzt direkt
+   darüber"; draft `.relbar`): what the session's open plan is at, the publish outcome of its pages
+   (§13: "3 published, 1 sent to review"), and its transitions on the right. Expanded, the plan itself
+   opens above that head, so the head stays right above the composer. */
+
+/* Its gap to the composer as padding: the dock sets the margin of its children (`.dock > *`). */
+.wrap {
+  padding-bottom: 8px;
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--elevation-float);
+}
+
+/* The plan, scrolling on its own when it is long, so the chat keeps room above it. */
+.panel {
+  max-height: min(50vh, 420px);
+  overflow-y: auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--fg-primary);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+/* Wraps when the actions do not fit beside the status: they move to a line of their own, on the
+   right, and wrap among themselves when even that is too narrow (e.g. four on the review panel). */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+}
+
+/* In a panel (`ReviewPanel`), which has its padding already. */
+.head.inCard {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+.icon {
+  flex: none;
+  color: var(--interactive);
+}
+
+.ok .icon {
+  color: var(--success);
+}
+
+.bad .icon {
+  color: var(--error);
+}
+
+.text {
+  flex: 1 1 120px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+
+/* The plan at a glance while the bar is collapsed, in the numbers' own width (design.md §5). */
+.glance {
+  color: var(--fg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* A transition the quality gates refused (`PlanHead` on the review page's panel): one line above the
+   head, icon and text in the colour of what failed (§3.3); the checks themselves are in the checklist. */
+.refusal {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.refusalIcon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.refusal[data-kind="blocking"] .refusalIcon {
+  color: var(--error);
+}
+
+.refusal[data-kind="warning"] .refusalIcon {
+  color: var(--warning);
+}
+
+/* The outcome in the publish dialog's title (`PublishDialog`): its icon in the status colour. */
+.doneIcon,
+.failedIcon {
+  margin-right: 6px;
+  vertical-align: -3px;
+}
+
+.doneIcon {
+  color: var(--success);
+}
+
+.failedIcon {
+  color: var(--error);
+}
+
+/* The pages that failed, below the reason: a row per page with a 3 px left edge in `--error`
+   (§3.3 "Prüfzeile mit Fehler"). */
+.failedPages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.failedPage {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--error);
+  border-radius: var(--corner-lg);
+}
+
+.failedPageName {
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.failedPageError {
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}

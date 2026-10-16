@@ -59,7 +59,7 @@ public class HandlebarsPartType extends TextPartType {
 			t.setRenderResult(result);
 
 			// when edit mode is edit or realedit, switch to preview mode
-			if (editMode == RenderType.EM_ALOHA) {
+			if (RenderType.isAlohaEditMode(editMode)) {
 				editModeChanged = true;
 				renderType.setEditMode(RenderType.EM_ALOHA_READONLY);
 			}

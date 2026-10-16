@@ -46,9 +46,9 @@ export function partTextOf(element: Element): string {
     return (rendered ?? element.textContent ?? '').trim();
 }
 
-/** Whether a marked part shows an image: it is an `<img>` or holds one. */
+/** Whether a marked part shows an image: it is an `<img>` or holds one that no marked part inside it holds. */
 export function isImagePart(element: Element): boolean {
-    return element.matches('img') || element.querySelector('img') !== null;
+    return element.matches('img') || Array.from(element.querySelectorAll('img')).some((image) => image.closest(MARKED) === element);
 }
 
 function boxOf(element: Element): ElementBox {

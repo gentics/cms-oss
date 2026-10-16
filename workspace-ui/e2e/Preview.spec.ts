@@ -530,6 +530,88 @@ test.describe('Swapping an image', () => {
         await expect(card).toBeHidden();
     });
 
+    test('uploads an image from the device into the session and sends it as the page, the part named in the text and the file', async ({ page }) => {
+        const FILE_ID = '6b0d9e31-44a8-4c57-9f2e-8d1a3c7b5e02';
+
+        await stubS1Session(page, [imagePage()]);
+        await stubCmsImages(page);
+        const posted = await stubSending(page);
+        const uploads: string[] = [];
+
+        await page.route((url) => url.pathname === `/rest/proxy/genaix/sessions/${SESSION}/files`, (route) => {
+            if (route.request().method() !== 'POST') {
+                return route.fulfill({ json: { items: [], next_cursor: null } });
+            }
+
+            uploads.push(route.request().postDataBuffer()?.includes('hero-new.png') ? 'hero-new.png' : 'other');
+
+            return route.fulfill({
+                status: 201,
+                json: {
+                    id: FILE_ID, kind: 'upload', name: 'hero-new.png', media_type: 'image/png', size: PNG.length, mode: 'source',
+                    sha256: '0'.repeat(64), created_at: '2026-10-16T10:00:00Z', created_by: 'user', download_url: `/api/v1/sessions/${SESSION}/files/${FILE_ID}/content`,
+                },
+            });
+        });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('img', { name: 'Hero' }).click();
+        await page.getByRole('menuitem', { name: 'Swap the image' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Image' });
+
+        await card.getByLabel('Upload image').setInputFiles({ name: 'hero-new.png', mimeType: 'image/png', buffer: PNG });
+        await expect(card.getByRole('radio', { name: 'hero-new.png' })).toBeChecked();
+        await card.getByRole('button', { name: 'Use image' }).click();
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(uploads).toEqual(['hero-new.png']);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "content_1" (Image), replace its image with: ' },
+                { type: 'file_ref', file_id: FILE_ID, mode: 'source' },
+            ],
+        });
+        await expect(card).toBeHidden();
+    });
+
+    test('lays the upload tile and the image tiles out side by side, none over another, also when the grid scrolls', async ({ page }) => {
+        await stubS1Session(page, [imagePage()]);
+        await stubCmsImages(page);
+        // The session itself, which is otherwise asked of the dev server's GenAIx proxy.
+        await stubSending(page);
+        // More images than the grid shows at once.
+        await page.route((url) => url.pathname === '/rest/folder/getItems/7', (route) => route.fulfill({
+            json: { items: Array.from({ length: 12 }, (_, index) => ({ id: 5000 + index, name: `image-${index}.jpg`, type: 'image' })) },
+        }));
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('img', { name: 'Hero' }).click();
+        await page.getByRole('menuitem', { name: 'Swap the image' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Image' });
+
+        await card.getByLabel('Upload image').setInputFiles({ name: 'hero-new.png', mimeType: 'image/png', buffer: PNG });
+        await expect(card.getByRole('img', { name: 'image-11.jpg' })).toBeAttached();
+
+        // Every pair of tiles that share more than a pixel, as "a/b", and the tiles' heights.
+        const layout = await card.locator('label:has(img), label:has(input[type="file"])').evaluateAll((elements) => {
+            const boxes = elements.map((element) => element.getBoundingClientRect());
+            const overlapping = boxes.flatMap((box, index) => boxes.slice(index + 1).flatMap((other, offset) => (
+                box.left < other.right - 1 && other.left < box.right - 1 && box.top < other.bottom - 1 && other.top < box.bottom - 1
+                    ? [`${index}/${index + 1 + offset}`]
+                    : []
+            )));
+
+            return { count: boxes.length, overlapping, minHeight: Math.min(...boxes.map(({ height }) => height)) };
+        });
+
+        expect(layout.count).toBe(14);
+        expect(layout.overlapping).toEqual([]);
+        expect(layout.minHeight).toBeGreaterThan(20);
+    });
+
     test('closes the image card and clears the selection with a click into the page outside the parts, without sending', async ({ page }) => {
         await stubS1Session(page, [imagePage()]);
         await stubCmsImages(page);

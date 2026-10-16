@@ -87,8 +87,11 @@ export interface PreviewActions {
     onSendFeedback: (element: PageElementInput, text: string) => Promise<void>;
     /** Sends the part's new text, written by hand, as a turn; rejects when it was not sent, so the card stays open. */
     onSendEdit: (element: PageElementInput, text: string) => Promise<void>;
-    /** Sends the CMS image picked for the part as a turn; rejects when it was not sent, so the card stays open. */
-    onSendImage: (element: PageElementInput, image: ContextReference) => Promise<void>;
+    /**
+     * Sends the image picked for the part as a turn: a CMS image as its reference, an uploaded one as
+     * the file; rejects when it was not sent, so the card stays open.
+     */
+    onSendImage: (element: PageElementInput, image: ContextReference | File) => Promise<void>;
     /** Sends the changed page settings of the page as a turn; rejects when they were not sent, so the sheet stays open. */
     onSendSettings: (page: ContextReference, changes: PageSettingsChange[]) => Promise<void>;
     /** Whether a turn can be sent now (feedback, new text, an image or page settings): not while a run is working or waiting. */
@@ -126,7 +129,8 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  * plain text; Apply or Ctrl/Cmd+Enter sends it (`onSendEdit`) to be written word for word, an unchanged
  * text sends nothing. For a part that shows an image, "Swap the image" takes the place of "Write it
  * yourself" (final_draft.html "askImage"), when the preview names its node: the image card there offers
- * the node's images from the CMS (`ImagePicker`), and "Use image" sends the picked one (`onSendImage`).
+ * the node's images from the CMS and an image to upload (`ImagePicker`), and "Use image" sends the
+ * picked one (`onSendImage`).
  * "Reference in the chat" hands the part to `onReferenceInChat` (the chat composer's `insertPageElement`).
  *
  * For a page, "Page settings" in the header drops the page settings over the preview (`PageSettings`,
@@ -181,7 +185,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
     const editFieldRef = useRef<HTMLTextAreaElement>(null);
     const canApply = canSendFeedback && !isSending && editText.trim() !== '';
     const [isImageOpen, setIsImageOpen] = useState(false);
-    const [pickedImage, setPickedImage] = useState<CmsItem | null>(null);
+    const [pickedImage, setPickedImage] = useState<CmsItem | File | null>(null);
     const canUseImage = canSendFeedback && !isSending && pickedImage !== null;
     // The node whose images can replace a part's image; without it, no image can be offered.
     const nodeId = preview.cms_ref.node_id;
@@ -287,7 +291,9 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setIsSending(true);
 
         try {
-            await actions?.onSendImage(pageElementOf(element), { type: 'image', id: String(pickedImage.id), node_id: nodeId, label: pickedImage.name });
+            await actions?.onSendImage(pageElementOf(element), pickedImage instanceof File
+                ? pickedImage
+                : { type: 'image', id: String(pickedImage.id), node_id: nodeId, label: pickedImage.name });
             setIsImageOpen(false);
         } catch {
             // Not sent: the caller has said why; the card and the pick stay for another try.

@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
 import { createWrapper } from '@/test/renderWithProviders';
@@ -111,5 +111,53 @@ describe('ImagePicker', () => {
         renderPicker();
 
         expect(await screen.findByText('The images could not be loaded.')).toBeInTheDocument();
+    });
+
+    describe('upload', () => {
+        // jsdom has no object URLs; the tile of an uploaded image shows it from one.
+        beforeEach(() => {
+            vi.stubGlobal('URL', Object.assign(class extends URL {}, { createObjectURL: vi.fn(() => 'blob:hero'), revokeObjectURL: vi.fn() }));
+        });
+
+        it('offers the upload tile also when the node has no images', async () => {
+            stubCms(Response.json({ items: [] }));
+            renderPicker();
+
+            expect(await screen.findByText('No images found.')).toBeInTheDocument();
+            expect(screen.getByLabelText('Upload image')).toHaveAttribute('type', 'file');
+        });
+
+        it('takes an image from the device, shows it as a picked tile and hands it on', async () => {
+            const user = userEvent.setup();
+            const hero = new File(['png'], 'hero.png', { type: 'image/png' });
+
+            stubCms();
+            const onValueChange = renderPicker();
+
+            await user.upload(screen.getByLabelText('Upload image'), hero);
+
+            expect(onValueChange).toHaveBeenCalledWith(hero);
+            expect(screen.getByRole('img', { name: 'hero.png' })).toHaveAttribute('src', 'blob:hero');
+            expect(screen.getByRole('radio', { name: 'hero.png' })).toBeInTheDocument();
+        });
+
+        it('refuses a file that is not an image, and one over the upload limit, saying why', async () => {
+            const user = userEvent.setup({ applyAccept: false });
+            const large = new File(['png'], 'large.png', { type: 'image/png' });
+
+            Object.defineProperty(large, 'size', { value: 30 * 1_048_576 });
+            stubCms();
+            const onValueChange = renderPicker();
+
+            await user.upload(screen.getByLabelText('Upload image'), new File(['pdf'], 'terms.pdf', { type: 'application/pdf' }));
+
+            expect(screen.getByRole('alert')).toHaveTextContent('This file type is not supported: application/pdf');
+
+            await user.upload(screen.getByLabelText('Upload image'), large);
+
+            expect(screen.getByRole('alert')).toHaveTextContent('It is 30 MB; files can be up to 25 MB.');
+            expect(onValueChange).not.toHaveBeenCalled();
+            expect(screen.queryByRole('radio', { name: /terms|large/ })).not.toBeInTheDocument();
+        });
     });
 });

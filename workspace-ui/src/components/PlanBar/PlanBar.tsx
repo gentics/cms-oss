@@ -4,18 +4,13 @@ import { useTranslation } from 'react-i18next';
 
 import { PlanCard } from '@/components/PlanCard/PlanCard';
 import { Button } from '@/components/ui/button';
-import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
+import type { Plan } from '@/services/apiService/genaix/types';
 import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import { PlanHead } from './PlanHead';
 import { ReviewButton } from './ReviewButton';
 
 import styles from './PlanBar.module.css';
-
-// The statuses with something to do or see on the review page: every status with a gated transition
-// (release while accepted, running or done; publish or request review once released), which is made
-// only there, and the outcome of one sent out.
-const REVIEWABLE: ReadonlySet<PlanStatus> = new Set(['accepted', 'running', 'done', 'released', 'published', 'review_requested']);
 
 interface PlanBarProps {
     sessionId: string;
@@ -35,8 +30,8 @@ interface PlanBarProps {
  * its own open (`interaction.requested` with its `plan_id`), and collapses once that is done. A click
  * on the toggle holds until the plan's waiting changes.
  *
- * While the plan has something to review (`REVIEWABLE`), "Review & release" next to the toggle opens
- * the review page, where the plan's preview, checks and pages are shown together, and releases a done
+ * Once the plan is done and has written a page, "Review & release" next to the toggle opens the
+ * review page (`ReviewButton` decides), where the plan's preview, checks and pages are shown together, and releases a done
  * plan on the way (`ReviewButton`); publish and request review are made there, not here (`PlanHead`
  * without `withGatedActions`).
  */
@@ -80,7 +75,7 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
                     <PlanCard plan={plan} sessionId={sessionId} canAnswer={!isWorking} />
                 </div>
                 <PlanHead sessionId={sessionId} plan={plan}>
-                    {REVIEWABLE.has(plan.status) && <ReviewButton sessionId={sessionId} plan={plan} />}
+                    <ReviewButton sessionId={sessionId} plan={plan} />
                     <Button
                         variant="ghost"
                         size="icon"

@@ -15,7 +15,7 @@ import type { Plan } from '@/services/apiService/genaix/types';
  * where it is and offers what its status still allows here: discard and reopen. While a gated transition
  * is open to it (release, publish, request review; e.g. an older plan still released beside a newer one,
  * `plan_policy.concurrency`), "Review & release" opens this plan on the review page, where it is made
- * (`ReviewButton`, which releases a done plan on the way).
+ * (`ReviewButton`, shown once the plan is done and wrote a page, which releases a done plan on the way).
  */
 export function ChatPlanCard({ plan, sessionId }: { plan: Plan; sessionId: string }) {
     const { t } = useTranslation();

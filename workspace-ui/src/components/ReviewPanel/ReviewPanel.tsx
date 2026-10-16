@@ -7,9 +7,10 @@ import { PlanHead } from '@/components/PlanBar/PlanHead';
 import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
 import { isCheckForPage, isFailingCheck } from '@/helper/pageChecks/pageChecks';
+import { writtenPagesOf } from '@/helper/planActions/planActions';
 import { useCanPublishCmsPage, useCanPublishCmsPages } from '@/hooks/useCmsQueries';
 import { usePlanTransition, useSendMessage } from '@/hooks/useGenaixQueries';
-import type { Check, CmsObjectRef, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
+import type { Check, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
 
 import styles from './ReviewPanel.module.css';
 
@@ -18,10 +19,6 @@ const CLOSED: PlanStatus[] = ['published', 'review_requested', 'discarded', 'sup
 const SEVERITY_ICONS: Record<Check['severity'], LucideIcon> = { pass: CircleCheckIcon, info: InfoIcon, warn: CircleAlertIcon, fail: CircleAlertIcon };
 
 const PUBLICATION_ICONS: Record<Publication['status'], LucideIcon> = { pending: CircleDashedIcon, published: CircleCheckIcon, review_requested: SendIcon, failed: CircleAlertIcon };
-
-// The operations of a page the plan wrote, the pages `publish` acts on (contract, plan transitions route:
-// `created` or `updated`, and `published`, which replaces them once the page went out).
-const WRITTEN: ReadonlySet<CmsObjectRef['operation']> = new Set(['created', 'updated', 'published']);
 
 // The checks grouped by where they come from (a guideline, a requirement, a gate), in their order.
 function groupChecks(checks: Check[]): [string, Check[]][] {
@@ -94,7 +91,7 @@ export function ReviewPanel({ sessionId, state, page }: ReviewPanelProps) {
     const sendMessage = useSendMessage(sessionId);
     const isClosed = CLOSED.includes(plan.status);
     const isChecking = Boolean(usePlanTransition(sessionId, plan.id).pending?.isCheck);
-    const writtenPages = plan.status === 'released' ? state.cms_objects.filter(({ type, operation }) => type === 'page' && WRITTEN.has(operation)) : [];
+    const writtenPages = plan.status === 'released' ? writtenPagesOf(state.cms_objects) : [];
     const canPublish = useCanPublishCmsPages(writtenPages);
 
     // A suggested fix is a message to the agent; the chat shows how it goes.

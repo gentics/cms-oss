@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ErrorNotifications } from '@/components/ErrorNotifications/ErrorNotifications';
 import { UiProvider } from '@/components/ui/provider';
+import { CMS_USER_QUERY_KEY } from '@/hooks/useCmsAuth';
 import { routeTree } from '@/router';
+import type { CmsUser } from '@/services/cmsApiService/cmsApiService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 
@@ -29,9 +31,14 @@ class ResizeObserverStub {
     disconnect() {}
 }
 
-function renderDashboard() {
+const CMS_USER: CmsUser = { id: 3, login: 'emu', firstName: 'Erika', lastName: 'Mustermann' };
+
+// `cmsUser` is the user `LoginGate` has loaded before it shows the page.
+function renderDashboard(cmsUser: CmsUser = CMS_USER) {
     const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/'] }) });
     const queryClient = new QueryClient();
+
+    queryClient.setQueryData(CMS_USER_QUERY_KEY, cmsUser);
 
     render(
         <QueryClientProvider client={queryClient}>
@@ -56,13 +63,33 @@ describe('DashboardPage', () => {
         vi.useRealTimers();
     });
 
-    it('greets by the time of day', async () => {
+    it('greets the CMS user by name and the time of day', async () => {
         vi.useFakeTimers({ toFake: ['Date'] });
         vi.setSystemTime(new Date(2026, 9, 5, 9, 0));
 
         renderDashboard();
 
-        expect(await screen.findByRole('heading', { name: 'Good morning, Dominik' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Good morning, Erika Mustermann' })).toBeInTheDocument();
+    });
+
+    it('greets the CMS user by login when the user has no name', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date(2026, 9, 5, 20, 0));
+
+        renderDashboard({ ...CMS_USER, firstName: '', lastName: '' });
+
+        expect(await screen.findByRole('heading', { name: 'Good evening, emu' })).toBeInTheDocument();
+    });
+
+    it('takes the CMS user LoginGate has loaded, without asking the CMS again', async () => {
+        const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 404 }));
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        renderDashboard();
+
+        expect(await screen.findByRole('heading', { name: /Erika Mustermann/ })).toBeInTheDocument();
+        expect(fetchMock.mock.calls.map(([input]) => String(input))).not.toContain('/rest/user/me');
     });
 
     it('shows the open to-dos and folds out the recent sessions', async () => {

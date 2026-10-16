@@ -11,7 +11,7 @@ import { PlanBar } from '@/components/PlanBar/PlanBar';
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
 import { pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
-import { type SendTurnInput, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
+import { type SendTurnInput, type StartFile, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
 import { useOpenPlan } from '@/hooks/useOpenPlan';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
@@ -160,7 +160,8 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
  * part of it goes into the chat composer, and feedback on a part is sent as a turn of its own, as the page plus the part named in the text
  * (`pageElementParts`). New text written for a part by hand is sent the same way, as the page, a text
  * asking to replace the part's text, and the new text as a `verbatim` part (`pageElementEditParts`), and
- * so is a CMS image picked for a part, as a `reference` part (`pageElementImageParts`). Changed page
+ * so is a CMS image picked for a part, as a `reference` part (`pageElementImageParts`), or an image
+ * uploaded for it, as the turn's file (`file_ref` part). Changed page
  * settings go as the page, a text asking to change them, and each new value (`pageSettingsParts`). None needs a run
  * to be working or waiting: a second message would be refused (`409 run_already_active`), and none is an
  * answer to the run's question.
@@ -171,9 +172,9 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
     const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
     const previews = useWorkspaceEventStore((state) => selectSession(sessionId)(state).previews);
 
-    async function send(parts: UserMessagePart[]) {
+    async function send(parts: UserMessagePart[], files: StartFile[] = []) {
         try {
-            await sendTurn.mutateAsync({ parts, files: [] });
+            await sendTurn.mutateAsync({ parts, files });
         } catch (error) {
             useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
 
@@ -188,7 +189,14 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
             onReferenceInChat={(element, text) => composerRef.current?.insertPageElement(element, text)}
             onSendFeedback={(element, text) => send(pageElementParts({ ...element, text: pageElementNaming(t, element) }, text))}
             onSendEdit={(element, text) => send(pageElementEditParts({ ...element, text: pageElementReplaceNaming(t, element) }, text))}
-            onSendImage={(element, image) => send(pageElementImageParts({ ...element, text: pageElementReplaceImageNaming(t, element) }, image))}
+            onSendImage={(element, image) => {
+                const attrs = { ...element, text: pageElementReplaceImageNaming(t, element) };
+
+                // An uploaded image goes into the session with the turn, as a source (`useSendTurn`).
+                return image instanceof File
+                    ? send(pageElementImageParts(attrs), [{ file: image, mode: 'source' }])
+                    : send(pageElementImageParts(attrs, image));
+            }}
             onSendSettings={(page, changes) => send(pageSettingsParts(t, page, changes))}
             canSendFeedback={!run && !sendTurn.isPending}
         />

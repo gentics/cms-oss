@@ -120,6 +120,13 @@ describe('pageElementImageParts', () => {
             { type: 'reference', ref: image },
         ]);
     });
+
+    it('ends at the naming text without an image, for an uploaded one that follows as the turn\'s file', () => {
+        expect(pageElementImageParts({ page: page9142, tagName: 'content_1', constructName: 'Image', text: ' – part "content_1" (Image), replace its image with: ' })).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – part "content_1" (Image), replace its image with: ' },
+        ]);
+    });
 });
 
 describe('pageSettingsParts', () => {

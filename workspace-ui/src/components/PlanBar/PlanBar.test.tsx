@@ -1,7 +1,7 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
+import type { CmsObjectRef, Plan, PlanStatus } from '@/services/apiService/genaix/types';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { renderWithProviders } from '@/test/renderWithProviders';
 
@@ -20,6 +20,18 @@ function plan(status: PlanStatus): Plan {
     return { id: 'pl-1', workflow: 'content_create', status, version: 1, summary: 'New terms page.', items: [] };
 }
 
+// A page the plan wrote, as `PlanState.cms_objects` lists it.
+const WRITTEN_PAGE: CmsObjectRef = { type: 'page', id: 9142, node_id: 3, operation: 'created' };
+
+// Answers the plan's state (`GET …/plans/pl-1`) with `cmsObjects`, every list with an empty page.
+function stubPlanState(cmsObjects: CmsObjectRef[]) {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => (
+        String(input).endsWith(`/sessions/${SESSION}/plans/pl-1`)
+            ? Response.json({ plan: plan('done'), cms_objects: cmsObjects })
+            : Response.json({ items: [], next_cursor: null })
+    )));
+}
+
 async function renderBar(status: PlanStatus) {
     renderWithProviders(<PlanBar sessionId={SESSION} plan={plan(status)} />, { path: `/sessions/${SESSION}` });
 
@@ -30,7 +42,7 @@ describe('PlanBar', () => {
     beforeEach(() => {
         useWorkspaceEventStore.setState({ sessions: {} });
         vi.stubGlobal('ResizeObserver', ResizeObserverStub);
-        vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => Response.json({ items: [], next_cursor: null })));
+        stubPlanState([WRITTEN_PAGE]);
     });
 
     afterEach(() => {
@@ -42,7 +54,7 @@ describe('PlanBar', () => {
 
         expect(within(bar).getByRole('button', { name: 'Discard' })).toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Release' })).not.toBeInTheDocument();
-        expect(within(bar).getByRole('link', { name: 'Review & release' })).toHaveAttribute('href', `/sessions/${SESSION}/review?plan=pl-1`);
+        expect(await within(bar).findByRole('link', { name: 'Review & release' })).toHaveAttribute('href', `/sessions/${SESSION}/review?plan=pl-1`);
     });
 
     it('keeps a released plan\'s publish and request review for the review page', async () => {
@@ -51,14 +63,32 @@ describe('PlanBar', () => {
         expect(within(bar).getByRole('button', { name: 'Reopen' })).toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Request review' })).not.toBeInTheDocument();
-        expect(within(bar).getByRole('link', { name: 'Review & release' })).toBeInTheDocument();
+        expect(await within(bar).findByRole('link', { name: 'Review & release' })).toBeInTheDocument();
     });
 
-    it('leads a running plan to the review page too, where it can be released', async () => {
+    it('has no review link while the plan is still running, even with a page written', async () => {
         const bar = await renderBar('running');
 
+        // The plan's state, which lists a page, is not even asked for while the plan runs.
+        await waitFor(() => expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(0));
+        expect(vi.mocked(fetch).mock.calls.map(([input]) => String(input))).not.toContainEqual(expect.stringMatching(/\/plans\/pl-1$/));
         expect(within(bar).queryByRole('button', { name: 'Release' })).not.toBeInTheDocument();
-        expect(within(bar).getByRole('link', { name: 'Review & release' })).toBeInTheDocument();
+        expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
+    });
+
+    it('has no review link for a done plan that wrote no page', async () => {
+        const fetchMock = vi.fn<typeof fetch>(async (input) => (
+            String(input).endsWith(`/sessions/${SESSION}/plans/pl-1`)
+                ? Response.json({ plan: plan('done'), cms_objects: [{ ...WRITTEN_PAGE, operation: 'read' }] })
+                : Response.json({ items: [], next_cursor: null })
+        ));
+
+        vi.stubGlobal('fetch', fetchMock);
+        const bar = await renderBar('done');
+
+        await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContainEqual(expect.stringMatching(/\/plans\/pl-1$/)));
+        expect(within(bar).getByRole('button', { name: 'Discard' })).toBeInTheDocument();
+        expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
     });
 
     it('has no review link while the plan is only proposed', async () => {

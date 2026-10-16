@@ -78,8 +78,8 @@ textarea.input {
   font-size: var(--font-size-xs);
 }
 
-/* A settings review: always the same list, per setting its name above (design.md §5.1 field label: 12 px,
-   500, `--fg-primary`), its value as a field, and under it where a proposed value came from. */
+/* A settings review: always the same list, per setting its name and state above (design.md §5.1 field
+   label: 12 px, 500, `--fg-primary`), its field, and under it where a proposed value came from. */
 .settings {
   display: flex;
   flex-direction: column;
@@ -92,35 +92,36 @@ textarea.input {
   gap: 4px;
 }
 
+/* The name, then "Selection required" right beside it. */
+.settingHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
 .settingName {
   color: var(--fg-primary);
   font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
-/* The value inside its field, cut with an ellipsis where it is too long; the badge and the chevron after it. */
-.valueText,
-.valuePlaceholder {
-  flex: 1;
+/* The chosen value in a select, "Recommended" right after it while it is the recommended one (`OptionSelect`). */
+.selectedValue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.selectedLabel {
   min-width: 0;
   overflow: hidden;
-  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.valuePlaceholder {
-  color: var(--fg-muted);
-}
-
-/* The select's chevron, as the select that takes the field's place shows it. */
-.chevron {
-  display: inline-flex;
-  flex: none;
-  color: var(--fg-secondary);
-}
-
-/* "Recommended" in the field (design.md §12 "Badge": 10 px, uppercase, `--corner-sm`, `rgba(interactive,.12)`),
+/* "Recommended" in a select (design.md §12 "Badge": 10 px, uppercase, `--corner-sm`, `rgba(interactive,.12)`),
    its sparkles an icon with meaning (§9 "KI"). */
 .recommended,
 .requiredBadge {

@@ -1,14 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { FolderSearchDialog } from '@/components/FolderSearchDialog/FolderSearchDialog';
-import { Button } from '@/components/ui/button';
-import { SelectChevron } from '@/components/ui/select';
 import { useCmsLanguages, useCmsNodes, useCmsTemplates } from '@/hooks/useCmsQueries';
 import type { CmsFolder, CmsNode } from '@/services/cmsApiService/cmsApiService';
 
-import { type Option, OptionSelect } from './OptionSelect';
-import { withPath } from './withPath';
+import { type Option, OptionSelect, type Recommendation } from './OptionSelect';
 
 import styles from './InteractionCard.module.css';
 
@@ -42,12 +39,6 @@ interface SettingFieldProps {
     disabled: boolean;
     /** The folder chosen in the review right now: its templates, and the languages of its node. */
     folder?: Option;
-    /** Opened by a click on the value: its list or the folder search opens, its text field takes the focus, at once. */
-    opensAtOnce?: boolean;
-    /** The user is done with it: chose, cancelled, or left its text field. */
-    onDone?: () => void;
-    /** The user began typing into its text field. */
-    onEdit?: () => void;
 }
 
 // The options to offer: GenAIx's first (with their reasons), then the others, each value once; the
@@ -67,6 +58,11 @@ function choose(options: Option[], value: string, onChange: (option: Option) => 
     }
 }
 
+// What GenAIx recommends for a `missing` setting, for its select to say so.
+function recommendationOf(row: SettingRow): Recommendation | undefined {
+    return row.recommended ? { value: row.recommended.value, reason: row.reason } : undefined;
+}
+
 // A folder of the folder search as an option: its id as the value, its name as the wording, and the
 // folder with its node and path as `ref`.
 function folderOption(node: CmsNode, folder: CmsFolder): Option {
@@ -78,19 +74,17 @@ function folderOption(node: CmsNode, folder: CmsFolder): Option {
 // The entry of a folder's list that opens the folder search ("Other folder…"); never a folder id.
 const OTHER_FOLDER = '\u0000other-folder';
 
-// `folder`: never typed, and no button of its own. With options a select, whose last entry "Other
-// folder…" opens the folder search wherever a folder off the options may be given; else the chosen
-// folder as a value, which opens the folder search when clicked.
-function FolderField({ id, row, value, onChange, disabled, opensAtOnce = false, onDone }: SettingFieldProps) {
+// `folder`: never typed, always a select: the chosen folder and GenAIx's options, and wherever a folder
+// off them may be given a last entry that opens the folder search ("Other folder…", "Choose folder…"
+// while there is none to list).
+function FolderField({ id, row, value, onChange, disabled }: SettingFieldProps) {
     const { t } = useTranslation();
     // Folders chosen in the folder search, offered beside GenAIx's options from then on.
     const [picked, setPicked] = useState<Option[]>([]);
-    const options = mergeOptions(undefined, row.options ?? [], picked);
-    const canPick = row.canChooseOther || options.length === 0;
-    // Without options to list, the click that opened the field opens the folder search.
-    const [isPicking, setIsPicking] = useState(opensAtOnce && options.length === 0);
-    // "Other folder…" was chosen: the list closing then does not end the editing, the folder search follows.
-    const opensSearchRef = useRef(false);
+    const [isPicking, setIsPicking] = useState(false);
+    const options = mergeOptions(value, row.options ?? [], picked);
+    const canPick = row.canChooseOther || (row.options ?? []).length === 0;
+    const search = { value: OTHER_FOLDER, label: t(options.length > 0 ? 'chat.interaction.otherFolder' : 'chat.interaction.chooseFolder') };
 
     function pick(node: CmsNode, folder: CmsFolder) {
         const option = folderOption(node, folder);
@@ -98,64 +92,27 @@ function FolderField({ id, row, value, onChange, disabled, opensAtOnce = false, 
         setPicked((current) => [...current.filter(({ value: other }) => other !== option.value), option]);
         setIsPicking(false);
         onChange(option);
-        onDone?.();
-    }
-
-    function cancel() {
-        setIsPicking(false);
-        onDone?.();
-    }
-
-    function chooseFromList(next: string) {
-        if (next === OTHER_FOLDER) {
-            opensSearchRef.current = true;
-            setIsPicking(true);
-        } else {
-            choose(options, next, onChange);
-        }
-    }
-
-    // After the select reported the choice, whichever of the two it reports first.
-    function closeList() {
-        setTimeout(() => {
-            if (!opensSearchRef.current) {
-                onDone?.();
-            }
-
-            opensSearchRef.current = false;
-        });
     }
 
     return (
         <>
-            {options.length > 0
-                ? (
-                    <OptionSelect
-                        id={id}
-                        options={canPick ? [...options, { value: OTHER_FOLDER, label: t('chat.interaction.otherFolder') }] : options}
-                        value={value?.value ?? ''}
-                        onChange={chooseFromList}
-                        onClose={closeList}
-                        defaultOpen={opensAtOnce}
-                        disabled={disabled}
-                    />
-                )
-                : (
-                    <Button id={id} variant="input" size="field" onClick={() => setIsPicking(true)} disabled={disabled}>
-                        <span className={value ? styles.valueText : styles.valuePlaceholder}>
-                            {value ? withPath(value.label, value.ref) : t('chat.interaction.chooseFolder')}
-                        </span>
-                        <span className={styles.chevron}><SelectChevron /></span>
-                    </Button>
-                )}
-            {isPicking && <FolderSearchDialog onPick={pick} onCancel={cancel} />}
+            <OptionSelect
+                id={id}
+                options={canPick ? [...options, search] : options}
+                value={value?.value ?? ''}
+                onChange={(next) => (next === OTHER_FOLDER ? setIsPicking(true) : choose(options, next, onChange))}
+                disabled={disabled}
+                placeholder={t('chat.interaction.chooseFolder')}
+                recommended={recommendationOf(row)}
+            />
+            {isPicking && <FolderSearchDialog onPick={pick} onCancel={() => setIsPicking(false)} />}
         </>
     );
 }
 
 // `template`: GenAIx's options, and the templates of the chosen folder besides them, also once another
 // folder was chosen (the template chosen so far stays). Without either there is nothing to offer.
-function TemplateField({ id, row, value, onChange, disabled, folder, opensAtOnce, onDone }: SettingFieldProps) {
+function TemplateField({ id, row, value, onChange, disabled, folder }: SettingFieldProps) {
     const { t } = useTranslation();
     const genaixOptions = row.options ?? [];
     const folderId = folder ? Number(folder.value) : Number.NaN;
@@ -182,29 +139,28 @@ function TemplateField({ id, row, value, onChange, disabled, folder, opensAtOnce
             onChange={(next) => choose(options, next, onChange)}
             disabled={disabled || options.length === 0}
             placeholder={placeholder}
-            defaultOpen={opensAtOnce}
-            onClose={onDone}
+            recommended={recommendationOf(row)}
         />
     );
 }
 
 // `language`: the languages of the chosen folder's node, of every node while that is not known; GenAIx's
 // options first. The value is the language code.
-function LanguageField({ id, row, value, onChange, disabled, folder, opensAtOnce, onDone }: SettingFieldProps) {
+function LanguageField({ id, row, value, onChange, disabled, folder }: SettingFieldProps) {
     const nodes = useCmsNodes();
     const folderNodeId = folder?.ref?.node_id;
     const languages = useCmsLanguages(folderNodeId !== undefined ? [folderNodeId] : (nodes.data ?? []).map((node) => node.id));
     const options = mergeOptions(value, row.options ?? [], languages.languages.map((language) => ({ value: language.code, label: language.name })));
 
-    return <OptionSelect id={id} options={options} value={value?.value ?? ''} onChange={(next) => choose(options, next, onChange)} disabled={disabled} defaultOpen={opensAtOnce} onClose={onDone} />;
+    return <OptionSelect id={id} options={options} value={value?.value ?? ''} onChange={(next) => choose(options, next, onChange)} disabled={disabled} recommended={recommendationOf(row)} />;
 }
 
 // `node`: the nodes the user can see. The value is the node id.
-function NodeField({ id, row, value, onChange, disabled, opensAtOnce, onDone }: SettingFieldProps) {
+function NodeField({ id, row, value, onChange, disabled }: SettingFieldProps) {
     const nodes = useCmsNodes();
     const options = mergeOptions(value, row.options ?? [], (nodes.data ?? []).map((node) => ({ value: String(node.id), label: node.name })));
 
-    return <OptionSelect id={id} options={options} value={value?.value ?? ''} onChange={(next) => choose(options, next, onChange)} disabled={disabled} defaultOpen={opensAtOnce} onClose={onDone} />;
+    return <OptionSelect id={id} options={options} value={value?.value ?? ''} onChange={(next) => choose(options, next, onChange)} disabled={disabled} recommended={recommendationOf(row)} />;
 }
 
 // `YYYY-MM-DDTHH:mm` in local time, as a `datetime-local` field holds it; '' for a value that is no date.
@@ -220,24 +176,9 @@ function toLocalInput(iso: string): string {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-// The ref of a text field, which takes the focus when the click on its value opened it.
-function useTextFieldFocus({ opensAtOnce = false }: SettingFieldProps) {
-    const ref = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (opensAtOnce) {
-            ref.current?.focus();
-        }
-    }, [opensAtOnce]);
-
-    return ref;
-}
-
 // `publish_at`: the browser's date and time picker; the value is the moment as an ISO `date-time`.
-function PublishAtField(props: SettingFieldProps) {
-    const { id, value, onChange, disabled, onEdit, onDone } = props;
+function PublishAtField({ id, value, onChange, disabled }: SettingFieldProps) {
     const { i18n } = useTranslation();
-    const ref = useTextFieldFocus(props);
 
     function change(local: string) {
         const date = new Date(local);
@@ -247,35 +188,20 @@ function PublishAtField(props: SettingFieldProps) {
         }
     }
 
-    return (
-        <input
-            ref={ref}
-            id={id}
-            type="datetime-local"
-            className={styles.input}
-            value={toLocalInput(value?.value ?? '')}
-            onChange={(event) => change(event.target.value)}
-            onFocus={onEdit}
-            onBlur={onDone}
-            disabled={disabled}
-        />
-    );
+    return <input id={id} type="datetime-local" className={styles.input} value={toLocalInput(value?.value ?? '')} onChange={(event) => change(event.target.value)} disabled={disabled} />;
 }
 
 // Any other key: a constraint in the user's words, as free text.
-function TextField(props: SettingFieldProps) {
-    const { id, value, onChange, disabled, onEdit, onDone } = props;
-    const ref = useTextFieldFocus(props);
+function TextField({ id, value, onChange, disabled }: SettingFieldProps) {
+    const { t } = useTranslation();
 
     return (
         <input
-            ref={ref}
             id={id}
             className={styles.input}
             value={value?.label ?? ''}
+            placeholder={t('chat.interaction.enterValue')}
             onChange={(event) => onChange({ value: event.target.value, label: event.target.value })}
-            onFocus={onEdit}
-            onBlur={onDone}
             disabled={disabled}
         />
     );
@@ -287,12 +213,9 @@ function TextField(props: SettingFieldProps) {
  * contract `UserSettingPart.value`). `publish_at` uses the date picker. Any other key, such as
  * `filename`, is a constraint in the user's words and stays free text; so does a key with GenAIx options
  * that none of these is, as a select over them.
- *
- * Opened by a click on its value (`opensAtOnce`), a list opens, the folder search opens or the text field
- * takes the focus at once; `onDone` once the user chose, cancelled or left the field.
  */
 export function SettingField(props: SettingFieldProps) {
-    const { id, row, value, onChange, disabled, opensAtOnce, onDone } = props;
+    const { id, row, value, onChange, disabled } = props;
 
     switch (row.key) {
         // `file_folder`, `image_folder`: the advisory folders an upload goes into (rc.5), `recommended` preselected.
@@ -313,7 +236,7 @@ export function SettingField(props: SettingFieldProps) {
     }
 
     if (row.options?.length) {
-        return <OptionSelect id={id} options={row.options} value={value?.value ?? ''} onChange={(next) => choose(row.options!, next, onChange)} disabled={disabled} defaultOpen={opensAtOnce} onClose={onDone} />;
+        return <OptionSelect id={id} options={row.options} value={value?.value ?? ''} onChange={(next) => choose(row.options!, next, onChange)} disabled={disabled} recommended={recommendationOf(row)} />;
     }
 
     return <TextField {...props} />;

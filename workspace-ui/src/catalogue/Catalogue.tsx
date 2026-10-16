@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverClose, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/ui/popover';
 import { Radio, RadioGroup } from '@/components/ui/radio-group';
-import { Select, SelectChevron, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -209,16 +209,6 @@ export function Catalogue() {
                             <Button variant="quiet" size="text" aria-expanded>
                                 {t('catalogue.buttons.sources')}
                                 <ChevronUpIcon size={12} />
-                            </Button>
-                        </State>
-                        <State label={t('catalogue.buttons.value')}>
-                            <Button variant="input" size="field">
-                                {t('catalogue.buttons.valueText')}
-                                <SelectChevron />
-                            </Button>
-                            <Button variant="input" size="field" data-attention="">
-                                {t('catalogue.buttons.choose')}
-                                <SelectChevron />
                             </Button>
                         </State>
                         <State label={t('catalogue.buttons.pressed')}>

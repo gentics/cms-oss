@@ -80,16 +80,6 @@ describe('Button', () => {
         expect(button).toHaveAttribute('data-size', 'text');
     });
 
-    it('has an input variant in a field size, a value in the look of a field that opens its choice', () => {
-        render(<Button variant="input" size="field" data-attention="">Choose…</Button>, { wrapper: UiProvider });
-
-        const button = screen.getByRole('button', { name: 'Choose…' });
-
-        expect(button).toHaveAttribute('data-variant', 'input');
-        expect(button).toHaveAttribute('data-size', 'field');
-        expect(button).toHaveAttribute('data-attention');
-    });
-
     it('has a mini icon size for chips and passages', () => {
         render(<Button variant="ghost" size="icon-xs" aria-label="Remove">×</Button>, { wrapper: UiProvider });
 

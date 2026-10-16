@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -78,22 +78,20 @@ describe('InteractionCard', () => {
 
         // Only the settings; the prompt is not shown.
         expect(screen.queryByText('Ich habe diese Einstellungen abgeleitet.')).not.toBeInTheDocument();
-        // Every setting is a value in the look of a field; a proposed one says under it where it came from.
-        expect(screen.getByRole('button', { name: 'Folder Richtlinien' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Language Deutsch' })).toBeInTheDocument();
+        // Every chosen setting is a select with its value; a proposed one says under it where it came from.
+        expect(screen.getByRole('combobox', { name: 'Folder' })).toHaveTextContent('Richtlinien');
+        expect(screen.getByRole('combobox', { name: 'Language' })).toHaveTextContent('Deutsch');
         expect(screen.getByText('From your text · „auf Deutsch“')).toBeInTheDocument();
         expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 
-        // The missing template: "Choose…", "Selection required", and Confirm waits for it.
-        const template = screen.getByRole('button', { name: 'Template Choose…' });
+        // The missing template: "Selection required" beside its name, and Confirm waits for it.
+        const template = screen.getByRole('combobox', { name: 'Template' });
         const confirm = screen.getByRole('button', { name: 'Confirm' });
 
-        expect(template).toHaveAttribute('data-attention');
-        expect(template).toHaveAccessibleDescription('Selection required');
+        expect(screen.getByText('Selection required')).toBeInTheDocument();
         expect(confirm).toBeDisabled();
         expect(screen.getByText('Still to choose: Template')).toBeInTheDocument();
 
-        // A click opens its list at once.
         await user.click(template);
         await user.click(await screen.findByRole('option', { name: 'Kampagnen-Landingpage' }));
 
@@ -129,21 +127,23 @@ describe('InteractionCard', () => {
             }],
         }));
 
-        // The value, "Recommended" in its field with the reason as its tooltip, and no button of its own.
-        const folder = screen.getByRole('button', { name: 'Ordner fuer das PDF Downloads · /Downloads/' });
+        // A select with the recommended folder and "Recommended" in it, the reason its tooltip; no button of its own.
+        const folder = screen.getByRole('combobox', { name: 'Ordner fuer das PDF' });
 
-        expect(folder).toHaveAccessibleDescription('Recommended');
-        expect(screen.getByText('Recommended')).toHaveAttribute('title', 'Downloads ist der Standard-Dateiordner des Knotens.');
+        expect(folder).toHaveTextContent('Downloads · /Downloads/');
+        expect(within(folder).getByText('Recommended')).toHaveAttribute('title', 'Downloads ist der Standard-Dateiordner des Knotens.');
         expect(screen.queryByRole('button', { name: 'Other folder…' })).not.toBeInTheDocument();
 
-        // A click lists GenAIx's folders, and "Other folder…" for the folder search.
+        // Its list: GenAIx's folders, and "Other folder…" for the folder search.
         await user.click(folder);
 
         expect(await screen.findByRole('option', { name: 'Other folder…' })).toBeInTheDocument();
 
         await user.click(screen.getByRole('option', { name: /Veranstaltungen/ }));
 
-        await waitFor(() => expect(screen.queryByText('Recommended')).not.toBeInTheDocument());
+        // Another folder: no "Recommended" in the field any more.
+        await waitFor(() => expect(folder).toHaveTextContent('Veranstaltungen'));
+        expect(folder).not.toHaveTextContent('Recommended');
 
         await user.click(screen.getByRole('button', { name: 'Confirm' }));
 
@@ -156,12 +156,10 @@ describe('InteractionCard', () => {
 
         renderCard(interaction({ kind: 'settings_review', prompt: 'Passt das?', proposed: [{ key: 'filename', value: 'a.html', label: 'a.html', source: 'text' }] }));
 
-        // The value opens its field with a click, which then has the focus.
-        await user.click(screen.getByRole('button', { name: 'File name a.html' }));
-
+        // A typed setting is a text field with its value.
         const field = screen.getByRole('textbox', { name: 'File name' });
 
-        expect(field).toHaveFocus();
+        expect(field).toHaveValue('a.html');
         await user.clear(field);
         await user.type(field, 'terms.html');
         await user.click(screen.getByRole('button', { name: 'Confirm' }));
@@ -169,15 +167,16 @@ describe('InteractionCard', () => {
         expect(await sentAnswer(fetchMock)).toEqual({ settings: [{ type: 'setting', key: 'filename', value: 'terms.html', label: 'terms.html' }] });
     });
 
-    it('opens the folder search with a click on a folder without options, with no button of its own', async () => {
+    it('opens the folder search from the folder select\'s "Other folder…", with no button of its own', async () => {
         const user = userEvent.setup();
 
         stubAnswer();
         renderCard(interaction({ kind: 'settings_review', prompt: 'Passt das?', proposed: [{ key: 'folder', value: '42', label: 'Richtlinien', source: 'context' }] }));
 
-        expect(screen.queryByRole('button', { name: /Choose folder/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Choose folder|Other folder/ })).not.toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'Folder Richtlinien' }));
+        await user.click(screen.getByRole('combobox', { name: 'Folder' }));
+        await user.click(await screen.findByRole('option', { name: 'Other folder…' }));
 
         expect(await screen.findByRole('dialog', { name: 'Choose a folder' })).toBeInTheDocument();
     });

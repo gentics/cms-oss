@@ -77,8 +77,6 @@
   /* §8 "Lädt": one sweep of the skeleton shimmer. */
   --duration-skeleton: 1.1s;
   --press-scale: 0.97;
-  /* A field-wide control (a value that opens its select) moves less when pressed: wide, .97 would wobble. */
-  --press-scale-field: 0.99;
 
   /* Chat (§11, §12 "Chat-Blasen"): what stands in the agent's column is indented by its avatar
      (26 px) plus the gap after it (9 px). */

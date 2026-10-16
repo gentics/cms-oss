@@ -6,7 +6,6 @@ import { PartCard } from '@/components/MessageParts/PartCard';
 import { SelectableList } from '@/components/MessageParts/SelectableList';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { SelectChevron } from '@/components/ui/select';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useAnswerInteraction } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
@@ -17,7 +16,6 @@ import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { interactionCardId } from './focusInteractionCard';
 import { type Option, OptionSelect } from './OptionSelect';
 import { SettingField, type SettingRow } from './SettingField';
-import { withPath } from './withPath';
 
 import styles from './InteractionCard.module.css';
 
@@ -291,18 +289,13 @@ function Form({ interaction, onSubmit, disabled }: KindProps) {
     );
 }
 
-// The keys chosen from a list or a picker; any other key without options is typed (`SettingField`).
-const CHOSEN_KEYS: ReadonlySet<string> = new Set(['node', 'folder', 'file_folder', 'image_folder', 'template', 'language', 'publish_at']);
-
 // `settings_review` (contract §9.1): every `proposed` setting prefilled, every `missing` one to fill or
 // preselected with what GenAIx recommends, answered with one `setting` part per key. Always the same list,
-// one setting per row: its name; its value in the look of a field with a chevron (`Button` `input`), which
-// a click opens for changing in its own field (`SettingField`, opened at once) until the user chose or
-// left it; and its state. A proposed value says where it came from under the field, a recommended one has
-// "Recommended" in the field (its reason the tooltip), and one still to choose shows "Choose…", a
-// `--warning` border and "Selection required". Confirm is enabled once every setting has a value; until
-// then the foot says which are still to choose. A different folder keeps the chosen template; its field
-// then offers the new folder's templates beside it.
+// one setting per row: its name, with "Selection required" beside it while it has no value; its field
+// (`SettingField`: a select for what is chosen, a text field for what is typed; the recommended option
+// says so in its select, `OptionSelect`); and under a proposed value where it came from. Confirm is enabled once every setting has a value; until then the
+// foot says which are still to choose. A different folder keeps the chosen template; its field then
+// offers the new folder's templates beside it.
 function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
     const { t } = useTranslation();
     const rows = useMemo((): SettingRow[] => [
@@ -331,9 +324,6 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
             return initial ? [[row.key, { value: initial.value, label: initial.label, ref: initial.ref }]] : [];
         }),
     ));
-    // The setting the user opened for changing, if any.
-    const [editing, setEditing] = useState<string>();
-
     const nameOf = (row: SettingRow) => row.name || t(`chat.interaction.setting.${row.key}`, { defaultValue: row.key });
     const toChoose = rows.filter((row) => (values[row.key]?.value ?? '') === '');
     const isComplete = toChoose.length === 0;
@@ -347,62 +337,23 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
         setValues((current) => ({ ...current, [row.key]: option }));
     }
 
-    // One setting: its name, its value as a field (or its own field while it is changed), its state.
+    // One setting: its name and state, its field, and where a proposed value came from.
     function settingRow(row: SettingRow) {
         const id = `interaction-${interaction.id}-${row.key}`;
         const value = values[row.key];
-        const isEditing = editing === row.key;
         const isMissing = !value?.value;
         // Where the proposed value came from, while it is still that value.
         const source = row.source && value?.value === row.proposed?.value
             ? `${t(`chat.interaction.source.${row.source}`)}${row.evidence ? ` · „${row.evidence}“` : ''}`
             : undefined;
-        const isRecommended = row.recommended !== undefined && value?.value === row.recommended.value;
-        const placeholder = t(CHOSEN_KEYS.has(row.key) || row.options?.length ? 'chat.interaction.choose' : 'chat.interaction.enterValue');
 
         return (
             <div key={row.key} className={styles.setting}>
-                {isEditing
-                    ? <label className={styles.settingName} htmlFor={id}>{nameOf(row)}</label>
-                    : <span id={`${id}-name`} className={styles.settingName}>{nameOf(row)}</span>}
-                {isEditing
-                    ? (
-                        <SettingField
-                            id={id}
-                            row={row}
-                            value={value}
-                            onChange={(option) => choose(row, option)}
-                            disabled={disabled}
-                            folder={values.folder}
-                            opensAtOnce
-                            onDone={() => setEditing(undefined)}
-                            onEdit={() => setEditing(row.key)}
-                        />
-                    )
-                    : (
-                        <Button
-                            id={id}
-                            variant="input"
-                            size="field"
-                            data-attention={isMissing ? '' : undefined}
-                            aria-labelledby={`${id}-name ${id}-value`}
-                            aria-describedby={isRecommended || isMissing ? `${id}-state` : undefined}
-                            disabled={disabled}
-                            onClick={() => setEditing(row.key)}
-                        >
-                            <span id={`${id}-value`} className={isMissing ? styles.valuePlaceholder : styles.valueText}>
-                                {isMissing ? placeholder : withPath(value.label || value.value, value.ref)}
-                            </span>
-                            {isRecommended && (
-                                <span id={`${id}-state`} className={styles.recommended} title={row.reason}>
-                                    <SparklesIcon size={11} aria-hidden />
-                                    {t('chat.interaction.recommended')}
-                                </span>
-                            )}
-                            {isMissing && <span id={`${id}-state`} className={styles.requiredBadge}>{t('chat.interaction.required')}</span>}
-                            <span className={styles.chevron}><SelectChevron /></span>
-                        </Button>
-                    )}
+                <div className={styles.settingHead}>
+                    <label className={styles.settingName} htmlFor={id}>{nameOf(row)}</label>
+                    {isMissing && <span className={styles.requiredBadge}>{t('chat.interaction.required')}</span>}
+                </div>
+                <SettingField id={id} row={row} value={value} onChange={(option) => choose(row, option)} disabled={disabled} folder={values.folder} />
                 {source && (
                     <span className={styles.source}>
                         <SparklesIcon size={12} aria-hidden />

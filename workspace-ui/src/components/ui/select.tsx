@@ -11,19 +11,6 @@ function Select<Value, Multiple extends boolean | undefined = false>(props: Sele
     return <SelectPrimitive.Root {...props} />;
 }
 
-/**
- * The select's own chevron (design.md §12 "Eingabefelder": two 5 px triangles), in `currentColor`; also for a
- * control that opens into a select, so that it does not change when the select takes its place.
- */
-function SelectChevron() {
-    return (
-        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
-            <path d="M5 1 9.5 5.5h-9z" />
-            <path d="M5 13 .5 8.5h9z" />
-        </svg>
-    );
-}
-
 /** `fullWidth`: as wide as its container, as a text field is (e.g. in a settings review). */
 function SelectTrigger({ className, children, fullWidth = false, ...props }: SelectPrimitive.Trigger.Props & { fullWidth?: boolean }) {
     return (
@@ -42,7 +29,10 @@ function SelectTrigger({ className, children, fullWidth = false, ...props }: Sel
         >
             {children}
             <SelectPrimitive.Icon className="text-slate">
-                <SelectChevron />
+                <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+                    <path d="M5 1 9.5 5.5h-9z" />
+                    <path d="M5 13 .5 8.5h9z" />
+                </svg>
             </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
     );
@@ -98,4 +88,4 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
     );
 }
 
-export { Select, SelectChevron, SelectContent, SelectItem, SelectTrigger, SelectValue };
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };

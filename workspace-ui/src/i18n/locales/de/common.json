@@ -592,10 +592,7 @@
             "link": "Als Link",
             "linkText": "Zu den Buttons",
             "quiet": "Leiser Text-Button",
-            "sources": "Quellen",
-            "value": "Wert als Feld",
-            "valueText": "Richtlinien · /Richtlinien/",
-            "choose": "Auswählen…"
+            "sources": "Quellen"
         },
         "checkbox": {
             "title": "Checkbox",

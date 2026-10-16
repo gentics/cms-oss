@@ -18,11 +18,6 @@ const buttonVariants = cva(
                 solid: 'bg-solid text-white',
                 // Meta text that opens more (design.md §5.1 `--fg-muted`, 400), e.g. the sources of an answer.
                 quiet: 'font-normal text-muted not-data-disabled:hover:text-slate aria-expanded:text-slate',
-                // A value in the look of a field that opens its choice when clicked (design.md §12 "Eingabefelder":
-                // surface, `--border-field`; hover and an open popup as focus, `--interactive`). `data-attention`: a
-                // value still to choose, its border in `--warning` (§3.3 warning family). Pressed, it scales only
-                // slightly (`--press-scale-field`), as wide as it is.
-                input: 'border-line-field bg-surface font-normal text-ink not-data-disabled:hover:border-azure not-data-disabled:active:scale-(--press-scale-field) data-attention:border-warn',
             },
             size: {
                 default: 'px-12 py-8',
@@ -34,9 +29,6 @@ const buttonVariants = cva(
                 brand: 'gap-9 py-4 pr-8 pl-4',
                 // Inline with text, no padding of its own (meta text, `--font-size-xs`).
                 text: 'gap-4 rounded-xs p-0 text-xs',
-                // As big as a field (design.md §12 "Eingabefelder": 32 px high, `--corner-md`, the full width), its
-                // content at the start: e.g. an `input` that opens into a full-width select.
-                field: 'h-32 w-full min-w-0 justify-start gap-8 rounded-md px-8 text-base',
             },
         },
         defaultVariants: {

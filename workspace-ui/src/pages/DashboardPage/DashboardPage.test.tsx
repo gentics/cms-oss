@@ -63,13 +63,13 @@ describe('DashboardPage', () => {
         vi.useRealTimers();
     });
 
-    it('greets the CMS user by name and the time of day', async () => {
+    it('greets the CMS user by first name and the time of day', async () => {
         vi.useFakeTimers({ toFake: ['Date'] });
         vi.setSystemTime(new Date(2026, 9, 5, 9, 0));
 
         renderDashboard();
 
-        expect(await screen.findByRole('heading', { name: 'Good morning, Erika Mustermann' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Good morning, Erika' })).toBeInTheDocument();
     });
 
     it('greets the CMS user by login when the user has no name', async () => {
@@ -88,7 +88,7 @@ describe('DashboardPage', () => {
 
         renderDashboard();
 
-        expect(await screen.findByRole('heading', { name: /Erika Mustermann/ })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: /Erika/ })).toBeInTheDocument();
         expect(fetchMock.mock.calls.map(([input]) => String(input))).not.toContain('/rest/user/me');
     });
 

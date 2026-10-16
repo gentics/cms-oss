@@ -34,9 +34,9 @@ export function DashboardPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const startSession = useStartSession();
-    // The CMS user of the session (`LoginGate` shows the page only with one): first and last name, the login without them.
+    // The CMS user of the session (`LoginGate` shows the page only with one): first name, the login without one.
     const cmsUser = useCmsUser({ refetchOnMount: false }).data;
-    const greetingName = cmsUser && ([cmsUser.firstName, cmsUser.lastName].filter(Boolean).join(' ') || cmsUser.login);
+    const greetingName = cmsUser ? (cmsUser.firstName || cmsUser.login) : null;
 
     // Upload progress of the files sent, by their position, for the composer's attachment list.
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);

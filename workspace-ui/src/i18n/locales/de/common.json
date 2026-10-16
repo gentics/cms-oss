@@ -34,6 +34,10 @@
         "mobile": "Mobil · 390 px",
         "fullScreen": "Vollbild",
         "leaveFullScreen": "Vollbild verlassen",
+        "pages": {
+            "label": "Seiten",
+            "unnamed": "Seite {{id}}"
+        },
         "selection": {
             "selected": "Ausgewählt: {{name}}",
             "clear": "Auswahl aufheben",
@@ -59,6 +63,7 @@
             "swap": "Bild tauschen",
             "search": "Bilder suchen",
             "use": "Bild verwenden",
+            "upload": "Bild hochladen",
             "cancel": "Abbrechen",
             "loading": "Bilder werden geladen …",
             "empty": "Keine Bilder gefunden.",
@@ -80,19 +85,6 @@
             "language": "Sprache",
             "created": "Erstellt",
             "edited": "Zuletzt bearbeitet"
-        },
-        "pages": {
-            "position": "{{index}} von {{count}}",
-            "unnamed": "Seite {{id}}",
-            "groups": {
-                "create": "Neue Seiten · {{count}}",
-                "update": "Bearbeitete Seiten · {{count}}",
-                "translate": "Übersetzungen · {{count}}",
-                "link": "Seiten mit neuen Verweisen · {{count}}",
-                "publish": "Zu veröffentlichende Seiten · {{count}}",
-                "construct": "Seiten mit Bausteinen · {{count}}",
-                "other": "Weitere Seiten · {{count}}"
-            }
         }
     },
     "workspace": {
@@ -520,6 +512,12 @@
             "published": "Veröffentlicht",
             "review_requested": "Prüfung angefordert",
             "failed": "Fehlgeschlagen"
+        },
+        "page": {
+            "issues_one": "{{count}} offener Punkt",
+            "issues_other": "{{count}} offene Punkte",
+            "canPublish": "Sie dürfen diese Seite veröffentlichen.",
+            "needsReview": "Braucht eine Prüfung: Sie dürfen diese Seite nicht veröffentlichen."
         },
         "actions": {
             "release": "Freigeben",

@@ -1,6 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
-/** The selector of the parts of a CMS page: the CMS marks them in read-only mode when `COPY_TAGS` is on (`AlohaRenderer`). */
+/** The selector of the parts of a CMS page: the CMS marks them with `tagmarkers=true` (edit mode without Aloha Editor, `AlohaPageServlet`). */
 const MARKED = '[data-gcn-tagid]';
 
 /** A marked part of the previewed page, as the CMS annotated it. */
@@ -46,9 +46,9 @@ export function partTextOf(element: Element): string {
     return (rendered ?? element.textContent ?? '').trim();
 }
 
-/** Whether a marked part shows an image: it is an `<img>` or holds one. */
+/** Whether a marked part shows an image: it is an `<img>` or holds one that no marked part inside it holds. */
 export function isImagePart(element: Element): boolean {
-    return element.matches('img') || element.querySelector('img') !== null;
+    return element.matches('img') || Array.from(element.querySelectorAll('img')).some((image) => image.closest(MARKED) === element);
 }
 
 function boxOf(element: Element): ElementBox {
@@ -65,7 +65,8 @@ function findPart(doc: Document, tagName: string): Element | null {
  * The marked parts of the page in the preview frame `frameRef`: which one the mouse is over and where
  * the selected one (`selected`, a tag name) sits, both as boxes for an overlay above the frame. Call
  * `onFrameLoad` from the frame's `load`. A click on a part selects it through `onSelect` instead of
- * following a link in it; Escape in the frame clears the selection. The boxes follow scrolling,
+ * following a link in it; a click into the page outside the parts and Escape in the frame clear the
+ * selection. The boxes follow scrolling,
  * resizing and changes to the page. `changed` (tag names, from `changed_elements`) gives the boxes of
  * the parts the last CMS write changed; a name not on the page has none. `textOf` reads a part's
  * current text (`partTextOf`), `hasImage` whether it shows an image (`isImagePart`).
@@ -129,6 +130,8 @@ export function usePreviewElements(
             if (element) {
                 event.preventDefault();
                 callbacks.current.onSelect(previewElementOf(element));
+            } else {
+                callbacks.current.onSelect(null);
             }
         }
 

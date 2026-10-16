@@ -223,9 +223,10 @@ describe('ReviewPanel', () => {
         ['accepted', ['Release']],
         ['running', ['Release']],
         ['done', ['Discard', 'Release']],
-        ['released', ['Discard', 'Reopen', 'Request review', 'Publish']],
-        ['published', ['Reopen']],
-        ['review_requested', ['Reopen']],
+        // rc.5 removed `reopen`: a published plan is changed with a message (contract §4.4).
+        ['released', ['Discard', 'Request review', 'Publish']],
+        ['published', []],
+        ['review_requested', []],
         ['discarded', []],
         ['superseded', []],
     ])('offers in status %s: %j', async (status, actions) => {
@@ -257,7 +258,7 @@ describe('ReviewPanel', () => {
             await renderPanel(planState('released', { cms_objects: [writtenPage(9142)] }));
 
             await waitFor(() => expect(permissionUrls).toEqual(['/rest/perm/publish/page/9142?nodeId=3']));
-            expect(actionNames()).toEqual(['Discard', 'Reopen', 'Request review']);
+            expect(actionNames()).toEqual(['Discard', 'Request review']);
         });
 
         it('offers no Publish when the user may publish only some of the plan\'s pages', async () => {
@@ -266,7 +267,7 @@ describe('ReviewPanel', () => {
             await renderPanel(planState('released', { cms_objects: [writtenPage(9142), writtenPage(9143, 'updated')] }));
 
             await waitFor(() => expect(permissionUrls).toHaveLength(2));
-            expect(actionNames()).toEqual(['Discard', 'Reopen', 'Request review']);
+            expect(actionNames()).toEqual(['Discard', 'Request review']);
         });
 
         it('offers Publish when the user may publish every page the plan wrote, and does not ask for pages it only read', async () => {

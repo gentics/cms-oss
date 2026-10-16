@@ -51,9 +51,31 @@ export function resolvePendingFileSources(parts: UserMessagePart[], fileIds: str
         return { ...part, source: fileId ?? 'user' };
     });
 }
+
+/**
+ * The references of `parts` (`reference` parts, e.g. an @-mention), in order and each object once:
+ * what a new session's `SessionContext.references` holds, so the session keeps them for every run.
+ */
+export function partReferences(parts: UserMessagePart[]): ContextReference[] {
+    const references = new Map<string, ContextReference>();
+
+    for (const part of parts) {
+        if (part.type !== 'reference') {
+            continue;
+        }
+
+        const key = `${part.ref.type}:${part.ref.node_id ?? ''}:${part.ref.id}`;
+
+        if (!references.has(key)) {
+            references.set(key, part.ref);
+        }
+    }
+
+    return [...references.values()];
+}
 /** The attribute that marks a passage's element in the field (its node view). */
 export const VERBATIM_ATTRIBUTE = 'data-verbatim';
-const HARD_BREAK_NODE = 'hardBreak';
+export const HARD_BREAK_NODE = 'hardBreak';
 
 /** The token of a CMS object or other context: a `reference` part, its `ContextReference` in `ref`. */
 export const REFERENCE_NODE = 'reference';
@@ -150,14 +172,15 @@ export function pageElementReplaceImageNaming(t: TFunction, { tagName, construct
 /**
  * The parts of an image swap of a part of a page (the preview's image card): the page as a `reference`
  * part, the naming text (`pageElementReplaceImageNaming`) as a `text` part, then the chosen CMS image
- * as a `reference` part. The part is named as for `PAGE_ELEMENT_NODE`; the request to replace its image
- * is an interim wording, until GenAIx defines how an image swap is sent.
+ * as a `reference` part. Without `image` the parts end at the naming text: an uploaded image follows
+ * as the turn's `file_ref` part. The part is named as for `PAGE_ELEMENT_NODE`; the request to replace
+ * its image is an interim wording, until GenAIx defines how an image swap is sent.
  */
-export function pageElementImageParts({ page, text: naming }: PageElementAttrs, image: ContextReference): UserMessagePart[] {
+export function pageElementImageParts({ page, text: naming }: PageElementAttrs, image?: ContextReference): UserMessagePart[] {
     return [
         { type: 'reference', ref: page },
         { type: 'text', text: normalizeText(naming) },
-        { type: 'reference', ref: image },
+        ...(image ? [{ type: 'reference' as const, ref: image }] : []),
     ];
 }
 

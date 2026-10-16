@@ -12,10 +12,12 @@ const SINGLE_SIGN_ON_QUERY_KEY = ['cms', 'singleSignOn'] as const;
 
 /**
  * The CMS user of the browser's CMS session cookie, `null` without a valid session. Fetched again
- * when the window regains focus, so an expired session leads back to the login.
+ * when the window regains focus, so an expired session leads back to the login. `refetchOnMount:
+ * false` reads it from the cache when a component mounts, e.g. on a page inside `LoginGate`, which
+ * has loaded it already.
  */
-export function useCmsUser() {
-    return useQuery({ queryKey: CMS_USER_QUERY_KEY, queryFn: getCmsUser, retry: false });
+export function useCmsUser({ refetchOnMount }: { refetchOnMount?: boolean } = {}) {
+    return useQuery({ queryKey: CMS_USER_QUERY_KEY, queryFn: getCmsUser, retry: false, refetchOnMount });
 }
 
 /**

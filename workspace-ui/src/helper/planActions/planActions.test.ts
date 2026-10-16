@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Plan, Workflow } from '@/services/apiService/genaix/types';
 
-import { hasGatedActions, isAcceptedOnCard, isFirstDraft, planActions, planPresence } from './planActions';
+import { hasGatedActions, isAcceptedOnCard, isFirstDraft, planActions, planPresence, writtenPagesOf } from './planActions';
 
 describe('planActions', () => {
     it('leaves the gated transitions out unless asked for them (the review page)', () => {
@@ -84,5 +84,18 @@ describe('planPresence', () => {
     it('shows nothing of such a plan once it is done without a page to publish', () => {
         expect(planPresence(quick('done'), catalogue, undefined)).toBe('none');
         expect(planPresence(quick('done'), catalogue, [])).toBe('none');
+    });
+});
+
+describe('writtenPagesOf', () => {
+    it('keeps the pages the plan created, changed or published, and nothing else', () => {
+        expect(writtenPagesOf([
+            { type: 'page', id: 1, operation: 'created' },
+            { type: 'page', id: 2, operation: 'updated' },
+            { type: 'page', id: 3, operation: 'published' },
+            { type: 'page', id: 4, operation: 'read' },
+            { type: 'image', id: 5, operation: 'created' },
+            { type: 'page', id: 6 },
+        ]).map(({ id }) => id)).toEqual([1, 2, 3]);
     });
 });

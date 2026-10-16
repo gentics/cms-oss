@@ -34,6 +34,10 @@
         "mobile": "Mobile · 390 px",
         "fullScreen": "Full screen",
         "leaveFullScreen": "Leave full screen",
+        "pages": {
+            "label": "Pages",
+            "unnamed": "Page {{id}}"
+        },
         "selection": {
             "selected": "Selected: {{name}}",
             "clear": "Clear selection",
@@ -59,6 +63,7 @@
             "swap": "Swap the image",
             "search": "Search images",
             "use": "Use image",
+            "upload": "Upload image",
             "cancel": "Cancel",
             "loading": "Loading images …",
             "empty": "No images found.",
@@ -80,19 +85,6 @@
             "language": "Language",
             "created": "Created",
             "edited": "Last edited"
-        },
-        "pages": {
-            "position": "{{index}} of {{count}}",
-            "unnamed": "Page {{id}}",
-            "groups": {
-                "create": "New pages · {{count}}",
-                "update": "Edited pages · {{count}}",
-                "translate": "Translations · {{count}}",
-                "link": "Pages with new links · {{count}}",
-                "publish": "Pages to publish · {{count}}",
-                "construct": "Pages with constructs · {{count}}",
-                "other": "Other pages · {{count}}"
-            }
         }
     },
     "workspace": {
@@ -520,6 +512,12 @@
             "published": "Published",
             "review_requested": "Review requested",
             "failed": "Failed"
+        },
+        "page": {
+            "issues_one": "{{count}} open issue",
+            "issues_other": "{{count}} open issues",
+            "canPublish": "You may publish this page.",
+            "needsReview": "Needs a review: you may not publish this page."
         },
         "actions": {
             "release": "Release",

@@ -1,5 +1,6 @@
+import { TextSelection } from '@tiptap/pm/state';
 import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
-import { type DragEvent, type Ref, useImperativeHandle, useState } from 'react';
+import { type DragEvent, type Ref, useImperativeHandle, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -11,7 +12,7 @@ import { IconButton } from '@/components/IconButton/IconButton';
 import { ReferenceMenu } from '@/components/ReferenceMenu/ReferenceMenu';
 import { Button } from '@/components/ui/button';
 import { VoiceInput } from '@/components/VoiceInput/VoiceInput';
-import { attachmentSource, PAGE_ELEMENT_NODE, type PageElementAttrs, pageElementNaming, textContent } from '@/helper/composerParts/composerParts';
+import { attachmentSource, HARD_BREAK_NODE, PAGE_ELEMENT_NODE, type PageElementAttrs, pageElementNaming, textContent } from '@/helper/composerParts/composerParts';
 import { UPLOAD_ACCEPT } from '@/helper/uploadLimits/uploadLimits';
 import { useComposer } from '@/hooks/useComposer';
 import type { StartSessionInput } from '@/hooks/useGenaixQueries';
@@ -128,11 +129,51 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         addReferences,
     }));
 
-    // One recognizer for the inline and the big mic; the words go into the field, nothing is sent.
-    const dictation = useSpeechDictation({ onText: setText, onEnd: () => textInput().focus() });
+    // Where the current take starts in the field, and the space before it: a take is added after the
+    // text already there, not in its place. `null` until the take's first words.
+    const takeRef = useRef<{ from: number; prefix: string } | null>(null);
 
+    // Writes the take so far behind the text the field had when the take began.
+    function writeTake(text: string) {
+        const { doc } = editor.state;
+
+        if (!takeRef.current) {
+            const from = TextSelection.atEnd(doc).from;
+            const before = doc.resolve(from).nodeBefore;
+            const endsLine = !before || before.type.name === HARD_BREAK_NODE || (before.isText && /\s$/.test(before.text ?? ''));
+
+            takeRef.current = { from, prefix: endsLine ? '' : ' ' };
+        }
+
+        const { from, prefix } = takeRef.current;
+        const range = { from, to: TextSelection.atEnd(doc).from };
+        const chain = editor.chain();
+
+        (text ? chain.insertContentAt(range, textContent(prefix + text)) : chain.deleteRange(range))
+            .command(({ tr }) => {
+                tr.setSelection(TextSelection.atEnd(tr.doc));
+
+                return true;
+            })
+            .run();
+    }
+
+    // One recognizer for the inline and the big mic; the words go into the field, nothing is sent.
+    const dictation = useSpeechDictation({
+        onText: writeTake,
+        onEnd: () => {
+            takeRef.current = null;
+            textInput().focus();
+        },
+    });
+
+    // Cancelling throws the take away; the text before it stays.
     function cancelDictation() {
-        setText('');
+        if (takeRef.current) {
+            writeTake('');
+            takeRef.current = null;
+        }
+
         textInput().focus();
     }
 

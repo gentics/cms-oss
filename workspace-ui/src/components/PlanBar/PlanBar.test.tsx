@@ -1,9 +1,8 @@
-import { act, screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { GenaixEvent, Plan, PlanStatus } from '@/services/apiService/genaix/types';
-import { useRevisePlanStore } from '@/store/useRevisePlanStore';
+import type { CmsObjectRef, GenaixEvent, Plan, PlanStatus } from '@/services/apiService/genaix/types';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { renderWithProviders } from '@/test/renderWithProviders';
 
@@ -22,6 +21,18 @@ function plan(status: PlanStatus, overrides: Partial<Plan> = {}): Plan {
     return { id: 'pl-1', workflows: [{ id: 'content_create', version: '1.0.0' }], status, version: 1, summary: 'New terms page.', items: [], ...overrides };
 }
 
+// A page the plan wrote, as `PlanState.cms_objects` lists it.
+const WRITTEN_PAGE: CmsObjectRef = { type: 'page', id: 9142, node_id: 3, operation: 'created' };
+
+// Answers the plan's state (`GET …/plans/pl-1`) with `cmsObjects`, every list with an empty page.
+function stubPlanState(cmsObjects: CmsObjectRef[]) {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => (
+        String(input).endsWith(`/sessions/${SESSION}/plans/pl-1`)
+            ? Response.json({ plan: plan('done'), cms_objects: cmsObjects })
+            : Response.json({ items: [], next_cursor: null })
+    )));
+}
+
 async function renderBar(status: PlanStatus, overrides: Partial<Plan> = {}) {
     renderWithProviders(<PlanBar sessionId={SESSION} plan={plan(status, overrides)} />, { path: `/sessions/${SESSION}` });
 
@@ -31,9 +42,8 @@ async function renderBar(status: PlanStatus, overrides: Partial<Plan> = {}) {
 describe('PlanBar', () => {
     beforeEach(() => {
         useWorkspaceEventStore.setState({ sessions: {} });
-        useRevisePlanStore.setState({ planIds: {} });
         vi.stubGlobal('ResizeObserver', ResizeObserverStub);
-        vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => Response.json({ items: [], next_cursor: null })));
+        stubPlanState([WRITTEN_PAGE]);
     });
 
     afterEach(() => {
@@ -45,33 +55,42 @@ describe('PlanBar', () => {
 
         expect(within(bar).getByRole('button', { name: 'Discard' })).toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Release' })).not.toBeInTheDocument();
-        expect(within(bar).getByRole('link', { name: 'Review & release' })).toHaveAttribute('href', `/sessions/${SESSION}/review?plan=pl-1`);
+        expect(await within(bar).findByRole('link', { name: 'Review & release' })).toHaveAttribute('href', `/sessions/${SESSION}/review?plan=pl-1`);
     });
 
     it('keeps a released plan\'s publish and request review for the review page', async () => {
         const bar = await renderBar('released');
 
-        expect(within(bar).getByRole('button', { name: 'Ask for a change' })).toBeInTheDocument();
+        // A change is asked for with a plain message, which GenAIx's session agent tells apart (contract §4.4).
+        expect(within(bar).queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Request review' })).not.toBeInTheDocument();
-        expect(within(bar).getByRole('link', { name: 'Review & release' })).toBeInTheDocument();
+        expect(await within(bar).findByRole('link', { name: 'Review & release' })).toBeInTheDocument();
     });
 
-    it('leads a running plan to the review page too, where it can be released', async () => {
+    it('has no review link while the plan is still running, even with a page written', async () => {
         const bar = await renderBar('running');
 
+        // The plan's state, which lists a page, is not even asked for while the plan runs.
+        await waitFor(() => expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(0));
+        expect(vi.mocked(fetch).mock.calls.map(([input]) => String(input))).not.toContainEqual(expect.stringMatching(/\/plans\/pl-1$/));
         expect(within(bar).queryByRole('button', { name: 'Release' })).not.toBeInTheDocument();
-        expect(within(bar).getByRole('link', { name: 'Review & release' })).toBeInTheDocument();
+        expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
     });
 
-    it('puts the composer into revising a finished plan with Ask for a change (rc.5)', async () => {
-        const user = userEvent.setup();
+    it('has no review link for a done plan that wrote no page', async () => {
+        const fetchMock = vi.fn<typeof fetch>(async (input) => (
+            String(input).endsWith(`/sessions/${SESSION}/plans/pl-1`)
+                ? Response.json({ plan: plan('done'), cms_objects: [{ ...WRITTEN_PAGE, operation: 'read' }] })
+                : Response.json({ items: [], next_cursor: null })
+        ));
+
+        vi.stubGlobal('fetch', fetchMock);
         const bar = await renderBar('done');
 
-        await user.click(within(bar).getByRole('button', { name: 'Ask for a change' }));
-
-        expect(useRevisePlanStore.getState().planIds).toEqual({ [SESSION]: 'pl-1' });
-        expect(within(bar).getByRole('button', { name: 'Ask for a change' })).toHaveAttribute('aria-pressed', 'true');
+        await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContainEqual(expect.stringMatching(/\/plans\/pl-1$/)));
+        expect(within(bar).getByRole('button', { name: 'Discard' })).toBeInTheDocument();
+        expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
     });
 
     it('offers no Stop and change while the plan executes (GenAIx\'s router redirects it on a message)', async () => {
@@ -118,9 +137,9 @@ describe('PlanBar', () => {
         } as GenaixEvent);
 
         const bar = await renderBar('done', { items });
-        const head = within(bar).getByText('Done').parentElement!;
 
-        expect(head).toHaveTextContent(/^Done · 1 page to publish$/);
+        // The head's line alone (the folded plan card has a step "Done" of its own).
+        expect(within(bar).getByText((_, element) => element?.textContent === 'Done · 1 page to publish')).toBeInTheDocument();
     });
 
     it('shows the plan at a glance in the head while collapsed', async () => {
@@ -157,11 +176,20 @@ describe('PlanBar', () => {
         expect(within(bar).getByRole('button', { name: 'Show plan' })).toHaveAttribute('aria-expanded', 'false');
     });
 
-    // The module catalogue (`GET /workflows`) with `plan_approval` per module; every other read gets an empty list.
+    // The module catalogue (`GET /workflows`) with `plan_approval` per module, the plan's state with a page it
+    // wrote; every other read gets an empty list.
     function stubWorkflows(planApproval: Record<string, boolean>) {
-        vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => (String(input).endsWith('/workflows')
-            ? Response.json({ items: Object.entries(planApproval).map(([id, approval]) => ({ id, version: '1.0.0', title: id, description: '', roles: [], optional: false, steps_template: [], plan_approval: approval })) })
-            : Response.json({ items: [], next_cursor: null }))));
+        vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
+            const url = String(input);
+
+            if (url.endsWith('/workflows')) {
+                return Response.json({ items: Object.entries(planApproval).map(([id, approval]) => ({ id, version: '1.0.0', title: id, description: '', roles: [], optional: false, steps_template: [], plan_approval: approval })) });
+            }
+
+            return url.endsWith(`/sessions/${SESSION}/plans/pl-1`)
+                ? Response.json({ plan: plan('done'), cms_objects: [WRITTEN_PAGE] })
+                : Response.json({ items: [], next_cursor: null });
+        }));
     }
 
     it('expands by itself while a plan accepted on its card is proposed', async () => {
@@ -208,20 +236,20 @@ describe('PlanBar', () => {
             const bar = await renderBar('done', quickEdit);
 
             await vi.waitFor(() => expect(within(bar).queryByRole('button', { name: 'Show plan' })).not.toBeInTheDocument());
-            expect(within(bar).getByRole('link', { name: 'Review & release' })).toBeInTheDocument();
+            expect(await within(bar).findByRole('link', { name: 'Review & release' })).toBeInTheDocument();
             expect(within(bar).getByText('Done').parentElement).toHaveTextContent(/^Done · 1 page to publish$/);
         });
     });
 
-    it('stays collapsed for a plan its run confirms in the chat (plan_approval: false)', async () => {
+    it('has nothing to expand for a plan its run confirms in the chat (plan_approval: false): its head alone', async () => {
         stubWorkflows({ content_quick_edit: false });
 
         const bar = await renderBar('proposed', { workflows: [{ id: 'content_quick_edit', version: '1.0.0' }] });
 
-        // Collapsed also once the catalogue was read, not only before it came.
-        await vi.waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([input]) => String(input).endsWith('/workflows'))).toBe(true));
-        await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
-        expect(within(bar).getByRole('button', { name: 'Show plan' })).toHaveAttribute('aria-expanded', 'false');
+        // Once the catalogue was read: no toggle, and no steps to show.
+        await vi.waitFor(() => expect(within(bar).queryByRole('button', { name: 'Show plan' })).not.toBeInTheDocument());
+        expect(within(bar).queryByRole('button', { name: 'Hide plan' })).not.toBeInTheDocument();
+        expect(within(bar).queryByRole('list')).not.toBeInTheDocument();
     });
 
     it('shows a revision being drafted with its items, offering discard only', async () => {
@@ -237,7 +265,7 @@ describe('PlanBar', () => {
         const research = { id: 'content_research', version: '1.0.0' };
         const bar = await renderBar('done', { workflows: [research, { id: 'content_create', version: '1.0.0' }] });
 
-        expect(within(bar).getByRole('link', { name: 'Review & release' })).toBeInTheDocument();
+        expect(await within(bar).findByRole('link', { name: 'Review & release' })).toBeInTheDocument();
     });
 
     it('has no review link for a plan that only reads', async () => {

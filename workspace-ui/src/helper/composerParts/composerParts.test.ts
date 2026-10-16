@@ -5,7 +5,7 @@ import { composerExtensions } from '@/components/ComposerTextInput/composerExten
 import i18n from '@/i18n';
 import type { ContextReference, FileMode } from '@/services/apiService/genaix/types';
 
-import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, pendingFileSource, readParts, referenceContent, resolvePendingFileSources, selectedRange, textContent, touchesVerbatim } from './composerParts';
+import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, partReferences, pendingFileSource, readParts, referenceContent, resolvePendingFileSources, selectedRange, textContent, touchesVerbatim } from './composerParts';
 
 const schema = getSchema(composerExtensions);
 
@@ -118,6 +118,13 @@ describe('pageElementImageParts', () => {
             { type: 'reference', ref: page9142 },
             { type: 'text', text: ' – part "content_1" (Image), replace its image with: ' },
             { type: 'reference', ref: image },
+        ]);
+    });
+
+    it('ends at the naming text without an image, for an uploaded one that follows as the turn\'s file', () => {
+        expect(pageElementImageParts({ page: page9142, tagName: 'content_1', constructName: 'Image', text: ' – part "content_1" (Image), replace its image with: ' })).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – part "content_1" (Image), replace its image with: ' },
         ]);
     });
 });
@@ -260,6 +267,28 @@ describe('resolvePendingFileSources', () => {
             { type: 'verbatim', text: 'Second', source: 'user' },
             { type: 'text', text: 'and' },
         ]);
+    });
+});
+
+describe('partReferences', () => {
+    it('is the referenced objects in order, each once, without the other parts', () => {
+        const page: ContextReference = { type: 'page', id: '8871', node_id: 3, label: 'Product launch 2025' };
+        const folder: ContextReference = { type: 'folder', id: '42', node_id: 3, label: 'Campaigns' };
+        const samePageOtherNode: ContextReference = { type: 'page', id: '8871', node_id: 4 };
+
+        expect(partReferences([
+            { type: 'text', text: 'Compare ' },
+            { type: 'reference', ref: page },
+            { type: 'text', text: ' in ' },
+            { type: 'reference', ref: folder },
+            { type: 'setting', key: 'language', value: 'de' },
+            { type: 'reference', ref: { ...page } },
+            { type: 'reference', ref: samePageOtherNode },
+        ])).toEqual([page, folder, samePageOtherNode]);
+    });
+
+    it('is empty without reference parts', () => {
+        expect(partReferences([{ type: 'text', text: 'Which pages are offline?' }])).toEqual([]);
     });
 });
 

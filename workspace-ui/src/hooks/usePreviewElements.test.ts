@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isImagePart, markedElementOf, partTextOf, previewElementOf } from './usePreviewElements';
 
-// A page as the CMS renders it in read-only mode with COPY_TAGS: a marked text part inside a marked
+// A page as the CMS renders it with tagmarkers=true: a marked text part inside a marked
 // container part, and unmarked page structure around them.
 function page() {
     document.body.innerHTML = `
@@ -79,5 +79,19 @@ describe('isImagePart', () => {
         expect(isImagePart(part('1'))).toBe(true);
         expect(isImagePart(part('2'))).toBe(true);
         expect(isImagePart(part('3'))).toBe(false);
+    });
+
+    it('is false for a text part whose only image belongs to a marked part inside it', () => {
+        // An image block added to a text editable: the image belongs to the block, not to the text.
+        document.body.innerHTML = `
+            <div data-gcn-tagid="890" data-gcn-tagname="pagecontent"><p>Text</p>
+                <div data-gcn-tagid="893" data-gcn-tagname="manimage_1" class="aloha-block">
+                    <figure><img src="/a.jpg" alt=""></figure>
+                </div>
+            </div>`;
+        const part = (tagId: string) => document.querySelector(`[data-gcn-tagid="${tagId}"]`)!;
+
+        expect(isImagePart(part('890'))).toBe(false);
+        expect(isImagePart(part('893'))).toBe(true);
     });
 });

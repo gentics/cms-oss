@@ -110,7 +110,8 @@ public abstract class ContentTag extends Tag {
 		// when rendering for aloha editor, there are some tags that probably need to be migrated to aloha editor.
 		// migration means that those tags are rendered as if they were not editable at all (they render only their regular output).
 		// in this way, when the page is saved, the tags' html will be made part of the contenteditable code
-		if (renderType.getEditMode() == RenderType.EM_ALOHA || renderType.getEditMode() == RenderType.EM_ALOHA_READONLY) {
+		if (renderType.getEditMode() == RenderType.EM_ALOHA || renderType.getEditMode() == RenderType.EM_ALOHA_READONLY
+				|| renderType.getEditMode() == RenderType.EM_ALOHA_PREVIEW) {
 			// the following will find table cell tags that are inline editable
 			if (TABLE_CELL_TAG_NAME.matcher(getName()).matches() && isInlineEditable()) {
 				return false;

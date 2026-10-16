@@ -3,21 +3,30 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
+import { ReviewPages } from '@/components/ReviewPages/ReviewPages';
 import { ReviewPanel } from '@/components/ReviewPanel/ReviewPanel';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { usePlanState } from '@/hooks/useGenaixQueries';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { PlanState } from '@/services/apiService/genaix/types';
-import { type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { cmsRefKey, type LivePreview, livePreviewOf, previewKey, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './ReviewPage.module.css';
 
-// The plan's latest preview as the preview column takes it; `seq` 0, below every live update.
-function previewOf(state: PlanState | undefined): LivePreview | undefined {
-    const preview = state?.preview;
+/**
+ * The plan's pages to preview (`PlanState.previews`), and the latest of them: only the plan's pages,
+ * not those another plan of the session wrote. Each page as the stream last sent it (`live`), which
+ * reloads it on every `preview.updated`, else as the plan has it stored. The latest is the page the
+ * stream sent last, else the plan's `preview`.
+ */
+function planPreviews(state: PlanState | undefined, live: LivePreview[] = []): { preview?: LivePreview; previews: LivePreview[] } {
+    const liveOf = (page: LivePreview) => live.find((sent) => previewKey(sent) === previewKey(page)) ?? page;
+    const previews = (state?.previews ?? []).map((stored) => liveOf(livePreviewOf(stored)));
+    const stored = state?.preview ? liveOf(livePreviewOf(state.preview)) : undefined;
+    const preview = previews.reduce<LivePreview | undefined>((latest, page) => (!latest || page.seq > latest.seq ? page : latest), stored);
 
-    return preview ? { seq: 0, cms_ref: preview.cms_ref, preview_url: preview.preview_url, mode: preview.mode, changed_elements: preview.changed_elements } : undefined;
+    return { preview, previews };
 }
 
 /**
@@ -27,7 +36,12 @@ function previewOf(state: PlanState | undefined): LivePreview | undefined {
  * and the review panel on the right, the checklist and the actions that release and publish it
  * (`ReviewPanel`). It follows the session's event stream, which also replays the plans, so a live
  * `preview.updated` replaces the plan's stored preview and the plan is read again as it changes. The
- * preview only shows the page here; working on it happens in the chat.
+ * preview shows only the plan's pages (`planPreviews`), and only shows them; working on them happens in
+ * the chat.
+ *
+ * A plan that wrote several pages lists them on the left (`ReviewPages`). The page `?page=` names is
+ * shown, else the one previewed last, else the first: its preview, and in the panel its checks and
+ * whether it can be published.
  */
 export function ReviewPage() {
     const { t } = useTranslation();
@@ -35,12 +49,18 @@ export function ReviewPage() {
 
     useSessionEvents(id || undefined);
 
-    const { plan: planId } = useSearch({ strict: false });
+    const { plan: planId, page: pageId } = useSearch({ strict: false });
     const newestPlanId = useWorkspaceEventStore((store) => selectSession(id)(store).plans?.at(-1)?.plan.id);
     // The router keeps a search value as given, so an empty `?plan=` arrives as `''`: the newest plan then.
     const state = usePlanState(id, planId || newestPlanId);
-    const livePreview = useWorkspaceEventStore((store) => selectSession(id)(store).preview);
-    const preview = livePreview ?? previewOf(state.data);
+    const livePreviews = useWorkspaceEventStore((store) => selectSession(id)(store).previews);
+    const { preview: latest, previews } = planPreviews(state.data, livePreviews);
+    const publications = state.data?.publications ?? [];
+    const latestKey = latest && previewKey(latest);
+    const page = publications.length > 1
+        ? publications.find(({ cms_ref: ref }) => ref.id === pageId) ?? publications.find(({ cms_ref: ref }) => cmsRefKey(ref) === latestKey) ?? publications[0]
+        : undefined;
+    const preview = page ? previews.find((shown) => previewKey(shown) === cmsRefKey(page.cms_ref)) : latest;
 
     let panel;
 
@@ -52,7 +72,7 @@ export function ReviewPage() {
             </div>
         );
     } else if (state.data) {
-        panel = <ReviewPanel sessionId={id} state={state.data} />;
+        panel = <ReviewPanel sessionId={id} state={state.data} page={page} />;
     } else {
         panel = <p className={styles.state} role="status">{t(planId || newestPlanId || !id ? 'review.loading' : 'review.noPlan')}</p>;
     }
@@ -67,9 +87,10 @@ export function ReviewPage() {
                 <h1 className={styles.title}>{t('review.pageTitle')}</h1>
             </header>
             <main className={styles.main}>
+                {state.data && page && <ReviewPages sessionId={id} publications={publications} checks={state.data.checks} selectedId={page.cms_ref.id} />}
                 <div className={styles.preview}>
                     {preview
-                        ? <PreviewColumn preview={preview} />
+                        ? <PreviewColumn preview={preview} previews={page ? undefined : previews} />
                         : <p className={styles.noPreview}>{t('review.noPreview')}</p>}
                 </div>
                 <aside className={styles.panel}>{panel}</aside>

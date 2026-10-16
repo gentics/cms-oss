@@ -7,18 +7,13 @@ import { Button } from '@/components/ui/button';
 import { isAcceptedOnCard } from '@/helper/planActions/planActions';
 import { useWorkflows } from '@/hooks/useGenaixQueries';
 import { usePlanPresence } from '@/hooks/usePlanPresence';
-import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
+import type { Plan } from '@/services/apiService/genaix/types';
 import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import { PlanHead } from './PlanHead';
 import { ReviewButton } from './ReviewButton';
 
 import styles from './PlanBar.module.css';
-
-// The statuses with something to do or see on the review page: every status with a gated transition
-// (release while accepted, running or done; publish or request review once released), which is made
-// only there, and the outcome of one sent out.
-const REVIEWABLE: ReadonlySet<PlanStatus> = new Set(['accepted', 'running', 'done', 'released', 'published', 'review_requested']);
 
 interface PlanBarProps {
     sessionId: string;
@@ -45,8 +40,8 @@ interface PlanBarProps {
  * to expand: Stop while it works, and "Review & release" once it is done. One with nothing left to do
  * is not shown at all (`none`, `SessionPage`).
  *
- * While the plan has something to review (`REVIEWABLE`), "Review & release" next to the toggle opens
- * the review page, where the plan's preview, checks and pages are shown together, and releases a done
+ * Once the plan is done and has written a page, "Review & release" next to the toggle opens the
+ * review page (`ReviewButton` decides), where the plan's preview, checks and pages are shown together, and releases a done
  * plan on the way (`ReviewButton`); publish and request review are made there, not here (`PlanHead`
  * without `withGatedActions`).
  */
@@ -69,8 +64,6 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
     const isExpanded = toggled?.waits === waits ? toggled.isExpanded : waits;
     // Its head alone, for a plan confirmed in the chat or needing no acceptance.
     const isHeadOnly = usePlanPresence(sessionId, plan) === 'head';
-    // The head alone offers the review only once the work is done; while it runs, Stop is enough.
-    const canReview = REVIEWABLE.has(plan.status) && !(isHeadOnly && (plan.status === 'accepted' || plan.status === 'running'));
 
     useLayoutEffect(() => {
         const wrap = wrapRef.current;
@@ -99,7 +92,7 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
                     </div>
                 )}
                 <PlanHead sessionId={sessionId} plan={plan} withGlance={!isExpanded && !isHeadOnly}>
-                    {canReview && <ReviewButton sessionId={sessionId} plan={plan} />}
+                    <ReviewButton sessionId={sessionId} plan={plan} />
                     {!isHeadOnly && (
                         <Button
                             variant="ghost"

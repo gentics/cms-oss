@@ -10,7 +10,6 @@ import type { GenaixEvent, Plan } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useHandOffStore } from '@/store/useHandOffStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
-import { useRevisePlanStore } from '@/store/useRevisePlanStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 import { stubUploads } from '@/test/stubUploads';
@@ -99,7 +98,6 @@ describe('SessionPage', () => {
         useErrorNotificationStore.setState({ errors: [] });
         useHandOffStore.setState({ handOffs: {} });
         useInteractionDraftStore.setState({ drafts: {}, locks: {} });
-        useRevisePlanStore.setState({ planIds: {} });
     });
 
     afterEach(() => {
@@ -354,48 +352,6 @@ describe('SessionPage', () => {
         expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view&real=view&tagmarkers=true');
     });
 
-    it('shows a page chosen in the preview\'s page menu until the next preview.updated (rc.5 addition)', async () => {
-        const user = userEvent.setup();
-        const url = (id: number) => `https://cms.example.com/alohapage?realid=${id}&nodeid=3&mode=view`;
-        const previewOf = (id: number, name: string) => ({ cms_ref: { type: 'page', id, node_id: 3, name }, preview_url: url(id), mode: 'view' });
-        const plan: Plan = {
-            id: 'p-1',
-            workflows: [{ id: 'content_edit', version: '1.0.0' }],
-            status: 'done',
-            version: 1,
-            summary: 'Both pages edited.',
-            items: [{ id: 'p1', label: 'Edit both pages', kind: 'update', workflow: 'content_edit', status: 'done' }],
-        };
-
-        vi.stubGlobal('fetch', withEmptySessionList(async (input) => (String(input).endsWith('/sessions/s-1/plans/p-1')
-            ? Response.json({ plan, workflows: plan.workflows, state: 'done', steps: [], checks: [], gates: [], approval_chain: [], cms_objects: [], previews: [previewOf(9142, 'Neue Nutzungsbedingungen ab Q3'), previewOf(8644, 'Versand und Lieferung')] })
-            : Response.json({ items: [], next_cursor: null }))));
-
-        const showPreview = (seq: number) => act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
-            seq,
-            ts: '2026-10-15T09:00:01Z',
-            session_id: 's-1',
-            plan_id: 'p-1',
-            type: 'preview.updated',
-            cms_ref: { type: 'page', id: 9142, node_id: 3, name: 'Neue Nutzungsbedingungen ab Q3' },
-            preview_url: url(9142),
-            mode: 'view',
-        }));
-
-        act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-15T09:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
-        showPreview(2);
-        await renderPage();
-
-        await user.click(await screen.findByRole('button', { name: /Neue Nutzungsbedingungen ab Q3\s*1 of 2/ }));
-        await user.click(await screen.findByRole('menuitemradio', { name: 'Versand und Lieferung' }));
-
-        expect(screen.getByTitle('Preview of the page in the CMS').getAttribute('src')).toContain('realid=8644');
-
-        showPreview(3);
-
-        expect(screen.getByTitle('Preview of the page in the CMS').getAttribute('src')).toContain('realid=9142');
-    });
-
     describe('answering the question the run waits on', () => {
         // A run that waits on an `ask_user` question expiring `expiresAt`, by default in 10 minutes.
         function waitOnQuestion(expiresAt = new Date(Date.now() + 10 * 60_000).toISOString()) {
@@ -495,17 +451,20 @@ describe('SessionPage', () => {
             act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-14T14:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
         }
 
-        // Sends the messages to `posts`; every read (the modules, the plans) goes to `reads` and gets an empty list.
+        // Sends the messages to `posts`; every read goes to `reads`: a plan's state (`GET …/plans/p-1`) without
+        // objects, every list (the modules, the plans) empty.
         function stubPosts(response: () => Response = accepted) {
             const posts = vi.fn<typeof fetch>(async () => response());
-            const reads = vi.fn<typeof fetch>(async () => Response.json({ items: [], next_cursor: null }));
+            const reads = vi.fn<typeof fetch>(async (input) => (String(input).endsWith('/sessions/s-1/plans/p-1')
+                ? Response.json({ cms_objects: [] })
+                : Response.json({ items: [], next_cursor: null })));
 
             vi.stubGlobal('fetch', withEmptySessionList(async (input, init) => (init?.method === 'POST' ? posts(input, init) : reads(input, init))));
 
             return Object.assign(posts, { reads });
         }
 
-        it('sends the next message as a revision of the plan after "Ask for a change", then leaves that mode', async () => {
+        it('offers no "Ask for a change" on a finished plan: a follow-up is a plain message, which GenAIx tells apart', async () => {
             const user = userEvent.setup();
             const posts = stubPosts();
 
@@ -513,19 +472,14 @@ describe('SessionPage', () => {
 
             const { field } = await renderPage();
 
-            await user.click(screen.getByRole('button', { name: 'Ask for a change' }));
+            // Whether a message revises the plan, GenAIx's session agent decides (contract §4.4).
+            expect(screen.queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
 
-            expect(screen.getByText('Change this plan')).toBeInTheDocument();
-            await waitFor(() => expect(field).toHaveFocus());
-
+            await user.click(field);
             await user.keyboard('Make it more colourful{Enter}');
 
             await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
-            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({
-                parts: [{ type: 'text', text: 'Make it more colourful' }],
-                options: { mode: 'revise', plan_id: 'p-1' },
-            });
-            await waitFor(() => expect(screen.queryByText('Change this plan')).not.toBeInTheDocument());
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Make it more colourful' }] });
         });
 
         it('sends a plain message while a plan executes, for GenAIx to tell a question from a redirect', async () => {
@@ -573,24 +527,6 @@ describe('SessionPage', () => {
 
             await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
             expect(String(posts.mock.calls[0]![0])).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
-        });
-
-        it('leaves the mode and reads the plans again when the plan cannot be revised (409 plan_not_revisable)', async () => {
-            const user = userEvent.setup();
-            const { reads } = stubPosts(() => Response.json({ type: 't', title: 't', status: 409, genaix_code: 'plan_not_revisable' }, { status: 409 }));
-            showPlan('done');
-
-            const { field } = await renderPage();
-
-            await user.click(screen.getByRole('button', { name: 'Ask for a change' }));
-            await waitFor(() => expect(field).toHaveFocus());
-            await user.keyboard('Make it more colourful{Enter}');
-
-            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
-                { messageKey: 'chat.sendFailed', detailKey: 'errors.genaix.plan_not_revisable' },
-            ]));
-            expect(useRevisePlanStore.getState().planIds).toEqual({});
-            await waitFor(() => expect(reads.mock.calls.some(([input]) => String(input).endsWith('/sessions/s-1/plans'))).toBe(true));
         });
     });
 

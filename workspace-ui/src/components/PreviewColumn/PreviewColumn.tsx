@@ -1,5 +1,4 @@
-import type { TFunction } from 'i18next';
-import { ArrowUpIcon, AtSignIcon, CheckIcon, ChevronDownIcon, ExternalLinkIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
+import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, EyeIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,26 +6,17 @@ import type { PageElementInput } from '@/components/Composer/Composer';
 import { ImagePicker } from '@/components/ImagePicker/ImagePicker';
 import { PageSettings } from '@/components/PageSettings/PageSettings';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverClose, PopoverContent, PopoverTitle } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import type { PageSettingsChange } from '@/helper/composerParts/composerParts';
-import type { PreviewPageGroup } from '@/helper/previewPages/previewPages';
 import { type ElementBox, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
-import type { ContextReference, Preview } from '@/services/apiService/genaix/types';
+import type { ContextReference } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
-import type { LivePreview } from '@/store/useWorkspaceEventStore';
+import { type LivePreview, previewKey } from '@/store/useWorkspaceEventStore';
 
 import styles from './PreviewColumn.module.css';
 
@@ -35,9 +25,10 @@ const READ_ONLY_PARAMS = { mode: 'view', real: 'view', tagmarkers: 'true' } as c
 
 // `url` (`preview_url` of `preview.updated`) as a read-only preview: `mode=view` as in the contract
 // example, and `real=view`, which is what the CMS's `/alohapage` reads (`AlohaPageServlet`; without
-// it, it renders for editing and locks the page). `tagmarkers=true` makes that read-only render mark
-// the page's tags (`data-gcn-*`), which the part selection needs (`usePreviewElements`), without the
-// CMS feature `copy_tags`; a CMS that does not know it ignores it, and the page has no markers then.
+// it, it renders for editing and locks the page). `tagmarkers=true` renders it like for editing, but
+// without Aloha Editor and without locking the page, with the page's tags marked (`data-gcn-*`), which
+// the part selection needs (`usePreviewElements`); a CMS that does not know it ignores it, and the page
+// has no markers then.
 // A parameter that is missing or has another value is set; everything else stays. A URL that already
 // has all of them is returned unchanged.
 // On the dev server (`npm run dev`, `npm run dev:debug`; `DEV`, but not Vitest's mode `test`) the URL is
@@ -96,89 +87,36 @@ export interface PreviewActions {
     onSendFeedback: (element: PageElementInput, text: string) => Promise<void>;
     /** Sends the part's new text, written by hand, as a turn; rejects when it was not sent, so the card stays open. */
     onSendEdit: (element: PageElementInput, text: string) => Promise<void>;
-    /** Sends the CMS image picked for the part as a turn; rejects when it was not sent, so the card stays open. */
-    onSendImage: (element: PageElementInput, image: ContextReference) => Promise<void>;
+    /**
+     * Sends the image picked for the part as a turn: a CMS image as its reference, an uploaded one as
+     * the file; rejects when it was not sent, so the card stays open.
+     */
+    onSendImage: (element: PageElementInput, image: ContextReference | File) => Promise<void>;
     /** Sends the changed page settings of the page as a turn; rejects when they were not sent, so the sheet stays open. */
     onSendSettings: (page: ContextReference, changes: PageSettingsChange[]) => Promise<void>;
     /** Whether a turn can be sent now (feedback, new text, an image or page settings): not while a run is working or waiting. */
     canSendFeedback: boolean;
 }
 
-/** The plan's pages to switch the preview between: their previews by the kind of item, and what choosing one does. */
-export interface PreviewPages {
-    pages?: PreviewPageGroup[];
-    onPageChange?: (preview: Preview) => void;
-}
-
-/** The preview, with all of `PreviewActions` (the session's chat) or none of them (only showing the page, as on the review page). */
-export type PreviewColumnProps = { preview: LivePreview } & PreviewPages & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
-
-// A page's name in the page menu: its CMS name, else its id.
-function pageName(t: TFunction, preview: Pick<Preview, 'cms_ref'>): string {
-    return preview.cms_ref.name || t('preview.pages.unnamed', { id: preview.cms_ref.id });
-}
-
 /**
- * The page menu in the header (rc.5 addition, 09-integration-guide.md "The plan at a glance"): the page
- * shown with its place among the plan's pages, and every page of the plan to choose from, grouped by
- * the kind of item that made or changed it (`previewPages`). Only with two pages or more.
+ * The preview, with all of `PreviewActions` (the session's chat) or none of them (only showing the page, as on the review page).
+ * `preview` is the latest one (the last `preview.updated`); `previews` the latest of each page, when there may be several.
  */
-function PageMenu({ preview, pages, onPageChange }: { preview: LivePreview; pages: PreviewPageGroup[]; onPageChange: (preview: Preview) => void }) {
-    const { t } = useTranslation();
-    const all = pages.flatMap(({ previews }) => previews);
-    const current = String(preview.cms_ref.id);
-    const index = all.findIndex(({ cms_ref: ref }) => String(ref.id) === current);
-
-    if (all.length < 2) {
-        return null;
-    }
-
-    function choose(value: unknown) {
-        const chosen = all.find(({ cms_ref: ref }) => String(ref.id) === value);
-
-        if (chosen) {
-            onPageChange(chosen);
-        }
-    }
-
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
-                <span className={styles.pageName}>{pageName(t, preview)}</span>
-                {' '}
-                {index >= 0 && <span className={styles.pagePosition}>{t('preview.pages.position', { index: index + 1, count: all.length })}</span>}
-                <ChevronDownIcon size={14} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                {pages.map(({ kind, previews }) => (
-                    <DropdownMenuGroup key={kind}>
-                        <DropdownMenuLabel>{t(`preview.pages.groups.${kind}`, { count: previews.length })}</DropdownMenuLabel>
-                        <DropdownMenuRadioGroup value={current} onValueChange={choose}>
-                            {previews.map((page) => (
-                                <DropdownMenuRadioItem key={String(page.cms_ref.id)} value={String(page.cms_ref.id)} closeOnClick>
-                                    {pageName(t, page)}
-                                </DropdownMenuRadioItem>
-                            ))}
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuGroup>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
-}
+export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[] } & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
 
 /**
  * The right column: the CMS preview of the page the session produced, framed on the preview stage
  * (design.md §11 "Vorschau-Bühne"), always read-only (`readOnlyPreviewUrl`), so that showing it
  * never opens the page for editing. The browser loads the URL with its own CMS session. A CMS that
- * forbids framing leaves the frame blank, so the URL and a link to open it are always shown next to
- * it (integration guide §5). Each `preview.updated` remounts the frame, which reloads it even when
+ * forbids framing leaves the frame blank, so a link to open it is always shown next to it (integration
+ * guide §5). Each `preview.updated` remounts the frame, which reloads it even when
  * the URL stayed the same. The header switches the width between desktop and mobile (390 px) and
  * shows the column in full screen, which Escape leaves (final_draft.html "preview widths").
  *
  * A part of the page is selected by clicking it (`usePreviewElements`): a layer above the frame
  * outlines the part under the mouse and the selected one, the page itself stays as the CMS rendered
- * it (design.md §12 "Elemente in der Vorschau"). The header names the selection and clears it. When a
+ * it (design.md §12 "Elemente in der Vorschau"). The header names the selection and clears it; so
+ * does a click into the page outside the parts, which also closes the part's menu or card. When a
  * reload no longer has the selected part, the selection is cleared and a toast says so.
  *
  * The parts the last CMS write changed (`changed_elements`) are tinted until the next update.
@@ -191,7 +129,8 @@ function PageMenu({ preview, pages, onPageChange }: { preview: LivePreview; page
  * plain text; Apply or Ctrl/Cmd+Enter sends it (`onSendEdit`) to be written word for word, an unchanged
  * text sends nothing. For a part that shows an image, "Swap the image" takes the place of "Write it
  * yourself" (final_draft.html "askImage"), when the preview names its node: the image card there offers
- * the node's images from the CMS (`ImagePicker`), and "Use image" sends the picked one (`onSendImage`).
+ * the node's images from the CMS and an image to upload (`ImagePicker`), and "Use image" sends the
+ * picked one (`onSendImage`).
  * "Reference in the chat" hands the part to `onReferenceInChat` (the chat composer's `insertPageElement`).
  *
  * For a page, "Page settings" in the header drops the page settings over the preview (`PageSettings`,
@@ -201,14 +140,24 @@ function PageMenu({ preview, pages, onPageChange }: { preview: LivePreview; page
  * Without `PreviewActions` the preview only shows the page: no part is selected, outlined or offered a
  * menu, and there are no page settings; the changed parts are still tinted.
  *
- * With `pages` of two or more, the header has a page menu (`PageMenu`): choosing a page hands its preview
- * to `onPageChange`, which shows it.
+ * With `previews` of more than one page, a select next to the title switches between them: the page of the latest `preview` is shown
+ * until another page is picked, and again once a newer `preview` comes. Another page clears the
+ * selection and closes the menu, the cards and the page settings, which were for the page before.
  */
 export function PreviewColumn(props: PreviewColumnProps) {
-    const { preview } = props;
+    const { preview: latest, previews = [] } = props;
+    // The page picked, and the latest preview when it was picked: a newer one shows its own page again.
+    const [picked, setPicked] = useState<{ key: string; seq: number } | null>(null);
+    const preview = (picked?.seq === latest.seq && previews.find((page) => previewKey(page) === picked.key)) || latest;
+    const pageKey = previewKey(preview);
     const actions: PreviewActions | undefined = props.onReferenceInChat ? props : undefined;
     const canSendFeedback = actions?.canSendFeedback ?? false;
     const { t } = useTranslation();
+    // By `previewKey`, each page's name for the page select.
+    const pageNames = Object.fromEntries(previews.map((page) => [
+        previewKey(page),
+        page.cms_ref.name || t('preview.pages.unnamed', { id: page.cms_ref.id }),
+    ]));
     const titleId = useId();
     const url = readOnlyPreviewUrl(preview.preview_url);
     const [isMobile, setIsMobile] = useState(false);
@@ -236,13 +185,26 @@ export function PreviewColumn(props: PreviewColumnProps) {
     const editFieldRef = useRef<HTMLTextAreaElement>(null);
     const canApply = canSendFeedback && !isSending && editText.trim() !== '';
     const [isImageOpen, setIsImageOpen] = useState(false);
-    const [pickedImage, setPickedImage] = useState<CmsItem | null>(null);
+    const [pickedImage, setPickedImage] = useState<CmsItem | File | null>(null);
     const canUseImage = canSendFeedback && !isSending && pickedImage !== null;
     // The node whose images can replace a part's image; without it, no image can be offered.
     const nodeId = preview.cms_ref.node_id;
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const settingsRef = useRef<HTMLElement>(null);
     const settingsButtonRef = useRef<HTMLButtonElement>(null);
+    const [shownPageKey, setShownPageKey] = useState(pageKey);
+
+    // Another page: what was selected or open belonged to the page before. Adjusted while rendering rather than in an effect.
+    if (pageKey !== shownPageKey) {
+        setShownPageKey(pageKey);
+        setSelected(null);
+        setIsMenuOpen(false);
+        setIsFeedbackOpen(false);
+        setIsEditOpen(false);
+        setIsImageOpen(false);
+        setIsSettingsOpen(false);
+    }
+
     const { onFrameLoad, hovered, selectedBox, changedBoxes, textOf, hasImage } = usePreviewElements(frameRef, selected?.tagName ?? null, (element) => {
         // A click on a part selects it and opens its menu; Escape clears both. Only with actions to offer.
         if (!actions) {
@@ -329,7 +291,9 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setIsSending(true);
 
         try {
-            await actions?.onSendImage(pageElementOf(element), { type: 'image', id: String(pickedImage.id), node_id: nodeId, label: pickedImage.name });
+            await actions?.onSendImage(pageElementOf(element), pickedImage instanceof File
+                ? pickedImage
+                : { type: 'image', id: String(pickedImage.id), node_id: nodeId, label: pickedImage.name });
             setIsImageOpen(false);
         } catch {
             // Not sent: the caller has said why; the card and the pick stay for another try.
@@ -438,9 +402,24 @@ export function PreviewColumn(props: PreviewColumnProps) {
     return (
         <section className={`${styles.column} ${isFullScreen ? styles.fullScreen : ''}`} aria-labelledby={titleId}>
             <header className={styles.head}>
-                <h2 id={titleId} className={styles.title}>{t('preview.title')}</h2>
-                {props.pages && props.onPageChange && <PageMenu preview={preview} pages={props.pages} onPageChange={props.onPageChange} />}
-                <span className={styles.url} title={url}>{url}</span>
+                <div className={styles.lead}>
+                    <h2 id={titleId} className={styles.title}>
+                        <EyeIcon size={16} className={styles.titleIcon} aria-hidden="true" />
+                        {t('preview.title')}
+                    </h2>
+                    {previews.length > 1 && (
+                        <div className={styles.pages}>
+                            <Select items={pageNames} value={pageKey} onValueChange={(key) => key !== null && setPicked({ key, seq: latest.seq })}>
+                                <SelectTrigger aria-label={t('preview.pages.label')}>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(pageNames).map(([key, name]) => <SelectItem key={key} value={key}>{name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                </div>
                 {/* A link in the look of a button, as "New" in the left column. */}
                 <Button
                     size="sm"
@@ -490,7 +469,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     />
                 )}
                 <div className={styles.page}>
-                    <iframe key={preview.seq} ref={frameRef} className={styles.frame} src={url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
+                    <iframe key={`${pageKey}@${preview.seq}`} ref={frameRef} className={styles.frame} src={url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
                     <div className={styles.overlay} aria-hidden="true">
                         {isFeedbackOpen && selectedBox && dimBands(selectedBox).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
                         {changedBoxes.map(({ tagName, box }) => <div key={tagName} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}

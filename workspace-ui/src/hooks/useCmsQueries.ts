@@ -193,6 +193,17 @@ export function useCanPublishCmsPages(pages: readonly { id: number; node_id?: nu
     });
 }
 
+/**
+ * Whether the current CMS user may publish `page` (`canPublishCmsPage`, the query `useCanPublishCmsPages`
+ * shares); `undefined` while it loads, when it could not be read, and without a page.
+ */
+export function useCanPublishCmsPage(page: { id: number; node_id?: number } | undefined): boolean | undefined {
+    return useQuery({
+        queryKey: cmsKeys.publishPermission(page?.id ?? 0, page?.node_id),
+        queryFn: page ? ({ signal }) => canPublishCmsPage(page.id, page.node_id, signal) : skipToken,
+    }).data;
+}
+
 /** The templates linked to the folder `folderId` (`listCmsTemplates`); off while the folder is not known. */
 export function useCmsTemplates(folderId: number | undefined, nodeId: number | undefined) {
     return useQuery({

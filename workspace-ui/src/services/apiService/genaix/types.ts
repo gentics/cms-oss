@@ -130,6 +130,7 @@ export type PlanStatus = GenaixSchema<'PlanStatus'>;
 export type PlanState = GenaixSchema<'PlanState'>;
 export type PlanSummary = GenaixSchema<'PlanSummary'>;
 export type PlanPage = GenaixSchema<'PlanPage'>;
+export type Preview = GenaixSchema<'Preview'>;
 
 // Plan transitions (POST /sessions/{session_id}/plans/{plan_id}/transitions) and their outcome
 export type TransitionRequest = GenaixSchema<'TransitionRequest'>;
@@ -139,5 +140,4 @@ export type ApprovalStep = GenaixSchema<'ApprovalStep'>;
 export type Check = GenaixSchema<'Check'>;
 export type PlanItem = GenaixSchema<'PlanItem'>;
 export type PlannedObject = GenaixSchema<'PlannedObject'>;
-export type Preview = GenaixSchema<'Preview'>;
 export type DerivedSettings = GenaixSchema<'DerivedSettings'>;

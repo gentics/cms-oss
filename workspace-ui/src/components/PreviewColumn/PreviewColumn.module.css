@@ -31,36 +31,39 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
+/* The title and the page select, on the left; the rest of the head sits on the right. */
+.lead {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .title {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   color: var(--fg-primary);
   font-size: var(--font-size-md);
   font-weight: 500;
 }
 
-/* The page menu's trigger: the page's name, then its place among the plan's pages in meta text. */
-.pageName {
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* design.md §9 "Ansehen". */
+.titleIcon {
+  flex: none;
+  color: var(--interactive);
 }
 
-.pagePosition {
-  color: var(--fg-muted);
-  font-size: var(--font-size-xs);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-}
-
-.url {
-  flex: 1;
+/* The page select, when the session wrote several pages: as wide as the page's name, at most 240 px,
+   which it cuts off. */
+.pages {
+  display: flex;
+  flex: 0 1 auto;
   min-width: 0;
-  overflow: hidden;
-  color: var(--fg-muted);
-  font-size: var(--font-size-sm);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  max-width: 240px;
 }
 
 .stage {

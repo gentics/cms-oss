@@ -69,15 +69,14 @@ pages, because the web tier reads those from disk per request. A change to `open
 to `examples/`, to `mcp/tools.json` or to a mock's source needs the restart, because each
 mock loads the contracts once at startup.
 
-## Further contract versions under /rc5/ and /rc3/
+## A further contract version under /rc4/
 
-The root URLs serve the current contract, `1.0.0-rc.4` (agreed 2026-10-12). Further versions
+The root URLs serve the current contract, `1.0.0-rc.5` (agreed 2026-10-15). Further versions
 are served under a path prefix each, with their own sources, built site and API mock:
 
 | Prefix | Version | API mock |
 |---|---|---|
-| `/rc5/` | `1.0.0-rc.5` draft, for review (living plans) | container `genaix-mock-rc5`, port 8082 |
-| `/rc3/` | `1.0.0-rc.3`, the previous release candidate | container `genaix-mock-rc3`, port 8081 |
+| `/rc4/` | `1.0.0-rc.4`, the previous release candidate | container `genaix-mock-rc4`, port 8081 |
 
 Each has `/<prefix>/docs/`, `/<prefix>/html/`, `/<prefix>/client/`, `/<prefix>/openapi.yaml`
 and its own API mock at `/<prefix>/api/v1`. Every HTML page carries a small **Contract**
@@ -90,8 +89,8 @@ The versions are configured in the web container's `HANDOUT_SLOTS`
 syncing a checkout of its branch into its slot:
 
 ```bash
-git checkout rc5-draft && stage1/deploy/openshift/sync.sh --slot rc5
-git checkout rc3-draft && stage1/deploy/openshift/sync.sh --slot rc3
+git worktree add /tmp/contract-rc4 contract-1.0.0-rc.4
+/tmp/contract-rc4/stage1/deploy/openshift/sync.sh --slot rc4
 ```
 
 A slot sync restarts only that version's API mock. The web tier, the manifests and the root

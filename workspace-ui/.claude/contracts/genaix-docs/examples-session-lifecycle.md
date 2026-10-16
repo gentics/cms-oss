@@ -7,8 +7,7 @@ produces. Section 11 continues past the first page: accepting a plan, a second p
 same conversation that edits pages, publishing them per plan, and one plan revised as the user
 changes their mind (`s7-continuous-session.sse`, `s6-content-edit.sse`, `s8-living-plan.sse`).
 
-This describes `1.0.0-rc.5`, a draft for review: `1.0.0-rc.4` (agreed 2026-10-12) stays the
-contract until it is agreed. Its one idea: **a session is one conversation, and the work it
+This describes `1.0.0-rc.5`, agreed by all parties on 2026-10-15. Its one idea: **a session is one conversation, and the work it
 carries out is a set of living plans.** A plan covers one piece of work, uses one or more
 workflow modules and has its own steps, checks, gates, derived settings, previews, publications
 and lifecycle. A follow-up on the same work **revises** the plan as a new version with the same
@@ -497,6 +496,10 @@ plan uploads a file or an image and the user named no folder, recommending the n
 `defaultFileFolderId` or `defaultImageFolderId`, and listed in `corrected_by_user` once
 confirmed. S8's third version asks `file_folder`.
 
+A `choice` may say which option GenAIx recommends and why (`recommended`, an option `reason`) and
+allow the user's own words (`other_allowed`, answered as `other`, with `selected` then empty),
+since the `1.0.0-rc.5` addition, 2026-10-15.
+
 `409` means it was already answered, typically a double submit from two tabs. `410`
 means it expired and the agent has already been told the question timed out; send a new
 message instead of retrying. A review that expires or is cancelled ends the run with no
@@ -577,6 +580,13 @@ carries:
   refused (section 11.1).
 - `pending_interaction` and `authorizations` - the question the plan's run is blocked on, and
   whether the session's credentials can still act for this plan's module.
+
+**Items, objects and findings** (since the `1.0.0-rc.5` addition, 2026-10-15). A create item says what it creates
+(`creates`: type, label, path) and, once written, carries the object in `created`; tag fills and
+verifications are sub-steps with `parent`, so every top-level write item is one object and a
+client counts the plan at a glance from the top-level items. Checks carry the `plan_version` and
+`item_ids` they are about; the proposing run reports what to know before accepting (a page that is
+online, an object changed since it was read, a near-duplicate).
 
 A user correction goes through `PATCH /sessions/{id}` with a complete `context` object.
 The agent sees the change on the next turn and stops re-deriving the fields listed in

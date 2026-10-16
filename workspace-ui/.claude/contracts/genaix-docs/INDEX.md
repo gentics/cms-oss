@@ -19,6 +19,8 @@ Contract version: 1.0.0-rc.5, shared by openapi.yaml and mcp/tools.json.
 
 What changed since `1.0.0-rc.4`: `03-genaix-api.md` §16.1, `09-integration-guide.md` §10, `README.md` "Contract versions", and the `changelog` of both contract files (authoritative).
 
+The `1.0.0-rc.5` addition of 2026-10-15 ("plans at a glance": `PlanItem.creates`, `created`, `parent`; `Check.plan_version`, `item_ids`; a `choice` with `recommended`, option `reason`, `other_allowed`, answered with `other`): `03-genaix-api.md` §8, §9 and §16.1 ("Addition of 2026-10-15"), `09-integration-guide.md` "The plan card" ("The plan at a glance") and §10, and the `1.0.0-rc.5 addition` entry of the `openapi.yaml` changelog.
+
 ## Documents
 
 - [GenAIx Phase One contracts](README.md): What this package contains, the reading order, the machine-readable artifacts and the contract versions.

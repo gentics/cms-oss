@@ -564,7 +564,10 @@ message that accepts a plan, answers the plan run's interaction or redirects the
 checked by the harness **before** it reaches the CMS. The harness looks up the tool's
 `write_targets` binding, reads the target id from the `from` argument, and allows the call only
 when that object is one of the executing plan's objects: an item's `target`, or an object the plan
-created through a `creates` binding. In a plan with several modules the binding is that of the
+created through a `creates` binding. When a call through a `creates` binding completes, the harness
+records the object on the running item as `created` (the `1.0.0-rc.5` addition, 2026-10-15), and a second created object
+for an item that already has one is refused like a call outside the plan (`plan_scope_violation`,
+"one object per item"). In a plan with several modules the binding is that of the
 segment's module, and the objects are those of the whole plan, so the plan's scope is the union of
 its modules' scopes (`1.0.0-rc.5`). A tool bound by `item_kind` is allowed only while the plan has
 items of that kind. Anything the harness cannot map — no binding, the argument missing or not an
@@ -589,10 +592,10 @@ offered to every run (`1.0.0-rc.4`).
 | Tool | Runs | Effect | Emits |
 |---|---|---|---|
 | `report_step` | plan | Set a step's or substep's status and detail. Ids are validated against the `steps_template` of the plan's modules, as `<workflow>/<id>` (`1.0.0-rc.5`); an unknown id is a tool error, not an invention. | `step.updated` |
-| `update_plan` | plan | Replace the whole plan **of the run's own plan**, never another; the harness increments `plan.version`. Before acceptance it shapes the proposal, each item naming its module and the items it `depends_on` (`1.0.0-rc.5`). Once the plan is accepted (§6.5), a change needs a `reason`, which the event carries, and may merge, split, reorder or drop `pending` items but never add a target the accepted version did not have, nor change or drop a `done` item; more work is a revision. | `plan.updated` |
-| `report_check` | plan | Report an advisory check. The harness forces `blocking: false` and sets `kind: prompt` with a non-`gate` `source.type`, so a client can tell a self-report from a gate verdict. | `check.updated` |
+| `update_plan` | plan | Replace the whole plan **of the run's own plan**, never another; the harness increments `plan.version`. Before acceptance it shapes the proposal, each item naming its module and the items it `depends_on` (`1.0.0-rc.5`). Since the `1.0.0-rc.5` addition, 2026-10-15 every `create` and `translate` item carries `creates` (a `PlannedObject`; a tool error without it) and its `target` is the object it acts in (for a create the parent folder); tag fills and verifications are sub-steps with `parent`, the item whose object they work on, one level deep and after it, so every top-level write item concerns exactly one object. Once the plan is accepted (§6.5), a change needs a `reason`, which the event carries, and may merge, split, reorder or drop `pending` items but never add a target the accepted version did not have, nor change or drop a `done` item; more work is a revision. | `plan.updated` |
+| `report_check` | plan | Report an advisory check. The harness forces `blocking: false` and sets `kind: prompt` with a non-`gate` `source.type`, so a client can tell a self-report from a gate verdict. Since the `1.0.0-rc.5` addition, 2026-10-15 it stamps `plan_version` with the plan's current version and takes `item_ids`, the items the check concerns; in a proposing run its findings are about the proposal (§6.5). | `check.updated` |
 | `set_derived_settings` | plan | Propose folder, template, language, filename, url. Fields the user corrected are ignored and reported back as already decided. A module whose `produces` is empty or only `report` has no settings card (`derived_settings` is `null`) and the tool is an error for it; so does `content_edit` (§8.5). | `derived_settings.updated` |
-| `request_interaction` | plan, session | Ask the user (`ask_user`, `choice`, `confirm`, `form`, `settings_review`) and block until answered, timed out or cancelled. The interaction carries the run's `plan_id`, `null` for the session agent. | `interaction.requested`, `interaction.resolved` |
+| `request_interaction` | plan, session | Ask the user (`ask_user`, `choice`, `confirm`, `form`, `settings_review`) and block until answered, timed out or cancelled. The interaction carries the run's `plan_id`, `null` for the session agent. A `choice` may say which option it recommends (`recommended`), why per option (`reason`) and whether the user may answer in their own words (`other_allowed`), since the `1.0.0-rc.5` addition, 2026-10-15. | `interaction.requested`, `interaction.resolved` |
 | `write_artifact` | plan | Write a path-confined file into `<base>/sessions/<id>/artifacts/`. | `artifact.created`, `artifact.updated` |
 | `draft_plan` | session | `{goal, workflows?, inputs?}`: draft a new plan for work no plan of the session covers, unrelated objects and an unrelated goal. `goal` states the work in the user's terms; `workflows` names the modules the agent expects, a hint the proposing run may change (`1.0.0-rc.5`; a required `workflow` before); `inputs` are module inputs keyed by module id, each validated against that module's `inputs_schema` (for `content_edit` the pages as `references`) and kept as `PlanState.inputs`; invalid inputs are a tool error. The harness creates the plan (`drafting`, version 0) and starts the plan's first run once the session agent's turn ends: the proposing run, which picks the modules and pins their versions in `Plan.workflows`, or for work that only reads the run that carries the plan out (§6.5). When the user starts unrelated work instead of a plan still `drafting` or `proposed`, and says so, the harness supersedes that plan. Refused as a tool error when a named module is unknown, unavailable to the user, or `session`. | `plan.updated` (and `plan.updated` `superseded` for a replaced plan) |
 | `revise_plan` | session | `{plan_id, instruction}` (`1.0.0-rc.5`): revise a plan of the session as a new version, for a message that concerns the plan's objects or continues its goal. The plan is `proposed`, `done`, `released`, `published` or `review_requested`; an executing plan is redirected by GenAIx's router, not through this tool, and a `discarded` or `superseded` one is a tool error. The harness makes the plan `drafting` (clearing `closed_at` of a settled one) and starts its proposing run with the instruction once the session agent's turn ends; that run ends with the plan `proposed` at `version + 1` (§6.5). | `plan.updated` |
@@ -701,7 +704,11 @@ revises it (below).
 | none with a CMS write tool (`content_research`) | `execute`, at once: `drafting` → `running` | none: reading is free |
 
 In the proposing run nothing is written and no interaction asks for the acceptance, because the
-user's answer is an ordinary message, not a reply to a question. The plan's `PlanState.state` is
+user's answer is an ordinary message, not a reply to a question. Since the `1.0.0-rc.5` addition, 2026-10-15 the
+proposing run reports with `report_check` what the user should know before accepting: an object
+that is online (its edit stays a draft until published), an object that changed since it was
+read, a near-duplicate, an effect that cannot be undone. Each finding carries the `item_ids` it
+concerns; accepting needs no acknowledgement. The plan's `PlanState.state` is
 `awaiting_feedback` while it is `proposed`.
 
 **Acceptance is the user's own decision, and nothing else** (`1.0.0-rc.4` core rule). The model
@@ -1587,7 +1594,7 @@ already supported.
 
 ## 12. API surface
 
-The fields this document depends on (`1.0.0-rc.5`, a draft for review; `openapi.yaml` is
+The fields this document depends on (`1.0.0-rc.5`, agreed 2026-10-15; `openapi.yaml` is
 authoritative):
 
 - `Workflow`: `id`, `title`, `description`, `scenario`, `roles`, `optional`, `produces`,

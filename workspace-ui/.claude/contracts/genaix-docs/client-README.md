@@ -4,7 +4,7 @@ A tiny client that consumes the stage 1 GenAIx API v1 contract end to end: a cha
 interface, a part-aware composer, structured message-part rendering, the live event
 stream, interactions, MCP connections, quality gates and the session lifecycle.
 
-Tracks `1.0.0-rc.5` (draft: living plans). Its identity handling is the direct mode, which rc.3
+Tracks `1.0.0-rc.5` (living plans, agreed 2026-10-15). Its identity handling is the direct mode, which rc.3
 introduced and rc.4 and rc.5 keep. A session is one conversation and its work a set of plans: the
 client keys its state on `plan_id`, draws a card per plan, accepts a proposed plan or a revised
 version of it with a `plan` part (as proposed or adjusted in the card), revises a plan with a

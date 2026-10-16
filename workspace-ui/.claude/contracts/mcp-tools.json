@@ -36,11 +36,11 @@
     },
     {
       "version": "1.0.0-rc.5",
-      "summary": "Draft for review (2026-10-14); 1.0.0-rc.4 stays the agreed version until this is agreed. The GenAIx-side tools follow the GenAIx API 1.0.0-rc.5, in which a plan is living and may use several workflow modules: draft_plan takes optional workflows instead of a required workflow, and revise_plan is new. The CMS tool surface is unchanged.",
-      "detail": "(1) draft_plan: the session agent names the goal of new work and may pass the workflow modules it expects (workflows, module ids); the plan's proposing run picks the modules the work needs, splits it into items, each naming its module, and orders them by their dependencies. The required single workflow of 1.0.0-rc.4 is gone. (2) New revise_plan(plan_id, instruction): a message about the work of an existing plan revises that plan as a new version instead of drafting another; items finished in an earlier version stay done. A plan that is executing is redirected by GenAIx's router, not by this tool (its run is cancelled with cancel_reason redirected, then the proposing run follows). Every plan but a discarded or superseded one is revisable. (3) genaix_side_tools gains schemas, the input schemas of draft_plan and revise_plan, because the GenAIx API now depends on their arguments. Transport, groups and every CMS tool are unchanged."
+      "summary": "Agreed by all parties (2026-10-15). The GenAIx-side tools follow the GenAIx API 1.0.0-rc.5, in which a plan is living and may use several workflow modules: draft_plan takes optional workflows instead of a required workflow, and revise_plan is new. The CMS tools describe and write every part value: update_page_tags writes every part type get_page_tags reads, get_construct gives each part's value schema, add_page_tag returns what is needed to embed a tag in a text.",
+      "detail": "(1) draft_plan: the session agent names the goal of new work and may pass the workflow modules it expects (workflows, module ids); the plan's proposing run picks the modules the work needs, splits it into items, each naming its module, and orders them by their dependencies. The required single workflow of 1.0.0-rc.4 is gone. (2) New revise_plan(plan_id, instruction): a message about the work of an existing plan revises that plan as a new version instead of drafting another; items finished in an earlier version stay done. A plan that is executing is redirected by GenAIx's router, not by this tool (its run is cancelled with cancel_reason redirected, then the proposing run follows). Every plan but a discarded or superseded one is revisable. (3) genaix_side_tools gains schemas, the input schemas of draft_plan and revise_plan, because the GenAIx API now depends on their arguments. (4) update_page_tags writes every part type get_page_tags reads a value for, in that shape: besides text, checkbox and page/file/image/folder ids, also node and form references, external page URLs, form UUIDs, lists, single and multi selects (by option value), datasource entries, overviews and page/template tag links; a reference may be given as an id or as the ref the read tools return. A select value that is not an option is invalid-data, listing the options. (5) get_page and get_page_tags read datasource entries ({key, value}) and overviews ({listType, selectType, orderBy, orderDirection, maxItems, recursive, items}), which they omitted. (6) get_construct: every writable part carries value, the JSON schema of what update_page_tags writes into it (select options as enum), and datasourceId for a select. (7) add_page_tag also returns parts (the construct's parts with value) and embedAs, the <node TAGNAME> element that shows the tag inside a rich-text part, when the construct may be a subtag. All additive: every call and value valid in 1.0.0-rc.4 stays valid. Transport and groups are unchanged."
     }
   ],
-  "status": "1.0.0-rc.5 draft for review; 1.0.0-rc.4 stays agreed and frozen for development (release candidate 4) until rc.5 is agreed; 1.0.0 at the demo-readiness checkpoint",
+  "status": "1.0.0-rc.5 agreed and frozen for development (release candidate 5); 1.0.0 at the demo-readiness checkpoint",
   "owner": {
     "specification": "ioflair",
     "implementation": "Gentics (cms-mcp Java module)"
@@ -2174,7 +2174,7 @@
                         "properties": {
                           "type": "object",
                           "additionalProperties": true,
-                          "description": "Flattened partKeyword -> value, typed by part type."
+                          "description": "Plain values by part keyword, in the shapes update_page_tags writes (see its tags.properties)."
                         },
                         "propertiesRaw": {
                           "type": "object",
@@ -2375,7 +2375,8 @@
                     },
                     "properties": {
                       "type": "object",
-                      "additionalProperties": true
+                      "additionalProperties": true,
+                      "description": "Plain values by part keyword, in the shapes update_page_tags writes (see its tags.properties)."
                     }
                   }
                 }
@@ -3691,7 +3692,7 @@
         {
           "name": "update_page_tags",
           "title": "Update page tags",
-          "description": "Sets the values of one or more content blocks on a page in a single call. This is the only way to write page content. The tool takes the edit lock, applies exactly the values you give, saves, creates a version and releases the lock, so you never have to lock or unlock anything yourself. Values are written byte for byte: nothing is reformatted, re-encoded or reflowed, which is what makes verbatim text reproduction possible. Name only the tags and parts you want to change; untouched tags are left alone. Use add_page_tag first if a tag does not exist yet, or set createMissing with a constructKeyword. Do NOT use this tool for page metadata such as name or filename, that is update_page_properties.",
+          "description": "Sets the values of one or more content blocks on a page in a single call. This is the only way to write page content. The tool takes the edit lock, applies exactly the values you give, saves, creates a version and releases the lock, so you never have to lock or unlock anything yourself. Values are written byte for byte: nothing is reformatted, re-encoded or reflowed, which is what makes verbatim text reproduction possible. Name only the tags and parts you want to change; untouched tags are left alone. Every part type get_page_tags reads a value for can be written, in that shape; get_construct gives each part's value schema. A value that does not fit its part (a select value that is not an option, a ref of another type) is refused with the reason and nothing is written. Use add_page_tag first if a tag does not exist yet, or set createMissing with a constructKeyword. Do NOT use this tool for page metadata such as name or filename, that is update_page_properties.",
           "group": "content_write",
           "access": "write",
           "roles": [
@@ -3754,7 +3755,7 @@
                       "minProperties": 1,
                       "maxProperties": 100,
                       "additionalProperties": true,
-                      "description": "partKeyword -> value. Strings for text and rich-text parts, booleans for checkboxes, integer ids for page, file, image and folder parts, arrays of strings for multi-selects."
+                      "description": "partKeyword -> value, in the shapes get_page_tags returns, so a value read can be written back unchanged; get_construct gives each part's value schema. STRING and RICHTEXT a string (rich text is HTML; a tag of the page is embedded with <node TAGNAME>); BOOLEAN true or false; IMAGE, FILE, FOLDER, NODE and CMSFORM the object's ID or its ref {type, id}; PAGE the page's ID, its ref, or an external URL as string (an empty string clears it); FORM the form's UUID; LIST, ORDEREDLIST and UNORDEREDLIST an array of strings; SELECT the value of one option (null clears it); MULTISELECT an array of option values; DATASOURCE an array of {key, value} entries; OVERVIEW {listType: PAGE|FOLDER|IMAGE|FILE, selectType: MANUAL|FOLDER|AUTO, orderBy: ALPHABETICALLY|PRIORITY|PDATE|EDATE|CDATE|FILESIZE|SELF, orderDirection: ASC|DESC, maxItems, recursive, items: [refs]}, members left out keep their value; PAGETAG {pageId, contentTagId} or {pageId, templateTagId}; TEMPLATETAG {templateId, templateTagId}. VELOCITY, TABLE, BREADCRUMB, NAVIGATION and LOCALFILE parts cannot be written."
                     }
                   },
                   "required": [
@@ -4066,7 +4067,7 @@
         {
           "name": "add_page_tag",
           "title": "Add page tag",
-          "description": "Adds one new content block of a given construct to a page and returns its generated tag name, which you then fill with update_page_tags. Check with list_constructs that the construct is available in the page's node first. Calling this twice adds two blocks, so do not retry it blindly after a timeout: read the page with get_page_tags instead. Pass exactly one of constructKeyword or constructId; a call with neither or both is refused as invalid-params.",
+          "description": "Adds one new content block of a given construct to a page and returns its generated tag name, which you then fill with update_page_tags, and the construct's parts with the values they take. A tag the template has no place for is shown where you write the returned embedAs element into a rich-text part, e.g. the page's text. Check with list_constructs that the construct is available in the page's node first. Calling this twice adds two blocks, so do not retry it blindly after a timeout: read the page with get_page_tags instead. Pass exactly one of constructKeyword or constructId; a call with neither or both is refused as invalid-params.",
           "group": "content_write",
           "access": "write",
           "roles": [
@@ -4180,6 +4181,62 @@
               },
               "pageRef": {
                 "$ref": "#/definitions/ObjectRef"
+              },
+              "parts": {
+                "type": "array",
+                "description": "Parts of the tag's construct, as get_construct returns them, each with its value schema.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "keyword": {
+                      "type": "string"
+                    },
+                    "nameI18n": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "typeId": {
+                      "type": "integer"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "editable": {
+                      "type": "boolean"
+                    },
+                    "liveEditable": {
+                      "type": "boolean"
+                    },
+                    "mandatory": {
+                      "type": "boolean"
+                    },
+                    "hidden": {
+                      "type": "boolean"
+                    },
+                    "partOrder": {
+                      "type": "integer"
+                    },
+                    "defaultValue": {},
+                    "globalId": {
+                      "type": "string"
+                    },
+                    "datasourceId": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Datasource of a select part."
+                    },
+                    "value": {
+                      "type": "object",
+                      "description": "JSON schema of the value update_page_tags writes into this part, select options as enum. Absent when the part cannot be written (not editable, or a type update_page_tags does not write)."
+                    }
+                  }
+                }
+              },
+              "embedAs": {
+                "type": "string",
+                "description": "<node TAGNAME>: write it into a RICHTEXT part of another tag (whose construct has mayContainSubtags) where the tag is to appear. Absent when the construct may not be a subtag."
               }
             },
             "required": [
@@ -5841,7 +5898,7 @@
         {
           "name": "get_construct",
           "title": "Get construct",
-          "description": "Loads one construct in full, including every part and the Handlebars template source. This is the mandatory first step before update_construct, because an update replaces the whole part list and you need to know what is there. The template is returned under template, not among parts: REST reports its type as RICHTEXT, so you cannot identify it by type alone. Pass exactly one of id or keyword; a call with neither or both is refused as invalid-params.",
+          "description": "Loads one construct in full, including every part and the Handlebars template source. This is the mandatory first step before update_construct, because an update replaces the whole part list and you need to know what is there. The template is returned under template, not among parts: REST reports its type as RICHTEXT, so you cannot identify it by type alone. Each part says under value what update_page_tags writes into it; a part without value cannot be written. To put content of this construct on a page: add_page_tag, then update_page_tags with the parts' values. A tag of a construct with mayBeSubtag is shown where its <node TAGNAME> stands in a RICHTEXT part of another tag whose construct has mayContainSubtags (the page's text, or a container's area). Pass exactly one of id or keyword; a call with neither or both is refused as invalid-params.",
           "group": "constructs",
           "access": "read",
           "roles": [
@@ -6009,6 +6066,15 @@
                         "defaultValue": {},
                         "globalId": {
                           "type": "string"
+                        },
+                        "datasourceId": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "Datasource of a select part."
+                        },
+                        "value": {
+                          "type": "object",
+                          "description": "JSON schema of the value update_page_tags writes into this part, select options as enum. Absent when the part cannot be written (not editable, or a type update_page_tags does not write)."
                         }
                       }
                     }

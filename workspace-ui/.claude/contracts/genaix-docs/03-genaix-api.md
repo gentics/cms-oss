@@ -32,10 +32,9 @@ the user accepts each version (§4.4). Reading and answering need no plan: the b
 agent** does that in every session.
 
 The contract is `v1`, served at `/api/v1`, JSON, `snake_case` field names, ISO 8601 timestamps
-with an explicit offset. This document describes **`1.0.0-rc.5`**, a **draft for review**
-(2026-10-14): it is not agreed, and `1.0.0-rc.4`, agreed by all parties on 2026-10-12, stays the
-contract implementations build against until it is. Where this document says "since
-`1.0.0-rc.5`", rc.4 behaves as the same sentence says it did before. A change is made only by
+with an explicit offset. This document describes **`1.0.0-rc.5`**, agreed by all parties on
+2026-10-15 and frozen for development: implementations build against it as it stands. Where this
+document says "since `1.0.0-rc.5`", rc.4 behaves as the same sentence says it did before. A change is made only by
 agreement, recorded in the changelog, with a breaking change only where no additive form
 exists. §16 lists what `1.0.0-rc.5` changes against `1.0.0-rc.4`, what `1.0.0-rc.4` changed
 against `1.0.0-rc.3`, and what `1.0.0-rc.3` changed against `1.0.0-rc.2`. At `1.0.0` the contract is frozen and every
@@ -860,7 +859,7 @@ composer can send `content` alone, and a client with one never has to build the 
 | `file_ref` | `file_id`, `mode?` (overrides the file's own) | `[[file name]]` | Attaches a session file; `mode: verbatim` puts the whole file under the same gate, hashed block by block |
 | `setting` | `key`, `value`, `label?` | `#[key: value]` | Becomes a constraint for this run, reflected in `derived_settings` (and in its `corrected_by_user`), so the agent stops re-deriving what the user already decided |
 | `filter` | `label`, `criteria` | `#[label]` | Passed into the search tool inputs of the run, so a research question searches what the user selected instead of what the model re-infers from prose |
-| `plan` | `plan` (`plan_id`, `based_on_version`, `summary?`, `items`: `id?`, `label`, `kind?`, `target?`, `workflow?`, `depends_on?`) | a numbered list of the item labels | Accepts the named proposed plan in the version the user adjusted, and the run executes it (`1.0.0-rc.3`, `plan_id` since `1.0.0-rc.4`, `workflow` and `depends_on` since `1.0.0-rc.5`; rules below, approval in §5.3) |
+| `plan` | `plan` (`plan_id`, `based_on_version`, `summary?`, `items`: `id?`, `label`, `kind?`, `target?`, `workflow?`, `depends_on?`, `creates?`, `parent?`) | a numbered list of the item labels | Accepts the named proposed plan in the version the user adjusted, and the run executes it (`1.0.0-rc.3`, `plan_id` since `1.0.0-rc.4`, `workflow` and `depends_on` since `1.0.0-rc.5`; rules below, approval in §5.3) |
 
 **The `plan` part** is how a user accepts and edits the agent's plan instead of describing the
 edit in prose. `plan_id` names the plan (required since `1.0.0-rc.4`), `based_on_version` the
@@ -878,8 +877,8 @@ plan version the user edited; `items` is the whole plan as the user wants it car
   version.
 - Nothing is stored and no run starts on any of these three `409`s.
 - The items, in order, are the order of work. An item whose `id` equals a current plan item's
-  keeps that step, with its `kind`, `target`, `workflow` and `depends_on` unless the part sets
-  them; an item without an `id`, or with one the plan does not have, is a new step, and GenAIx
+  keeps that step, with its `kind`, `target`, `workflow`, `depends_on`, `creates` and `parent`
+  unless the part sets them (`creates` and `parent` since the `1.0.0-rc.5` addition, 2026-10-15); an item without an `id`, or with one the plan does not have, is a new step, and GenAIx
   assigns its id and, when it names no `workflow`, its module. A current step the part does not
   list is removed.
 - A `done` item is kept as it is (since `1.0.0-rc.5`): leaving it out does not remove it, and a
@@ -887,7 +886,10 @@ plan version the user edited; `items` is the whole plan as the user wants it car
   `/parts/<i>/plan/items/<j>`.
 - An order that puts an item before one it `depends_on` is `422 validation_failed` with
   `errors[].code: dependency_order` at `/parts/<i>/plan/items/<j>` (since `1.0.0-rc.5`).
-- 1 to 100 items, each `label` 1 to 500 characters.
+- Removing an item that is another kept item's `parent` removes its sub-steps too (the `1.0.0-rc.5` addition, 2026-10-15).
+  A sub-step placed before its parent, or a sub-step of a sub-step, is `422 validation_failed`
+  with `errors[].code: dependency_order` at that item.
+- 1 to 200 items (1 to 100 before the `1.0.0-rc.5` addition, 2026-10-15), each `label` 1 to 500 characters.
 
 The input side is **strict**, the deliberate opposite of the output registry in §7: a part whose
 `type` is not one of the seven above is rejected whole with `422 validation_failed`, naming the
@@ -1285,9 +1287,24 @@ subject, never a login), `accepted_at`, `closed_at` (cleared when a settled plan
 - **`plan`**: the `Plan` above. `items` are `PlanItem`s (`id`, `label`, `kind`:
   `create`\|`update`\|`link`\|`translate`\|`publish`\|`construct`\|`report`\|`other`,
   `workflow`, `target?`, `status`: `pending`\|`running`\|`done`\|`skipped`\|`failed`\|`removed`,
-  and since `1.0.0-rc.5` `version`, `change` and `depends_on`, §4.4 and §4.6), plus `reason` on
-  every version after the first. Versioned and replaced wholesale on every change; a user adjusts
-  it with a `plan` part (§5.1).
+  and since `1.0.0-rc.5` `version`, `change` and `depends_on`, §4.4 and §4.6; `creates`, `created`
+  and `parent` since the `1.0.0-rc.5` addition, 2026-10-15), plus `reason` on every version after the first. Versioned
+  and replaced wholesale on every change; a user adjusts it with a `plan` part (§5.1).
+
+  **Items an object each, sub-steps folded** (the `1.0.0-rc.5` addition, 2026-10-15). A create or translate item says
+  what it brings into being in `creates` (a `PlannedObject`: `type`
+  `folder`\|`page`\|`file`\|`image`\|`construct`, `label`, `path?`, `language?`, `of?`); its
+  `target` stays the object it acts in, for a create the parent folder, which is its write
+  scope. Once its write completed the item carries the object in `created`, so a client opens the
+  preview of the page a step made. An item with a `parent` is a sub-step of the item whose object
+  it works on: filling the tags of the page the parent creates, verifying it. Every item without
+  a `parent` that writes concerns exactly one CMS object (its `creates`, else its `target`):
+  five pages are five top-level items, each with its tag fills as sub-steps. A sub-step comes
+  after its parent, one level deep, and a parent is `done` only when its sub-steps are.
+
+  **A plan at a glance.** A client counts only the items without a `parent`, grouped by `kind`
+  and by the object type (`creates.type`, else `target.type`): "+3 folders · +4 pages · 2 pages
+  edited · +2 translations". A `report` or `other` item is never counted.
 - **`steps`**: `Step` objects (`id`, `workflow`, `label`, `status`:
   `pending`\|`running`\|`done`\|`skipped`\|`failed`\|`waiting`, `detail?`, `substeps?`,
   `tool_calls?`), each module's `steps_template` in plan order. `waiting` means blocked on a user
@@ -1297,7 +1314,14 @@ subject, never a login), `accepted_at`, `closed_at` (cleared when a settled plan
   since `1.0.0-rc.5` always `<workflow>/<template id>` (`content_edit/st-2`).
 - **`checks`**: `Check` objects (`id`, `label`, `severity`: `pass`\|`info`\|`warn`\|`fail`,
   `blocking`, `message`, `source`, `suggested_actions?`, `plan_id` since `1.0.0-rc.4`,
-  `workflow` since `1.0.0-rc.5`).
+  `workflow` since `1.0.0-rc.5`, `plan_version` and `item_ids` since the `1.0.0-rc.5` addition, 2026-10-15).
+  **Findings before acceptance** (the `1.0.0-rc.5` addition, 2026-10-15): the proposing run reports what the user
+  should know before accepting through `report_check` (a page that is online, an object that
+  changed since it was read, a near-duplicate, an irreversible effect), each with the
+  `plan_version` it is about and the `item_ids` it concerns. `info` is a heads-up, `warn` needs
+  the user's attention; neither blocks, and accepting the plan needs no acknowledgement. A client
+  shows the findings of the current version before acceptance and treats older ones as
+  history. A gate check carries the version its run executed.
   `blocking` is a property of the check, not of severity. A verbatim-reuse check carries a
   `verification` object: `locked`, `matched_units`, `total_units`, `unit`
   (`chars`\|`blocks`\|`files`), `identical` (the lock badge boolean), plus up to 20 `deviations`
@@ -1447,10 +1471,17 @@ acceptance when answered `approved: true` (§5.3) — the only interaction that 
 | `kind` | `answer` shape | Used for |
 |---|---|---|
 | `ask_user` | `{"text": "..."}`, ≤4000 chars | Free-text clarification |
-| `choice` | `{"selected": ["option-id", ...]}`, one id unless `multi: true` | Picking among `options` (e.g. which template) |
+| `choice` | `{"selected": ["option-id", ...], "other"?: "..."}`, one id unless `multi: true` | Picking among `options` (e.g. which template); with `other_allowed` the user's own text instead of or besides them |
 | `confirm` | `{"approved": bool, "comment"?: "..."}` | Yes/no gates (e.g. "create it as a draft?") |
 | `form` | `{"values": {...}}`, validated against `interaction.schema` | Structured input (e.g. construct metadata) |
 | `settings_review` | `{"settings": [UserSettingPart, ...], "comment"?: "..."}` | Confirming the settings GenAIx inferred from the user's text, and supplying the ones it could not derive (§9.1) |
+
+**A `choice` like the settings review** (the `1.0.0-rc.5` addition, 2026-10-15). A `choice` may carry `recommended`
+(the option ids GenAIx recommends, one unless `multi`; an array, where a `settings_review` entry
+has one value), a `reason` per option, and `other_allowed`. A client puts the recommended option
+first with its reason and preselects it; with `other_allowed` it offers a free-text answer,
+sent as `other`, and `selected` may then be empty. `other` without `other_allowed` is `422` at
+`/answer/other`; an empty `selected` without `other` is `422` at `/answer/selected`.
 
 Resolve with `POST /sessions/{session_id}/interactions/{interaction_id}` (the blocked run
 continues on the same stream), or with `reply_to_interaction` on the next `POST .../messages`
@@ -1920,9 +1951,12 @@ message.
 
 ## 16. Changes
 
-### 16.1 Changes in `1.0.0-rc.5` (draft)
+### 16.1 Changes in `1.0.0-rc.5`
 
-Drafted 2026-10-14 for review; not agreed, and `1.0.0-rc.4` stays the contract until it is.
+Drafted 2026-10-14, agreed by all parties on 2026-10-15. `openapi.yaml` carries `1.0.0-rc.5` and its
+changelog is authoritative. The CMS MCP tools of the same version also describe and write every part
+value (`get_construct` `value`, `add_page_tag` `embedAs`; `mcp/tools.json` changelog, `04-mcp-scope.md` §4.4); those are
+additive and were added to the reviewed draft before agreement.
 `openapi.yaml` carries `1.0.0-rc.5` and its changelog is authoritative. **Living plans, across
 modules.** **Breaking** for rc.4 clients, which upgrade with rc.5; there is no compatibility
 switch.
@@ -1957,6 +1991,14 @@ switch.
   `schemas/workflow-manifest.schema.json` drops `plan_policy.concurrency`.
 - **Examples** (§14): the new `examples/s8-living-plan.sse`, one plan revised four times across
   two modules, with a redirect; S7's "make it a news item instead" revises the proposed plan.
+
+**Addition of 2026-10-15** (after agreement; optional members only and one constraint relaxed, a
+client that ignores them keeps working): `PlanItem.creates` (`PlannedObject`), `created` and
+`parent`, with the rule that every top-level write item concerns one object and the glance rule
+(§8); `UserPlanItem.creates` and `parent`, `UserPlan.items` up to 200; `Check.plan_version` and
+`item_ids`, and findings the proposing run reports before acceptance (§8); a `choice` with
+`recommended`, an option `reason` and `other_allowed`, and `ChoiceAnswer.other` (§9). Accepting
+a plan needs no acknowledgement of findings. Transcripts S1, S6, S7 and S8 show the new members.
 
 ### 16.2 Changes in `1.0.0-rc.4`
 

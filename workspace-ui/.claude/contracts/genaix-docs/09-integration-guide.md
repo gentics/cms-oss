@@ -6,9 +6,8 @@ does; the CMS MCP specification (`mcp/tools.json`, `04-mcp-scope.md`) describes 
 Neither says how the two are wired together, who creates which credential, what the proxy in between
 must do, or what to do when a step fails. That is this document.
 
-Every route and field name used below exists in `openapi.yaml`, contract version `1.0.0-rc.5`, a
-draft for review (2026-10-14); `1.0.0-rc.4` (agreed 2026-10-12) stays the agreed contract until it
-is agreed. Passages new in `rc.3`, `rc.4` or `rc.5` say so; section 10 lists them. The one idea
+Every route and field name used below exists in `openapi.yaml`, contract version `1.0.0-rc.5`,
+agreed by all parties on 2026-10-15. Passages new in `rc.3`, `rc.4` or `rc.5` say so; section 10 lists them. The one idea
 `rc.4` adds: **the session is the conversation, the plan is the unit of work.** The one idea `rc.5`
 adds: **the plan is living**: a follow-up on the same work revises it, and one plan may use several
 modules.
@@ -1083,6 +1082,20 @@ catalogue's `steps_template` and gate ids are the unprefixed module ids. An acce
 runs as one execute run per contiguous segment of one module's items, each `run.started` naming the
 module in `run.workflow`, without another acceptance between them.
 
+**The plan at a glance** (since the `1.0.0-rc.5` addition, 2026-10-15). Draw the card's summary line from the items
+without a `parent`, grouped by `kind` and by the object type (`creates.type`, else `target.type`):
+"+3 folders · +4 pages · 2 pages edited · +2 translations"; a `report` or `other` item is not
+counted. Each top-level write item concerns one object, and a click opens its steps and the
+object: the items with that item's id as `parent` (tag fills, verifications), folded under it,
+and its `created` object once written, which `PlanState.previews` previews, so a page dropdown in
+the preview can list every page of the plan. Before acceptance, a **"Needs you"** strip shows what
+waits for the user: a pending interaction of the plan's run, and the findings of the current
+version (`Check.plan_version` equal to `plan.version`), each next to the items in its `item_ids`;
+older findings are history. Accepting needs no acknowledgement of them. A `choice` question
+(`Interaction.recommended`, option `reason`, `other_allowed`) renders like the settings review: the
+recommended option first with its reason, the user's own text where `other_allowed`, sent as
+`other`; answering in the conversation (`reply_to_interaction`) works as for every question.
+
 ### Editing existing pages, and following up in the same conversation
 
 `content_edit` (`1.0.0-rc.3`) edits pages that already exist, one to twenty. Started from a CMS
@@ -1758,6 +1771,10 @@ streaming flush, which needs the CMS release that includes GPU-2665. The load-be
   steering the user to discard, and must not offer `reopen`, which is gone. "Stop and change" on an
   executing plan is a message with `options.mode: revise` and that plan's `options.plan_id`; a
   `run.cancelled` with `cancel_reason: redirected` is not a failure.
+- Should draw a plan's summary from its top-level items and fold sub-steps (`parent`) under them,
+  show the current version's findings before acceptance, and render a `choice` with its
+  `recommended` option and `other` answer (since the `1.0.0-rc.5` addition, 2026-10-15); a client that ignores these
+  members keeps working.
 - Must handle several open plan cards (`Session.open_plan_ids`, since `1.0.0-rc.5`), keeping the one
   `open_plan_id` names in view, and must render a plan of several modules as one card.
 - Must show the per-page `publications` of each plan after its publish rather than one outcome
@@ -1897,7 +1914,7 @@ Uploads from GenAIx into the CMS use a signed, short-lived GenAIx link the CMS f
 `mcp.upload_url_hosts` (section 4); without it GenAIx falls back to base64, at most 5 MB. The CMS
 MCP gains `create_folder`.
 
-**rc.5 (draft, 2026-10-14, for review; rc.4 stays the agreed contract).** **Living plans, across
+**rc.5 (agreed 2026-10-15, drafted 2026-10-14).** **Living plans, across
 modules.** A follow-up on the work of a plan revises it as a new version under the same `id`
 instead of opening another: the card stays, renders what changed from each item's `change` and the
 history from `plan.versions`, and items finished earlier stay `done` and are not run again. Every
@@ -1914,3 +1931,12 @@ the advisory folder keys `file_folder` and `image_folder` for uploads. New codes
 configuration, the identity model and the credential lifetime are unchanged.
 `examples/s8-living-plan.sse` plays one plan revised four times across two modules, with a
 redirect.
+
+**rc.5 addition (2026-10-15).** **Plans at a glance.** Optional members only, and a `choice`
+answer may now be the user's own text: a plan item says what it creates (`creates`) and, once
+written, which object it created (`created`); tag fills and verifications are sub-steps with
+`parent`, so every top-level write item is one object and a card can show "+4 pages · 2 pages
+edited"; a check carries the `plan_version` and `item_ids` it is about, and the proposing run
+reports findings before acceptance; a `choice` carries `recommended`, option `reason`s and
+`other_allowed`, answered with `other`. `UserPlan.items` allows up to 200 items. A client that
+ignores the new members keeps working.

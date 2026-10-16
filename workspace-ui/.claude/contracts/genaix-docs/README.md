@@ -23,9 +23,9 @@ reference client that let it be tried out end to end.
 Read 01 first regardless of role. A Workspace UI developer then wants 03, 08 and the
 `examples/` directory; a CMS integrator wants 02, 04, 05, 06 and 09.
 
-The documents describe **`1.0.0-rc.5`, a draft for review** (living plans, below); `1.0.0-rc.4`
-stays the agreed contract until rc.5 is agreed. Passages that change with rc.5 say "since
-`1.0.0-rc.5`", so a reader of the agreed contract can tell what rc.4 does: for the living plan
+The documents describe **`1.0.0-rc.5`, agreed by all parties on 2026-10-15** (living plans,
+below). Passages that change with rc.5 say "since `1.0.0-rc.5`", so a reader can tell what rc.4
+did: for the living plan
 start with `03-genaix-api.md` §4.4 to §4.6, for module composition `08-workflow-modules.md` §6.7,
 and for the plan card `09-integration-guide.md` "The plan card".
 
@@ -89,9 +89,9 @@ to rebuild after a contract change.
 ## Contract versions
 
 The GenAIx API (`openapi.yaml`) and the CMS MCP tool specification (`mcp/tools.json`) share the
-same version line. `openapi.yaml` and `mcp/tools.json` carry `1.0.0-rc.5`, a **draft for review**
-(2026-10-14). `1.0.0-rc.4`, **agreed by all parties on 2026-10-12**, stays the contract
-implementations build against until rc.5 is agreed. A change from here is made by agreement, recorded in the changelogs, and a breaking change only where no additive form exists. A revision that touches only one of the two leaves the other at its previous number. Both files carry their own changelog; the summary below
+same version line. `openapi.yaml` and `mcp/tools.json` carry `1.0.0-rc.5`, **agreed by all
+parties on 2026-10-15** and frozen for development: implementations build against it as it
+stands. A change from here is made by agreement, recorded in the changelogs, and a breaking change only where no additive form exists. A revision that touches only one of the two leaves the other at its previous number. Both files carry their own changelog; the summary below
 omits detail already there.
 
 - **`1.0.0-draft.1`** — first contract: sessions, messages, runs, the SSE event model, message
@@ -201,7 +201,7 @@ omits detail already there.
   that URL. New
   transcript `s7-continuous-session.sse`; S1 to S6 carry the rc.4 shapes. The genaix-mock and
   the reference client follow.
-- **`1.0.0-rc.5`** (draft for review, 2026-10-14; rc.4 stays agreed until this is) — **living
+- **`1.0.0-rc.5`** (drafted 2026-10-14, agreed by all parties 2026-10-15) — **living
   plans, across modules.** A follow-up on the work of a plan revises it as a new version under the
   same `id` instead of opening another: items finished in an earlier version stay `done` and are
   not run again, every version is accepted with a `plan` part, and each item's `change` says what

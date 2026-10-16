@@ -4,11 +4,11 @@
 contract the CMS team hosts in the cms-mcp module, ioflair implements as tools inside it, and any MCP client consumes. The prose companion, with rationale, scenario coverage,
 exclusions and the requirements towards the CMS implementation, is `../04-mcp-scope.md`.
 
-Current version: `1.0.0-rc.5`, a **draft for review** (2026-10-14) that changes only the GenAIx-side
-tools (`draft_plan` takes optional `workflows`, `revise_plan` is new, both with input schemas), aligned
-with `../openapi.yaml` 1.0.0-rc.5. `1.0.0-rc.4` (`create_folder`, the normative URL source of
-`upload_file`, and the GenAIx-side tools) stays the version agreed by all parties on 2026-10-12 and
-frozen for development until rc.5 is agreed. The
+Current version: `1.0.0-rc.5` (the GenAIx-side tools follow living plans: `draft_plan` takes optional
+`workflows`, `revise_plan` is new, both with input schemas; the CMS tools describe and write every part
+value: `get_construct` gives each part's `value` schema, `update_page_tags` writes every part type it
+reads, `add_page_tag` returns `parts` and `embedAs`), aligned with `../openapi.yaml`, agreed by all
+parties on 2026-10-15 and frozen for development. The
 `changelog` array records what moved between drafts. Specification owner ioflair, implementation owner
 Gentics.
 

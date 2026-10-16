@@ -191,10 +191,8 @@ info:
 
     ## Versioning policy
 
-    This is `v1`. **`1.0.0-rc.4`** is agreed by all parties (2026-10-12) and is the release
-    candidate implementations build against. **`1.0.0-rc.5`**, which this document
-    describes, is a **draft for review**: it is not agreed, and rc.4 stays the contract
-    until it is. The contract may
+    This is `v1`. **`1.0.0-rc.5`** is agreed by all parties (2026-10-15) and is the release
+    candidate implementations build against. The contract may
     still change while implementation proceeds, but only by agreement between the parties,
     recorded in the changelog below, and a
     breaking change is made only where no additive form exists. At `1.0.0` the contract is
@@ -207,8 +205,21 @@ info:
 
     ## Changelog
 
-    **1.0.0-rc.5 draft** (2026-10-14, for review; rc.4 stays the agreed contract until this
-    is agreed). **Living plans, across modules.** A follow-up on the work of a plan revises
+    **1.0.0-rc.5 addition** (2026-10-15, optional members only, one constraint relaxed; a
+    client that ignores them keeps working). **Plans at a glance.** A plan item may say what it
+    creates (`creates`, a `PlannedObject`) and, once written, which object it created
+    (`created`); a create item's `target` stays the parent folder, its write scope. An item may
+    be a sub-step of another (`parent`): tag fills and verifications fold under the item whose
+    object they work on, so every top-level write item concerns exactly one CMS object and a
+    client counts "+4 pages, 2 pages edited" from the top-level items. A `Check` may carry the
+    `plan_version` it was raised against and the `item_ids` it concerns; the proposing run
+    reports what the user should know before accepting (objects online, changed since read,
+    near-duplicates) with `report_check`. A `choice` interaction may carry `recommended` (option
+    ids), a `reason` per option and `other_allowed`; its answer may then be the user's own text
+    (`ChoiceAnswer.other`), with `selected` empty. `UserPlan.items` allows up to 200 items.
+    Acceptance needs no acknowledgement of findings.
+
+    **1.0.0-rc.5** (agreed 2026-10-15, drafted 2026-10-14). **Living plans, across modules.** A follow-up on the work of a plan revises
     that plan as a new version instead of opening another: items finished in an earlier
     version stay `done` and are not run again, and the user accepts every version with a
     `plan` part as before. A message while a plan executes is a question (side run) or
@@ -11086,10 +11097,11 @@ components:
         items:
           type: array
           minItems: 1
-          maxItems: 100
+          maxItems: 200
           description: >-
             The steps in the order of work. Absent accepts the plan as proposed (since
-            `1.0.0-rc.4`), or runs a `done` plan again within its accepted scope.
+            `1.0.0-rc.4`), or runs a `done` plan again within its accepted scope. At most 200
+            items (100 before the `1.0.0-rc.5` addition, 2026-10-15).
           items:
             $ref: '#/components/schemas/UserPlanItem'
       additionalProperties: false
@@ -11140,6 +11152,17 @@ components:
           items:
             type: string
             maxLength: 64
+        creates:
+          $ref: '#/components/schemas/PlannedObject'
+          description: >-
+            What the step brings into being (since `1.0.0-rc.5` addition, 2026-10-15). Absent keeps the current item's;
+            on a new step GenAIx fills it.
+        parent:
+          type: string
+          maxLength: 64
+          description: >-
+            The id of the item whose object this step works on (since `1.0.0-rc.5` addition, 2026-10-15). Absent keeps
+            the current item's. Removing a parent removes its sub-steps.
       additionalProperties: false
 
     # -------------------------------------------------------- workflow view
@@ -12067,8 +12090,64 @@ components:
             type: string
           examples:
             - [p1, p3]
+        creates:
+          $ref: '#/components/schemas/PlannedObject'
+          description: >-
+            The object this item brings into being (since `1.0.0-rc.5` addition, 2026-10-15), for `kind` `create` and
+            `translate` (a language variant), and `construct` when it defines a new construct.
+            GenAIx sets it on every such item it proposes. `target` stays what it was: the object
+            the item acts on or in, for a create the parent folder, which is its write scope.
+        created:
+          $ref: '#/components/schemas/ContextReference'
+          description: >-
+            The object the item created, once its write completed (since `1.0.0-rc.5` addition, 2026-10-15): the result
+            of the call through the module's `creates` binding (`08` write targets). Absent
+            until then, kept when the item is `done`. One item creates at most one object.
+        parent:
+          type: string
+          description: >-
+            The id of the item whose object this item works on (since `1.0.0-rc.5` addition, 2026-10-15): filling the
+            tags of the page its parent creates, or verifying it. An item with a `parent` writes
+            no object of its own and is not counted in a glance; a client may fold it under its
+            parent. A parent is never itself a sub-step (one level), comes before its sub-steps,
+            and is `done` only when they are. Every item without a `parent` that writes
+            (`create`, `update`, `link`, `translate`, `publish`, `construct`) concerns exactly
+            one CMS object: its `creates`, else its `target`.
+          examples:
+            - p1
         detail:
           type: string
+      additionalProperties: false
+
+    PlannedObject:
+      type: object
+      title: PlannedObject
+      description: >-
+        An object a plan item will create (since `1.0.0-rc.5` addition, 2026-10-15). It has no id yet, so it is not a
+        `ContextReference`. A tag fill is not a planned object: it is a sub-step (`parent`) of
+        the item that creates or edits the page.
+      required: [type, label]
+      properties:
+        type:
+          type: string
+          enum: [folder, page, file, image, construct]
+        label:
+          type: string
+          maxLength: 512
+          description: The name it will get, as the user will see it.
+        path:
+          type: string
+          maxLength: 1024
+          description: Where it will appear, for display, e.g. `/Acme GmbH Website/Events 2027/`.
+        language:
+          type: string
+          maxLength: 16
+          description: >-
+            For a page or a language variant, the language code (a translation creates the
+            variant).
+        of:
+          $ref: '#/components/schemas/ContextReference'
+          description: For a language variant, the page it is a variant of.
       additionalProperties: false
 
     Step:
@@ -12152,6 +12231,21 @@ components:
             plan.
           examples:
             - content_create
+        plan_version:
+          type: integer
+          minimum: 1
+          description: >-
+            The plan version the check was raised against (since `1.0.0-rc.5` addition, 2026-10-15). A finding the
+            proposing run reports is about the proposal at this version; a gate check carries
+            the version its run executed. A client shows the findings of the current version
+            before acceptance and treats older ones as history.
+        item_ids:
+          type: array
+          maxItems: 100
+          description: The plan items the check concerns, when it concerns some (since `1.0.0-rc.5` addition, 2026-10-15).
+          items:
+            type: string
+            maxLength: 64
         label:
           type: string
         severity:
@@ -12601,6 +12695,12 @@ components:
                 type: string
               description:
                 type: string
+              reason:
+                type: string
+                maxLength: 500
+                description: >-
+                  Why GenAIx offers this option (since `1.0.0-rc.5` addition, 2026-10-15), as for a `settings_review`
+                  option.
               ref:
                 $ref: '#/components/schemas/ContextReference'
             additionalProperties: false
@@ -12608,6 +12708,21 @@ components:
           type: boolean
           default: false
           description: 'For `choice`: whether several options may be selected.'
+        recommended:
+          type: array
+          minItems: 1
+          description: >-
+            For `choice`: the option ids GenAIx recommends, one unless `multi` (since `1.0.0-rc.5` addition, 2026-10-15).
+            A client preselects them; the user still answers. An array, where a
+            `settings_review` entry's `recommended` is a single value.
+          items:
+            type: string
+        other_allowed:
+          type: boolean
+          default: false
+          description: >-
+            For `choice`: the answer may be the user's own text (`other`) instead of, or
+            besides, the options (since `1.0.0-rc.5` addition, 2026-10-15).
         schema:
           type: object
           description: >-
@@ -12800,7 +12915,7 @@ components:
         | kind | member |
         |---|---|
         | `ask_user` | `{"text": "..."}` |
-        | `choice` | `{"selected": [...]}` |
+        | `choice` | `{"selected": [...], "other"?: "..."}` |
         | `confirm` | `{"approved": bool, "comment"?: "..."}` |
         | `form` | `{"values": {...}}` |
         | `settings_review` | `{"settings": [...], "comment"?: "..."}` |
@@ -12821,13 +12936,27 @@ components:
           additionalProperties: false
         - type: object
           title: ChoiceAnswer
-          required: [selected]
+          description: >-
+            The selected option ids, at least one, or the user's own text in `other` where the
+            interaction has `other_allowed` (since `1.0.0-rc.5` addition, 2026-10-15; `selected` may then be empty).
+            `other` without `other_allowed` is `422` at `/answer/other`, an empty `selected`
+            without `other` `422` at `/answer/selected`.
+          anyOf:
+            - required: [selected]
+              properties:
+                selected:
+                  minItems: 1
+            - required: [other]
           properties:
             selected:
               type: array
-              minItems: 1
               items:
                 type: string
+            other:
+              type: string
+              minLength: 1
+              maxLength: 4000
+              description: The user's own answer, only where `other_allowed` (since `1.0.0-rc.5` addition, 2026-10-15).
             comment:
               type: string
               maxLength: 4000

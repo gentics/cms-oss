@@ -1,10 +1,13 @@
 # GenAIx and CMS contracts (version 1.0.0-rc.5)
 
+`1.0.0-rc.5` is agreed by all parties (2026-10-15) and frozen for development, together with its addition of the same day ("plans at a glance", below).
+
 ## Where things are
 - `.claude/contracts/openapi.yaml`: the GenAIx API. The source of truth for every route, request, SSE event and message part the UI handles.
 - `.claude/contracts/mcp-tools.json`: the CMS MCP tool specification. Background only; see below.
 - `.claude/contracts/genaix-docs/INDEX.md`: map of the prose documents. Start here.
 - What changed since rc.4: `03-genaix-api.md` §16.1, `09-integration-guide.md` §10, and the `changelog` in both contract files (authoritative).
+- The rc.5 addition (2026-10-15): `03-genaix-api.md` §8 ("A plan at a glance", findings before acceptance), §9 (a `choice` like the settings review), §16.1 ("Addition of 2026-10-15"); `09-integration-guide.md` "The plan card" ("The plan at a glance"); the `1.0.0-rc.5 addition` entry of the `openapi.yaml` changelog.
 
 ## Rules
 - Where a prose document and a contract file disagree, the contract file wins.
@@ -30,6 +33,14 @@
   - Accepting as proposed keeps `version`; an adjusted acceptance is `version + 1`. Nothing may rely on rc.4's version + 1 on every acceptance.
   - Several plans may be open (`Session.open_plan_ids`); at most one executes (`Session.executing_plan_id`). An accepted plan runs one execute run per contiguous segment of one module's pending items (`Run.workflow`); "done" comes from `plan.status`, never from `run.completed`.
   - Settings review: advisory keys `file_folder` and `image_folder` (a CMS folder id; a `missing` entry with `recommended` and `other_allowed: true`).
+- The rc.5 addition of 2026-10-15, "plans at a glance" (`openapi.yaml` changelog; `03-genaix-api.md` §8, §9). Optional members only and one constraint relaxed; a client that ignores them keeps working:
+  - `PlanItem.creates` (`PlannedObject`: `type` `folder`|`page`|`file`|`image`|`construct`, `label`, `path?`, `language?`, `of?`; no id yet, so not a `ContextReference`) says what a `create` or `translate` item (or a `construct` item defining a new construct) brings into being. Its `target` stays the object it acts in: for a create, the parent folder.
+  - `PlanItem.created` (`ContextReference`): the object the item created, once its write completed; kept when `done`. One item creates at most one object. `PlanState.previews` (one per page, in the order of `publications`) previews it.
+  - `PlanItem.parent`: the item is a sub-step (tag fills, verifications) of the item whose object it works on. One level deep, after its parent; a parent is `done` only when its sub-steps are. Every top-level item that writes (`create`, `update`, `link`, `translate`, `publish`, `construct`) concerns exactly one CMS object: its `creates`, else its `target`.
+  - The glance: count only items without `parent`, grouped by `kind` and object type (`creates.type`, else `target.type`), e.g. "+3 folders · +4 pages · 2 pages edited · +2 translations". `report` and `other` items are never counted.
+  - `UserPlanItem.creates` and `parent` (absent keeps the current item's). Removing a parent removes its sub-steps. A sub-step before its parent, or a sub-step of a sub-step, is `422 validation_failed` with `errors[].code: dependency_order`. `UserPlan.items`: 1 to 200 (was 100).
+  - `Check.plan_version` (the version it was raised against) and `Check.item_ids` (the items it concerns). The proposing run reports findings before acceptance (`report_check`: page online, changed since read, near-duplicate, irreversible effect): `info` is a heads-up, `warn` needs attention, neither blocks, and accepting needs no acknowledgement. Before acceptance show the findings with `plan_version === plan.version`; older ones are history. A gate check carries the version its run executed.
+  - `choice` interactions: `recommended` (an array of option ids, one unless `multi`; a `settings_review` entry's `recommended` is a single value), `options[].reason`, `other_allowed`. Render like the settings review: recommended option first with its reason, preselected; with `other_allowed` a free-text answer sent as `ChoiceAnswer.other` (1 to 4000 characters), `selected` may then be empty. `other` without `other_allowed` is `422` at `/answer/other`; empty `selected` without `other` is `422` at `/answer/selected`.
 - From `mcp-tools.json` the UI needs only:
   - the `inputSchema` of `search_content` and `count_content`: the keys of `UserFilterPart.criteria` must use these field names, camelCase as spelled there (`openapi.yaml`, `UserFilterPart`)
   - tool names and groups, if `tool.started` gets custom labels. `tool.started.group` is a CMS group or `genaix`; the `genaix` tools are listed in `genaix_side_tools.tools` (rc.5 adds `revise_plan`)
@@ -39,7 +50,7 @@
 ## Local mock
 `INDEX.md` says the mock source is not included here. It is in the hand-out repo instead:
 - `git@git.gentics.com:psc/genaix/api-contract.git`, checked out at `../../api-contract` from this app (the path `npm run mock:genaix` uses). The GenAIx mock is `mocks/genaix-mock/`, its transcripts are `examples/*.sse` and `mocks/genaix-mock/scripts/*.sse`.
-- rc.5 is on the branch `rc5-draft` (`main` is still rc.4). It adds `examples/s8-living-plan.sse`: one plan, two modules, revisions and a redirect (`#s8` in the drafting message binds a plan to it).
+- rc.5, agreed, is on `main` (commit `98bcbf4` "rc.5 addition (2026-10-15): plans at a glance" adds the addition, mock included). The branch `rc5-draft` holds the draft before agreement; `rc4-draft` the previous candidate. rc.5 adds `examples/s8-living-plan.sse`: one plan, two modules, revisions and a redirect (`#s8` in the drafting message binds a plan to it). The transcripts S1, S6, S7 and S8 carry the addition's members (`creates`, `created`, `parent`, `Check.plan_version`, `item_ids`, a `choice` with `recommended` and `other_allowed`).
 - Start it with `npm run mock:genaix` (`GENAIX_MOCK_PORT=8123 ./run.sh` in `mocks/genaix-mock/`; Python 3.11+, creates `.venv` on first run). It serves `http://localhost:8123/api/v1`, the same port as the docker compose stack of the hand-out (`deploy-README.md`). `run.sh` alone defaults to `8080`, which the docs under `contracts/` still name.
 - Fixture credentials only, in direct mode: `Authorization: Bearer sk_gnx_mock` (any `sk_gnx_` token works) and any `X-GCMS-Subject`. Proxied mode needs `GENAIX_MOCK_CMS_PUBLIC_KEY` (`mocks-genaix-mock-README.md`, "Identity: two caller modes").
 - Only the GenAIx mock is needed. The CMS MCP mock (`mocks/cms-mcp-mock/`) is not, because the UI never calls the MCP and the GenAIx mock never contacts an MCP server.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isImagePart, markedElementOf, partTextOf, previewElementOf } from './usePreviewElements';
+import { blockOf, blocksOf, isImagePart, markedElementOf, partTextOf, previewElementOf } from './usePreviewElements';
 
 // A page as the CMS renders it with tagmarkers=true: a marked text part inside a marked
 // container part, and unmarked page structure around them.
@@ -93,5 +93,64 @@ describe('isImagePart', () => {
 
         expect(isImagePart(part('890'))).toBe(false);
         expect(isImagePart(part('893'))).toBe(true);
+    });
+});
+
+describe('blocksOf', () => {
+    // A text part holding a headline and a paragraph, as GenAIx writes a new page into one Aloha text.
+    function textPart(html: string) {
+        document.body.innerHTML = `<div data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)">${html}</div>`;
+
+        return document.querySelector('[data-gcn-tagid]')!;
+    }
+
+    it('splits a text part into its headings, paragraphs, quotes, code, lists and tables', () => {
+        const part = textPart('<h1>headline 1</h1> loose text <p>Lorem</p><br><blockquote>Q</blockquote><pre>C</pre><ul><li>L</li></ul><table><tr><td>T</td></tr></table><div>other</div>');
+
+        expect(blocksOf(part).map((block) => block.localName)).toEqual(['h1', 'p', 'blockquote', 'pre', 'ul', 'table']);
+    });
+
+    it('does not split a part with a single block, one whose only other block is a marked part, or one that shows an image', () => {
+        expect(blocksOf(textPart('<p>Only one</p>'))).toEqual([]);
+        expect(blocksOf(textPart('<p>Text</p><p data-gcn-tagid="933" data-gcn-tagname="content_4">Inner</p>'))).toEqual([]);
+        expect(blocksOf(textPart('<p>Text</p><p><img src="/a.jpg" alt=""></p>'))).toEqual([]);
+    });
+
+    it('splits a text part around an image block in it, leaving out empty paragraphs and the image block', () => {
+        // As the CMS renders a new page: an image block (a marked part of its own) between the text, with empty paragraphs around it.
+        const part = textPart(`<p>Die Gemeinde Bruchtal unterstützt Kleinbetriebe.</p><p>Die Förderung übernimmt 50 %.</p><p></p><div data-gcn-tagid="970" data-gcn-tagname="manimage_1" data-gcn-i18n-constructname="[Handbuch] Bild" class="aloha-block">
+            <figure><img src="/a.jpg" alt="Infografik"></figure>
+        </div><p></p><h2>Wer kann einen Antrag stellen?</h2><ul><li>Betriebe</li></ul><p>Gemeindeamt Bruchtal<br>Hauptplatz 1</p>`);
+
+        expect(blocksOf(part).map((block) => block.textContent)).toEqual([
+            'Die Gemeinde Bruchtal unterstützt Kleinbetriebe.',
+            'Die Förderung übernimmt 50 %.',
+            'Wer kann einen Antrag stellen?',
+            'Betriebe',
+            'Gemeindeamt BruchtalHauptplatz 1',
+        ]);
+        // The image block stays a part of its own: a click there selects it, not a block of the text.
+        expect(markedElementOf(part.querySelector('img'))?.getAttribute('data-gcn-tagname')).toBe('manimage_1');
+    });
+
+    it('finds the block a target is in, and none outside the blocks', () => {
+        const part = textPart('<h1>headline <b id="bold">1</b></h1><p>Lorem</p>');
+
+        expect(blockOf(document.getElementById('bold')!.firstChild, part)?.localName).toBe('h1');
+        expect(blockOf(part, part)).toBeNull();
+        expect(blockOf(null, part)).toBeNull();
+    });
+
+    it('describes a block by its place, its kind and the start of its text', () => {
+        const part = textPart('<h1>headline 1</h1><p>Lorem ipsum dolor sit amet,   consectetur adipiscing elit, sed do</p>');
+        const [headline, paragraph] = blocksOf(part);
+
+        expect(previewElementOf(part, headline)).toEqual({
+            tagName: 'pagecontent',
+            constructName: 'Aloha Text (lang)',
+            block: { index: 0, count: 2, kind: 'heading1', excerpt: 'headline 1' },
+        });
+        expect(previewElementOf(part, paragraph).block).toEqual({ index: 1, count: 2, kind: 'paragraph', excerpt: 'Lorem ipsum dolor sit amet, consectetur…' });
+        expect(previewElementOf(part, null)).toEqual({ tagName: 'pagecontent', constructName: 'Aloha Text (lang)' });
     });
 });

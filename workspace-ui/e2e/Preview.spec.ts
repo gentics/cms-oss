@@ -466,6 +466,175 @@ test.describe('Writing a part yourself', () => {
     });
 });
 
+// A page as GenAIx creates it: the headline and the paragraphs in one Aloha text, i.e. in one marked part
+// (`pagecontent`). `headline` sets the headline's text; `null` leaves it out, as if it had been removed.
+function blockPage(headline: string | null = 'headline 1'): string {
+    const heading = headline === null ? '' : `<h1>${headline}</h1>`;
+
+    return `<!doctype html><body style="margin:0;font:16px sans-serif">
+        <section class="docs-content">
+            <div data-gcn-pageid="9142" data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" style="padding:30px">${heading}
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p><p>Second paragraph</p></div>
+        </section></body>`;
+}
+
+test.describe('Selecting a block of a part', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
+
+    test('outlines the block under the mouse, not the whole part, and names its kind', async ({ page }) => {
+        await stubS1Session(page, [blockPage()]);
+        // Also stubs the session, so that the page doesn't wait for a GenAIx mock that isn't running.
+        await stubSending(page);
+        await page.goto(`#/sessions/${SESSION}`);
+
+        const headline = page.frameLocator(frameSelector).getByRole('heading', { name: 'headline 1' });
+
+        await headline.hover();
+
+        const label = page.getByText('Heading 1 · Aloha Text (lang)', { exact: true });
+
+        await expect(label).toBeVisible();
+
+        // The outline's box is the headline's box (the label sits at its top left), not the part's.
+        const headlineBox = (await headline.boundingBox())!;
+        const labelBox = (await label.boundingBox())!;
+
+        expect(Math.abs(labelBox.x - headlineBox.x)).toBeLessThan(2);
+        expect(Math.abs(labelBox.y - headlineBox.y)).toBeLessThan(2);
+
+        await page.frameLocator(frameSelector).getByText('Lorem ipsum').hover();
+        await expect(page.getByText('Paragraph · Aloha Text (lang)', { exact: true })).toBeVisible();
+        await expect(label).toBeHidden();
+    });
+
+    test('writes the headline alone and sends it verbatim, the block named by its place, kind and text', async ({ page }) => {
+        await stubS1Session(page, [blockPage()]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('heading', { name: 'headline 1' }).click();
+        await expect(page.getByText('Selected: Heading 1 · Aloha Text (lang)')).toBeVisible();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Heading 1 · Aloha Text (lang)' });
+        const field = card.getByRole('textbox', { name: 'New text' });
+
+        await expect(card.getByText('Aloha Text (lang) · pagecontent · Heading 1')).toBeVisible();
+        await expect(field).toHaveValue('headline 1');
+
+        await field.fill('A new headline');
+        await field.press('Control+Enter');
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "pagecontent" (Aloha Text (lang)), block 1 of 3 (Heading 1 "headline 1"), replace its text with: ' },
+                { type: 'verbatim', text: 'A new headline', source: 'user', label: 'Aloha Text (lang) · pagecontent · Heading 1' },
+            ],
+        });
+    });
+
+    test('references a paragraph in the chat as the block of its part', async ({ page }) => {
+        await stubS1Session(page, [blockPage()]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Second paragraph').click();
+        await page.getByRole('menuitem', { name: 'Reference in the chat' }).click();
+
+        const field = page.getByRole('textbox', { name: 'What should happen?' });
+
+        await expect(field.getByText('Aloha Text (lang) · pagecontent · Paragraph')).toBeVisible();
+
+        await page.keyboard.type('make this shorter');
+        await page.keyboard.press('Enter');
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "pagecontent" (Aloha Text (lang)), block 3 of 3 (Paragraph "Second paragraph"): make this shorter' },
+            ],
+        });
+    });
+
+    test('names the block by its text as it is after a reload', async ({ page }) => {
+        const { loadedUrls, sendNextUpdate } = await stubS1Session(page, [blockPage(), blockPage('headline 2')]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('heading', { name: 'headline 1' }).click();
+        await expect(page.getByRole('menuitem', { name: 'Give feedback' })).toBeVisible();
+
+        // The headline is rewritten while its menu is open: the selection stays, and what is sent names the new text.
+        sendNextUpdate();
+        await expect.poll(() => loadedUrls.length).toBe(2);
+        await expect(page.frameLocator(frameSelector).getByRole('heading', { name: 'headline 2' })).toBeVisible();
+        await expect(page.getByText('Selected: Heading 1 · Aloha Text (lang)')).toBeVisible();
+
+        await page.getByRole('menuitem', { name: 'Give feedback' }).click();
+        await page.getByRole('dialog', { name: 'Heading 1 · Aloha Text (lang)' }).getByRole('textbox').fill('shorter');
+        await page.getByRole('dialog', { name: 'Heading 1 · Aloha Text (lang)' }).getByRole('button', { name: 'Send' }).click();
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "pagecontent" (Aloha Text (lang)), block 1 of 3 (Heading 1 "headline 2"): shorter' },
+            ],
+        });
+    });
+
+    test('selects a heading of a text that holds an image block, and the image block as a part of its own', async ({ page }) => {
+        // As the CMS renders a new page: an image block between the paragraphs, with empty paragraphs around it.
+        await stubS1Session(page, [`<!doctype html><body style="margin:0;font:16px sans-serif">
+            <div data-gcn-pageid="9142" data-gcn-tagid="967" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" style="padding:30px"><p>Die Gemeinde Bruchtal unterstützt Kleinbetriebe.</p><p></p><div data-gcn-pageid="9142" data-gcn-tagid="970" data-gcn-tagname="manimage_1" data-gcn-i18n-constructname="[Handbuch] Bild" class="aloha-block">
+                <figure><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Infografik" width="200" height="80"></figure>
+            </div><p></p><h2>Wer kann einen Antrag stellen?</h2><ul><li>Betriebe mit Sitz in Bruchtal</li></ul></div></body>`]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('heading', { name: 'Wer kann einen Antrag stellen?' }).click();
+        await expect(page.getByText('Selected: Heading 2 · Aloha Text (lang)')).toBeVisible();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await expect(page.getByRole('dialog', { name: 'Heading 2 · Aloha Text (lang)' }).getByRole('textbox', { name: 'New text' })).toHaveValue('Wer kann einen Antrag stellen?');
+        await page.keyboard.press('Escape');
+
+        await page.frameLocator(frameSelector).getByRole('img', { name: 'Infografik' }).click();
+        await expect(page.getByText('Selected: [Handbuch] Bild')).toBeVisible();
+        await expect(page.getByRole('menuitem', { name: 'Swap the image' })).toBeVisible();
+
+        await page.getByRole('menuitem', { name: 'Reference in the chat' }).click();
+        await page.keyboard.type('kleiner');
+        await page.keyboard.press('Enter');
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "manimage_1" ([Handbuch] Bild): kleiner' },
+            ],
+        });
+    });
+
+    test('clears the selected block with a note when a reload no longer has it', async ({ page }) => {
+        const { loadedUrls, sendNextUpdate } = await stubS1Session(page, [blockPage(), blockPage(null)]);
+
+        await stubSending(page);
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('heading', { name: 'headline 1' }).click();
+        await expect(page.getByText('Selected: Heading 1 · Aloha Text (lang)')).toBeVisible();
+
+        sendNextUpdate();
+        await expect.poll(() => loadedUrls.length).toBe(2);
+        await expect(page.getByText('The selected part is no longer on the page')).toBeVisible();
+        await expect(page.getByText('Selected: Heading 1 · Aloha Text (lang)')).toBeHidden();
+    });
+});
+
 test.describe('Swapping an image', () => {
     test.use({ viewport: { width: 1280, height: 800 } });
 

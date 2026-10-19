@@ -274,9 +274,39 @@ describe('PlanBar', () => {
         expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
     });
 
+    it('offers the other open plans only while more than one is open', async () => {
+        const onPickPlan = vi.fn();
+        const other = plan('released', { id: 'pl-0', summary: 'Older terms page.' });
+        const { unmount } = renderWithProviders(<PlanBar sessionId={SESSION} plan={plan('done')} openPlans={[plan('done')]} onPickPlan={onPickPlan} />, { path: `/sessions/${SESSION}` });
+
+        // One open plan: the bar as it always was.
+        expect(within(await screen.findByRole('region', { name: 'Open plan' })).queryByRole('button', { name: /open plans?$/ })).not.toBeInTheDocument();
+        unmount();
+
+        renderWithProviders(<PlanBar sessionId={SESSION} plan={plan('done')} openPlans={[other, plan('done')]} onPickPlan={onPickPlan} />, { path: `/sessions/${SESSION}` });
+
+        expect(await within(await screen.findByRole('region', { name: 'Open plan' })).findByRole('button', { name: '2 open plans' })).toBeInTheDocument();
+    });
+
+    it('has no review link once the plan went out, published or sent to review', async () => {
+        for (const status of ['published', 'review_requested'] as const) {
+            const { unmount } = renderWithProviders(<PlanBar sessionId={SESSION} plan={plan(status)} />, { path: `/sessions/${SESSION}` });
+            const bar = await screen.findByRole('region', { name: 'Open plan' });
+
+            expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
+            unmount();
+        }
+    });
+
     it('has no review link while the plan is only proposed', async () => {
         const bar = await renderBar('proposed');
 
         expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
+    });
+
+    it('has a review link for a proposed revision of a plan accepted before, which is accepted there', async () => {
+        const bar = await renderBar('proposed', { version: 3, accepted_version: 2 });
+
+        expect(await within(bar).findByRole('link', { name: 'Review & release' })).toHaveAttribute('href', `/sessions/${SESSION}/review?plan=pl-1`);
     });
 });

@@ -100,7 +100,7 @@ describe('PartRenderer', () => {
         expect(screen.getByText('Neue Nutzungsbedingungen ab Q3')).toBeInTheDocument();
     });
 
-    it('renders a construct draft with its parts, template and validation', () => {
+    it('says a tag type was drafted, with its name, and folds its details away until opened', async () => {
         renderPart({
             type: 'construct_draft',
             keyword: 'terms_change_table',
@@ -110,20 +110,78 @@ describe('PartRenderer', () => {
             validation: { ok: true, issues: [{ severity: 'warning', message: 'Set a default row count.', line: 3 }] },
         });
 
-        expect(screen.getByRole('region', { name: 'Terms change table' })).toBeInTheDocument();
-        expect(screen.getByText('Heading')).toBeInTheDocument();
-        expect(screen.getByText('<table>{{cms.tag.parts.heading}}</table>')).toBeInTheDocument();
-        expect(screen.getByText('The template is valid')).toBeInTheDocument();
+        const card = screen.getByRole('region', { name: 'New tag type' });
+
+        expect(card).toHaveTextContent('Terms change tableNot created yet1 finding');
+        expect(screen.getByText('Set a default row count.')).not.toBeVisible();
+
+        const details = screen.getByRole('button', { name: 'Details' });
+
+        expect(details).toHaveAttribute('aria-expanded', 'false');
+        await userEvent.click(details);
+
+        expect(screen.getByText('terms_change_table')).toBeVisible();
+        expect(screen.getByRole('list', { name: 'Parts' })).toHaveTextContent('HeadingheadingRequired');
+        expect(screen.getByText('The template is valid')).toBeVisible();
         expect(screen.getByRole('img', { name: 'Warning' })).toBeInTheDocument();
-        expect(screen.getByText('Set a default row count.')).toBeInTheDocument();
+        expect(screen.getByText('Set a default row count.')).toBeVisible();
+
+        // The template is folded once more until opened.
+        const template = screen.getByRole('button', { name: 'Template' });
+
+        expect(screen.getByText('<table>{{cms.tag.parts.heading}}</table>')).not.toBeVisible();
+        await userEvent.click(template);
+        expect(screen.getByText('<table>{{cms.tag.parts.heading}}</table>')).toBeVisible();
     });
 
-    it('renders an API call log', () => {
-        renderPart({ type: 'api_call_log', label: 'CMS calls', calls: [{ method: 'POST', path: '/rest/construct?nodeId=3', summary: 'Create construct', status: 200 }] });
+    it('says a tag type was created once the CMS has it (created_ref)', () => {
+        renderPart({
+            type: 'construct_draft',
+            keyword: 'digi_countdown',
+            name: { en: 'DIGI Bonus Countdown' },
+            parts: [],
+            template: '<div></div>',
+            validation: { ok: true, issues: [] },
+            created_ref: { type: 'construct', id: 412 },
+        });
 
-        expect(screen.getByRole('cell', { name: 'POST /rest/construct?nodeId=3' })).toBeInTheDocument();
-        expect(screen.getByRole('cell', { name: '200' })).toBeInTheDocument();
-        expect(screen.getByRole('cell', { name: 'Create construct' })).toBeInTheDocument();
+        expect(screen.getByRole('region', { name: 'New tag type' })).toHaveTextContent('DIGI Bonus CountdownCreated');
+    });
+
+    it('says when a construct draft\'s template is not valid, and lists no findings it does not have', async () => {
+        renderPart({ type: 'construct_draft', keyword: 'teaser', name: { en: 'Teaser' }, parts: [], template: '{{#if}}', validation: { ok: false, issues: [] } });
+
+        await userEvent.click(screen.getByRole('button', { name: 'Details' }));
+
+        expect(screen.getByText('The template is not valid')).toBeVisible();
+        expect(screen.queryByRole('list', { name: 'Validation' })).not.toBeInTheDocument();
+    });
+
+    it('renders an API call log collapsed to the number of calls, opened with each call', async () => {
+        renderPart({ type: 'api_call_log', label: 'Create construct digi_countdown', calls: [{ method: 'POST', path: '/rest/construct?nodeId=3', summary: 'Create construct', status: 200 }] });
+        const toggle = within(screen.getByRole('region', { name: 'Create construct digi_countdown' })).getByRole('button', { name: '1 CMS call' });
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByRole('cell', { name: 'Create construct' })).not.toBeInTheDocument();
+
+        await userEvent.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByRole('cell', { name: 'POST /rest/construct?nodeId=3' })).toBeVisible();
+        expect(screen.getByRole('cell', { name: '200' })).toBeVisible();
+        expect(screen.getByRole('cell', { name: 'Create construct' })).toBeVisible();
+    });
+
+    it('says how many calls of an API call log failed while it is collapsed', () => {
+        renderPart({
+            type: 'api_call_log',
+            calls: [
+                { method: 'GET', path: '/rest/construct/88', summary: 'Read construct', status: 200 },
+                { method: 'PUT', path: '/rest/construct/88', summary: 'Update template', status: 409 },
+            ],
+        });
+
+        expect(screen.getByRole('button', { name: '2 CMS calls · 1 failed' })).toHaveAttribute('aria-expanded', 'false');
     });
 
     it('renders a citation collapsed to "Sources", opened with its marker and the highlighted passage as text, not as HTML', async () => {

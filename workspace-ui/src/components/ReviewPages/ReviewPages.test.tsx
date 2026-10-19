@@ -20,15 +20,17 @@ const PUBLICATIONS = [
 ];
 
 function check(id: string, severity: Check['severity'], pageId?: number): Check {
-    return { id, label: id, severity, blocking: false, message: '', source: { type: 'gate' }, ...(pageId && { target: { type: 'page', id: String(pageId) } }) };
+    return { id, label: id, severity, blocking: false, message: '', source: { type: 'gate' }, gate_id: id, kind: 'script', ...(pageId && { target: { type: 'page', id: String(pageId) } }) };
 }
 
-const CHECKS = [
+const CHECKS: Check[] = [
     check('chk-1', 'fail', 9011),
     check('chk-2', 'warn', 9011),
     check('chk-3', 'pass', 8644),
     // About the whole plan: counted on no page.
     check('chk-4', 'fail'),
+    // The agent's own finding, no gate's: never counted.
+    { id: 'content_edit/chk-review', label: 'Review', severity: 'warn', blocking: false, message: '', source: { type: 'system' }, kind: 'prompt', target: { type: 'page', id: '9011' } },
 ];
 
 describe('ReviewPages', () => {

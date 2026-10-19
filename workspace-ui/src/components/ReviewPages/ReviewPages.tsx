@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { CircleAlertIcon, CircleCheckIcon, CircleDashedIcon, type LucideIcon, SendIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { isCheckOnPage, isFailingCheck } from '@/helper/pageChecks/pageChecks';
+import { isCheckOnPage, isFailingCheck, isGateCheck } from '@/helper/pageChecks/pageChecks';
 import type { Check, Publication } from '@/services/apiService/genaix/types';
 
 import styles from './ReviewPages.module.css';
@@ -28,7 +28,7 @@ interface ReviewPagesProps {
 
 /**
  * The pages of a plan that wrote several, on the left of the review page: each with its publish status
- * and the number of its checks that found something (warnings and failures naming it as `target`).
+ * and the number of its gate checks that found something (warnings and failures naming it as `target`).
  * Picking one puts it in the URL (`?page=`), and the review page shows it: its preview, its checks and
  * whether it can be published.
  */
@@ -43,7 +43,7 @@ export function ReviewPages({ sessionId, publications, checks, selectedId }: Rev
                     const { cms_ref: page } = publication;
                     const status = statusOf(publication);
                     const Icon = ICONS[status];
-                    const issues = checks.filter((check) => isCheckOnPage(check, page) && isFailingCheck(check)).length;
+                    const issues = checks.filter((check) => isGateCheck(check) && isCheckOnPage(check, page) && isFailingCheck(check)).length;
 
                     return (
                         <li key={page.id}>

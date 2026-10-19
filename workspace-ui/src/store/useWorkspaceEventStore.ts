@@ -197,6 +197,8 @@ export interface SessionLiveState {
      */
     openPlanId?: string | null;
     executingPlanId?: string | null;
+    /** Every open plan of the session, oldest first, as the last `session.updated` said (rc.5 `Session.open_plan_ids`). */
+    openPlanIds?: string[];
 }
 
 interface WorkspaceEventState {
@@ -522,6 +524,7 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
     if (event.type === 'session.updated') {
         next.openPlanId = event.session.open_plan_id ?? null;
         next.executingPlanId = event.session.executing_plan_id ?? null;
+        next.openPlanIds = event.session.open_plan_ids ?? [];
     }
 
     // `publications.updated` carries the plan's whole array every time (rc.4: per plan).
@@ -707,6 +710,7 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         previews: undefined,
         openPlanId: undefined,
         executingPlanId: undefined,
+        openPlanIds: undefined,
         checks: undefined,
         derivedSettings: undefined,
         approvalChains: undefined,

@@ -1,15 +1,11 @@
-import { useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Composer } from '@/components/Composer/Composer';
 import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
 import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
 import { Topbar } from '@/components/Topbar/Topbar';
-import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useCmsUser } from '@/hooks/useCmsAuth';
-import { type StartSessionInput, useStartSession } from '@/hooks/useGenaixQueries';
-import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { useSessionStart } from '@/hooks/useSessionStart';
 
 import styles from './DashboardPage.module.css';
 
@@ -32,36 +28,10 @@ function greetingKey(hour: number): string {
  */
 export function DashboardPage() {
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const startSession = useStartSession();
+    const { start, isStarting, uploadProgress } = useSessionStart();
     // The CMS user of the session (`LoginGate` shows the page only with one): first name, the login without one.
     const cmsUser = useCmsUser({ refetchOnMount: false }).data;
     const greetingName = cmsUser ? (cmsUser.firstName || cmsUser.login) : null;
-
-    // Upload progress of the files sent, by their position, for the composer's attachment list.
-    const [uploadProgress, setUploadProgress] = useState<number[]>([]);
-
-    function reportUploadProgress(index: number, fraction: number) {
-        setUploadProgress((current) => {
-            const next = [...current];
-
-            next[index] = fraction;
-
-            return next;
-        });
-    }
-
-    function handleSubmit(input: StartSessionInput) {
-        setUploadProgress([]);
-        startSession.mutate({ ...input, onFileProgress: reportUploadProgress }, {
-            onSuccess: (session) => {
-                void navigate({ to: '/sessions/$id', params: { id: session.id } });
-            },
-            onError: (error) => {
-                useErrorNotificationStore.getState().addError({ messageKey: 'dashboard.startFailed', detailKey: errorMessageKey(error) });
-            },
-        });
-    }
 
     return (
         <div className={styles.page}>
@@ -71,7 +41,7 @@ export function DashboardPage() {
                     <div className={styles.content}>
                         {greetingName && <h1 className={styles.greeting}>{t(greetingKey(new Date().getHours()), { name: greetingName })}</h1>}
 
-                        <Composer variant="start" onSubmit={handleSubmit} isSubmitting={startSession.isPending} uploadProgress={uploadProgress} />
+                        <Composer variant="start" onSubmit={start} isSubmitting={isStarting} uploadProgress={uploadProgress} />
 
                         <div className={styles.todos}>
                             <SessionTodos />

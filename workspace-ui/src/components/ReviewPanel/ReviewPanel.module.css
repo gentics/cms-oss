@@ -26,6 +26,15 @@
   font-weight: 500;
 }
 
+/* The body and, while the quality gates run, their work in front of it. */
+.main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .body {
   display: flex;
   flex: 1;
@@ -34,6 +43,13 @@
   min-height: 0;
   padding: 14px 15px;
   overflow-y: auto;
+  transition: filter var(--duration-state) var(--easing), opacity var(--duration-state) var(--easing);
+
+  &[data-checking] {
+    filter: blur(3px);
+    opacity: .45;
+    user-select: none;
+  }
 }
 
 .summary {
@@ -63,14 +79,106 @@
   font-size: var(--font-size-sm);
 }
 
-/* While the quality gates check the plan on its release (design.md §8 "Lädt", "Denkt"). */
+/* While the quality gates check the plan (design.md §8 "Denkt", large): over the blurred body. */
 .checking {
+  position: absolute;
+  inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 24px;
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  text-align: center;
+
+  /* "Answer in the chat", while the plan's run waits on a question (§4.1: links in `--interactive`). */
+  & a {
+    color: var(--interactive);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+}
+
+/* What the gates decided (`CheckOutcome`), at the top of the checklist: a status row in the colour of
+   the outcome, icon and text (design.md §3.3). */
+.outcome {
+  display: flex;
+  align-items: flex-start;
   gap: 8px;
   margin: 0;
-  color: var(--fg-secondary);
+  padding: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-lg);
+  color: var(--fg-primary);
   font-size: var(--font-size-sm);
+  font-weight: 500;
+
+  &[data-kind="passed"] {
+    border-color: rgba(var(--success-rgb), .30);
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  &[data-kind="warning"] {
+    border-color: rgba(var(--warning-rgb), .45);
+    border-left: 3px solid var(--warning);
+    background: var(--warning-bg);
+    color: var(--warning);
+  }
+
+  &[data-kind="blocking"] {
+    border-color: rgba(var(--error-rgb), .30);
+    border-left: 3px solid var(--error);
+    background: var(--error-bg);
+    color: var(--error);
+  }
+}
+
+.outcomeIcon {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* The checks that passed, folded into one line (design.md §12 "Checkliste": erfüllte Punkte
+   zusammenklappbar); open, their groups below it. */
+.passed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.passedIcon {
+  color: var(--success);
+}
+
+.chevron {
+  display: inline-flex;
+  transition: transform var(--duration-popover) var(--easing);
+
+  &[data-open] {
+    transform: rotate(180deg);
+  }
+}
+
+.passedList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+
+  &[hidden] {
+    display: none;
+  }
 }
 
 .list {

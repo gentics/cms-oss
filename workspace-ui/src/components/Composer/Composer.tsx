@@ -60,6 +60,8 @@ interface ComposerProps {
     onStop?: () => void;
     /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
     sessionId?: string;
+    /** The field's placeholder instead of the variant's, e.g. "What's next?" after publishing. */
+    placeholder?: string;
     ref?: Ref<ComposerHandle>;
 }
 
@@ -76,7 +78,7 @@ const TEXT_KEYS = {
  * field. On phones it puts voice first. Sending is the caller's. While a run is working
  * (`isRunning`), Stop replaces send and calls `onStop`.
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, placeholder, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -351,7 +353,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                     <VerbatimSourcesContext value={verbatimSources}>
                         <ComposerTextInput
                             editor={editor}
-                            label={t(texts.placeholder)}
+                            label={placeholder ?? t(texts.placeholder)}
                             isEmpty={isEmpty}
                             size={isChat ? 'base' : 'lg'}
                             onKeyDown={handleKeyDown}

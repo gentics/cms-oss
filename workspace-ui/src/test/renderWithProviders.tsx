@@ -26,7 +26,7 @@ export function createWrapper(queryClient = new QueryClient()) {
 export function renderWithProviders(ui: ReactElement, { path = '/' }: { path?: string } = {}) {
     const queryClient = new QueryClient();
     const rootRoute = createRootRoute({ component: () => <>{ui}<Outlet /></> });
-    const routeTree = rootRoute.addChildren(['/', '/sessions/$id', '/sessions/$id/review'].map((routePath) => (
+    const routeTree = rootRoute.addChildren(['/', '/sessions/$id', '/sessions/$id/review', '/sessions/$id/published'].map((routePath) => (
         createRoute({ getParentRoute: () => rootRoute, path: routePath, component: () => null })
     )));
     const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: [path] }) });

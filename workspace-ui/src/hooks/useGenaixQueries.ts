@@ -290,17 +290,36 @@ export function useSendTurn(sessionId: string) {
 export interface TransitionPlanInput {
     planId: string;
     request: TransitionRequest;
-    /**
-     * Sent to have the quality gates check the plan rather than as the user's own decision: the release
-     * "Review & release" sends on the way and "Check again". Only these show the check in progress
-     * (`ReviewPanel`); the request is the same.
-     */
-    isCheck?: boolean;
 }
 
 /** The `409 quality_gate_failed` problem a transition was refused with, or `undefined` for any other outcome. */
 export function gateRefusalOf(error: unknown): Problem | undefined {
     return error instanceof GenaixApiError && error.genaixCode === 'quality_gate_failed' ? error.problem : undefined;
+}
+
+/** A transition the quality gates refused: which one, and the problem that says why. */
+export interface GateRefusal {
+    action: TransitionRequest['action'];
+    problem: Problem;
+}
+
+/**
+ * The refusal by the quality gates of the plan's latest transition, while the plan still offers that
+ * transition (`actions`); it stands until another transition is sent.
+ */
+export function latestGateRefusal({ latest }: PlanTransition, actions: TransitionRequest['action'][]): GateRefusal | undefined {
+    const action = latest?.input.request.action;
+    const problem = latest?.status === 'error' && action && actions.includes(action) ? gateRefusalOf(latest.error) : undefined;
+
+    return action && problem ? { action, problem } : undefined;
+}
+
+/**
+ * Whether a refusal can be got past by acknowledging its checks (`acknowledge_checks`): no blocking gate
+ * failed (`failing_gates` empty) and there are checks to acknowledge. A blocking check never can be.
+ */
+export function canAcknowledgeRefusal(problem: Problem): boolean {
+    return (problem.failing_gates ?? []).length === 0 && (problem.acknowledgeable_checks ?? []).length > 0;
 }
 
 /**

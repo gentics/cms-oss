@@ -1,6 +1,7 @@
 import { useParams } from '@tanstack/react-router';
 import { type CSSProperties, type RefObject, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 
 import { AppShell } from '@/components/AppShell/AppShell';
 import { ChatStream } from '@/components/ChatStream/ChatStream';
@@ -13,7 +14,7 @@ import { pageElementEditParts, pageElementImageParts, pageElementNaming, pageEle
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { type SendTurnInput, type StartFile, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
-import { useOpenPlan } from '@/hooks/useOpenPlan';
+import { type PickedPlan, useOpenPlan, useOpenPlans } from '@/hooks/useOpenPlan';
 import { usePlanPresence } from '@/hooks/usePlanPresence';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
@@ -224,7 +225,16 @@ export function SessionPage() {
     const preview = useWorkspaceEventStore((state) => (id ? selectSession(id)(state).preview : undefined));
     // The plan the bar above the composer is for, if any; the stream keeps room for the bar meanwhile,
     // as high as it is, expanded or not. None for a plan with nothing left to show (`planPresence`).
-    const barPlan = useOpenPlan(id ?? '');
+    // The plan the user picked from several open ones (`PlanSwitcher`), while GenAIx names the same open
+    // and executing plan as when it was picked (`PickedPlan`).
+    const [pickedPlan, setPickedPlan] = useState<PickedPlan>();
+    const sessionPlanIds = useWorkspaceEventStore(useShallow((state) => {
+        const session = selectSession(id ?? '')(state);
+
+        return { openPlanId: session.openPlanId, executingPlanId: session.executingPlanId };
+    }));
+    const barPlan = useOpenPlan(id ?? '', pickedPlan);
+    const openPlans = useOpenPlans(id ?? '');
     const openPlan = usePlanPresence(id ?? '', barPlan) === 'none' ? undefined : barPlan;
     const [planBarHeight, setPlanBarHeight] = useState(0);
     const chatStyle = openPlan ? ({ '--plan-bar-space': `${planBarHeight}px` } as CSSProperties) : undefined;
@@ -237,7 +247,16 @@ export function SessionPage() {
             {id && <ChatStream key={id} sessionId={id} isLoading={isLoading} />}
             {id && (
                 <div className={styles.dock}>
-                    {openPlan && <PlanBar key={openPlan.id} sessionId={id} plan={openPlan} onHeightChange={setPlanBarHeight} />}
+                    {openPlan && (
+                        <PlanBar
+                            key={openPlan.id}
+                            sessionId={id}
+                            plan={openPlan}
+                            openPlans={openPlans}
+                            onPickPlan={(planId) => setPickedPlan({ planId, ...sessionPlanIds })}
+                            onHeightChange={setPlanBarHeight}
+                        />
+                    )}
                     <SessionComposer key={id} sessionId={id} composerRef={composerRef} />
                 </div>
             )}

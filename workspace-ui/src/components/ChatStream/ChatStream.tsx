@@ -159,8 +159,8 @@ function confirmationEntry(id: string, runId: string | undefined, parts: Parts):
  * interaction to answer and, while the agent works, the thinking indicator with its latest status.
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
  * its steps and thinking. Follows new content while scrolled to the end. Plans are not in the
- * conversation: the open one is in the plan bar above the composer (`PlanBar`, `useOpenPlan`), the
- * others are not shown.
+ * conversation: the open one is in the plan bar above the composer (`PlanBar`, `useOpenPlan`), and
+ * while several are open the bar offers the others (`PlanSwitcher`).
  *
  * While the history loads, or while `isLoading` (the session is loaded whole first, `useSessionEvents`),
  * skeletons stand where the conversation will, so it appears at once rather than piece by piece.

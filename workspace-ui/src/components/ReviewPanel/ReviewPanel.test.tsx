@@ -27,6 +27,8 @@ const altText: Check = {
     blocking: false,
     message: 'The hero image has no alt text.',
     source: { type: 'gate', label: 'Accessibility' },
+    gate_id: 'alt_text',
+    kind: 'script',
     suggested_actions: [{ label: 'Add alt text', prompt: 'Add an alt text to the hero image.' }],
 };
 
@@ -37,6 +39,19 @@ const tone: Check = {
     blocking: false,
     message: 'The page addresses readers formally.',
     source: { type: 'guideline', label: 'Tone & Address' },
+    gate_id: 'guideline_compliance',
+    kind: 'subagent',
+};
+
+// The agent's own finding (`report_check`), no gate's: it never holds up a transition.
+const selfReport: Check = {
+    id: 'content_create/chk-cross-link-online-page',
+    label: 'Cross-link to an online page',
+    severity: 'warn',
+    blocking: false,
+    message: 'The new page links to a page that is online.',
+    source: { type: 'system', label: 'Agent' },
+    kind: 'prompt',
 };
 
 const brokenLink: Check = {
@@ -46,6 +61,8 @@ const brokenLink: Check = {
     blocking: true,
     message: 'One link points to a deleted page.',
     source: { type: 'gate', label: 'Links' },
+    gate_id: 'references_exist',
+    kind: 'script',
 };
 
 const page: Publication = {
@@ -88,7 +105,7 @@ function writtenPage(id: number, operation: CmsObjectRef['operation'] = 'created
  * transitions route and the CMS permission URLs asked.
  */
 function stubRoutes({ transition, onDiscard = 'keep', permissions = {} }: {
-    transition?: (body: Record<string, unknown>) => Response;
+    transition?: (body: Record<string, unknown>) => Response | Promise<Response>;
     onDiscard?: 'keep' | 'restore';
     permissions?: Record<number, boolean>;
 } = {}) {
@@ -158,10 +175,11 @@ async function renderLivePanel(initial: PlanState) {
         return <ReviewPanel sessionId={SESSION} state={state} />;
     }
 
-    renderWithProviders(<LivePanel />, { path: `/sessions/${SESSION}/review` });
+    const { router } = renderWithProviders(<LivePanel />, { path: `/sessions/${SESSION}/review` });
+
     await screen.findByRole('heading', { name: 'Review' });
 
-    return { setState: (state: PlanState) => act(() => setState(state)) };
+    return { router, setState: (state: PlanState) => act(() => setState(state)) };
 }
 
 // A plan event of the session's stream, `seq` above the ones applied before.
@@ -198,24 +216,95 @@ describe('ReviewPanel', () => {
     });
 
     it('shows the checklist grouped by source, each check with its state in words', async () => {
+        const user = userEvent.setup();
+
         stubRoutes();
         await renderPanel(planState('done'));
 
         const checklist = screen.getByRole('region', { name: 'Checklist' });
 
+        await user.click(within(checklist).getByRole('button', { name: '1 check passed' }));
         expect(within(checklist).getByRole('group', { name: 'Tone & Address' })).toHaveTextContent('Formal addressPassed');
         expect(within(checklist).getByRole('group', { name: 'Accessibility' })).toHaveTextContent('Images have alt textWarning');
         expect(within(checklist).getByText('The hero image has no alt text.')).toBeInTheDocument();
     });
 
-    it('sends a suggested fix to the agent and goes back to the chat', async () => {
+    it('says what a failing check found in one sentence, its gate\'s summary, not every finding', async () => {
+        const selfCheck: Check = {
+            ...altText,
+            id: 'content_create/chk-release-self-check',
+            label: 'Agent self-check before release',
+            message: 'Page 42 is an offline draft. The alt text "test" is a placeholder.\ninfo: I read page 42 back from the CMS.\nwarn: The alt text \'test\' is not descriptive.',
+            source: { type: 'gate', id: 'release_self_check', label: 'Agent self-check before release' },
+            gate_id: 'release_self_check',
+            kind: 'prompt',
+            evidence: { gate_id: 'release_self_check', kind: 'prompt', verdict: 'warn', summary: 'Page 42 is an offline draft. The alt text "test" is a placeholder.', finding_count: 2 },
+            suggested_actions: undefined,
+        };
+
+        stubRoutes();
+        await renderPanel(planState('done', { checks: [selfCheck] }));
+
+        const checklist = screen.getByRole('region', { name: 'Checklist' });
+
+        expect(within(checklist).getByText('Page 42 is an offline draft. The alt text "test" is a placeholder.')).toBeInTheDocument();
+        expect(within(checklist).queryByText(/I read page 42 back/)).not.toBeInTheDocument();
+    });
+
+    it('folds the checks that passed into one line, closed until opened', async () => {
+        const user = userEvent.setup();
+        const short: Check = { ...tone, id: 'chk-short', label: 'Short sentences' };
+
+        stubRoutes();
+        await renderPanel(planState('done', { checks: [tone, altText, short] }));
+
+        const checklist = screen.getByRole('region', { name: 'Checklist' });
+        const toggle = within(checklist).getByRole('button', { name: '2 checks passed' });
+
+        // The warning stays in view; the passed ones are folded.
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(within(checklist).getByText('Images have alt text')).toBeInTheDocument();
+        expect(within(checklist).queryByText('Formal address')).not.toBeInTheDocument();
+
+        await user.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(within(checklist).getByRole('group', { name: 'Tone & Address' })).toHaveTextContent('Formal addressPassedShort sentencesPassed');
+
+        await user.click(toggle);
+
+        expect(within(checklist).queryByText('Formal address')).not.toBeInTheDocument();
+    });
+
+    it('has no line for passed checks when none passed', async () => {
+        stubRoutes();
+        await renderPanel(planState('done', { checks: [altText] }));
+
+        expect(within(screen.getByRole('region', { name: 'Checklist' })).queryByRole('button', { name: /passed/ })).not.toBeInTheDocument();
+    });
+
+    it('leaves the agent\'s own findings out of the checklist, showing only the gates\' checks', async () => {
+        stubRoutes();
+        await renderPanel(planState('done', { checks: [tone, altText, selfReport] }));
+
+        const checklist = screen.getByRole('region', { name: 'Checklist' });
+
+        expect(within(checklist).queryByRole('group', { name: 'Agent' })).not.toBeInTheDocument();
+        expect(within(checklist).queryByText('Cross-link to an online page')).not.toBeInTheDocument();
+        expect(within(checklist).getByText('Images have alt text')).toBeInTheDocument();
+    });
+
+    it('sends a suggested fix to the agent as a revision of this plan and goes back to the chat', async () => {
         const user = userEvent.setup();
         const { messages } = stubRoutes();
-        const { router } = await renderPanel(planState('done'));
+        const { router } = await renderPanel(planState('released'));
 
         await user.click(screen.getByRole('button', { name: 'Add alt text' }));
 
-        await waitFor(() => expect(messages).toEqual([{ parts: [{ type: 'text', text: 'Add an alt text to the hero image.' }] }]));
+        await waitFor(() => expect(messages).toEqual([{
+            parts: [{ type: 'text', text: 'Add an alt text to the hero image.' }],
+            options: { mode: 'revise', plan_id: PLAN_ID },
+        }]));
         expect(router.state.location.pathname).toBe(`/sessions/${SESSION}`);
     });
 
@@ -236,6 +325,100 @@ describe('ReviewPanel', () => {
         expect(actionNames()).toEqual(actions);
     });
 
+    describe('while the quality gates check the plan', () => {
+        // Holds the transitions until `answer` is called with the response.
+        function holdTransitions() {
+            let resolveTransition: (response: Response) => void = () => {};
+
+            stubRoutes({ transition: () => new Promise<Response>((resolve) => {
+                resolveTransition = resolve;
+            }) });
+
+            return {
+                answer: (response: Response) => {
+                    act(() => resolveTransition(response));
+                },
+            };
+        }
+
+        it('blurs the checklist and shows the gates at work until they decided, then that all passed', async () => {
+            const user = userEvent.setup();
+            const { answer } = holdTransitions();
+            const { setState } = await renderLivePanel(planState('done', { checks: [tone] }));
+
+            await user.click(screen.getByRole('button', { name: 'Release' }));
+
+            expect(await screen.findByText('The quality gates are checking the plan…')).toBeInTheDocument();
+            expect(screen.getByRole('region', { name: 'Checklist' }).closest('[aria-busy="true"]')).not.toBeNull();
+
+            answer(Response.json(planState('released').plan));
+            setState(planState('released', { checks: [tone] }));
+
+            await waitFor(() => expect(screen.queryByText('The quality gates are checking the plan…')).not.toBeInTheDocument());
+            expect(screen.getByRole('region', { name: 'Checklist' }).closest('[aria-busy="true"]')).toBeNull();
+            expect(within(screen.getByRole('region', { name: 'Checklist' })).getByRole('status')).toHaveTextContent('All checks passed. The plan is released.');
+            expect(actionNames()).toEqual(['Discard', 'Request review', 'Publish']);
+        });
+
+        it('shows the gates at work on "Publish anyway" too: the release first, then publishing over the whole page', async () => {
+            const user = userEvent.setup();
+            let isHeld = false;
+            let answer: (response: Response) => void = () => {};
+            const { sent } = stubRoutes({
+                transition: (body) => {
+                    if (body.action === 'publish') {
+                        return accepted('r-9');
+                    }
+
+                    if (!body.acknowledge_checks) {
+                        return problem('quality_gate_failed', { failing_checks: [altText], failing_gates: [], acknowledgeable_checks: ['chk-alt-text'] });
+                    }
+
+                    isHeld = true;
+
+                    return new Promise<Response>((resolve) => {
+                        answer = resolve;
+                    });
+                },
+            });
+
+            await renderPanel(planState('done'));
+            await user.click(screen.getByRole('button', { name: 'Release' }));
+            await user.click(await screen.findByRole('button', { name: 'Publish anyway' }));
+
+            await waitFor(() => expect(isHeld).toBe(true));
+            expect(screen.getByText('The quality gates are checking the plan…')).toBeInTheDocument();
+            act(() => answer(Response.json(planState('released').plan)));
+
+            await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release', acknowledge_checks: ['chk-alt-text'] }, { action: 'publish' }]));
+            expect(await screen.findByText('Publishing…')).toBeInTheDocument();
+        });
+    });
+
+    it('says a released plan passed every check', async () => {
+        stubRoutes();
+        await renderPanel(planState('released', { checks: [tone] }));
+
+        expect(within(screen.getByRole('region', { name: 'Checklist' })).getByRole('status')).toHaveTextContent('All checks passed. The plan is released.');
+    });
+
+    it('says a released plan was released with the warnings the user acknowledged', async () => {
+        stubRoutes();
+        await renderPanel(planState('released', { checks: [tone, { ...altText, acknowledged_by: 'sub-1', acknowledged_at: '2026-10-14T09:00:00Z' }] }));
+
+        const checklist = screen.getByRole('region', { name: 'Checklist' });
+
+        expect(within(checklist).getByRole('status')).toHaveTextContent('Released with 1 warning.');
+        expect(within(checklist).getByRole('group', { name: 'Accessibility' })).toHaveTextContent('Images have alt textWarning · acknowledged');
+    });
+
+    it('says nothing about the gates before they ran', async () => {
+        stubRoutes();
+        await renderPanel(planState('done'));
+
+        expect(within(screen.getByRole('region', { name: 'Checklist' })).queryByRole('status')).not.toBeInTheDocument();
+    });
+
     it('releases a done plan, then publishes the released one: two steps', async () => {
         const user = userEvent.setup();
         const { sent } = stubRoutes();
@@ -247,7 +430,6 @@ describe('ReviewPanel', () => {
 
         await renderPanel(planState('released'));
         await user.click(screen.getByRole('button', { name: 'Publish' }));
-        await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
         await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'publish' }]));
     });
 
@@ -280,132 +462,80 @@ describe('ReviewPanel', () => {
         });
     });
 
-    describe('publishing, confirmed in a dialog', () => {
+    describe('publishing, over the whole page', () => {
         const pending: Publication = { cms_ref: { type: 'page', id: 9142, name: 'Neue Nutzungsbedingungen' }, status: 'pending', approval_chain: [] };
 
-        it('asks first and sends nothing until confirmed; cancelling closes the dialog', async () => {
-            const user = userEvent.setup();
-            const { sent } = stubRoutes();
-
-            await renderPanel(planState('released', { publications: [pending] }));
-            announce(1, [pending]);
-            await user.click(screen.getByRole('button', { name: 'Publish' }));
-
-            const dialog = await screen.findByRole('dialog', { name: 'Publish this plan?' });
-
-            expect(dialog).toHaveTextContent('1 page goes online.');
-            expect(sent).toEqual([]);
-
-            await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-            expect(sent).toEqual([]);
-        });
-
-        it('closes with Escape before it is confirmed', async () => {
-            const user = userEvent.setup();
-
-            stubRoutes();
-            await renderPanel(planState('released'));
-            await user.click(screen.getByRole('button', { name: 'Publish' }));
-            await screen.findByRole('dialog', { name: 'Publish this plan?' });
-
-            await user.keyboard('{Escape}');
-
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-        });
-
-        it('publishes once confirmed, shows that it is under way and cannot be closed meanwhile, then says what went out', async () => {
+        it('publishes at once, covers the page while it is under way, then opens the page that says what went out', async () => {
             const user = userEvent.setup();
             const { sent } = stubRoutes({ transition: () => accepted('r-9') });
-            const { setState } = await renderLivePanel(planState('released', { publications: [pending] }));
+            const { setState, router } = await renderLivePanel(planState('released', { publications: [pending] }));
 
             announce(1, [pending]);
             await user.click(screen.getByRole('button', { name: 'Publish' }));
-            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
 
             await waitFor(() => expect(sent).toEqual([{ action: 'publish' }]));
-            const dialog = screen.getByRole('dialog');
-
-            expect(within(dialog).getByRole('status')).toHaveTextContent('Publishing');
-            expect(within(dialog).queryByRole('button')).not.toBeInTheDocument();
-
-            await user.keyboard('{Escape}');
-            expect(screen.getByRole('dialog')).toBeInTheDocument();
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            expect(await screen.findByText('Publishing…')).toBeInTheDocument();
+            expect(screen.getByText('1 page goes online.')).toBeInTheDocument();
 
             announce(2, [{ ...pending, status: 'published' }]);
-            await setState(planState('published', { publications: [{ ...pending, status: 'published' }] }));
+            setState(planState('published', { publications: [{ ...pending, status: 'published' }] }));
 
-            expect(await within(dialog).findByText('Published')).toBeInTheDocument();
-            expect(dialog).toHaveTextContent('1 published');
-            await user.click(within(dialog).getByRole('button', { name: 'Close' }));
-
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            await waitFor(() => expect(router.state.location.pathname).toBe(`/sessions/${SESSION}/published`));
+            expect(router.state.location.search).toEqual({ plan: PLAN_ID });
+            expect(screen.queryByText('Publishing…')).not.toBeInTheDocument();
         });
 
-        it('counts pages sent to review as done, and says so', async () => {
+        it('opens that page too when a page went to review', async () => {
             const user = userEvent.setup();
 
             stubRoutes({ transition: () => accepted('r-9') });
-            const second: Publication = { ...pending, cms_ref: { type: 'page', id: 9143, name: 'Garantiebedingungen' } };
-            const { setState } = await renderLivePanel(planState('released', { publications: [pending, second] }));
+            const { setState, router } = await renderLivePanel(planState('released', { publications: [pending] }));
 
-            announce(1, [pending, second]);
             await user.click(screen.getByRole('button', { name: 'Publish' }));
-            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
-            await screen.findByRole('status');
+            await screen.findByText('Publishing…');
+            setState(planState('review_requested', { publications: [{ ...pending, status: 'review_requested' }] }));
 
-            announce(2, [{ ...pending, status: 'published' }, { ...second, status: 'review_requested' }]);
-            await setState(planState('review_requested', { publications: [{ ...pending, status: 'published' }, { ...second, status: 'review_requested' }] }));
-
-            const dialog = screen.getByRole('dialog');
-
-            expect(await within(dialog).findByText('Done')).toBeInTheDocument();
-            expect(dialog).toHaveTextContent('1 published, 1 in review');
+            await waitFor(() => expect(router.state.location.pathname).toBe(`/sessions/${SESSION}/published`));
         });
 
-        it('shows why publishing failed when its run fails, and can then be closed', async () => {
+        it('takes the overlay away when its run fails, says why, and shows the failed page in the panel', async () => {
             const user = userEvent.setup();
 
             stubRoutes({ transition: () => accepted('r-9') });
-            await renderPanel(planState('released', { publications: [pending] }));
+            const { setState, router } = await renderLivePanel(planState('released', { publications: [pending] }));
+
             announce(1, [pending]);
-
             await user.click(screen.getByRole('button', { name: 'Publish' }));
-            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
-            await screen.findByRole('status');
+            await screen.findByText('Publishing…');
 
             const error = { type: 't', title: 'Locked', status: 423, genaix_code: 'cms_object_locked' as const, detail: 'The page is locked by A. Kern.' };
+            const failed: Publication = { ...pending, status: 'failed', error };
 
             // The plan stays released: only the failed page and the failed run tell (contract).
-            announce(2, [{ ...pending, status: 'failed', error }]);
+            announce(2, [failed]);
             applyEvent(3, 'run.failed', { run_id: 'r-9', run: { id: 'r-9', status: 'failed' }, error });
+            setState(planState('released', { publications: [failed] }));
 
-            const dialog = screen.getByRole('dialog');
-
-            expect(await within(dialog).findByText('Publishing failed')).toBeInTheDocument();
-            expect(dialog).toHaveTextContent('Neue Nutzungsbedingungen');
-            expect(dialog).toHaveTextContent('The page is locked by A. Kern.');
-            await user.click(within(dialog).getByRole('button', { name: 'Close' }));
-
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            await waitFor(() => expect(screen.queryByText('Publishing…')).not.toBeInTheDocument());
+            expect(useErrorNotificationStore.getState().errors).toMatchObject([
+                { messageKey: 'planBar.publishing.failed', detailKey: 'errors.genaix.cms_object_locked' },
+            ]);
+            expect(screen.getByRole('region', { name: 'Neue Nutzungsbedingungen' })).toHaveTextContent('The page is locked by A. Kern.');
+            expect(router.state.location.pathname).toBe(`/sessions/${SESSION}/review`);
         });
 
-        it('shows a refused request in the dialog, beside the notification every failed transition gets', async () => {
+        it('puts nothing over the page when the request is refused, and notifies like every failed transition', async () => {
             const user = userEvent.setup();
 
             stubRoutes({ transition: () => problem('plan_closed') });
             await renderPanel(planState('released'));
             await user.click(screen.getByRole('button', { name: 'Publish' }));
-            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
 
-            const dialog = screen.getByRole('dialog');
-
-            expect(await within(dialog).findByText('Publishing failed')).toBeInTheDocument();
-            expect(dialog).toHaveTextContent('This plan is closed');
-            expect(useErrorNotificationStore.getState().errors).toMatchObject([
+            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
                 { messageKey: 'planBar.transitionFailed', detailKey: 'errors.genaix.plan_closed' },
-            ]);
+            ]));
+            expect(screen.queryByText('Publishing…')).not.toBeInTheDocument();
         });
 
         // Refuses `publish` with a warning until it is acknowledged; `release` is refused the same way.
@@ -417,54 +547,37 @@ describe('ReviewPanel', () => {
             });
         }
 
-        // Publish, confirmed, and refused by the gates: the dialog closes and the plan head says so.
+        // Publish, refused by the gates: the checklist says so.
         async function publishRefused(user: ReturnType<typeof userEvent.setup>) {
             await renderPanel(planState('released'));
             await user.click(screen.getByRole('button', { name: 'Publish' }));
-            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
 
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-            expect(await screen.findByText('Some checks have warnings. Confirm them to go on.')).toBeInTheDocument();
+            expect(await screen.findByText('Not published: 1 check has a warning.')).toBeInTheDocument();
+            expect(screen.queryByText('Publishing…')).not.toBeInTheDocument();
         }
 
-        it('leaves a refusal by the quality gates to the panel, and asks again before publishing anyway', async () => {
+        it('publishes anyway at once, acknowledging the warnings, over the whole page', async () => {
             const user = userEvent.setup();
             const { sent } = refuseUntilAcknowledged();
 
             await publishRefused(user);
             await user.click(await screen.findByRole('button', { name: 'Publish anyway' }));
 
-            const dialog = await screen.findByRole('dialog', { name: 'Publish this plan?' });
-
-            expect(sent).toEqual([{ action: 'publish' }]);
-            await user.click(within(dialog).getByRole('button', { name: 'Publish' }));
-
             await waitFor(() => expect(sent).toEqual([{ action: 'publish' }, { action: 'publish', acknowledge_checks: ['chk-alt-text'] }]));
-            expect(within(screen.getByRole('dialog')).getByRole('status')).toHaveTextContent('Publishing');
+            expect(await screen.findByText('Publishing…')).toBeInTheDocument();
         });
 
-        it('asks again before "Check again" after a refused publish, which publishes if the checks pass now', async () => {
+        it('publishes again on "Check again" after a refused publish, which goes out if the checks pass now', async () => {
             const user = userEvent.setup();
             const { sent } = refuseUntilAcknowledged();
 
             await publishRefused(user);
             await user.click(screen.getByRole('button', { name: 'Check again' }));
 
-            const dialog = await screen.findByRole('dialog', { name: 'Publish this plan?' });
-
-            expect(sent).toEqual([{ action: 'publish' }]);
-            await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-            expect(sent).toEqual([{ action: 'publish' }]);
-
-            await user.click(screen.getByRole('button', { name: 'Check again' }));
-            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
-
             await waitFor(() => expect(sent).toEqual([{ action: 'publish' }, { action: 'publish' }]));
         });
 
-        it('does not ask before "Check again" after a refused release, which puts nothing online', async () => {
+        it('checks again on "Check again" after a refused release, which puts nothing online', async () => {
             const user = userEvent.setup();
             const { sent } = refuseUntilAcknowledged();
 
@@ -473,7 +586,87 @@ describe('ReviewPanel', () => {
             await user.click(await screen.findByRole('button', { name: 'Check again' }));
 
             await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release' }]));
-            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            expect(screen.queryByText('Publishing…')).not.toBeInTheDocument();
+        });
+    });
+
+    describe('a proposed revision: Accept & review', () => {
+        // A revision of a plan accepted at version 2, proposed at version 3 (rc.5).
+        function revision(status: PlanStatus = 'proposed', extra: Partial<PlanState> = {}): PlanState {
+            const state = planState(status, extra);
+
+            return { ...state, plan: { ...state.plan, version: 3, accepted_version: 2 } };
+        }
+
+        it('accepts the revision as proposed, shows the work under way, and releases it once done', async () => {
+            const user = userEvent.setup();
+            const { sent, messages } = stubRoutes();
+            const { setState } = await renderLivePanel(revision());
+
+            expect(actionNames()).toEqual(['Discard', 'Accept & review']);
+            await user.click(screen.getByRole('button', { name: 'Accept & review' }));
+
+            await waitFor(() => expect(messages).toEqual([{
+                parts: [{ type: 'plan', plan: { plan_id: PLAN_ID, based_on_version: 3 } }],
+                options: { mode: 'execute' },
+            }]));
+            expect(await screen.findByText('The agent carries out the changes…')).toBeInTheDocument();
+            expect(screen.getByRole('region', { name: 'Checklist' }).closest('[aria-busy="true"]')).not.toBeNull();
+
+            setState(revision('running'));
+            expect(screen.getByText('The agent carries out the changes…')).toBeInTheDocument();
+            expect(sent).toEqual([]);
+
+            setState(revision('done'));
+
+            await waitFor(() => expect(sent).toEqual([{ action: 'release' }]));
+            expect(screen.queryByText('The agent carries out the changes…')).not.toBeInTheDocument();
+        });
+
+        it('shows the question of the plan\'s run, and the way to the chat where it is answered', async () => {
+            const user = userEvent.setup();
+
+            stubRoutes();
+            const { setState } = await renderLivePanel(revision());
+
+            await user.click(screen.getByRole('button', { name: 'Accept & review' }));
+            setState(revision('running'));
+            applyEvent(1, 'interaction.requested', {
+                run_id: 'r-1',
+                plan_id: PLAN_ID,
+                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'A second link?', multi: false, other_allowed: false, blocking: true, status: 'pending', requested_at: '2026-10-14T09:00:00Z', expires_at: '2099-01-01T00:00:00Z', run_id: 'r-1' },
+            });
+
+            expect(await screen.findByText('The agent has a question about the changes.')).toBeInTheDocument();
+            expect(screen.getByRole('link', { name: 'Answer in the chat' })).toHaveAttribute('href', `/sessions/${SESSION}`);
+        });
+
+        it('says so when the run that carries it out fails, and releases nothing', async () => {
+            const user = userEvent.setup();
+            const { sent } = stubRoutes();
+            const { setState } = await renderLivePanel(revision());
+
+            await user.click(screen.getByRole('button', { name: 'Accept & review' }));
+            await screen.findByText('The agent carries out the changes…');
+            setState(revision('accepted'));
+
+            const error = { type: 't', title: 'Locked', status: 423, genaix_code: 'cms_object_locked' as const };
+
+            // The plan stays accepted after a failed execute run (contract §4.1).
+            applyEvent(1, 'run.failed', { run_id: 'r-1', run: { id: 'r-1', status: 'failed' }, error });
+
+            await waitFor(() => expect(screen.queryByText('The agent carries out the changes…')).not.toBeInTheDocument());
+            expect(useErrorNotificationStore.getState().errors).toMatchObject([
+                { messageKey: 'review.acceptFailed', detailKey: 'errors.genaix.cms_object_locked' },
+            ]);
+            expect(sent).toEqual([]);
+        });
+
+        it('offers no Accept & review once the plan is not proposed', async () => {
+            stubRoutes();
+            await renderPanel(revision('done'));
+
+            expect(screen.queryByRole('button', { name: 'Accept & review' })).not.toBeInTheDocument();
         });
     });
 
@@ -547,26 +740,68 @@ describe('ReviewPanel', () => {
         expect(screen.queryByRole('button', { name: 'Add alt text' })).not.toBeInTheDocument();
     });
 
-    it('offers to check again or release anyway when the gates refuse a release with warnings only', async () => {
+    it('offers to check again or publish anyway when the gates refuse a release with warnings only', async () => {
         const user = userEvent.setup();
         const { sent } = stubRoutes({
-            transition: (body) => (body.acknowledge_checks
-                ? Response.json(planState('released').plan)
-                : problem('quality_gate_failed', { failing_checks: [altText], failing_gates: [], acknowledgeable_checks: ['chk-alt-text'] })),
+            transition: (body) => {
+                if (body.action === 'publish') {
+                    return accepted('r-9');
+                }
+
+                return body.acknowledge_checks
+                    ? Response.json(planState('released').plan)
+                    : problem('quality_gate_failed', { failing_checks: [altText], failing_gates: [], acknowledgeable_checks: ['chk-alt-text'] });
+            },
         });
 
         await renderPanel(planState('done'));
         await user.click(screen.getByRole('button', { name: 'Release' }));
 
-        // In the panel's foot, not in a dialog; the failing checks are in the checklist above.
-        expect(await screen.findByText('Some checks have warnings. Confirm them to go on.')).toBeInTheDocument();
+        // At the top of the checklist, with the failing checks; not in a dialog.
+        expect(await within(screen.getByRole('region', { name: 'Checklist' })).findByText('Not released: 1 check has a warning.')).toBeInTheDocument();
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-        expect(actionNames()).toEqual(['Discard', 'Check again', 'Release anyway']);
+        expect(actionNames()).toEqual(['Discard', 'Check again', 'Publish anyway']);
 
+        await user.click(screen.getByRole('button', { name: 'Publish anyway' }));
+
+        // The release with the warnings acknowledged, then at once the publish.
+        await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release', acknowledge_checks: ['chk-alt-text'] }, { action: 'publish' }]));
+        await waitFor(() => expect(screen.queryByText('Not released: 1 check has a warning.')).not.toBeInTheDocument());
+    });
+
+    it('does not publish when the release with the warnings acknowledged is refused again', async () => {
+        const user = userEvent.setup();
+        const { sent } = stubRoutes({
+            transition: () => problem('quality_gate_failed', { failing_checks: [altText], failing_gates: [], acknowledgeable_checks: ['chk-alt-text'] }),
+        });
+
+        await renderPanel(planState('done'));
+        await user.click(screen.getByRole('button', { name: 'Release' }));
+        await user.click(await screen.findByRole('button', { name: 'Publish anyway' }));
+
+        await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release', acknowledge_checks: ['chk-alt-text'] }]));
+        expect(await screen.findByText('Not released: 1 check has a warning.')).toBeInTheDocument();
+        expect(screen.queryByText('Publishing…')).not.toBeInTheDocument();
+    });
+
+    it('offers Release anyway instead to a user who may not publish the plan\'s pages', async () => {
+        const user = userEvent.setup();
+        const { sent } = stubRoutes({
+            permissions: { 9142: false },
+            transition: (body) => (body.acknowledge_checks
+                ? Response.json(planState('released').plan)
+                : problem('quality_gate_failed', { failing_checks: [altText], failing_gates: [], acknowledgeable_checks: ['chk-alt-text'] })),
+        });
+
+        await renderPanel(planState('done', { cms_objects: [writtenPage(9142)] }));
+        await user.click(screen.getByRole('button', { name: 'Release' }));
+        await screen.findByText('Not released: 1 check has a warning.');
+
+        expect(actionNames()).toEqual(['Discard', 'Check again', 'Release anyway']);
         await user.click(screen.getByRole('button', { name: 'Release anyway' }));
 
         await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release', acknowledge_checks: ['chk-alt-text'] }]));
-        await waitFor(() => expect(screen.queryByText('Some checks have warnings. Confirm them to go on.')).not.toBeInTheDocument());
+        expect(screen.queryByText('Publishing…')).not.toBeInTheDocument();
     });
 
     it('offers no way past a blocking check, only to check again', async () => {
@@ -576,7 +811,12 @@ describe('ReviewPanel', () => {
         await renderPanel(planState('done'));
         await user.click(screen.getByRole('button', { name: 'Release' }));
 
-        expect(await screen.findByText('Fix the blocking checks first, or ask the agent to. Then check again.')).toBeInTheDocument();
+        const checklist = screen.getByRole('region', { name: 'Checklist' });
+
+        expect(await within(checklist).findByText('Not released: 1 blocking check must be fixed.')).toBeInTheDocument();
+        // The blocking check as the refusal reported it, before the plan's state has it.
+        expect(within(checklist).getByRole('group', { name: 'Links' })).toHaveTextContent('Links resolveFailed · blocking');
+        expect(within(checklist).getByText('One link points to a deleted page.')).toBeInTheDocument();
         expect(actionNames()).toEqual(['Discard', 'Check again']);
 
         await user.click(screen.getByRole('button', { name: 'Check again' }));
@@ -589,7 +829,7 @@ describe('ReviewPanel', () => {
 
         stubRoutes({ transition: () => problem('plan_closed') });
         await renderPanel(planState('released'));
-        // Not Publish, whose refusals its dialog shows ('publishing, confirmed in a dialog').
+        // Not Publish, which has tests of its own ('publishing, over the whole page').
         await user.click(screen.getByRole('button', { name: 'Request review' }));
 
         await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([

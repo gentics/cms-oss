@@ -1,6 +1,7 @@
 import { createHashHistory, createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
 
 import { DashboardPage } from '@/pages/DashboardPage/DashboardPage';
+import { PublishedPage } from '@/pages/PublishedPage/PublishedPage';
 import { ReviewPage } from '@/pages/ReviewPage/ReviewPage';
 import { SessionPage } from '@/pages/SessionPage/SessionPage';
 
@@ -39,7 +40,18 @@ const sessionReviewRoute = createRoute({
     component: ReviewPage,
 });
 
-export const routeTree = rootRoute.addChildren([homeRoute, sessionRoute, sessionReviewRoute]);
+// After a plan was published from the review page: what went out, and the way to the next session.
+// `?plan=<plan id>` names the plan; without it the page has nothing to show.
+const sessionPublishedRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/sessions/$id/published',
+    validateSearch: (search: Record<string, unknown>): { plan?: string } => (
+        typeof search.plan === 'string' && search.plan ? { plan: search.plan } : {}
+    ),
+    component: PublishedPage,
+});
+
+export const routeTree = rootRoute.addChildren([homeRoute, sessionRoute, sessionReviewRoute, sessionPublishedRoute]);
 
 // Hash history, like the CMS's own UIs: the route lives after `#`, so the app works under whatever
 // path the CMS serves it from, and a reload never asks the CMS for a path it has no file for.

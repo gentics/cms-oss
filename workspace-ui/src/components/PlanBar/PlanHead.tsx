@@ -1,18 +1,18 @@
-import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RefreshCwIcon, RocketIcon, RouteIcon, SquareIcon, TriangleAlertIcon, XIcon } from 'lucide-react';
-import { type ReactNode, useState } from 'react';
+import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RefreshCwIcon, RocketIcon, RouteIcon, SquareIcon, XIcon } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PublishingOverlay } from '@/components/PublishingOverlay/PublishingOverlay';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { errorMessageKey, problemMessageKey } from '@/helper/errorMapper/errorMapper';
 import { isFirstDraft, planActions } from '@/helper/planActions/planActions';
 import { glanceText, isWorthAGlance, planGlance, showsProgress } from '@/helper/planGlance/planGlance';
-import { gateRefusalOf, useCancelRun, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
+import { canAcknowledgeRefusal, latestGateRefusal, useCancelRun, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
 import type { Plan, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
-
-import { PublishDialog, type PublishPhase } from './PublishDialog';
 
 import styles from './PlanBar.module.css';
 
@@ -32,16 +32,16 @@ type PublicationStatus = Publication['status'];
 // The order the page outcome is told in: what went out first, what is left last.
 const PUBLICATION_STATUSES: PublicationStatus[] = ['published', 'review_requested', 'failed', 'pending'];
 
-// What a transition is sent with besides its action: acknowledged warnings ("… anyway"), or `isCheck` ("Check again").
+// What a transition is sent with besides its action: acknowledged warnings ("… anyway").
 interface TransitionOptions {
     acknowledgeChecks?: string[];
-    isCheck?: boolean;
 }
 
-// Publishing as `PlanHead` drives it: asked (with what confirming sends), sent (with the run that carries
-// it out, once the `202` came), or refused. Whether it ended is read from the plan's status and the
-// run's end (`publishState`).
-type Publishing = { phase: 'confirm'; options: TransitionOptions } | { phase: 'publishing'; runId?: string } | { phase: 'failed'; failureKey: string };
+// Publishing under way, as `PlanHead` follows it: sent, with the run that carries it out once the `202`
+// came. Whether it ended is read from the plan's status and the run's end.
+interface Publishing {
+    runId?: string;
+}
 
 // How many of the plan's pages are in each publish status. A status outside the contract's enum counts
 // as pending (client rule: tolerate unknown enum values).
@@ -94,18 +94,22 @@ interface PlanHeadProps {
  * (`409 quality_gate_failed`), its button gives way to what can be done about it: "Check again", which
  * repeats it so the gates run again, and with warnings only (`failing_gates` empty) "Release anyway"
  * (or publish, request review), which repeats it with `acknowledgeable_checks` as `acknowledge_checks`
- * (contract, `TransitionRequest.acknowledge_checks`). A blocking check cannot be acknowledged, so then
- * only "Check again". A line above the head says which of the two it is; the failing checks themselves
- * are in the checklist above (`ReviewPanel`), so they are not listed again. This holds until another
- * transition is sent or the plan no longer offers that one.
+ * (contract, `TransitionRequest.acknowledge_checks`). For a release and a user who may publish
+ * (`canPublish`) that is "Publish anyway": the release with the warnings acknowledged, then at once the
+ * publish (`releaseAndPublish`). A blocking check cannot be acknowledged, so then
+ * only "Check again". Why it was refused, and the failing checks, are in the checklist above
+ * (`ReviewPanel`). This holds until another transition is sent or the plan no longer offers that one.
  *
  * The gated transitions
  * (release, publish, request review) only with `withGatedActions`, on the review page, so that a user
- * releases or publishes there, with the checks in view; publish only with `canPublish`. Every button
- * that can put pages online asks first in a dialog (`PublishDialog`), which then follows publishing to
- * its end: Publish, and after a refused publish "Publish anyway" and "Check again" (which repeats the
- * publish, as the gates only run with the transition). Discard asks first, saying what
- * happens to the pages by the modules' `plan_policy.on_discard` (`onDiscardOf`).
+ * releases or publishes there, with the checks in view; publish only with `canPublish`. Publish (and
+ * after a refused publish "Publish anyway" and "Check again", which repeats it, as the gates only run
+ * with the transition) covers the whole page while it is under way (`PublishingOverlay`); once the
+ * plan is `published` or `review_requested` the page that says so opens
+ * (`/sessions/$id/published?plan=`). A refusal by the gates shows in the checklist like any other; a
+ * publish run that fails or is stopped leaves the plan `released` (contract) and is an error
+ * notification. Discard asks first, saying what happens to the pages by the modules'
+ * `plan_policy.on_discard` (`onDiscardOf`).
  *
  * Outside the review page, while a run of the plan works (proposing, executing, publishing), Stop cancels
  * it (`POST …/runs/{run_id}/cancel`); the composer stops only the session agent's runs and side runs
@@ -122,21 +126,22 @@ interface PlanHeadProps {
  */
 export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions = false, canPublish = true, withGlance = false, children }: PlanHeadProps) {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const transitionPlan = useTransitionPlan(sessionId);
     const cancelRun = useCancelRun(sessionId);
-    const { pending, latest } = usePlanTransition(sessionId, plan.id);
+    const planTransition = usePlanTransition(sessionId, plan.id);
+    const { pending } = planTransition;
     const publications = useWorkspaceEventStore((state) => selectSession(sessionId)(state).publications?.[plan.id]);
     const hasRun = useWorkspaceEventStore((state) => Boolean(selectSession(sessionId)(state).run));
     // The plan's own run in progress, which Stop cancels.
     const planRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => live.planId === plan.id));
     const [isDiscardOpen, setIsDiscardOpen] = useState(false);
-    // The publish dialog, while it is open.
+    // The publishing under way, while the overlay shows it.
     const [publishing, setPublishing] = useState<Publishing>();
     const notices = useWorkspaceEventStore((state) => selectSession(sessionId)(state).notices);
     const onDiscard = onDiscardOf(plan, useWorkflows().data);
 
-    // `isCheck` for "Check again", which has the gates check the plan rather than release it at the user's word.
-    function transition(action: Action, { acknowledgeChecks, isCheck }: TransitionOptions = {}) {
+    function transition(action: Action, { acknowledgeChecks }: TransitionOptions = {}) {
         if (pending) {
             return;
         }
@@ -145,49 +150,62 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
 
         if (action !== 'publish') {
             // A refusal or any other failure is handled where every transition is (`useTransitionPlan`).
-            transitionPlan.mutate({ planId: plan.id, request, isCheck });
+            transitionPlan.mutate({ planId: plan.id, request });
 
             return;
         }
 
-        // Publish, confirmed in its dialog (`ask`): the dialog follows it. A refusal by the gates closes it
-        // and shows here like any other.
-        setPublishing({ phase: 'publishing' });
-        transitionPlan.mutate({ planId: plan.id, request, isCheck }, {
-            onSuccess: (result) => setPublishing({ phase: 'publishing', ...('run_id' in result && { runId: result.run_id }) }),
-            onError: (error) => setPublishing(gateRefusalOf(error) ? undefined : { phase: 'failed', failureKey: errorMessageKey(error) }),
+        publish(request);
+    }
+
+    // Publish: the overlay follows it until it ended (the effect below). Any failure of the request, a
+    // refusal by the gates included, is handled where every transition is (`useTransitionPlan`).
+    function publish(request: TransitionRequest) {
+        setPublishing({});
+        transitionPlan.mutate({ planId: plan.id, request }, {
+            onSuccess: (result) => setPublishing({ ...('run_id' in result && { runId: result.run_id }) }),
+            onError: () => setPublishing(undefined),
         });
     }
 
-    // `action` as its button sends it: a publish asks first in the dialog, which sends it once confirmed.
-    function ask(action: Action, options: TransitionOptions = {}) {
-        if (action === 'publish') {
-            setPublishing({ phase: 'confirm', options });
-        } else {
-            transition(action, options);
+    // "Publish anyway" after a release the gates refused with warnings only: the release with them
+    // acknowledged, then, once it went through, the publish (its own `before_publish` gates run then; a
+    // refusal of the publish shows as any other).
+    function releaseAndPublish(acknowledgeChecks: string[]) {
+        if (pending) {
+            return;
         }
+
+        transitionPlan.mutate({ planId: plan.id, request: { action: 'release', acknowledge_checks: acknowledgeChecks } }, {
+            onSuccess: () => publish({ action: 'publish' }),
+        });
     }
 
-    // Where the publishing the dialog follows stands: the plan's status says it went out (`published`,
-    // or `review_requested` once a page went to review); the run that carries it out ending as failed or
-    // cancelled says it did not (the plan stays `released`, contract).
-    function publishState(current: Publishing): { phase: PublishPhase; failureKey?: string } {
-        if (current.phase !== 'publishing') {
-            return current;
+    // Where the publishing stands: the plan's status says it went out (`published`, or `review_requested`
+    // once a page went to review), and the page that says so opens; the run that carries it out ending as
+    // failed or cancelled says it did not (the plan stays `released`, contract).
+    const publishRunId = publishing?.runId;
+    const publishEnd = publishRunId === undefined ? undefined : notices?.find(({ runId, kind }) => runId === publishRunId && (kind === 'failed' || kind === 'cancelled'));
+    const hasPublished = plan.status === 'published' || plan.status === 'review_requested';
+    const isPublishing = Boolean(publishing) && !hasPublished && !publishEnd;
+    // The publishing whose end was acted on, so that it is acted on once.
+    const endedPublishing = useRef<Publishing>(undefined);
+
+    useEffect(() => {
+        if (!publishing || endedPublishing.current === publishing || !(hasPublished || publishEnd)) {
+            return;
         }
 
-        if (plan.status === 'published' || plan.status === 'review_requested') {
-            return { phase: plan.status === 'published' ? 'published' : 'done' };
+        endedPublishing.current = publishing;
+
+        if (hasPublished) {
+            void navigate({ to: '/sessions/$id/published', params: { id: sessionId }, search: { plan: plan.id } });
+        } else if (publishEnd) {
+            useErrorNotificationStore.getState().addError(publishEnd.kind === 'failed'
+                ? { messageKey: 'planBar.publishing.failed', detailKey: problemMessageKey(publishEnd.error) }
+                : { messageKey: 'planBar.publishing.cancelled' });
         }
-
-        const ended = current.runId === undefined ? undefined : notices?.find(({ runId, kind }) => runId === current.runId && (kind === 'failed' || kind === 'cancelled'));
-
-        if (ended?.kind === 'failed') {
-            return { phase: 'failed', failureKey: problemMessageKey(ended.error) };
-        }
-
-        return ended ? { phase: 'failed', failureKey: 'planBar.publishDialog.cancelled' } : current;
-    }
+    }, [publishing, hasPublished, publishEnd, navigate, sessionId, plan.id]);
 
     const counts = countByStatus(publications ?? []);
     const summary = PUBLICATION_STATUSES
@@ -201,13 +219,9 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     const actions = planActions(plan.status, withGatedActions).filter((action) => canPublish || action !== 'publish');
     // A revision is drafted with the items of the version it revises (rc.5); a first draft has none.
     const statusKey = plan.status === 'drafting' && !isFirstDraft(plan) ? 'revising' : plan.status;
-    const publish = publishing && publishState(publishing);
-    const refusedAction = latest?.input.request.action;
-    const refusal = withGatedActions && latest?.status === 'error' && refusedAction && actions.includes(refusedAction)
-        ? gateRefusalOf(latest.error)
-        : undefined;
-    const acknowledgeable = refusal?.acknowledgeable_checks ?? [];
-    const canAcknowledge = Boolean(refusal) && (refusal?.failing_gates ?? []).length === 0 && acknowledgeable.length > 0;
+    const refusal = withGatedActions ? latestGateRefusal(planTransition, actions) : undefined;
+    const acknowledgeable = refusal?.problem.acknowledgeable_checks ?? [];
+    const canAcknowledge = refusal ? canAcknowledgeRefusal(refusal.problem) : false;
     // Only while the plan is under way, and for more than one item; once done, the status and the pages
     // to publish say enough.
     const glanceEntries = withGlance && isUnderWay ? planGlance(plan.items ?? []) : [];
@@ -235,16 +249,26 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     function actionButtons(action: Action) {
         const ActionIcon = ACTION_ICONS[action];
 
-        if (refusal && action === refusedAction) {
+        if (action === refusal?.action) {
+            // A release refused for warnings goes on to publish at once, for a user who may publish.
+            const isPublishAnyway = action === 'release' && canPublish;
+            const AnywayIcon = isPublishAnyway ? GlobeIcon : ActionIcon;
+
             return [
-                <Button key={`${action}-retry`} variant={canAcknowledge ? 'secondary' : 'primary'} size="sm" disabled={Boolean(pending)} onClick={() => ask(action, { isCheck: true })}>
+                <Button key={`${action}-retry`} variant={canAcknowledge ? 'secondary' : 'primary'} size="sm" disabled={Boolean(pending)} onClick={() => transition(action)}>
                     <RefreshCwIcon size={14} />
                     {t('planBar.gate.retry')}
                 </Button>,
                 canAcknowledge && (
-                    <Button key={`${action}-anyway`} variant="primary" size="sm" disabled={Boolean(pending)} onClick={() => ask(action, { acknowledgeChecks: acknowledgeable })}>
-                        <ActionIcon size={14} />
-                        {t(`planBar.gate.anyway.${action}`)}
+                    <Button
+                        key={`${action}-anyway`}
+                        variant="primary"
+                        size="sm"
+                        disabled={Boolean(pending)}
+                        onClick={() => (isPublishAnyway ? releaseAndPublish(acknowledgeable) : transition(action, { acknowledgeChecks: acknowledgeable }))}
+                    >
+                        <AnywayIcon size={14} />
+                        {t(`planBar.gate.anyway.${isPublishAnyway ? 'publish' : action}`)}
                     </Button>
                 ),
             ];
@@ -260,7 +284,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                     if (action === 'discard') {
                         setIsDiscardOpen(true);
                     } else {
-                        ask(action);
+                        transition(action);
                     }
                 }}
             >
@@ -270,70 +294,50 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
         ];
     }
 
-    const RefusalIcon = canAcknowledge ? TriangleAlertIcon : CircleAlertIcon;
-
     return (
-        <>
-            {refusal && (
-                <p className={styles.refusal} data-kind={canAcknowledge ? 'warning' : 'blocking'} role="status">
-                    <RefusalIcon size={14} aria-hidden className={styles.refusalIcon} />
-                    {t(canAcknowledge ? 'planBar.gate.acknowledgeHint' : 'planBar.gate.blockingHint')}
-                </p>
-            )}
-            <div className={[styles.head, isInCard && styles.inCard, tone].filter(Boolean).join(' ')}>
-                <Icon size={16} className={styles.icon} aria-hidden />
-                <span className={styles.text}>
-                    <span className={styles.status}>{t(`parts.plan.status.${statusKey}`)}</span>
-                    {summary && ` · ${summary}`}
-                    {glance && <span className={styles.glance}>{` · ${glance}`}</span>}
-                </span>
-                <span className={styles.actions}>
-                    {planRun && !withGatedActions && (
-                        <Button variant="secondary" size="sm" disabled={planRun.status === 'cancelling' || cancelRun.isPending} onClick={stop}>
-                            <SquareIcon size={14} />
-                            {t('chat.stop')}
-                        </Button>
-                    )}
-                    {actions.flatMap(actionButtons)}
-                    {children}
-                </span>
-                {publish && (
-                    <PublishDialog
-                        phase={publish.phase}
-                        pageCount={(counts.pending ?? 0) + (counts.failed ?? 0)}
-                        summary={summary}
-                        failureKey={publish.failureKey}
-                        failedPages={(publications ?? []).filter(({ status }) => status === 'failed')}
-                        onConfirm={() => transition('publish', publishing?.phase === 'confirm' ? publishing.options : {})}
-                        onClose={() => setPublishing(undefined)}
-                    />
+        <div className={[styles.head, isInCard && styles.inCard, tone].filter(Boolean).join(' ')}>
+            <Icon size={16} className={styles.icon} aria-hidden />
+            <span className={styles.text}>
+                <span className={styles.status}>{t(`parts.plan.status.${statusKey}`)}</span>
+                {summary && ` · ${summary}`}
+                {glance && <span className={styles.glance}>{` · ${glance}`}</span>}
+            </span>
+            <span className={styles.actions}>
+                {planRun && !withGatedActions && (
+                    <Button variant="secondary" size="sm" disabled={planRun.status === 'cancelling' || cancelRun.isPending} onClick={stop}>
+                        <SquareIcon size={14} />
+                        {t('chat.stop')}
+                    </Button>
                 )}
-                <Dialog open={isDiscardOpen} onOpenChange={setIsDiscardOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{t('planBar.discard.title')}</DialogTitle>
-                        </DialogHeader>
-                        <DialogBody>
-                            <DialogDescription>{t(`planBar.discard.${onDiscard}`)}</DialogDescription>
-                        </DialogBody>
-                        <DialogFooter>
-                            <Button variant="secondary" size="sm" onClick={() => setIsDiscardOpen(false)}>{t('planBar.discard.cancel')}</Button>
-                            <Button
-                                variant="danger"
-                                size="sm"
-                                disabled={Boolean(pending)}
-                                onClick={() => {
-                                    setIsDiscardOpen(false);
-                                    transition('discard');
-                                }}
-                            >
-                                <XIcon size={14} />
-                                {t('planBar.actions.discard')}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
-        </>
+                {actions.flatMap(actionButtons)}
+                {children}
+            </span>
+            {isPublishing && <PublishingOverlay pageCount={(counts.pending ?? 0) + (counts.failed ?? 0)} />}
+            <Dialog open={isDiscardOpen} onOpenChange={setIsDiscardOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('planBar.discard.title')}</DialogTitle>
+                    </DialogHeader>
+                    <DialogBody>
+                        <DialogDescription>{t(`planBar.discard.${onDiscard}`)}</DialogDescription>
+                    </DialogBody>
+                    <DialogFooter>
+                        <Button variant="secondary" size="sm" onClick={() => setIsDiscardOpen(false)}>{t('planBar.discard.cancel')}</Button>
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            disabled={Boolean(pending)}
+                            onClick={() => {
+                                setIsDiscardOpen(false);
+                                transition('discard');
+                            }}
+                        >
+                            <XIcon size={14} />
+                            {t('planBar.actions.discard')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }

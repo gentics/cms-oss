@@ -287,8 +287,6 @@
             "failed_other": "{{count}} fehlgeschlagen"
         },
         "gate": {
-            "blockingHint": "Beheben Sie zuerst die blockierenden Prüfungen oder lassen Sie den Agenten das tun. Prüfen Sie dann erneut.",
-            "acknowledgeHint": "Einige Prüfungen haben Warnungen. Bestätigen Sie sie, um fortzufahren.",
             "retry": "Erneut prüfen",
             "anyway": {
                 "release": "Trotzdem freigeben",
@@ -304,19 +302,18 @@
             "restore": "Der Plan wird geschlossen und die Seiten, die er geändert hat, gehen auf ihre Version von vorher zurück.",
             "cancel": "Abbrechen"
         },
-        "publishDialog": {
-            "title": "Diesen Plan veröffentlichen?",
-            "text_one": "{{count}} Seite geht online.",
-            "text_other": "{{count}} Seiten gehen online.",
-            "textPages": "Die Seiten des Plans gehen online.",
-            "cancel": "Abbrechen",
-            "confirm": "Veröffentlichen",
-            "publishing": "Wird veröffentlicht …",
-            "published": "Veröffentlicht",
-            "done": "Erledigt",
+        "switcher": {
+            "label": "Offene Pläne",
+            "count_one": "{{count}} offener Plan",
+            "count_other": "{{count}} offene Pläne",
+            "untitled": "Plan ohne Titel"
+        },
+        "publishing": {
+            "title": "Wird veröffentlicht…",
+            "pages_one": "{{count}} Seite geht online.",
+            "pages_other": "{{count}} Seiten gehen online.",
             "failed": "Veröffentlichen fehlgeschlagen",
-            "cancelled": "Das Veröffentlichen wurde abgebrochen.",
-            "close": "Schließen"
+            "cancelled": "Das Veröffentlichen wurde gestoppt."
         }
     },
     "handOff": {
@@ -368,11 +365,18 @@
             }
         },
         "construct": {
+            "title": "Neuer Tag-Typ",
+            "created": "Erstellt",
+            "drafted": "Noch nicht erstellt",
+            "findings_one": "{{count}} Hinweis",
+            "findings_other": "{{count}} Hinweise",
+            "details": "Details",
             "parts": "Teile",
             "mandatory": "Pflicht",
             "template": "Template",
             "validation": "Prüfung",
             "valid": "Das Template ist gültig",
+            "invalid": "Das Template ist nicht gültig",
             "line": "Zeile {{line}}",
             "severity": {
                 "error": "Fehler",
@@ -382,6 +386,9 @@
         },
         "apiCalls": {
             "title": "CMS-Aufrufe",
+            "toggle_one": "{{count}} CMS-Aufruf",
+            "toggle_other": "{{count}} CMS-Aufrufe",
+            "failed": "· {{count}} fehlgeschlagen",
             "call": "Aufruf",
             "status": "Status",
             "summary": "Was er tat"
@@ -465,6 +472,21 @@
         "archiveFailed": "Die Sitzung konnte nicht gelöscht werden",
         "restoreFailed": "Die Sitzung konnte nicht wiederhergestellt werden"
     },
+    "published": {
+        "one": "Veröffentlicht",
+        "many_one": "{{count}} Seite veröffentlicht",
+        "many_other": "{{count}} Seiten veröffentlicht",
+        "inReview": "Zur Prüfung gesendet",
+        "manyInReview_one": "{{count}} Seite zur Prüfung gesendet",
+        "manyInReview_other": "{{count}} Seiten zur Prüfung gesendet",
+        "openPage": "Seite öffnen",
+        "openSession": "Diese Sitzung öffnen",
+        "newSession": "Neue Sitzung starten",
+        "placeholder": "Was kommt als Nächstes?",
+        "continue": "Sitzung fortsetzen",
+        "notPublished": "Dieser Plan wurde nicht veröffentlicht.",
+        "toReview": "Zur Prüfung"
+    },
     "review": {
         "title": "Prüfung",
         "pageTitle": "Prüfen & freigeben",
@@ -475,9 +497,37 @@
         "noPreview": "Noch keine Vorschau.",
         "checklist": "Checkliste",
         "noChecks": "Noch keine Prüfungen.",
-        "checking": "Checkliste wird geprüft…",
+        "checking": "Die Qualitätsprüfungen laufen…",
         "blocking": "blockierend",
         "acknowledged": "bestätigt",
+        "passedChecks_one": "{{count}} Prüfung bestanden",
+        "passedChecks_other": "{{count}} Prüfungen bestanden",
+        "acceptAndReview": "Annehmen & prüfen",
+        "carryingOut": "Der Agent setzt die Änderungen um…",
+        "question": "Der Agent hat eine Frage zu den Änderungen.",
+        "answerInChat": "Im Chat antworten",
+        "acceptFailed": "Die Änderungen konnten nicht umgesetzt werden",
+        "outcome": {
+            "passed": "Alle Prüfungen bestanden. Der Plan ist freigegeben.",
+            "withWarnings_one": "Freigegeben mit {{count}} Warnung.",
+            "withWarnings_other": "Freigegeben mit {{count}} Warnungen.",
+            "warning": {
+                "release_one": "Nicht freigegeben: {{count}} Prüfung hat eine Warnung.",
+                "release_other": "Nicht freigegeben: {{count}} Prüfungen haben Warnungen.",
+                "publish_one": "Nicht veröffentlicht: {{count}} Prüfung hat eine Warnung.",
+                "publish_other": "Nicht veröffentlicht: {{count}} Prüfungen haben Warnungen.",
+                "request_review_one": "Keine Prüfung angefordert: {{count}} Prüfung hat eine Warnung.",
+                "request_review_other": "Keine Prüfung angefordert: {{count}} Prüfungen haben Warnungen."
+            },
+            "blocking": {
+                "release_one": "Nicht freigegeben: {{count}} blockierende Prüfung muss behoben werden.",
+                "release_other": "Nicht freigegeben: {{count}} blockierende Prüfungen müssen behoben werden.",
+                "publish_one": "Nicht veröffentlicht: {{count}} blockierende Prüfung muss behoben werden.",
+                "publish_other": "Nicht veröffentlicht: {{count}} blockierende Prüfungen müssen behoben werden.",
+                "request_review_one": "Keine Prüfung angefordert: {{count}} blockierende Prüfung muss behoben werden.",
+                "request_review_other": "Keine Prüfung angefordert: {{count}} blockierende Prüfungen müssen behoben werden."
+            }
+        },
         "approvalChain": "Freigabe",
         "publications": "Seiten",
         "closed": "Dieser Plan ist abgeschlossen und kann nicht mehr geändert werden.",

@@ -56,6 +56,8 @@
   --corner-xl: 12px;
   --corner-2xl: 14px;
   --corner-3xl: 16px;
+  /* §12 "Erfolg nach dem Veröffentlichen": the success mark. */
+  --corner-mark: 24px;
   --corner-full: 999px;
 
   /* Shadows (§6.3) */
@@ -77,6 +79,9 @@
   /* §8 "Lädt": one sweep of the skeleton shimmer. */
   --duration-skeleton: 1.1s;
   --press-scale: 0.97;
+  /* §10 "Erfolg": the success mark scales from .6 to 1, the one springing movement. */
+  --easing-success: cubic-bezier(0.2, 1.4, 0.4, 1);
+  --duration-success: 500ms;
 
   /* Chat (§11, §12 "Chat-Blasen"): what stands in the agent's column is indented by its avatar
      (26 px) plus the gap after it (9 px). */

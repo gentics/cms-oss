@@ -1,6 +1,8 @@
-import { CircleAlertIcon, CircleCheckIcon, InfoIcon, PuzzleIcon, TriangleAlertIcon } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon, CircleAlertIcon, CircleCheckIcon, CircleDashedIcon, InfoIcon, PuzzleIcon, TriangleAlertIcon } from 'lucide-react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/ui/button';
 import type { ConstructDraftPart } from '@/services/apiService/genaix/types';
 
 import { PartCard } from './PartCard';
@@ -19,49 +21,63 @@ function localised(names: Record<string, string> | undefined, language: string):
     return names[language] ?? names.en ?? Object.values(names)[0];
 }
 
-/** `construct_draft`: the construct GenAIx drafted, its editable parts, the Handlebars template and its validation. */
+/**
+ * `construct_draft`: a new construct (tag type), in one line: its name and whether it was created in
+ * the CMS (`created_ref`, set once `create_construct` ran; before, the draft waits for the user's
+ * confirmation, contract §14 S3), with the number of the validation's findings when there are some.
+ * "Details" opens the rest: keyword and validity, the editable parts, the findings, and the Handlebars
+ * template, folded once more until opened.
+ */
 export function ConstructDraftPartView({ part }: PartViewProps<ConstructDraftPart>) {
     const { t, i18n } = useTranslation();
     const language = i18n.language.split('-')[0] ?? 'en';
     const issues = part.validation?.issues ?? [];
+    const parts = part.parts ?? [];
+    const [isOpen, setIsOpen] = useState(false);
+    const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+    const detailsId = useId();
+    const templateId = useId();
+    const isValid = part.validation?.ok;
+    const isCreated = part.created_ref !== undefined;
+    const name = localised(part.name, language) || part.keyword;
 
     return (
-        <PartCard icon={PuzzleIcon} title={localised(part.name, language) || part.keyword}>
-            <div className={styles.section}>
-                <span className={`${styles.mono} ${styles.meta}`}>{part.keyword}</span>
+        <PartCard icon={PuzzleIcon} title={t('parts.construct.title')}>
+            <div className={styles.constructLine}>
+                <span className={styles.constructName}>{name}</span>
+                <span className={isCreated ? styles.ok : styles.meta}>
+                    {isCreated ? <CircleCheckIcon size={12} aria-hidden /> : <CircleDashedIcon size={12} aria-hidden />}
+                    {t(isCreated ? 'parts.construct.created' : 'parts.construct.drafted')}
+                </span>
+                {issues.length > 0 && <span className={styles.meta}>{t('parts.construct.findings', { count: issues.length })}</span>}
+                <Button variant="ghost" size="sm" aria-expanded={isOpen} aria-controls={detailsId} onClick={() => setIsOpen((open) => !open)}>
+                    {t('parts.construct.details')}
+                    {isOpen ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
+                </Button>
             </div>
-            {(part.parts ?? []).length > 0 && (
-                <div className={styles.section}>
-                    <h4 className={styles.sectionTitle}>{t('parts.construct.parts')}</h4>
-                    <ul className={styles.blocks}>
-                        {part.parts.map((item) => (
-                            <li key={item.keyword} className={styles.block}>
-                                <span className={styles.blockText}>
-                                    <span>{localised(item.name, language) || item.keyword}</span>
-                                    <span className={`${styles.mono} ${styles.meta}`}>{item.keyword}</span>
-                                </span>
-                                {item.mandatory && <span className={styles.badge}>{t('parts.construct.mandatory')}</span>}
+            <div id={detailsId} className={styles.constructDetails} hidden={!isOpen}>
+                <p className={styles.constructSummary}>
+                    <span className={styles.mono}>{part.keyword}</span>
+                    {part.validation && (
+                        <span className={isValid ? styles.ok : styles.bad}>
+                            {isValid ? <CircleCheckIcon size={12} aria-hidden /> : <CircleAlertIcon size={12} aria-hidden />}
+                            {t(isValid ? 'parts.construct.valid' : 'parts.construct.invalid')}
+                        </span>
+                    )}
+                </p>
+                {parts.length > 0 && (
+                    <ul className={styles.constructParts} aria-label={t('parts.construct.parts')}>
+                        {parts.map((item) => (
+                            <li key={item.keyword} className={styles.constructPart}>
+                                <span>{localised(item.name, language) || item.keyword}</span>
+                                <span className={`${styles.mono} ${styles.meta}`}>{item.keyword}</span>
+                                {item.mandatory && <span className={styles.meta}>{t('parts.construct.mandatory')}</span>}
                             </li>
                         ))}
                     </ul>
-                </div>
-            )}
-            {part.template && (
-                <div className={styles.section}>
-                    <h4 className={styles.sectionTitle}>{t('parts.construct.template')}</h4>
-                    <pre className={styles.code}><code>{part.template}</code></pre>
-                </div>
-            )}
-            {part.validation && (
-                <div className={styles.section}>
-                    <h4 className={styles.sectionTitle}>{t('parts.construct.validation')}</h4>
-                    <ul className={styles.issues}>
-                        {part.validation.ok && (
-                            <li className={styles.issue}>
-                                <CircleCheckIcon size={14} className={styles.ok} aria-hidden />
-                                <span>{t('parts.construct.valid')}</span>
-                            </li>
-                        )}
+                )}
+                {issues.length > 0 && (
+                    <ul className={styles.issues} aria-label={t('parts.construct.validation')}>
                         {issues.map((issue, index) => {
                             const Icon = SEVERITY_ICONS[issue.severity];
 
@@ -76,8 +92,17 @@ export function ConstructDraftPartView({ part }: PartViewProps<ConstructDraftPar
                             );
                         })}
                     </ul>
-                </div>
-            )}
+                )}
+                {part.template && (
+                    <div className={styles.constructTemplate}>
+                        <Button variant="ghost" size="sm" aria-expanded={isTemplateOpen} aria-controls={templateId} onClick={() => setIsTemplateOpen((open) => !open)}>
+                            {t('parts.construct.template')}
+                            {isTemplateOpen ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
+                        </Button>
+                        <pre id={templateId} className={styles.code} hidden={!isTemplateOpen}><code>{part.template}</code></pre>
+                    </div>
+                )}
+            </div>
         </PartCard>
     );
 }

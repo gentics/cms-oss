@@ -394,7 +394,7 @@
   right: 4px;
 }
 
-/* `table`, `api_call_log` (draft `.tbl`; design.md §12 "Tabelle"). */
+/* `table`, `api_call_log` (draft `.tbl`; design.md §12 "Tabelle"); `.tableScroll` only for `table`. */
 .tableScroll {
   overflow-x: auto;
   margin: -6px -6px;
@@ -534,18 +534,87 @@
   font-size: var(--font-size-xs);
 }
 
-/* `construct_draft`. */
-.section + .section {
-  margin-top: 10px;
+/* `construct_draft`: one line, the new tag type's name, whether it was created and "Details"; opened,
+   a summary line (keyword, validity), the parts one line each, the findings, and the template folded
+   away once more. Both toggles are ghost buttons. */
+.constructLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: var(--font-size-xs);
+
+  & > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
 }
 
-.sectionTitle {
-  margin: 0 0 4px;
-  color: var(--fg-muted);
-  font-size: var(--font-size-overline);
+.constructName {
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
   font-weight: 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+}
+
+.constructDetails {
+  margin-top: 10px;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.constructSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0 0 8px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+
+  & > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.constructParts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+}
+
+.constructPart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+}
+
+.issues + .constructTemplate {
+  margin-top: 8px;
+}
+
+.constructTemplate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+
+  & > .code {
+    align-self: stretch;
+  }
+
+  & > .code[hidden] {
+    display: none;
+  }
 }
 
 .code {
@@ -634,6 +703,18 @@
 
 .snippet {
   margin: 0;
+}
+
+/* `api_call_log`: the table of calls, opened under its toggle like the sources. */
+.apiCalls {
+  overflow-x: auto;
+  margin: 4px 0 0;
+  padding: 0 0 0 10px;
+  border-left: 2px solid var(--border-subtle);
+
+  &[hidden] {
+    display: none;
+  }
 }
 
 .snippet mark {

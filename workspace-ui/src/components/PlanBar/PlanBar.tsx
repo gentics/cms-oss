@@ -3,6 +3,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlanCard } from '@/components/PlanCard/PlanCard';
+import { PlanSwitcher } from '@/components/PlanSwitcher/PlanSwitcher';
 import { Button } from '@/components/ui/button';
 import { isAcceptedOnCard } from '@/helper/planActions/planActions';
 import { useWorkflows } from '@/hooks/useGenaixQueries';
@@ -19,6 +20,10 @@ interface PlanBarProps {
     sessionId: string;
     /** The session's open plan (`useOpenPlan`). */
     plan: Plan;
+    /** Every open plan of the session (`useOpenPlans`); with more than one, the bar offers to show another (`PlanSwitcher`). */
+    openPlans?: Plan[];
+    /** Shows the plan picked from `openPlans` in the bar. */
+    onPickPlan?: (planId: string) => void;
     /** The bar's height whenever it changes, for the chat to keep the room free above the composer. */
     onHeightChange?: (height: number) => void;
 }
@@ -40,12 +45,15 @@ interface PlanBarProps {
  * to expand: Stop while it works, and "Review & release" once it is done. One with nothing left to do
  * is not shown at all (`none`, `SessionPage`).
  *
+ * While more than one plan of the session is open (rc.5), "2 open plans" next to the head offers the
+ * others (`PlanSwitcher`); picking one shows it here. With one open plan the bar is as it always was.
+ *
  * Once the plan is done and has written a page, "Review & release" next to the toggle opens the
  * review page (`ReviewButton` decides), where the plan's preview, checks and pages are shown together, and releases a done
  * plan on the way (`ReviewButton`); publish and request review are made there, not here (`PlanHead`
  * without `withGatedActions`).
  */
-export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
+export function PlanBar({ sessionId, plan, openPlans = [], onPickPlan, onHeightChange }: PlanBarProps) {
     const { t } = useTranslation();
     const panelId = useId();
     const wrapRef = useRef<HTMLDivElement>(null);
@@ -92,6 +100,7 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
                     </div>
                 )}
                 <PlanHead sessionId={sessionId} plan={plan} withGlance={!isExpanded && !isHeadOnly}>
+                    {onPickPlan && <PlanSwitcher plans={openPlans} currentId={plan.id} onPick={onPickPlan} />}
                     <ReviewButton sessionId={sessionId} plan={plan} />
                     {!isHeadOnly && (
                         <Button

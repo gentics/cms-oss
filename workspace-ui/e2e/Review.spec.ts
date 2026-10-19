@@ -17,7 +17,7 @@ function planState(status: string) {
         state: status === 'published' ? 'done' : status === 'released' ? 'awaiting_approval' : 'done',
         plan: { id: PLAN, workflows: [{ id: 'content_create', version: '1.0.0' }], status, version: 2, summary: 'New terms page in Richtlinien.', items: [] },
         steps: [],
-        checks: [{ id: 'chk-1', label: 'Formal address', severity: 'pass', blocking: false, message: 'Fine.', source: { type: 'guideline', label: 'Tone & Address' } }],
+        checks: [{ id: 'chk-1', label: 'Formal address', severity: 'pass', blocking: false, message: 'Fine.', source: { type: 'guideline', label: 'Tone & Address' }, gate_id: 'guideline_compliance', kind: 'subagent' }],
         gates: [],
         approval_chain: [{ id: 'ap-1', label: 'Author releases the draft', actor: { type: 'user' }, status: status === 'done' ? 'pending' : 'done' }],
         cms_objects: [],
@@ -74,6 +74,8 @@ async function stubReview(page: Page) {
         return route.fulfill({ status: 200, contentType: 'text/event-stream', body: frames.slice(after).join('') });
     });
     await page.route((url) => url.pathname === '/rest/proxy/genaix/workflows', (route) => route.fulfill({ json: { items: [] } }));
+    // The sessions to continue, on the page after publishing.
+    await page.route((url) => url.pathname === '/rest/proxy/genaix/sessions', (route) => route.fulfill({ json: { items: [], next_cursor: null } }));
     await page.route((url) => url.pathname === '/alohapage', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Neue Nutzungsbedingungen ab Q3</p>' }));
 
     return actions;
@@ -82,7 +84,7 @@ async function stubReview(page: Page) {
 test.describe('Review & release', () => {
     test.use({ viewport: { width: 1280, height: 800 } });
 
-    test('releases the plan, then publishes it, and shows the page as published', async ({ page }) => {
+    test('releases the plan, then publishes it, and opens the page that says it went out', async ({ page }) => {
         const actions = await stubReview(page);
 
         await page.goto(`#/sessions/${SESSION}/review`);
@@ -91,20 +93,18 @@ test.describe('Review & release', () => {
 
         await expect(page.getByRole('heading', { level: 1, name: 'Review & release' })).toBeVisible();
         await expect(page.frameLocator('iframe[title="Preview of the page in the CMS"]').getByText('Neue Nutzungsbedingungen ab Q3')).toBeVisible();
-        await expect(panel.getByRole('region', { name: 'Checklist' })).toContainText('Formal address');
+        // A check that passed is folded into one line.
+        await expect(panel.getByRole('region', { name: 'Checklist' })).toContainText('1 check passed');
 
         await panel.getByRole('button', { name: 'Release' }).click();
         await expect(panel.getByRole('button', { name: 'Publish' })).toBeVisible();
 
+        // Publish goes at once, without a dialog; once the plan is published its page opens.
         await panel.getByRole('button', { name: 'Publish' }).click();
-        // The final approval: confirmed in its dialog, which then says what went out.
-        const dialog = page.getByRole('dialog', { name: 'Publish this plan?' });
-
-        await dialog.getByRole('button', { name: 'Publish' }).click();
-        await expect(page.getByRole('dialog')).toContainText('Published');
-        await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
-        await expect(panel.getByRole('region', { name: 'Pages' })).toContainText('Published');
-        await expect(panel.getByRole('button', { name: 'Reopen' })).toBeVisible();
+        await expect(page).toHaveURL(new RegExp(`#/sessions/${SESSION}/published\\?plan=${PLAN}$`));
+        await expect(page.getByRole('heading', { level: 1, name: 'Published' })).toBeVisible();
+        await expect(page.getByText('Neue Nutzungsbedingungen', { exact: true })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Open this session' })).toBeVisible();
 
         expect(actions).toEqual(['release', 'publish']);
     });

@@ -13,14 +13,21 @@ import styles from './RecentSessions.module.css';
 /** How many sessions the folded-out line shows before "Show all sessions". */
 const RECENT_SESSION_COUNT = 3;
 
+interface RecentSessionsProps {
+    /** The line's text instead of "Recent sessions", e.g. "Continue a session" after publishing. */
+    title?: string;
+    /** Whether the newest sessions are folded out from the start. */
+    defaultOpen?: boolean;
+}
+
 /**
  * "Recent sessions" on the dashboard: one line that folds out the newest sessions; "Show all
  * sessions" opens the "All sessions" drawer (final_draft.html `#dashHist`).
  */
-export function RecentSessions() {
+export function RecentSessions({ title, defaultOpen = false }: RecentSessionsProps) {
     const { t } = useTranslation();
     const listId = useId();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(defaultOpen);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const sessions = useSessions();
     const hiddenIds = useSessionArchiveStore((state) => state.hiddenIds);
@@ -31,7 +38,7 @@ export function RecentSessions() {
         <div className={styles.recent}>
             <Button variant="ghost" aria-expanded={isOpen} aria-controls={listId} onClick={() => setIsOpen((open) => !open)}>
                 <RotateCcwClockIcon size={16} aria-hidden="true" />
-                {t('sessions.recent')}
+                {title ?? t('sessions.recent')}
                 <span className={styles.chevron} data-open={isOpen || undefined}>
                     <ChevronDownIcon size={16} aria-hidden="true" />
                 </span>

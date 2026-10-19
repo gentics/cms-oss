@@ -21,7 +21,7 @@ const state: PlanState = {
     state: 'done',
     plan: { id: 'pl-2', workflows: [{ id: 'content_create', version: '1.0.0' }], status: 'done', version: 3, summary: 'New terms page in Richtlinien.', items: [] },
     steps: [],
-    checks: [{ id: 'chk-1', label: 'Formal address', severity: 'pass', blocking: false, message: 'Fine.', source: { type: 'guideline', label: 'Tone & Address' } }],
+    checks: [{ id: 'chk-1', label: 'Formal address', severity: 'pass', blocking: false, message: 'Fine.', source: { type: 'guideline', label: 'Tone & Address' }, gate_id: 'guideline_compliance', kind: 'subagent' }],
     gates: [],
     approval_chain: [],
     cms_objects: [],
@@ -112,7 +112,8 @@ describe('ReviewPage', () => {
 
         const panel = await screen.findByRole('region', { name: 'Review' });
 
-        expect(within(panel).getByRole('region', { name: 'Checklist' })).toHaveTextContent('Formal addressPassed');
+        // A check that passed is folded into one line.
+        expect(within(panel).getByRole('region', { name: 'Checklist' })).toHaveTextContent('1 check passed');
         expect(within(panel).getByText('New terms page in Richtlinien.')).toBeInTheDocument();
         expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', expect.stringContaining('/alohapage?realid=9142'));
         // The newest plan, not the earlier one.
@@ -189,7 +190,7 @@ describe('ReviewPage', () => {
         }
 
         function check(id: string, label: string, severity: Check['severity'], pageId?: number): Check {
-            return { id, label, severity, blocking: false, message: `${label}.`, source: { type: 'gate', label: 'Gates' }, ...(pageId && { target: { type: 'page', id: String(pageId) } }) };
+            return { id, label, severity, blocking: false, message: `${label}.`, source: { type: 'gate', label: 'Gates' }, gate_id: id, kind: 'script', ...(pageId && { target: { type: 'page', id: String(pageId) } }) };
         }
 
         const shipping = page(8644, 'Versand und Lieferung');
@@ -204,7 +205,7 @@ describe('ReviewPage', () => {
                 previews: [shipping.preview, service.preview],
                 preview: service.preview,
                 checks: [
-                    check('chk-plan', 'Formal address', 'pass'),
+                    check('chk-plan', 'Formal address', 'info'),
                     check('chk-8644', 'Alt text missing', 'warn', 8644),
                     check('chk-9011', 'Changed meanwhile', 'fail', 9011),
                 ],

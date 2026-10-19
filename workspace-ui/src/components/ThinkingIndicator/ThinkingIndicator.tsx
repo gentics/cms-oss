@@ -4,11 +4,12 @@ import styles from './ThinkingIndicator.module.css';
 
 /**
  * The three dots of "Denkt" (design.md §8), decorative. `inheritsColor` paints them in the text colour,
- * for a surface in `--interactive-fill` such as a primary button.
+ * for a surface in `--interactive-fill` such as a primary button; `isLarge` makes them the one thing to
+ * see on a surface that waits, such as the review panel's checklist while the quality gates run.
  */
-export function ThinkingDots({ inheritsColor = false }: { inheritsColor?: boolean }) {
+export function ThinkingDots({ inheritsColor = false, isLarge = false }: { inheritsColor?: boolean; isLarge?: boolean }) {
     return (
-        <span className={inheritsColor ? `${styles.dots} ${styles.inherit}` : styles.dots} aria-hidden>
+        <span className={[styles.dots, inheritsColor && styles.inherit, isLarge && styles.large].filter(Boolean).join(' ')} aria-hidden>
             <i />
             <i />
             <i />

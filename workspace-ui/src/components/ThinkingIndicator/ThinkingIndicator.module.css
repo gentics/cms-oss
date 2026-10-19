@@ -27,6 +27,16 @@
   background: currentColor;
 }
 
+/* Large: the one thing to see while a surface waits (the review panel while the gates run). */
+.large {
+  gap: 6px;
+}
+
+.large > i {
+  width: 10px;
+  height: 10px;
+}
+
 .dots > i:nth-child(2) {
   animation-delay: calc(var(--duration-attention) * 0.14);
 }

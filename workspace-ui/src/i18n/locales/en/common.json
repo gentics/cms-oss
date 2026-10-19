@@ -287,8 +287,6 @@
             "failed_other": "{{count}} failed"
         },
         "gate": {
-            "blockingHint": "Fix the blocking checks first, or ask the agent to. Then check again.",
-            "acknowledgeHint": "Some checks have warnings. Confirm them to go on.",
             "retry": "Check again",
             "anyway": {
                 "release": "Release anyway",
@@ -304,19 +302,18 @@
             "restore": "The plan is closed and the pages it changed go back to their version from before it.",
             "cancel": "Cancel"
         },
-        "publishDialog": {
-            "title": "Publish this plan?",
-            "text_one": "{{count}} page goes online.",
-            "text_other": "{{count}} pages go online.",
-            "textPages": "The plan's pages go online.",
-            "cancel": "Cancel",
-            "confirm": "Publish",
-            "publishing": "Publishing…",
-            "published": "Published",
-            "done": "Done",
+        "switcher": {
+            "label": "Open plans",
+            "count_one": "{{count}} open plan",
+            "count_other": "{{count}} open plans",
+            "untitled": "Untitled plan"
+        },
+        "publishing": {
+            "title": "Publishing…",
+            "pages_one": "{{count}} page goes online.",
+            "pages_other": "{{count}} pages go online.",
             "failed": "Publishing failed",
-            "cancelled": "Publishing was stopped.",
-            "close": "Close"
+            "cancelled": "Publishing was stopped."
         }
     },
     "handOff": {
@@ -368,11 +365,18 @@
             }
         },
         "construct": {
+            "title": "New tag type",
+            "created": "Created",
+            "drafted": "Not created yet",
+            "findings_one": "{{count}} finding",
+            "findings_other": "{{count}} findings",
+            "details": "Details",
             "parts": "Parts",
             "mandatory": "Required",
             "template": "Template",
             "validation": "Validation",
             "valid": "The template is valid",
+            "invalid": "The template is not valid",
             "line": "line {{line}}",
             "severity": {
                 "error": "Error",
@@ -382,6 +386,9 @@
         },
         "apiCalls": {
             "title": "CMS calls",
+            "toggle_one": "{{count}} CMS call",
+            "toggle_other": "{{count}} CMS calls",
+            "failed": "· {{count}} failed",
             "call": "Call",
             "status": "Status",
             "summary": "What it did"
@@ -465,6 +472,21 @@
         "archiveFailed": "Deleting the session failed",
         "restoreFailed": "Restoring the session failed"
     },
+    "published": {
+        "one": "Published",
+        "many_one": "{{count}} page published",
+        "many_other": "{{count}} pages published",
+        "inReview": "Sent to review",
+        "manyInReview_one": "{{count}} page sent to review",
+        "manyInReview_other": "{{count}} pages sent to review",
+        "openPage": "Open the page",
+        "openSession": "Open this session",
+        "newSession": "Start a new session",
+        "placeholder": "What’s next?",
+        "continue": "Continue a session",
+        "notPublished": "This plan has not been published.",
+        "toReview": "Go to its review"
+    },
     "review": {
         "title": "Review",
         "pageTitle": "Review & release",
@@ -475,9 +497,37 @@
         "noPreview": "No preview yet.",
         "checklist": "Checklist",
         "noChecks": "No checks yet.",
-        "checking": "Checking the checklist…",
+        "checking": "The quality gates are checking the plan…",
         "blocking": "blocking",
         "acknowledged": "acknowledged",
+        "passedChecks_one": "{{count}} check passed",
+        "passedChecks_other": "{{count}} checks passed",
+        "acceptAndReview": "Accept & review",
+        "carryingOut": "The agent carries out the changes…",
+        "question": "The agent has a question about the changes.",
+        "answerInChat": "Answer in the chat",
+        "acceptFailed": "The changes could not be carried out",
+        "outcome": {
+            "passed": "All checks passed. The plan is released.",
+            "withWarnings_one": "Released with {{count}} warning.",
+            "withWarnings_other": "Released with {{count}} warnings.",
+            "warning": {
+                "release_one": "Not released: {{count}} check has a warning.",
+                "release_other": "Not released: {{count}} checks have warnings.",
+                "publish_one": "Not published: {{count}} check has a warning.",
+                "publish_other": "Not published: {{count}} checks have warnings.",
+                "request_review_one": "No review requested: {{count}} check has a warning.",
+                "request_review_other": "No review requested: {{count}} checks have warnings."
+            },
+            "blocking": {
+                "release_one": "Not released: {{count}} blocking check must be fixed.",
+                "release_other": "Not released: {{count}} blocking checks must be fixed.",
+                "publish_one": "Not published: {{count}} blocking check must be fixed.",
+                "publish_other": "Not published: {{count}} blocking checks must be fixed.",
+                "request_review_one": "No review requested: {{count}} blocking check must be fixed.",
+                "request_review_other": "No review requested: {{count}} blocking checks must be fixed."
+            }
+        },
         "approvalChain": "Approval",
         "publications": "Pages",
         "closed": "This plan is closed and can no longer be changed.",

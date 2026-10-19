@@ -5688,9 +5688,14 @@ public class PageFactory extends AbstractFactory {
 		// lock the pages of the content for creating versions (lockingReads is true, if the snapshot is stale and the
 		// versioned data must be read with locking reads)
 		boolean lockingReads = lockForVersioning(contentId.intValue());
-		// the page versions are always read with a locking read (which reads the latest committed versions), because
+		// the page versions are read with a locking read (which reads the latest committed versions), because
 		// the staleness check only detects new versioned records.
-		NodeObjectVersion[] pageVersions = loadPageVersions(pageId.intValue(), true);
+		// Exception: if the content was created in this transaction, no other transaction can see the page, so the
+		// snapshot is current. A locking read would find no rows and lock the gap at the end of the index of nodeversion,
+		// which causes deadlocks between transactions creating new pages concurrently.
+		boolean contentCreatedInTrx = getTransactionScopedAttribute(CREATED_CONTENTS_IN_TRX, new HashSet<Integer>())
+				.contains(contentId.intValue());
+		NodeObjectVersion[] pageVersions = loadPageVersions(pageId.intValue(), !contentCreatedInTrx);
 
 		// get an instance of the page version number generator
 		// TODO make this configurable

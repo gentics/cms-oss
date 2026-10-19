@@ -107,6 +107,22 @@ export interface SettingAttrs {
     label: string;
 }
 
+/**
+ * One block inside a page part, e.g. the headline of an Aloha text that also holds a paragraph (the
+ * preview's `PreviewBlock`). The API has no field for a block inside a tag, so the naming text of the
+ * message says which block is meant: by position, kind and the start of its text.
+ */
+export interface PageElementBlock {
+    /** Position among the part's blocks, starting at 0. */
+    index: number;
+    /** Total number of blocks in the part. */
+    count: number;
+    /** Its kind, already translated, e.g. "Heading 1". */
+    label: string;
+    /** The first characters of its text. */
+    excerpt: string;
+}
+
 /** The attributes of a page part token. */
 export interface PageElementAttrs {
     /** The page the part belongs to, as a `page` reference. */
@@ -115,13 +131,38 @@ export interface PageElementAttrs {
     tagName: string;
     /** The name of its type, e.g. "Text"; empty when unknown. */
     constructName: string;
+    /** The block of the part that is meant; `null` or absent means the whole part. */
+    block?: PageElementBlock | null;
     /** What names the part in the message, e.g. ` – part "content_2" (Text): `. */
     text: string;
 }
 
-/** The text that names a part of a page in a message (`PageElementAttrs.text`), in the user's language. */
-export function pageElementNaming(t: TFunction, { tagName, constructName }: Pick<PageElementAttrs, 'tagName' | 'constructName'>): string {
-    return constructName ? t('composer.pageElement.naming', { tagName, constructName }) : t('composer.pageElement.namingWithoutType', { tagName });
+type PageElementName = Pick<PageElementAttrs, 'tagName' | 'constructName' | 'block'>;
+
+/**
+ * The label of a page part on its chat token and on the preview's cards, e.g. "Text · content_2". For a
+ * block, its kind is appended: "Text · content_2 · Heading 1".
+ */
+export function pageElementLabel({ tagName, constructName, block }: PageElementName): string {
+    return [constructName, tagName, block?.label].filter(Boolean).join(' · ');
+}
+
+// Translates the naming text of a part. The i18n key is `key`, plus `WithoutType` when the part has no
+// construct name, plus `Block` when a block is meant (e.g. `replaceWithWithoutTypeBlock`).
+function nameElement(t: TFunction, key: string, { tagName, constructName, block }: PageElementName): string {
+    const name = `composer.pageElement.${key}${constructName ? '' : 'WithoutType'}${block ? 'Block' : ''}`;
+
+    return block
+        ? t(name, { tagName, constructName, position: block.index + 1, count: block.count, kind: block.label, excerpt: block.excerpt })
+        : t(name, { tagName, constructName });
+}
+
+/**
+ * The text that names a part of a page in a message (`PageElementAttrs.text`), in the user's language;
+ * for a block, also its position, kind and the start of its text.
+ */
+export function pageElementNaming(t: TFunction, element: PageElementName): string {
+    return nameElement(t, 'naming', element);
 }
 
 /**
@@ -135,27 +176,26 @@ export function pageElementParts({ page, text: naming }: PageElementAttrs, text:
 
 /**
  * The text that names a part of a page and asks to replace its text, in the user's language: what
- * precedes the new text of a hand edit (`pageElementEditParts`).
+ * precedes the new text of a hand edit (`pageElementEditParts`). For a block, also its position, kind
+ * and the start of its text.
  */
-export function pageElementReplaceNaming(t: TFunction, { tagName, constructName }: Pick<PageElementAttrs, 'tagName' | 'constructName'>): string {
-    return constructName
-        ? t('composer.pageElement.replaceWith', { tagName, constructName })
-        : t('composer.pageElement.replaceWithWithoutType', { tagName });
+export function pageElementReplaceNaming(t: TFunction, element: PageElementName): string {
+    return nameElement(t, 'replaceWith', element);
 }
 
 /**
  * The parts of a hand edit of a part of a page (the preview's edit card): the page as a `reference`
  * part, the naming text (`pageElementReplaceNaming`) as a `text` part, then `text` as a `verbatim`
  * part the user wrote, unchanged, so that GenAIx writes it character-identical; its label names the part
- * as its token does (e.g. "Text · content_2"), for the check and the audit trail. The part is named
+ * as its token does (`pageElementLabel`, e.g. "Text · content_2"), for the check and the audit trail. The part is named
  * as for `PAGE_ELEMENT_NODE`; the request to replace its text is an interim wording, until GenAIx
  * defines how a hand edit is sent.
  */
-export function pageElementEditParts({ page, tagName, constructName, text: naming }: PageElementAttrs, text: string): UserMessagePart[] {
+export function pageElementEditParts({ page, text: naming, ...element }: PageElementAttrs, text: string): UserMessagePart[] {
     return [
         { type: 'reference', ref: page },
         { type: 'text', text: normalizeText(naming) },
-        { type: 'verbatim', text, source: 'user', label: constructName ? `${constructName} · ${tagName}` : tagName },
+        { type: 'verbatim', text, source: 'user', label: pageElementLabel(element) },
     ];
 }
 
@@ -237,11 +277,8 @@ export function tokenLabel(node: ProseMirrorNode): string {
         }
         case FILE_REF_NODE:
             return (node.attrs as FileRefAttrs).name;
-        case PAGE_ELEMENT_NODE: {
-            const { tagName, constructName } = node.attrs as PageElementAttrs;
-
-            return constructName ? `${constructName} · ${tagName}` : tagName;
-        }
+        case PAGE_ELEMENT_NODE:
+            return pageElementLabel(node.attrs as PageElementAttrs);
         default:
             return '';
     }

@@ -31,8 +31,8 @@ function planState(status: PlanStatus, publications: Publication[]): PlanState {
     };
 }
 
-// Answers the plan with `state`, the to-dos (`plan_status=released`) with a session to release, the
-// other session lists with the sessions to continue.
+// Answers the plan with `state`; the to-dos' lists (filtered by `plan_status` or `status`, `SessionTodos`)
+// with a session to release, the others empty; the unfiltered list with the sessions to continue.
 function stubRoutes(state: PlanState) {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
         const url = new URL(String(input), 'http://localhost');
@@ -42,7 +42,7 @@ function stubRoutes(state: PlanState) {
             return Response.json(state);
         }
 
-        if (path.endsWith('/sessions') && url.searchParams.has('plan_status')) {
+        if (path.endsWith('/sessions') && (url.searchParams.has('plan_status') || url.searchParams.has('status'))) {
             const toRelease = url.searchParams.get('plan_status') === 'released';
 
             return Response.json({ items: toRelease ? [sessionFixture({ id: 's-3', title: 'Prices 2026' })] : [], next_cursor: null });
@@ -142,7 +142,7 @@ describe('PublishedPage', () => {
         await screen.findByRole('heading', { level: 1, name: 'Published' });
         expect(screen.getByRole('region', { name: 'Start a new session' })).toBeInTheDocument();
         // The sessions to continue are folded out.
-        expect(await screen.findByText('Rework the product page')).toBeInTheDocument();
+        expect(await screen.findByRole('link', { name: /Rework the product page/ })).toBeInTheDocument();
         expect(within(screen.getByRole('main')).getByRole('button', { name: /Continue a session/ })).toHaveAttribute('aria-expanded', 'true');
         expect(screen.getByRole('link', { name: 'Open this session' })).toHaveAttribute('href', `/sessions/${SESSION}`);
     });

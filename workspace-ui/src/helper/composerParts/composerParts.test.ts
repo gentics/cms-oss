@@ -5,7 +5,7 @@ import { composerExtensions } from '@/components/ComposerTextInput/composerExten
 import i18n from '@/i18n';
 import type { ContextReference, FileMode } from '@/services/apiService/genaix/types';
 
-import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, partReferences, pendingFileSource, readParts, referenceContent, resolvePendingFileSources, selectedRange, textContent, touchesVerbatim } from './composerParts';
+import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementLabel, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, partReferences, pendingFileSource, readParts, referenceContent, resolvePendingFileSources, selectedRange, textContent, tokenLabel, touchesVerbatim } from './composerParts';
 
 const schema = getSchema(composerExtensions);
 
@@ -94,6 +94,42 @@ describe('pageElementEditParts', () => {
         const [, , quote] = pageElementEditParts({ page: page9142, tagName: 'content_3', constructName: '', text: ' – part "content_3", replace its text with: ' }, 'Neu');
 
         expect(quote).toEqual({ type: 'verbatim', text: 'Neu', source: 'user', label: 'content_3' });
+    });
+});
+
+describe('a block of a part', () => {
+    const block = { index: 0, count: 2, label: 'Heading 1', excerpt: 'headline 1' };
+    const headline = { tagName: 'pagecontent', constructName: 'Aloha Text (lang)', block };
+
+    it('names the block by its place, its kind and the start of its text, after the part, in the user\'s language', async () => {
+        await i18n.changeLanguage('en');
+        expect(pageElementNaming(i18n.t, headline)).toBe(' – part "pagecontent" (Aloha Text (lang)), block 1 of 2 (Heading 1 "headline 1"): ');
+        expect(pageElementNaming(i18n.t, { ...headline, constructName: '' })).toBe(' – part "pagecontent", block 1 of 2 (Heading 1 "headline 1"): ');
+        expect(pageElementReplaceNaming(i18n.t, headline)).toBe(' – part "pagecontent" (Aloha Text (lang)), block 1 of 2 (Heading 1 "headline 1"), replace its text with: ');
+        expect(pageElementReplaceNaming(i18n.t, { ...headline, constructName: '' })).toBe(' – part "pagecontent", block 1 of 2 (Heading 1 "headline 1"), replace its text with: ');
+
+        await i18n.changeLanguage('de');
+        expect(pageElementReplaceNaming(i18n.t, { ...headline, block: { ...block, label: 'Überschrift 1' } })).toBe(' – Teil "pagecontent" (Aloha Text (lang)), Block 1 von 2 (Überschrift 1 „headline 1“), ersetze seinen Text durch: ');
+        await i18n.changeLanguage('en');
+    });
+
+    it('labels the block after the part, and the part alone without one', () => {
+        expect(pageElementLabel(headline)).toBe('Aloha Text (lang) · pagecontent · Heading 1');
+        expect(pageElementLabel({ ...headline, constructName: '' })).toBe('pagecontent · Heading 1');
+        expect(pageElementLabel({ tagName: 'content_2', constructName: 'Text', block: null })).toBe('Text · content_2');
+    });
+
+    it('labels the verbatim part of a hand edit of the block with the block', () => {
+        const [, , quote] = pageElementEditParts({ page: page9142, ...headline, text: ' – part "pagecontent" (Aloha Text (lang)), block 1 of 2 (Heading 1 "headline 1"), replace its text with: ' }, 'Neue Überschrift');
+
+        expect(quote).toEqual({ type: 'verbatim', text: 'Neue Überschrift', source: 'user', label: 'Aloha Text (lang) · pagecontent · Heading 1' });
+    });
+
+    it('keeps the block on the part\'s token in the field, and shows it in the token\'s label', () => {
+        const node = doc({ type: 'pageElement', attrs: { page: page9142, ...headline, text: ' – part "pagecontent" (Aloha Text (lang)), block 1 of 2 (Heading 1 "headline 1"): ' } });
+
+        expect(node.firstChild?.attrs.block).toEqual(block);
+        expect(tokenLabel(node.firstChild!)).toBe('Aloha Text (lang) · pagecontent · Heading 1');
     });
 });
 

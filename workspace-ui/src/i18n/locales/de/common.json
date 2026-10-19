@@ -38,6 +38,19 @@
             "label": "Seiten",
             "unnamed": "Seite {{id}}"
         },
+        "block": {
+            "heading1": "Überschrift 1",
+            "heading2": "Überschrift 2",
+            "heading3": "Überschrift 3",
+            "heading4": "Überschrift 4",
+            "heading5": "Überschrift 5",
+            "heading6": "Überschrift 6",
+            "paragraph": "Absatz",
+            "quote": "Zitat",
+            "code": "Codeblock",
+            "list": "Liste",
+            "table": "Tabelle"
+        },
         "selection": {
             "selected": "Ausgewählt: {{name}}",
             "clear": "Auswahl aufheben",
@@ -163,7 +176,11 @@
             "replaceWith": " – Teil \"{{tagName}}\" ({{constructName}}), ersetze seinen Text durch: ",
             "replaceWithWithoutType": " – Teil \"{{tagName}}\", ersetze seinen Text durch: ",
             "replaceImageWith": " – Teil \"{{tagName}}\" ({{constructName}}), ersetze sein Bild durch: ",
-            "replaceImageWithWithoutType": " – Teil \"{{tagName}}\", ersetze sein Bild durch: "
+            "replaceImageWithWithoutType": " – Teil \"{{tagName}}\", ersetze sein Bild durch: ",
+            "namingBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
+            "namingWithoutTypeBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
+            "replaceWithBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: ",
+            "replaceWithWithoutTypeBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: "
         },
         "pageSettings": {
             "change": " – ändere seine Seiteneinstellungen:",

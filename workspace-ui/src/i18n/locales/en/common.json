@@ -38,6 +38,19 @@
             "label": "Pages",
             "unnamed": "Page {{id}}"
         },
+        "block": {
+            "heading1": "Heading 1",
+            "heading2": "Heading 2",
+            "heading3": "Heading 3",
+            "heading4": "Heading 4",
+            "heading5": "Heading 5",
+            "heading6": "Heading 6",
+            "paragraph": "Paragraph",
+            "quote": "Quote",
+            "code": "Code block",
+            "list": "List",
+            "table": "Table"
+        },
         "selection": {
             "selected": "Selected: {{name}}",
             "clear": "Clear selection",
@@ -163,7 +176,11 @@
             "replaceWith": " – part \"{{tagName}}\" ({{constructName}}), replace its text with: ",
             "replaceWithWithoutType": " – part \"{{tagName}}\", replace its text with: ",
             "replaceImageWith": " – part \"{{tagName}}\" ({{constructName}}), replace its image with: ",
-            "replaceImageWithWithoutType": " – part \"{{tagName}}\", replace its image with: "
+            "replaceImageWithWithoutType": " – part \"{{tagName}}\", replace its image with: ",
+            "namingBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
+            "namingWithoutTypeBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
+            "replaceWithBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: ",
+            "replaceWithWithoutTypeBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: "
         },
         "pageSettings": {
             "change": " – change its page settings:",

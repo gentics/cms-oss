@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, EyeIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +13,7 @@ import { Popover, PopoverClose, PopoverContent, PopoverTitle } from '@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import type { PageSettingsChange } from '@/helper/composerParts/composerParts';
+import { type PageElementBlock, pageElementLabel, type PageSettingsChange } from '@/helper/composerParts/composerParts';
 import { type ElementBox, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
 import type { ContextReference } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
@@ -60,6 +61,30 @@ function boxStyle({ top, left, width, height }: ElementBox): CSSProperties {
 // `text` with runs of white space as one space and without it at the ends: two texts that read the same compare equal.
 function collapseWhiteSpace(text: string): string {
     return text.replace(/\s+/g, ' ').trim();
+}
+
+// Converts the preview's block into the form the chat uses (`PageElementBlock`), its kind translated, e.g. "Heading 1"; `undefined` for a whole part.
+function elementBlock(t: TFunction, { block }: PreviewElement): PageElementBlock | undefined {
+    return block && { index: block.index, count: block.count, label: t(`preview.block.${block.kind}`), excerpt: block.excerpt };
+}
+
+// Short name on the hover outline, the menu, the header and the card titles: the construct name (else the
+// tag name), with the block kind in front for a block, e.g. "Heading 1 · Aloha Text (lang)".
+function elementName(t: TFunction, element: PreviewElement): string {
+    const name = element.constructName || element.tagName;
+    const block = elementBlock(t, element);
+
+    return block ? `${block.label} · ${name}` : name;
+}
+
+// Full name on the cards' @-token, the same as on the token in the chat (`pageElementLabel`), e.g. "Aloha Text (lang) · pagecontent · Heading 1".
+function elementLabel(t: TFunction, element: PreviewElement): string {
+    return pageElementLabel({ ...element, block: elementBlock(t, element) });
+}
+
+// Whether `a` and `b` are the same part and the same block of it (or both the whole part).
+function isSameElement(a: PreviewElement | null, b: PreviewElement | null): boolean {
+    return a?.tagName === b?.tagName && a?.block?.index === b?.block?.index;
 }
 
 // How far the outlines stand off a part (`outline-offset` in the CSS module); the focus mode leaves that much room.
@@ -118,6 +143,12 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  * it (design.md §12 "Elemente in der Vorschau"). The header names the selection and clears it; so
  * does a click into the page outside the parts, which also closes the part's menu or card. When a
  * reload no longer has the selected part, the selection is cleared and a toast says so.
+ *
+ * Blocks: the CMS often stores several blocks in one tag, e.g. a headline and a paragraph in one Aloha
+ * text. Then the block under the mouse is outlined and selected, not the whole tag (`blocksOf`). The
+ * menu and the cards act on that block only, and the edit card starts from its text alone. The UI
+ * calls it e.g. "Heading 1 · Text"; the message names it by its position and the start of its text,
+ * because the API has no field for a block inside a tag.
  *
  * The parts the last CMS write changed (`changed_elements`) are tinted until the next update.
  *
@@ -205,7 +236,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setIsSettingsOpen(false);
     }
 
-    const { onFrameLoad, hovered, selectedBox, changedBoxes, textOf, hasImage } = usePreviewElements(frameRef, selected?.tagName ?? null, (element) => {
+    const { onFrameLoad, hovered, selectedBox, changedBoxes, textOf, hasImage, currentOf } = usePreviewElements(frameRef, selected, (element) => {
         // A click on a part selects it and opens its menu; Escape clears both. Only with actions to offer.
         if (!actions) {
             return;
@@ -241,12 +272,16 @@ export function PreviewColumn(props: PreviewColumnProps) {
         return { type: 'page', id: String(id), ...(nodeId !== undefined ? { node_id: nodeId } : {}), ...(name ? { label: name } : {}) };
     }
 
-    // The part with its page, as the chat and the feedback take it.
-    function pageElementOf(element: PreviewElement): PageElementInput {
+    // The selected part with its page, as the chat and the cards send it. A block is re-read from the page
+    // first (`currentOf`), so its excerpt matches the page after a reload.
+    function pageElementOf(selection: PreviewElement): PageElementInput {
+        const element = currentOf(selection);
+
         return {
             page: pageRef(),
             tagName: element.tagName,
             constructName: element.constructName,
+            ...(element.block ? { block: elementBlock(t, element) } : {}),
         };
     }
 
@@ -265,7 +300,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
     }
 
     function openEdit(element: PreviewElement) {
-        const text = textOf(element.tagName);
+        const text = textOf(element);
 
         hasMovedFocusRef.current = true;
         setEditOriginal(text);
@@ -433,7 +468,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                 </Button>
                 {selected && (
                     <span className={styles.selection}>
-                        {t('preview.selection.selected', { name: selected.constructName || selected.tagName })}
+                        {t('preview.selection.selected', { name: elementName(t, selected) })}
                         <Button variant="ghost" size="icon-xs" aria-label={t('preview.selection.clear')} title={t('preview.selection.clear')} onClick={() => { setSelected(null); setIsMenuOpen(false); }}>
                             <XIcon size={12} />
                         </Button>
@@ -474,9 +509,9 @@ export function PreviewColumn(props: PreviewColumnProps) {
                         {isFeedbackOpen && selectedBox && dimBands(selectedBox).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
                         {changedBoxes.map(({ tagName, box }) => <div key={tagName} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
                         {selectedBox && <div ref={selectedBoxRef} className={`${styles.selected} ${isEditOpen || isImageOpen ? styles.editing : ''}`} style={boxStyle(selectedBox)} />}
-                        {actions && hovered && hovered.element.tagName !== selected?.tagName && (
+                        {actions && hovered && !isSameElement(hovered.element, selected) && (
                             <div className={styles.hovered} style={boxStyle(hovered.box)}>
-                                <span className={styles.label}>{hovered.element.constructName || hovered.element.tagName}</span>
+                                <span className={styles.label}>{elementName(t, hovered.element)}</span>
                             </div>
                         )}
                     </div>
@@ -489,13 +524,13 @@ export function PreviewColumn(props: PreviewColumnProps) {
                         page, where the next Escape clears the selection. */}
                     <DropdownMenuContent anchor={selectedBoxRef} finalFocus={finalFocus}>
                         <DropdownMenuGroup>
-                            <DropdownMenuLabel>{selected.constructName || selected.tagName}</DropdownMenuLabel>
+                            <DropdownMenuLabel>{elementName(t, selected)}</DropdownMenuLabel>
                             <DropdownMenuItem onClick={openFeedback}>
                                 <SparklesIcon size={16} />
                                 {t('preview.feedback.give')}
                             </DropdownMenuItem>
                             {/* An image part gets another image instead of new text, if the node to pick it from is known. */}
-                            {hasImage(selected.tagName)
+                            {hasImage(selected)
                                 ? nodeId !== undefined && (
                                     <DropdownMenuItem onClick={openImage}>
                                         <ImagesIcon size={16} />
@@ -522,7 +557,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     <PopoverContent anchor={selectedBoxRef} initialFocus={feedbackFieldRef} finalFocus={false}>
                         <div className={styles.cardHead}>
                             <SparklesIcon size={16} className={styles.cardIcon} aria-hidden="true" />
-                            <PopoverTitle className={styles.cardTitle}>{selected.constructName || selected.tagName}</PopoverTitle>
+                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
                             <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.feedback.cancel')} title={t('preview.feedback.cancel')} />}>
                                 <XIcon size={16} />
                             </PopoverClose>
@@ -530,7 +565,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                         <div className={styles.cardBody}>
                             <span className={styles.token}>
                                 <AtSignIcon size={13} aria-hidden="true" />
-                                {selected.constructName ? `${selected.constructName} · ${selected.tagName}` : selected.tagName}
+                                {elementLabel(t, selected)}
                             </span>
                             <Label htmlFor={feedbackFieldId}>{t('preview.feedback.label')}</Label>
                             <Textarea
@@ -560,7 +595,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     <PopoverContent anchor={selectedBoxRef} initialFocus={editFieldRef} finalFocus={false}>
                         <div className={styles.cardHead}>
                             <PencilIcon size={16} className={styles.cardIcon} aria-hidden="true" />
-                            <PopoverTitle className={styles.cardTitle}>{selected.constructName || selected.tagName}</PopoverTitle>
+                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
                             <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.edit.cancel')} title={t('preview.edit.cancel')} />}>
                                 <XIcon size={16} />
                             </PopoverClose>
@@ -568,7 +603,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                         <div className={styles.cardBody}>
                             <span className={styles.token}>
                                 <AtSignIcon size={13} aria-hidden="true" />
-                                {selected.constructName ? `${selected.constructName} · ${selected.tagName}` : selected.tagName}
+                                {elementLabel(t, selected)}
                             </span>
                             <Label htmlFor={editFieldId}>{t('preview.edit.label')}</Label>
                             <Textarea
@@ -594,7 +629,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     <PopoverContent anchor={selectedBoxRef} finalFocus={false}>
                         <div className={styles.cardHead}>
                             <ImagesIcon size={16} className={styles.cardIcon} aria-hidden="true" />
-                            <PopoverTitle className={styles.cardTitle}>{selected.constructName || selected.tagName}</PopoverTitle>
+                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
                             <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.image.cancel')} title={t('preview.image.cancel')} />}>
                                 <XIcon size={16} />
                             </PopoverClose>
@@ -602,7 +637,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                         <div className={styles.cardBody}>
                             <span className={styles.token}>
                                 <AtSignIcon size={13} aria-hidden="true" />
-                                {selected.constructName ? `${selected.constructName} · ${selected.tagName}` : selected.tagName}
+                                {elementLabel(t, selected)}
                             </span>
                             <ImagePicker nodeId={nodeId} value={pickedImage} onValueChange={setPickedImage} />
                         </div>

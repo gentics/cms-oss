@@ -567,14 +567,6 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 
 		}).at(editTimestamp).as(editor).unlock().build();
 
-		testPage = create(Page.class, p -> {
-			p.setFolder(node, testFolder);
-			p.setTemplateId(template.getId());
-			p.setName("Test Page");
-			p.setPriority(42);
-			p.setLanguage(german);
-		}).at(creationTimestamp).as(creator).unlock().build();
-
 		targetPage = create(Page.class, p -> {
 			p.setFolder(node, subFolder);
 			p.setTemplateId(template.getId());
@@ -584,6 +576,25 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 
 			getPartType(HandlebarsPartType.class, p.getContentTag(HBS_TAGNAME), "hb").setText("{{ cms.page.name }}");
 		}).at(creationTimestamp).as(creator).publish().unlock().build();
+
+		createTestPages();
+	}
+
+	/**
+	 * Create the test page (created by the creator, edited by the editor) and its english language variant
+	 * @throws NodeException
+	 */
+	protected static void createTestPages() throws NodeException {
+		ContentLanguage german = getLanguage("de");
+		ContentLanguage english = getLanguage("en");
+
+		testPage = create(Page.class, p -> {
+			p.setFolder(node, testFolder);
+			p.setTemplateId(template.getId());
+			p.setName("Test Page");
+			p.setPriority(42);
+			p.setLanguage(german);
+		}).at(creationTimestamp).as(creator).unlock().build();
 
 		testPage = update(testPage, p -> {
 			p.setDescription("This is the test page");

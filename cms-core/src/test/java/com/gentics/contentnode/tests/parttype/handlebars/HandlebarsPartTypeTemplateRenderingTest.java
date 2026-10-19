@@ -19,8 +19,10 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 
 /**
@@ -200,6 +202,19 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 		if (!Strings.CI.startsWith(testedTemplate, "{{")) {
 			testedTemplate = String.format("{{ %s }}", testedTemplate);
 		}
+
+		// every test case gets new test pages: setting the template in the already published page of the previous test case
+		// would create a new page version (published versions are never modified), but the test cases expect the
+		// versions 0.1, 0.2 and 1.0
+		Trx.operate(t -> {
+			try (InstantPublishingTrx iTrx = new InstantPublishingTrx(false)) {
+				for (Page page : t.getObject(testFolder).getPages()) {
+					page.delete(true);
+				}
+			}
+		});
+		createTestPages();
+
 		testPage = update(testPage, p -> {
 			getPartType(HandlebarsPartType.class, p.getContentTag(HBS_TAGNAME), "hb").setText(testedTemplate);
 		}).at(editTimestamp).as(editor).unlock().build();

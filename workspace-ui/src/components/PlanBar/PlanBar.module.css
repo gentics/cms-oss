@@ -42,6 +42,20 @@
   padding: 6px 6px 6px 12px;
 }
 
+/* Led by the discard button: as close to the edge on the left as the actions are on the right. */
+.head.withDiscard {
+  padding-left: 6px;
+}
+
+/* Between the discard button and the status: an action on its left, the state on its right (design.md
+   §6.2: 1-px lines in `--border-subtle`), as high as the icons. */
+.divider {
+  flex: none;
+  width: 1px;
+  height: 16px;
+  background: var(--border-subtle);
+}
+
 /* In a panel (`ReviewPanel`), which has its padding already. */
 .head.inCard {
   flex: 1;
@@ -75,12 +89,6 @@
   font-weight: 500;
 }
 
-/* The plan at a glance while the bar is collapsed, in the numbers' own width (design.md §5). */
-.glance {
-  color: var(--fg-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
 .actions {
   display: flex;
   flex: 0 1 auto;
@@ -88,4 +96,11 @@
   justify-content: flex-end;
   gap: 6px;
   margin-left: auto;
+}
+
+/* In place of the buttons of a plan its run left without a way forward (`PlanHead`, `isStalled`). */
+.hint {
+  align-self: center;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
 }

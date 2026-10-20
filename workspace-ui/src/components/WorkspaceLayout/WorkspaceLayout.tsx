@@ -88,8 +88,20 @@ export function WorkspaceLayout({
         '--w-right': measured.total > 0 && widths.right !== null ? `${widths.right}px` : undefined,
     };
 
+    // A width past a limit is kept at the limit: the splitter stops there, and the other column, which
+    // is clamped against this one, keeps its width.
     function setWidth(side: Side, width: number | null) {
-        setRequested((current) => ({ ...current, [side]: width }));
+        setRequested((current) => {
+            const next = { ...current, [side]: width };
+
+            if (width === null) {
+                return next;
+            }
+
+            const clamped = clampColumnWidths({ total: measured.total, isLeftVisible: isLeftColumnVisible, isRightVisible: isRightColumnVisible, requested: next, rendered: measured });
+
+            return { ...next, [side]: clamped[side] };
+        });
     }
 
     function handleDrag(side: Side, clientX: number) {

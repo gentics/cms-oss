@@ -1,31 +1,36 @@
 import { useNavigate } from '@tanstack/react-router';
-import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RefreshCwIcon, RocketIcon, RouteIcon, SquareIcon, XIcon } from 'lucide-react';
+import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RefreshCwIcon, RocketIcon, RouteIcon, SquareIcon, TrashIcon } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { IconButton } from '@/components/IconButton/IconButton';
 import { PublishingOverlay } from '@/components/PublishingOverlay/PublishingOverlay';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { errorMessageKey, problemMessageKey } from '@/helper/errorMapper/errorMapper';
 import { isFirstDraft, planActions } from '@/helper/planActions/planActions';
-import { glanceText, isWorthAGlance, planGlance, showsProgress } from '@/helper/planGlance/planGlance';
 import { canAcknowledgeRefusal, latestGateRefusal, useCancelRun, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
 import type { Plan, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
-import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './PlanBar.module.css';
 
 type Action = TransitionRequest['action'];
+// The actions with a button among the others; discard has its own at the start of the head.
+type ButtonAction = Exclude<Action, 'discard'>;
 
-const ACTION_ICONS: Record<Action, LucideIcon> = {
+const ACTION_ICONS: Record<ButtonAction, LucideIcon> = {
     release: RocketIcon,
     publish: GlobeIcon,
     request_review: EyeIcon,
-    discard: XIcon,
 };
 
 const PRIMARY_ACTIONS = new Set<Action>(['release', 'publish']);
+
+// The statuses a failed or stopped run leaves its plan in (contract §4: `drafting` after a proposing
+// run, `accepted` after an execute run); the user's next message retries.
+const STALLED_STATUSES: ReadonlySet<Plan['status']> = new Set<Plan['status']>(['drafting', 'accepted']);
 
 type PublicationStatus = Publication['status'];
 
@@ -77,10 +82,10 @@ interface PlanHeadProps {
     withGatedActions?: boolean;
     /** Whether the user may publish the plan's pages in the CMS; without it, publish is not offered (request review is). */
     canPublish?: boolean;
-    /** The plan at a glance after its status, in one line ("+3 folders · 2 pages edited"), while the plan itself is not shown. */
-    withGlance?: boolean;
     /** Controls after the actions, such as the plan bar's toggle. */
     children?: ReactNode;
+    /** Said after the status, such as "Adjusted by you" (`usePlanAdjustment`). */
+    note?: string;
 }
 
 /**
@@ -109,7 +114,8 @@ interface PlanHeadProps {
  * (`/sessions/$id/published?plan=`). A refusal by the gates shows in the checklist like any other; a
  * publish run that fails or is stopped leaves the plan `released` (contract) and is an error
  * notification. Discard asks first, saying what happens to the pages by the modules'
- * `plan_policy.on_discard` (`onDiscardOf`).
+ * `plan_policy.on_discard` (`onDiscardOf`). Its button is a quiet icon (`trash`, design.md §9; red on hover) with its
+ * name as tooltip, at the very start of the head, a line between it and the status, far from the way forward.
  *
  * Outside the review page, while a run of the plan works (proposing, executing, publishing), Stop cancels
  * it (`POST …/runs/{run_id}/cancel`); the composer stops only the session agent's runs and side runs
@@ -120,11 +126,11 @@ interface PlanHeadProps {
  * (contract §4.4, §4.5). A revision being drafted shows as such: `drafting`, but with the items of its
  * current version.
  *
- * With `withGlance` the plan at a glance follows the status (`planGlance`), as the plan bar shows it
- * while collapsed, but only while the plan is under way (drafting to running): from `done` on, the head
- * says only the status and the publish outcome of its pages.
+ * A plan its run left `drafting` or `accepted` (failed or stopped, contract §4) has no way forward on
+ * the head: while no run works and nothing but discard is offered, the head says in place of the
+ * buttons that the next message tells GenAIx how to go on, which retries the run.
  */
-export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions = false, canPublish = true, withGlance = false, children }: PlanHeadProps) {
+export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions = false, canPublish = true, note, children }: PlanHeadProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const transitionPlan = useTransitionPlan(sessionId);
@@ -133,6 +139,8 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     const { pending } = planTransition;
     const publications = useWorkspaceEventStore((state) => selectSession(sessionId)(state).publications?.[plan.id]);
     const hasRun = useWorkspaceEventStore((state) => Boolean(selectSession(sessionId)(state).run));
+    // Also a message on its way, before its run started.
+    const isWorking = useWorkspaceEventStore((state) => isSessionWorking(selectSession(sessionId)(state)));
     // The plan's own run in progress, which Stop cancels.
     const planRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => live.planId === plan.id));
     const [isDiscardOpen, setIsDiscardOpen] = useState(false);
@@ -217,21 +225,16 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     const tone = counts.failed ? styles.bad : isUnderWay || isClosed ? undefined : styles.ok;
     const Icon = counts.failed ? CircleAlertIcon : isUnderWay || isClosed ? RouteIcon : CircleCheckIcon;
     const actions = planActions(plan.status, withGatedActions).filter((action) => canPublish || action !== 'publish');
+    // Discard leads the head, before the status; the other actions follow it.
+    const canDiscard = actions.includes('discard');
+    const buttonActions = actions.filter((action): action is ButtonAction => action !== 'discard');
+    // Left by a failed or stopped run, with nothing on the head to go on with.
+    const isStalled = STALLED_STATUSES.has(plan.status) && !hasRun && !isWorking && buttonActions.length === 0;
     // A revision is drafted with the items of the version it revises (rc.5); a first draft has none.
     const statusKey = plan.status === 'drafting' && !isFirstDraft(plan) ? 'revising' : plan.status;
     const refusal = withGatedActions ? latestGateRefusal(planTransition, actions) : undefined;
     const acknowledgeable = refusal?.problem.acknowledgeable_checks ?? [];
     const canAcknowledge = refusal ? canAcknowledgeRefusal(refusal.problem) : false;
-    // Only while the plan is under way, and for more than one item; once done, the status and the pages
-    // to publish say enough.
-    const glanceEntries = withGlance && isUnderWay ? planGlance(plan.items ?? []) : [];
-    const glance = isWorthAGlance(glanceEntries)
-        ? glanceEntries.map((entry) => {
-            const { value, label } = glanceText(t, entry, showsProgress(plan.status));
-
-            return `${value} ${label}`;
-        }).join(' · ')
-        : '';
 
     function stop() {
         if (!planRun) {
@@ -246,7 +249,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     }
 
     // The buttons of one action: as offered, or for the refused one what can be done about it.
-    function actionButtons(action: Action) {
+    function actionButtons(action: ButtonAction) {
         const ActionIcon = ACTION_ICONS[action];
 
         if (action === refusal?.action) {
@@ -280,13 +283,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                 variant={PRIMARY_ACTIONS.has(action) ? 'primary' : 'secondary'}
                 size="sm"
                 disabled={Boolean(pending) || (hasRun && action !== 'release')}
-                onClick={() => {
-                    if (action === 'discard') {
-                        setIsDiscardOpen(true);
-                    } else {
-                        transition(action);
-                    }
-                }}
+                onClick={() => transition(action)}
             >
                 <ActionIcon size={14} />
                 {t(`planBar.actions.${action}`)}
@@ -295,12 +292,24 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     }
 
     return (
-        <div className={[styles.head, isInCard && styles.inCard, tone].filter(Boolean).join(' ')}>
+        <div className={[styles.head, isInCard && styles.inCard, canDiscard && styles.withDiscard, tone].filter(Boolean).join(' ')}>
+            {canDiscard && (
+                <IconButton
+                    label={t('planBar.actions.discard')}
+                    variant="ghost-danger"
+                    size="icon"
+                    disabled={Boolean(pending) || hasRun}
+                    onClick={() => setIsDiscardOpen(true)}
+                >
+                    <TrashIcon size={16} />
+                </IconButton>
+            )}
+            {canDiscard && <span className={styles.divider} aria-hidden />}
             <Icon size={16} className={styles.icon} aria-hidden />
             <span className={styles.text}>
                 <span className={styles.status}>{t(`parts.plan.status.${statusKey}`)}</span>
                 {summary && ` · ${summary}`}
-                {glance && <span className={styles.glance}>{` · ${glance}`}</span>}
+                {note && ` · ${note}`}
             </span>
             <span className={styles.actions}>
                 {planRun && !withGatedActions && (
@@ -309,7 +318,8 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                         {t('chat.stop')}
                     </Button>
                 )}
-                {actions.flatMap(actionButtons)}
+                {buttonActions.flatMap(actionButtons)}
+                {isStalled && <span className={styles.hint}>{t('planBar.stalled')}</span>}
                 {children}
             </span>
             {isPublishing && <PublishingOverlay pageCount={(counts.pending ?? 0) + (counts.failed ?? 0)} />}
@@ -332,7 +342,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                                 transition('discard');
                             }}
                         >
-                            <XIcon size={14} />
+                            <TrashIcon size={14} />
                             {t('planBar.actions.discard')}
                         </Button>
                     </DialogFooter>

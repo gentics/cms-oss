@@ -23,11 +23,9 @@ const FINISHED: ReadonlySet<PlanStatus> = new Set(['done', 'released']);
  * the quality gates check it while the review page opens, which shows that (`ReviewPanel`) and then the
  * checks, the refusal or publish. A plan that went out (`published`, `review_requested`) gets no button:
  * a change to it is a message, which revises it. A plan whose modules all write no page
- * (`NOTHING_TO_REVIEW`; rc.5: a plan may use several modules) gets no button.
- *
- * A proposed revision of a plan accepted before (`accepted_version`, rc.5: a message about a finished
- * plan's work revises it) gets the button too: its pages exist, and the review page accepts the
- * revision and releases it once carried out ("Accept & review", `ReviewPanel`).
+ * (`NOTHING_TO_REVIEW`; rc.5: a plan may use several modules) gets no button. Nor does a proposed
+ * revision: it is accepted in the plan bar like any proposal, and reviewed once it is done (contract:
+ * `release` only from `done`).
  */
 export function ReviewButton({ sessionId, plan }: { sessionId: string; plan: Plan }) {
     const { t } = useTranslation();
@@ -35,8 +33,7 @@ export function ReviewButton({ sessionId, plan }: { sessionId: string; plan: Pla
     const { pending } = usePlanTransition(sessionId, plan.id);
     const modules = plan.workflows ?? [];
     const writesNoPage = modules.length > 0 && modules.every(({ id }) => NOTHING_TO_REVIEW.has(id));
-    const isRevision = plan.status === 'proposed' && plan.accepted_version != null;
-    const isReviewable = (FINISHED.has(plan.status) || isRevision) && !writesNoPage;
+    const isReviewable = FINISHED.has(plan.status) && !writesNoPage;
     const state = usePlanState(sessionId, isReviewable ? plan.id : undefined);
 
     if (!isReviewable || !state.data || writtenPagesOf(state.data.cms_objects).length === 0) {
@@ -51,7 +48,7 @@ export function ReviewButton({ sessionId, plan }: { sessionId: string; plan: Pla
 
     return (
         <Button
-            variant="secondary"
+            variant="primary"
             size="sm"
             nativeButton={false}
             role={undefined}

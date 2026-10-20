@@ -1,30 +1,20 @@
-import { Link, useNavigate } from '@tanstack/react-router';
-import { BanIcon, CheckCheckIcon, ChevronDownIcon, CircleAlertIcon, CircleCheckIcon, CircleDashedIcon, InfoIcon, type LucideIcon, SendIcon, TriangleAlertIcon } from 'lucide-react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { BanIcon, ChevronDownIcon, CircleAlertIcon, CircleCheckIcon, CircleDashedIcon, InfoIcon, type LucideIcon, SendIcon, TriangleAlertIcon } from 'lucide-react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlanHead } from '@/components/PlanBar/PlanHead';
 import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
-import { errorMessageKey, problemMessageKey } from '@/helper/errorMapper/errorMapper';
 import { checkSummary, isCheckForPage, isFailingCheck, isGateCheck } from '@/helper/pageChecks/pageChecks';
 import { GATED_ACTIONS, planActions, writtenPagesOf } from '@/helper/planActions/planActions';
-import { planMessage } from '@/helper/planMessage/planMessage';
 import { useCanPublishCmsPage, useCanPublishCmsPages } from '@/hooks/useCmsQueries';
-import { canAcknowledgeRefusal, type GateRefusal, latestGateRefusal, usePlanTransition, useSendMessage, useTransitionPlan } from '@/hooks/useGenaixQueries';
+import { canAcknowledgeRefusal, type GateRefusal, latestGateRefusal, usePlanTransition, useSendMessage } from '@/hooks/useGenaixQueries';
 import type { Check, Plan, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
-import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
-import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './ReviewPanel.module.css';
 
 const CLOSED: PlanStatus[] = ['published', 'review_requested', 'discarded', 'superseded'];
-
-// "Accept & review": the version accepted here and, once the message was taken, the run that carries it out.
-interface Accepting {
-    version: number;
-    runId?: string;
-}
 
 const SEVERITY_ICONS: Record<Check['severity'], LucideIcon> = { pass: CircleCheckIcon, info: InfoIcon, warn: CircleAlertIcon, fail: CircleAlertIcon };
 
@@ -152,13 +142,6 @@ function PageOutcome({ page }: { page: Publication }) {
  * A page a publish failed for shows above the checklist with why (`PageOutcome`); publish again
  * retries it.
  *
- * A proposed plan, a revision of a plan accepted before above all (rc.5: a message about its work
- * revises it), offers "Accept & review": the user's acceptance as proposed (`planMessage`, a `plan` part
- * in `execute` mode, contract §5.3), then, while the run carries out its pending items, the panel is out
- * of reach with that in front of it, or with the plan's question and the way to the chat, where it is
- * answered. Once the plan is `done` it is released, so the gates check it as on "Review & release". A
- * run that fails or is stopped leaves the plan `accepted` (contract) and is an error notification.
- *
  * With `page`, of a plan that wrote several, the panel is about that page: its outcome (`PageOutcome`)
  * above the checklist, and of the checks only those naming it as `target` and those naming no page,
  * which are about the whole plan. The transitions stay the plan's: they act on all of its pages.
@@ -186,51 +169,6 @@ export function ReviewPanel({ sessionId, state, page }: ReviewPanelProps) {
     // Asked while the plan can go on to publish: released, or done ("Publish anyway" after a refused release).
     const writtenPages = plan.status === 'released' || plan.status === 'done' ? writtenPagesOf(state.cms_objects) : [];
     const canPublish = useCanPublishCmsPages(writtenPages);
-    const transitionPlan = useTransitionPlan(sessionId);
-    const [accepting, setAccepting] = useState<Accepting>();
-    const isWorking = useWorkspaceEventStore((store) => isSessionWorking(selectSession(sessionId)(store)));
-    const hasPlanQuestion = useWorkspaceEventStore((store) => {
-        const session = selectSession(sessionId)(store);
-
-        return (session.interactions ?? []).some((interaction) => session.interactionPlans?.[interaction.id] === plan.id);
-    });
-    const acceptRunId = accepting?.runId;
-    const acceptEnd = useWorkspaceEventStore((store) => (acceptRunId === undefined
-        ? undefined
-        : selectSession(sessionId)(store).notices?.find(({ runId, kind }) => runId === acceptRunId && (kind === 'failed' || kind === 'cancelled'))));
-    // From the acceptance until the plan is done: the version accepted here, then its execute run.
-    const isCarryingOut = Boolean(accepting) && !acceptEnd && (plan.status === 'accepted' || plan.status === 'running' || (plan.status === 'proposed' && plan.version === accepting?.version));
-    // The acceptance whose end was acted on (released, or reported as failed), so that it is acted on once.
-    const endedAccepting = useRef<Accepting>(undefined);
-
-    useEffect(() => {
-        if (!accepting || endedAccepting.current === accepting) {
-            return;
-        }
-
-        if (plan.status === 'done') {
-            endedAccepting.current = accepting;
-            transitionPlan.mutate({ planId: plan.id, request: { action: 'release' } });
-        } else if (acceptEnd) {
-            endedAccepting.current = accepting;
-            useErrorNotificationStore.getState().addError(acceptEnd.kind === 'failed'
-                ? { messageKey: 'review.acceptFailed', detailKey: problemMessageKey(acceptEnd.error) }
-                : { messageKey: 'review.acceptFailed' });
-        }
-    }, [accepting, acceptEnd, plan.status, plan.id, transitionPlan]);
-
-    function acceptAndReview() {
-        const version = plan.version;
-
-        setAccepting({ version });
-        sendMessage.mutate(planMessage(plan), {
-            onSuccess: (accepted) => setAccepting({ version, runId: accepted.run_id }),
-            onError: (error) => {
-                setAccepting(undefined);
-                useErrorNotificationStore.getState().addError({ messageKey: 'review.acceptFailed', detailKey: errorMessageKey(error) });
-            },
-        });
-    }
 
     // A suggested fix is a message to the agent; the chat shows how it goes. It revises this plan
     // (`options.mode: revise`, rc.5) rather than leaving it to the session agent, which may draft a
@@ -282,7 +220,7 @@ export function ReviewPanel({ sessionId, state, page }: ReviewPanelProps) {
             </header>
 
             <div className={styles.main}>
-                <div className={styles.body} data-checking={isChecking || isCarryingOut || undefined} aria-busy={isChecking || isCarryingOut} inert={isChecking || isCarryingOut}>
+                <div className={styles.body} data-checking={isChecking || undefined} aria-busy={isChecking} inert={isChecking}>
                     <p className={styles.summary}>{plan.summary}</p>
 
                     {page && <PageOutcome key={page.cms_ref.id} page={page} />}
@@ -309,34 +247,16 @@ export function ReviewPanel({ sessionId, state, page }: ReviewPanelProps) {
                         {checkGroups(otherChecks)}
                     </section>
                 </div>
-                {(isChecking || isCarryingOut) && (
+                {isChecking && (
                     <div className={styles.checking} role="status">
-                        {isCarryingOut && hasPlanQuestion
-                            ? (
-                                <>
-                                    {t('review.question')}
-                                    <Link to="/sessions/$id" params={{ id: sessionId }}>{t('review.answerInChat')}</Link>
-                                </>
-                            )
-                            : (
-                                <>
-                                    <ThinkingDots isLarge />
-                                    {t(isCarryingOut ? 'review.carryingOut' : 'review.checking')}
-                                </>
-                            )}
+                        <ThinkingDots isLarge />
+                        {t('review.checking')}
                     </div>
                 )}
             </div>
 
             <footer className={styles.foot}>
-                <PlanHead sessionId={sessionId} plan={plan} isInCard withGatedActions canPublish={canPublish}>
-                    {plan.status === 'proposed' && (
-                        <Button variant="primary" size="sm" disabled={isWorking || isCarryingOut} onClick={acceptAndReview}>
-                            <CheckCheckIcon size={14} />
-                            {t('review.acceptAndReview')}
-                        </Button>
-                    )}
-                </PlanHead>
+                <PlanHead sessionId={sessionId} plan={plan} isInCard withGatedActions canPublish={canPublish} />
             </footer>
         </section>
     );

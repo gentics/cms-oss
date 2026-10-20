@@ -33,6 +33,12 @@ function stubPlanState(cmsObjects: CmsObjectRef[]) {
     )));
 }
 
+// The head's line of text (a `span`), not the head row around it, which reads the same while its buttons
+// are icons only (Discard, the toggle).
+function headLine(text: string) {
+    return (_: string, element: Element | null) => element?.tagName === 'SPAN' && element.textContent === text;
+}
+
 async function renderBar(status: PlanStatus, overrides: Partial<Plan> = {}) {
     renderWithProviders(<PlanBar sessionId={SESSION} plan={plan(status, overrides)} />, { path: `/sessions/${SESSION}` });
 
@@ -53,9 +59,17 @@ describe('PlanBar', () => {
     it('offers no release or publish, only the way to the review page, which opens this plan', async () => {
         const bar = await renderBar('done');
 
-        expect(within(bar).getByRole('button', { name: 'Discard' })).toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Release' })).not.toBeInTheDocument();
         expect(await within(bar).findByRole('link', { name: 'Review & release' })).toHaveAttribute('href', `/sessions/${SESSION}/review?plan=pl-1`);
+    });
+
+    it('offers discard with the other buttons, asking first', async () => {
+        const user = userEvent.setup();
+        const bar = await renderBar('done');
+
+        await user.click(within(bar).getByRole('button', { name: 'Discard' }));
+
+        expect(await screen.findByRole('dialog', { name: 'Discard this plan?' })).toBeInTheDocument();
     });
 
     it('keeps a released plan\'s publish and request review for the review page', async () => {
@@ -139,10 +153,10 @@ describe('PlanBar', () => {
         const bar = await renderBar('done', { items });
 
         // The head's line alone (the folded plan card has a step "Done" of its own).
-        expect(within(bar).getByText((_, element) => element?.textContent === 'Done · 1 page to publish')).toBeInTheDocument();
+        expect(within(bar).getByText(headLine('Done · 1 page to publish'))).toBeInTheDocument();
     });
 
-    it('shows the plan at a glance in the head while collapsed', async () => {
+    it('says only the status in the head while collapsed, the plan at a glance only in the plan itself', async () => {
         const user = userEvent.setup();
         const items: Plan['items'] = [
             { id: 'p1', label: 'Create folder Events', kind: 'create', workflow: 'content_create', status: 'done', creates: { type: 'folder', label: 'Events' } },
@@ -151,12 +165,33 @@ describe('PlanBar', () => {
         ];
         const bar = await renderBar('running', { items });
 
-        expect(within(bar).getByText(/1\/1 folder · 0\/1 new page/)).toBeInTheDocument();
+        expect(within(bar).queryByText(/1\/1 folder · 0\/1 new page/)).not.toBeInTheDocument();
 
         await user.click(within(bar).getByRole('button', { name: 'Show plan' }));
 
-        expect(within(bar).queryByText(/1\/1 folder · 0\/1 new page/)).not.toBeInTheDocument();
         expect(within(bar).getByRole('group', { name: 'At a glance' })).toHaveTextContent('1/1 folder');
+    });
+
+    it('offers Adjust and Accept plan in the head, also collapsed; Adjust expands it, Done says so after the status', async () => {
+        const user = userEvent.setup();
+        const items: Plan['items'] = [
+            { id: 'p1', label: 'Create the page', kind: 'create', workflow: 'content_create', status: 'pending' },
+            { id: 'p2', label: 'Write the intro', kind: 'create', workflow: 'content_create', status: 'pending' },
+        ];
+        const bar = await renderBar('proposed', { items });
+
+        expect(within(bar).getByRole('button', { name: 'Show plan' })).toHaveAttribute('aria-expanded', 'false');
+        expect(within(bar).getByRole('button', { name: 'Accept plan' })).toBeInTheDocument();
+
+        await user.click(within(bar).getByRole('button', { name: 'Adjust' }));
+
+        expect(within(bar).getByRole('button', { name: 'Hide plan' })).toHaveAttribute('aria-expanded', 'true');
+
+        await user.clear(within(bar).getByRole('textbox', { name: 'Step 2' }));
+        await user.type(within(bar).getByRole('textbox', { name: 'Step 2' }), 'Write a short intro');
+        await user.click(within(bar).getByRole('button', { name: 'Done' }));
+
+        expect(within(bar).getByText(headLine('Proposed · Adjusted by you'))).toBeInTheDocument();
     });
 
     it('expands by itself for a proposal, but not for a question of its run, which is answered in the chat', async () => {
@@ -252,13 +287,44 @@ describe('PlanBar', () => {
         expect(within(bar).queryByRole('list')).not.toBeInTheDocument();
     });
 
-    it('shows a revision being drafted with its items, offering discard only', async () => {
+    it('shows a revision being drafted as such, offering discard only', async () => {
         const items: Plan['items'] = [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'done' }];
         const bar = await renderBar('drafting', { items });
 
         expect(within(bar).getByText('Being revised')).toBeInTheDocument();
         expect(within(bar).getByRole('button', { name: 'Discard' })).toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
+    });
+
+    it('says to tell GenAIx how to go on with a plan its run left drafting (failed or stopped)', async () => {
+        const items: Plan['items'] = [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'pending' }];
+        const bar = await renderBar('drafting', { items });
+
+        expect(within(bar).getByText('Tell GenAIx how to continue with this plan')).toBeInTheDocument();
+        expect(within(bar).getByRole('button', { name: 'Discard' })).toBeInTheDocument();
+    });
+
+    it('says the same for a plan left accepted, whose release is made on the review page', async () => {
+        const bar = await renderBar('accepted');
+
+        expect(within(bar).getByText('Tell GenAIx how to continue with this plan')).toBeInTheDocument();
+    });
+
+    it('says nothing of the kind while the plan\'s run works', async () => {
+        useWorkspaceEventStore.getState().applyEvent(SESSION, {
+            seq: 1,
+            ts: '2026-10-14T14:00:01Z',
+            session_id: SESSION,
+            run_id: 'r-1',
+            plan_id: 'pl-1',
+            type: 'run.started',
+            run: { id: 'r-1', status: 'running', plan_id: 'pl-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 },
+        });
+
+        const bar = await renderBar('drafting');
+
+        expect(within(bar).getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+        expect(within(bar).queryByText('Tell GenAIx how to continue with this plan')).not.toBeInTheDocument();
     });
 
     it('has a review link unless every module of the plan writes nothing (rc.5: several modules)', async () => {
@@ -304,9 +370,10 @@ describe('PlanBar', () => {
         expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
     });
 
-    it('has a review link for a proposed revision of a plan accepted before, which is accepted there', async () => {
+    it('has no review link for a proposed revision either: it is accepted in the bar, and reviewed once done', async () => {
         const bar = await renderBar('proposed', { version: 3, accepted_version: 2 });
 
-        expect(await within(bar).findByRole('link', { name: 'Review & release' })).toHaveAttribute('href', `/sessions/${SESSION}/review?plan=pl-1`);
+        expect(within(bar).getByRole('button', { name: 'Accept plan' })).toBeInTheDocument();
+        expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
     });
 });

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import i18n from '@/i18n';
 import type { GenaixEvent } from '@/services/apiService/genaix/types';
 
 import { connectSessionEvents, type EventStreamStatus, HEARTBEAT_TIMEOUT_MS, parseSse, type SseFrame } from './eventStream';
@@ -145,6 +146,7 @@ describe('connectSessionEvents', () => {
         await done;
         vi.useRealTimers();
         vi.unstubAllGlobals();
+        await i18n.changeLanguage('en');
     });
 
     it('resumes after lastSeq with Last-Event-ID and after, and skips events it has passed on', async () => {
@@ -171,6 +173,16 @@ describe('connectSessionEvents', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         expect(requestOf(fetchMock, 0)).toEqual({ url: '/rest/proxy/genaix/sessions/s-1/events?after=0', lastEventId: null });
+    });
+
+    it('sends the Workspace UI\'s language as Accept-Language', async () => {
+        await i18n.changeLanguage('de');
+        const fetchMock = stubFetch();
+
+        connect();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(new Headers(fetchMock.mock.calls[0]![1]?.headers).get('Accept-Language')).toBe('de');
     });
 
     it('reconnects 1 s after the stream ends, from the last seq seen', async () => {

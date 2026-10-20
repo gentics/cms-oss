@@ -486,8 +486,8 @@ public class FileResourceImpl implements FileResource {
 					}
 				}
 			}
-			}
-			}
+		}
+	}
 
 	/**
 	 * Returns the filename of the file
@@ -645,29 +645,8 @@ public class FileResourceImpl implements FileResource {
 					}
 				}
 			}
-		} catch (Exception e) {
-			// If we encounter an error we just rollback
-			if (t != null) {
-				try {
-					t.rollback(false);
-				} catch (TransactionException e1) {
-					NodeLogger.getNodeLogger(getClass()).error("Error while rollback.", e1);
-					throw new WebApplicationException(new Exception("Error while saving file - Error while rollback of transaction.", e1));
-				}
-			} else {
-				NodeLogger.getNodeLogger(getClass()).warn("Transaction for rollback not available.", e);
-			}
-
-			NodeLogger.getNodeLogger(getClass()).error("Error while creating file.", e);
-
-			Message message = new Message(Message.Type.CRITICAL, e.getMessage());
-			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
-
-			if (e.getCause() != null) {
-				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getCause().getMessage());
-			}
-
-			return new FileUploadResponse(message, responseInfo, false);
+		} catch (IOException e) {
+			throw new NodeException(e);
 		}
 	}
 

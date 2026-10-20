@@ -1,21 +1,27 @@
 <div #tabContainer class="gtx-editor-tabs gtx-overflow-managed">
-  @for (tab of visibleTabs; track tab.id) {
-    <button
-      class="editor-tab"
-      [attr.data-id]="tab.id"
-      [class.active]="tab.id === activeTab"
-      [disabled]="tagEditorOpen"
-      (click)="handleUserChangeTab(tab.id)"
-      >
-      <div class="tab-icon">
-        <icon>{{ tab.icon }}</icon>
-        @if (tab.id === TAB_ID_LINK_CHECKER && brokenLinkCount) {
-          <div class="icon-badge">
-            {{ brokenLinkCount }}
-          </div>
-        }
-      </div>
-      <div class="tab-label">{{ tab.label | gtxI18n }}</div>
-    </button>
-  }
+    @for (tab of visibleTabs; track tab.id) {
+        <gtx-tooltip position="bottom">
+            <button
+                class="editor-tab"
+                [attr.data-id]="tab.id"
+                [class.active]="tab.id === activeTab"
+                [disabled]="tagEditorOpen"
+                (click)="handleUserChangeTab(tab.id)"
+            >
+                <div class="tab-icon">
+                    <icon>{{ tab.icon }}</icon>
+                    @if (tab.id === TAB_ID_LINK_CHECKER && brokenLinkCount) {
+                        <div class="icon-badge">
+                            {{ brokenLinkCount }}
+                        </div>
+                    }
+                </div>
+                <div class="tab-label">{{ tab.label | gtxI18n }}</div>
+            </button>
+
+            <div gtx-tooltip-content class="tab-tooltip">
+                {{ tab.label | gtxI18n }}
+            </div>
+        </gtx-tooltip>
+    }
 </div>

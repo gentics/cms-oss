@@ -18,6 +18,7 @@ import java.util.zip.ZipInputStream;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.PropertyTrx;
+import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.NodeFeatureClosure;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileFactory;
@@ -813,9 +814,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 			assertResponseOK(supply(() -> new ContentStagingResourceImpl().add(packageName, "node", node1Id, false)));
 			assertResponseOK(new ContentStagingResourceImpl().exportFromCms(packageName, 0));
 
-			operate(t -> t.getNodeConfig().getDefaultPreferences().setFeature(Feature.FORMS, false));
-
-			try (LoggedInClient client = systemClient()) {
+			try (FeatureClosure fc = new FeatureClosure(Feature.FORMS, false); LoggedInClient client = systemClient()) {
 				Response response = client.get().base().path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("import")
 						.request().post(Entity.json(StringUtils.EMPTY));
 				assertThat(response.getStatusInfo().toEnum()).as("Response status").isEqualTo(Status.INTERNAL_SERVER_ERROR);

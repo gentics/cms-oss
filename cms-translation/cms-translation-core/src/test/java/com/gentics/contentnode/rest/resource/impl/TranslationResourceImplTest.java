@@ -38,6 +38,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mockito;
 
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
@@ -140,11 +141,7 @@ public class TranslationResourceImplTest {
 			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.INTERNAL_SERVER_ERROR);
 			var response = ((RestMappedException) thrown).getRestResponse();
 
-			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.FAILURE) ;
-			final var expectedMessage = "The page could not be translated because the markup of the translated page is invalid";
-			final var actualMessage = response.getResponseInfo().getResponseMessage();
-
-			assertThat(actualMessage).contains(expectedMessage);
+			assertResponse(response, ResponseCode.FAILURE, msg);
 		});
 	}
 
@@ -169,10 +166,7 @@ public class TranslationResourceImplTest {
 			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.BAD_REQUEST);
 			var response = ((RestMappedException) thrown).getRestResponse();
 
-			final var expectedMessage = "Error while translating page: invalid language code";
-			final var actualMessage = response.getResponseInfo().getResponseMessage();
-
-			assertThat(actualMessage).contains(expectedMessage);
+			assertResponse(response, ResponseCode.FAILURE, msg);
 		});
 	}
 

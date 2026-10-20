@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import type {
     FileMode,
     FilePage,
@@ -91,6 +92,7 @@ export async function genaixRequest<T>(path: string, init?: RequestInit): Promis
     const headers = new Headers(init?.headers);
 
     headers.set('Accept', 'application/json');
+    headers.set('Accept-Language', i18n.language);
 
     return httpRequest<T>(url, { credentials: 'same-origin', ...init, headers }, toGenaixApiError);
 }
@@ -240,6 +242,7 @@ export function uploadSessionFile(sessionId: string, file: File, mode: FileMode,
 
         request.open('POST', url);
         request.setRequestHeader('Accept', 'application/json');
+        request.setRequestHeader('Accept-Language', i18n.language);
         request.upload.onprogress = (event) => {
             if (event.lengthComputable && event.total > 0) {
                 onProgress?.(event.loaded / event.total);

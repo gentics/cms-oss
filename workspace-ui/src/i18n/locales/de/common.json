@@ -313,6 +313,7 @@
         },
         "transitionFailed": "Der Plan konnte nicht geändert werden",
         "review": "Prüfen & freigeben",
+        "stalled": "Sag GenAIx, wie es mit dem Plan weitergehen soll",
         "discard": {
             "title": "Diesen Plan verwerfen?",
             "keep": "Der Plan wird geschlossen. Seiten, die er schon geändert hat, bleiben als Entwurf im CMS.",
@@ -421,7 +422,6 @@
             "moveDown": "Schritt nach unten",
             "remove": "Schritt entfernen",
             "add": "Schritt hinzufügen",
-            "keys": "Enter fügt einen Schritt hinzu · Esc bricht ab",
             "cancel": "Abbrechen",
             "done": "Fertig",
             "status": {
@@ -519,11 +519,6 @@
         "acknowledged": "bestätigt",
         "passedChecks_one": "{{count}} Prüfung bestanden",
         "passedChecks_other": "{{count}} Prüfungen bestanden",
-        "acceptAndReview": "Annehmen & prüfen",
-        "carryingOut": "Der Agent setzt die Änderungen um…",
-        "question": "Der Agent hat eine Frage zu den Änderungen.",
-        "answerInChat": "Im Chat antworten",
-        "acceptFailed": "Die Änderungen konnten nicht umgesetzt werden",
         "outcome": {
             "passed": "Alle Prüfungen bestanden. Der Plan ist freigegeben.",
             "withWarnings_one": "Freigegeben mit {{count}} Warnung.",

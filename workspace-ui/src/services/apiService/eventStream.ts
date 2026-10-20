@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import {
     GENAIX_API_BASE,
     GenaixApiError,
@@ -160,7 +161,7 @@ export async function connectSessionEvents(options: SessionEventStreamOptions): 
             resetWatchdog();
 
             const url = `${GENAIX_API_BASE}/sessions/${encodeURIComponent(sessionId)}/events?after=${lastSeq}`;
-            const headers = new Headers({ Accept: 'text/event-stream' });
+            const headers = new Headers({ 'Accept': 'text/event-stream', 'Accept-Language': i18n.language });
 
             if (lastSeq > 0) {
                 headers.set('Last-Event-ID', String(lastSeq));
@@ -259,7 +260,7 @@ export async function replaySessionEvents({ sessionId, signal }: { sessionId: st
 
         const url = `${GENAIX_API_BASE}/sessions/${encodeURIComponent(sessionId)}/events?after=0&follow=false`;
         const response = await fetch(url, {
-            headers: { Accept: 'text/event-stream' },
+            headers: { 'Accept': 'text/event-stream', 'Accept-Language': i18n.language },
             credentials: 'same-origin',
             cache: 'no-store',
             signal: connection.signal,

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import i18n from '@/i18n';
 import { HttpError } from '@/services/httpService/httpService';
 import { type StubbedUpload, stubUploads } from '@/test/stubUploads';
 
@@ -118,8 +119,9 @@ describe('genaixRequest errors', () => {
 });
 
 describe('routes', () => {
-    afterEach(() => {
+    afterEach(async () => {
         vi.unstubAllGlobals();
+        await i18n.changeLanguage('en');
     });
 
     it('sends Accept: application/json and the same-origin credentials', async () => {
@@ -131,6 +133,27 @@ describe('routes', () => {
 
         expect(new Headers(init.headers).get('Accept')).toBe('application/json');
         expect(init.credentials).toBe('same-origin');
+    });
+
+    it('sends the Workspace UI\'s language as Accept-Language, also with an upload', async () => {
+        await i18n.changeLanguage('de');
+
+        // A new response per call: the test reads two.
+        const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ items: [] }));
+        const uploads = stubUploads([{ status: 201, body: { id: 'f-1' } }]);
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        await listWorkflows();
+        await uploadSessionFile('s-1', new File(['text'], 'brief.txt'), 'verbatim');
+
+        expect(new Headers(fetchMock.mock.calls[0]![1]!.headers).get('Accept-Language')).toBe('de');
+        expect(new Headers(uploads[0]!.headers).get('Accept-Language')).toBe('de');
+
+        await i18n.changeLanguage('en');
+        await listWorkflows();
+
+        expect(new Headers(fetchMock.mock.calls[1]![1]!.headers).get('Accept-Language')).toBe('en');
     });
 
     it('listWorkflows returns the items of GET /workflows', async () => {

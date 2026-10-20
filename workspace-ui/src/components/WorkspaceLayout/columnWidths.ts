@@ -1,9 +1,11 @@
 /** Smallest width of the left column in px. */
 export const MIN_LEFT_WIDTH = 210;
+/** Largest width of the left column in px. */
+const MAX_LEFT_WIDTH = 480;
 /** Smallest width of the right column in px. */
 export const MIN_RIGHT_WIDTH = 320;
-/** Width the center column always keeps free in px (design.md §11; the draft's script used 300). */
-const MIN_CENTER_WIDTH = 320;
+/** Width the center column always keeps free in px when a side column is resized. */
+const MIN_CENTER_WIDTH = 480;
 /** Width of one splitter track in px (design.md §6.2). */
 export const SPLITTER_WIDTH = 9;
 
@@ -31,14 +33,14 @@ interface ClampedColumnWidths extends ColumnWidths {
 }
 
 /**
- * Fits the requested widths into the grid: each side column keeps its minimum, and together they
- * leave the center column at least `MIN_CENTER_WIDTH`. A column without a requested width counts
- * with its rendered width.
+ * Fits the requested widths into the grid: each side column keeps its minimum, the left one stays
+ * within `MAX_LEFT_WIDTH`, and together they leave the center column at least `MIN_CENTER_WIDTH`. A
+ * column without a requested width counts with its rendered width.
  */
 export function clampColumnWidths({ total, isLeftVisible, isRightVisible = true, requested, rendered }: ColumnWidthInput): ClampedColumnWidths {
     const splitters = (isLeftVisible ? SPLITTER_WIDTH : 0) + (isRightVisible ? SPLITTER_WIDTH : 0);
     const free = total - splitters - MIN_CENTER_WIDTH;
-    const maxLeft = Math.max(MIN_LEFT_WIDTH, free - (isRightVisible ? (requested.right ?? rendered.right) : 0));
+    const maxLeft = Math.min(MAX_LEFT_WIDTH, Math.max(MIN_LEFT_WIDTH, free - (isRightVisible ? (requested.right ?? rendered.right) : 0)));
     const maxRight = Math.max(MIN_RIGHT_WIDTH, free - (isLeftVisible ? (requested.left ?? rendered.left) : 0));
 
     return {

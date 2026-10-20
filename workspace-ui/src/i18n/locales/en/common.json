@@ -313,6 +313,7 @@
         },
         "transitionFailed": "The plan could not be changed",
         "review": "Review & release",
+        "stalled": "Tell GenAIx how to continue with this plan",
         "discard": {
             "title": "Discard this plan?",
             "keep": "The plan is closed. Pages it already changed stay as drafts in the CMS.",
@@ -421,7 +422,6 @@
             "moveDown": "Move step down",
             "remove": "Remove step",
             "add": "Add a step",
-            "keys": "Enter adds a step · Esc cancels",
             "cancel": "Cancel",
             "done": "Done",
             "status": {
@@ -519,11 +519,6 @@
         "acknowledged": "acknowledged",
         "passedChecks_one": "{{count}} check passed",
         "passedChecks_other": "{{count}} checks passed",
-        "acceptAndReview": "Accept & review",
-        "carryingOut": "The agent carries out the changes…",
-        "question": "The agent has a question about the changes.",
-        "answerInChat": "Answer in the chat",
-        "acceptFailed": "The changes could not be carried out",
         "outcome": {
             "passed": "All checks passed. The plan is released.",
             "withWarnings_one": "Released with {{count}} warning.",

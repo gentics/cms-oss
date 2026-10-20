@@ -200,7 +200,8 @@ function accepted(runId: string) {
 }
 
 function actionNames() {
-    return within(screen.getByRole('contentinfo')).queryAllByRole('button').map((button) => button.textContent);
+    // By accessible name: discard is an icon with its name as label.
+    return within(screen.getByRole('contentinfo')).queryAllByRole('button').map((button) => button.getAttribute('aria-label') ?? button.textContent);
 }
 
 describe('ReviewPanel', () => {
@@ -590,84 +591,11 @@ describe('ReviewPanel', () => {
         });
     });
 
-    describe('a proposed revision: Accept & review', () => {
-        // A revision of a plan accepted at version 2, proposed at version 3 (rc.5).
-        function revision(status: PlanStatus = 'proposed', extra: Partial<PlanState> = {}): PlanState {
-            const state = planState(status, extra);
+    it('offers no acceptance of a proposed revision: it is accepted in the plan bar', async () => {
+        stubRoutes();
+        await renderPanel({ ...planState('proposed'), plan: { ...planState('proposed').plan, version: 3, accepted_version: 2 } });
 
-            return { ...state, plan: { ...state.plan, version: 3, accepted_version: 2 } };
-        }
-
-        it('accepts the revision as proposed, shows the work under way, and releases it once done', async () => {
-            const user = userEvent.setup();
-            const { sent, messages } = stubRoutes();
-            const { setState } = await renderLivePanel(revision());
-
-            expect(actionNames()).toEqual(['Discard', 'Accept & review']);
-            await user.click(screen.getByRole('button', { name: 'Accept & review' }));
-
-            await waitFor(() => expect(messages).toEqual([{
-                parts: [{ type: 'plan', plan: { plan_id: PLAN_ID, based_on_version: 3 } }],
-                options: { mode: 'execute' },
-            }]));
-            expect(await screen.findByText('The agent carries out the changes…')).toBeInTheDocument();
-            expect(screen.getByRole('region', { name: 'Checklist' }).closest('[aria-busy="true"]')).not.toBeNull();
-
-            setState(revision('running'));
-            expect(screen.getByText('The agent carries out the changes…')).toBeInTheDocument();
-            expect(sent).toEqual([]);
-
-            setState(revision('done'));
-
-            await waitFor(() => expect(sent).toEqual([{ action: 'release' }]));
-            expect(screen.queryByText('The agent carries out the changes…')).not.toBeInTheDocument();
-        });
-
-        it('shows the question of the plan\'s run, and the way to the chat where it is answered', async () => {
-            const user = userEvent.setup();
-
-            stubRoutes();
-            const { setState } = await renderLivePanel(revision());
-
-            await user.click(screen.getByRole('button', { name: 'Accept & review' }));
-            setState(revision('running'));
-            applyEvent(1, 'interaction.requested', {
-                run_id: 'r-1',
-                plan_id: PLAN_ID,
-                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'A second link?', multi: false, other_allowed: false, blocking: true, status: 'pending', requested_at: '2026-10-14T09:00:00Z', expires_at: '2099-01-01T00:00:00Z', run_id: 'r-1' },
-            });
-
-            expect(await screen.findByText('The agent has a question about the changes.')).toBeInTheDocument();
-            expect(screen.getByRole('link', { name: 'Answer in the chat' })).toHaveAttribute('href', `/sessions/${SESSION}`);
-        });
-
-        it('says so when the run that carries it out fails, and releases nothing', async () => {
-            const user = userEvent.setup();
-            const { sent } = stubRoutes();
-            const { setState } = await renderLivePanel(revision());
-
-            await user.click(screen.getByRole('button', { name: 'Accept & review' }));
-            await screen.findByText('The agent carries out the changes…');
-            setState(revision('accepted'));
-
-            const error = { type: 't', title: 'Locked', status: 423, genaix_code: 'cms_object_locked' as const };
-
-            // The plan stays accepted after a failed execute run (contract §4.1).
-            applyEvent(1, 'run.failed', { run_id: 'r-1', run: { id: 'r-1', status: 'failed' }, error });
-
-            await waitFor(() => expect(screen.queryByText('The agent carries out the changes…')).not.toBeInTheDocument());
-            expect(useErrorNotificationStore.getState().errors).toMatchObject([
-                { messageKey: 'review.acceptFailed', detailKey: 'errors.genaix.cms_object_locked' },
-            ]);
-            expect(sent).toEqual([]);
-        });
-
-        it('offers no Accept & review once the plan is not proposed', async () => {
-            stubRoutes();
-            await renderPanel(revision('done'));
-
-            expect(screen.queryByRole('button', { name: 'Accept & review' })).not.toBeInTheDocument();
-        });
+        expect(actionNames()).toEqual(['Discard']);
     });
 
     it('requests a review of a released plan', async () => {

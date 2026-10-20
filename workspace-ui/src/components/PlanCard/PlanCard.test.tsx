@@ -1,9 +1,12 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useTranslation } from 'react-i18next';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InteractionCard } from '@/components/InteractionCard/InteractionCard';
+import { PlanAdjustActions } from '@/components/PlanBar/PlanAdjustActions';
 import { ensureSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
+import { usePlanAdjustment } from '@/hooks/usePlanAdjustment';
 import type { Interaction, Plan, PlanItem } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
@@ -67,6 +70,20 @@ async function postedBody(fetchMock: ReturnType<typeof stubFetch>): Promise<unkn
     return JSON.parse(String(init?.body));
 }
 
+// The card with its adjustment, its note and its buttons, as the plan bar puts them together (`PlanBar`).
+function AdjustablePlan({ plan }: { plan: Plan }) {
+    const { t } = useTranslation();
+    const adjustment = usePlanAdjustment('s-1', plan, true);
+
+    return (
+        <>
+            {adjustment.noteKey && <p>{t(adjustment.noteKey)}</p>}
+            <PlanCard plan={plan} sessionId="s-1" adjustment={adjustment} />
+            <PlanAdjustActions adjustment={adjustment} />
+        </>
+    );
+}
+
 describe('PlanCard', () => {
     beforeEach(() => {
         useWorkspaceEventStore.setState({ sessions: {} });
@@ -83,7 +100,7 @@ describe('PlanCard', () => {
         const user = userEvent.setup();
         const fetchMock = stubFetch();
 
-        render(<PlanCard plan={PLAN} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={PLAN} />, { wrapper: createWrapper() });
         await user.click(screen.getByRole('button', { name: 'Accept plan' }));
 
         expect(await postedBody(fetchMock)).toEqual({
@@ -96,7 +113,7 @@ describe('PlanCard', () => {
         const user = userEvent.setup();
         const fetchMock = stubFetch();
 
-        render(<PlanCard plan={PLAN} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={PLAN} />, { wrapper: createWrapper() });
         await user.click(screen.getByRole('button', { name: 'Adjust' }));
         await user.clear(screen.getByRole('textbox', { name: 'Step 2' }));
         await user.type(screen.getByRole('textbox', { name: 'Step 2' }), 'Write a short intro');
@@ -127,35 +144,52 @@ describe('PlanCard', () => {
         stubFetch();
 
         const v1 = { ...PLAN, version: 1 };
-        const { rerender } = render(<PlanCard plan={v1} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        const { rerender } = render(<AdjustablePlan plan={v1} />, { wrapper: createWrapper() });
 
         await user.click(screen.getByRole('button', { name: 'Accept plan' }));
         await waitFor(() => expect(screen.queryByRole('button', { name: 'Accept plan' })).not.toBeInTheDocument());
 
         // Executed and done, then "Ask for a change": drafted at the same version, proposed at the next one.
-        rerender(<PlanCard plan={{ ...v1, status: 'done', accepted_version: 1 }} sessionId="s-1" canAnswer />);
-        rerender(<PlanCard plan={{ ...v1, status: 'drafting', accepted_version: 1 }} sessionId="s-1" canAnswer />);
-        rerender(<PlanCard plan={{ ...v1, status: 'proposed', version: 2, accepted_version: 1, reason: 'Revised: shorter intro' }} sessionId="s-1" canAnswer />);
+        rerender(<AdjustablePlan plan={{ ...v1, status: 'done', accepted_version: 1 }} />);
+        rerender(<AdjustablePlan plan={{ ...v1, status: 'drafting', accepted_version: 1 }} />);
+        rerender(<AdjustablePlan plan={{ ...v1, status: 'proposed', version: 2, accepted_version: 1 }} />);
 
         expect(screen.getByRole('button', { name: 'Accept plan' })).toBeEnabled();
         expect(screen.getByRole('button', { name: 'Adjust' })).toBeEnabled();
     });
 
     it('marks what a proposed revision added, and strikes a removed step through (rc.5)', () => {
-        render(<PlanCard plan={REVISION} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={REVISION} />, { wrapper: createWrapper() });
 
-        const [p1, , p3, , p5] = screen.getAllByRole('listitem');
+        const [p3, , p5] = screen.getAllByRole('listitem');
 
-        expect(p1).toHaveTextContent('Create page PNDemo');
-        expect(p1).not.toHaveTextContent('New');
         expect(p3).toHaveTextContent('Upload the PDFNew');
         expect(p5).toHaveTextContent('Removed');
+    });
+
+    it('shows only the next steps of a revision, not what an earlier version did, until it is accepted', () => {
+        const items: PlanItem[] = [
+            { id: 'p1', label: 'Create page Fair', kind: 'create', workflow: 'content_create', status: 'done', creates: { type: 'page', label: 'Fair' } },
+            { id: 'p2', label: 'Create page Expo', kind: 'create', workflow: 'content_create', status: 'pending', creates: { type: 'page', label: 'Expo' } },
+            { id: 'p3', label: 'Create page Gala', kind: 'create', workflow: 'content_create', status: 'pending', creates: { type: 'page', label: 'Gala' } },
+        ];
+        const revision: Plan = { ...PLAN, version: 3, accepted_version: 2, items };
+        const { rerender } = render(<AdjustablePlan plan={revision} />, { wrapper: createWrapper() });
+
+        expect(screen.queryByText('Create page Fair')).not.toBeInTheDocument();
+        expect(screen.getAllByRole('listitem')[0]).toHaveTextContent(/^1Create page Expo/);
+        expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('+2 new pages');
+
+        rerender(<AdjustablePlan plan={{ ...revision, status: 'running' }} />);
+
+        expect(screen.getByText('Create page Fair')).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('1/3 new pages');
     });
 
     it('marks nothing on a plan that was never accepted, where every step is added', () => {
         const items: PlanItem[] = PLAN.items.map((item) => ({ ...item, change: 'added' }));
 
-        render(<PlanCard plan={{ ...PLAN, items }} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={{ ...PLAN, items }} />, { wrapper: createWrapper() });
 
         expect(screen.queryByText('New')).not.toBeInTheDocument();
     });
@@ -164,7 +198,7 @@ describe('PlanCard', () => {
         const user = userEvent.setup();
         const fetchMock = stubFetch();
 
-        render(<PlanCard plan={REVISION} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={REVISION} />, { wrapper: createWrapper() });
         await user.click(screen.getByRole('button', { name: 'Accept plan' }));
 
         expect(await postedBody(fetchMock)).toEqual({
@@ -173,15 +207,16 @@ describe('PlanCard', () => {
         });
     });
 
-    it('keeps done steps read-only while adjusting, and blocks what breaks an order of dependencies', async () => {
+    it('hides done steps while adjusting, and blocks what breaks an order of dependencies', async () => {
         const user = userEvent.setup();
 
-        render(<PlanCard plan={REVISION} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={REVISION} />, { wrapper: createWrapper() });
         await user.click(screen.getByRole('button', { name: 'Adjust' }));
 
-        // Only the pending steps are fields; p1 and p2 are done.
+        // Only the pending steps, numbered from 1; p1 and p2 are done and kept out of view.
         expect(screen.getAllByRole('textbox')).toHaveLength(2);
-        expect(screen.queryByRole('textbox', { name: 'Step 1' })).not.toBeInTheDocument();
+        expect(screen.getByRole('textbox', { name: 'Step 1' })).toHaveValue('Upload the PDF');
+        expect(screen.queryByText('Create page PNDemo')).not.toBeInTheDocument();
 
         const [upP3, upP4] = screen.getAllByRole('button', { name: 'Move step up' });
         const [downP3, downP4] = screen.getAllByRole('button', { name: 'Move step down' });
@@ -201,7 +236,7 @@ describe('PlanCard', () => {
         const user = userEvent.setup();
         const fetchMock = stubFetch();
 
-        render(<PlanCard plan={REVISION} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={REVISION} />, { wrapper: createWrapper() });
         await user.click(screen.getByRole('button', { name: 'Adjust' }));
         await user.click(screen.getByRole('button', { name: 'Restore' }));
         await user.click(screen.getByRole('button', { name: 'Done' }));
@@ -237,7 +272,7 @@ describe('PlanCard', () => {
             errors: [{ pointer: '/parts/0/plan/items/1', detail: 'p2 depends on p1', code: 'dependency_order' }],
         }, { status: 422 }));
 
-        render(<PlanCard plan={PLAN} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+        render(<AdjustablePlan plan={PLAN} />, { wrapper: createWrapper() });
         await user.click(screen.getByRole('button', { name: 'Adjust' }));
         await user.clear(screen.getByRole('textbox', { name: 'Step 2' }));
         await user.type(screen.getByRole('textbox', { name: 'Step 2' }), 'Write a short intro');
@@ -270,7 +305,7 @@ describe('PlanCard', () => {
         it('folds the sub-steps under their item, opened with its "n steps"', async () => {
             const user = userEvent.setup();
 
-            render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });
 
             expect(screen.getAllByRole('listitem')).toHaveLength(2);
             expect(screen.queryByText('Hero')).not.toBeVisible();
@@ -283,7 +318,7 @@ describe('PlanCard', () => {
         });
 
         it('lists the sub-steps of a plan with one item on one level with it, numbered in order', () => {
-            render(<PlanCard plan={{ ...GLANCE, items: GLANCE.items.filter(({ id }) => id !== 'p6') }} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            render(<AdjustablePlan plan={{ ...GLANCE, items: GLANCE.items.filter(({ id }) => id !== 'p6') }} />, { wrapper: createWrapper() });
 
             const items = screen.getAllByRole('listitem');
 
@@ -295,7 +330,7 @@ describe('PlanCard', () => {
         });
 
         it('shows what an item will create, then what it created', () => {
-            const { rerender } = render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            const { rerender } = render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });
             const [p1] = screen.getAllByRole('listitem');
 
             // What it creates, with where; its target, the parent folder, is in that path.
@@ -303,7 +338,7 @@ describe('PlanCard', () => {
 
             const created = { type: 'page' as const, id: '9142', node_id: 3, label: 'Neue Nutzungsbedingungen ab Q3' };
 
-            rerender(<PlanCard plan={{ ...GLANCE, status: 'running', items: GLANCE.items.map((item) => (item.id === 'p1' ? { ...item, status: 'done', created } : item)) }} sessionId="s-1" canAnswer />);
+            rerender(<AdjustablePlan plan={{ ...GLANCE, status: 'running', items: GLANCE.items.map((item) => (item.id === 'p1' ? { ...item, status: 'done', created } : item)) }} />);
 
             expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Neue Nutzungsbedingungen ab Q3');
             expect(screen.getAllByRole('listitem')[0]).not.toHaveTextContent('/Richtlinien/');
@@ -313,7 +348,7 @@ describe('PlanCard', () => {
             const user = userEvent.setup();
             const fetchMock = stubFetch();
 
-            render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });
             await user.click(screen.getByRole('button', { name: 'Adjust' }));
 
             // A field for p1 and p6 only; the sub-steps are shown under p1.
@@ -342,7 +377,7 @@ describe('PlanCard', () => {
             const user = userEvent.setup();
             const fetchMock = stubFetch();
 
-            render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });
             await user.click(screen.getByRole('button', { name: 'Adjust' }));
             await user.click(screen.getAllByRole('button', { name: 'Remove step' })[0]!);
 
@@ -360,7 +395,7 @@ describe('PlanCard', () => {
             const user = userEvent.setup();
             const items: PlanItem[] = Array.from({ length: 200 }, (_, i) => ({ id: `p${i}`, label: `Step ${i}`, kind: 'update', workflow: 'content_edit', status: 'pending' }));
 
-            render(<PlanCard plan={{ ...PLAN, items }} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            render(<AdjustablePlan plan={{ ...PLAN, items }} />, { wrapper: createWrapper() });
             await user.click(screen.getByRole('button', { name: 'Adjust' }));
 
             expect(screen.getByRole('button', { name: 'Add a step' })).toBeDisabled();
@@ -368,13 +403,13 @@ describe('PlanCard', () => {
         });
 
         it('counts the top-level items as tiles, "+n" while proposed and "done/total" once accepted', () => {
-            const { rerender } = render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+            const { rerender } = render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });
             const glance = screen.getByRole('group', { name: 'At a glance' });
 
             expect(glance).toHaveTextContent('+1 new page');
             expect(glance).toHaveTextContent('1 link');
 
-            rerender(<PlanCard plan={{ ...GLANCE, status: 'running', items: GLANCE.items.map((item) => (item.id === 'p1' ? { ...item, status: 'done' } : item)) }} sessionId="s-1" canAnswer />);
+            rerender(<AdjustablePlan plan={{ ...GLANCE, status: 'running', items: GLANCE.items.map((item) => (item.id === 'p1' ? { ...item, status: 'done' } : item)) }} />);
 
             expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('1/1 new page');
             expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('0/1 link');
@@ -405,7 +440,7 @@ describe('PlanCard', () => {
                 ask(GLANCE.id);
                 render(
                     <>
-                        <PlanCard plan={GLANCE} sessionId="s-1" canAnswer />
+                        <AdjustablePlan plan={GLANCE} />
                         <InteractionCard interaction={question} sessionId="s-1" />
                     </>,
                     { wrapper: createWrapper() },
@@ -424,7 +459,7 @@ describe('PlanCard', () => {
 
             it('offers no Accept or Adjust while the question is open', () => {
                 ask(GLANCE.id);
-                render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+                render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });
 
                 expect(screen.queryByRole('button', { name: 'Accept plan' })).not.toBeInTheDocument();
                 expect(screen.queryByRole('button', { name: 'Adjust' })).not.toBeInTheDocument();
@@ -432,13 +467,13 @@ describe('PlanCard', () => {
 
             it('says nothing for a question of another plan, nor once the plan is accepted', () => {
                 ask('another-plan');
-                const { rerender } = render(<PlanCard plan={GLANCE} sessionId="s-1" canAnswer />, { wrapper: createWrapper() });
+                const { rerender } = render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });
 
                 expect(screen.queryByRole('region', { name: 'Needs you' })).not.toBeInTheDocument();
 
                 useWorkspaceEventStore.setState({ sessions: {} });
                 ask(GLANCE.id);
-                rerender(<PlanCard plan={{ ...GLANCE, status: 'running' }} sessionId="s-1" canAnswer />);
+                rerender(<AdjustablePlan plan={{ ...GLANCE, status: 'running' }} />);
 
                 expect(screen.queryByRole('region', { name: 'Needs you' })).not.toBeInTheDocument();
             });

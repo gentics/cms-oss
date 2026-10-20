@@ -542,7 +542,10 @@ export class FormGridElementsContainerComponent {
     private updateDisplayItems(): void {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
-            const itemSchema = this.schemaPropertiesMap()?.[el.id];
+            const uniqueElId = this.id() === this.rootId()
+                ? el.id
+                : `${this.selfContext()}${UNIQUE_ID_GLUE}${el.id}`;
+            const itemSchema = this.schemaPropertiesMap()?.[uniqueElId];
             const visible = !el.formGridOptions?.['hidden'];
 
             if (itemSchema) {

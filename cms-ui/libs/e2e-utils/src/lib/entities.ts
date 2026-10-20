@@ -556,6 +556,93 @@ export const FORM_THREE: FormImportData = {
                         },
                     },
                 },
+                agg2: {
+                    properties: {
+                        salutation: {
+                            type: "catalog",
+                            updateOnChange: false,
+                            validation: { },
+                            mandatory: true,
+                            isList: false,
+                        },
+                        firstName: {
+                            type: "string",
+                            updateOnChange: false,
+                            validation: {
+                                maxLength: 255,
+                                minLength: 0,
+                            },
+                            mandatory: true,
+                            isList: false,
+                        },
+                        lastName: {
+                            type: "string",
+                            updateOnChange: false,
+                            validation: {
+                                maxLength: 255,
+                                minLength: 0,
+                            },
+                            mandatory: true,
+                            isList: false,
+                        },
+                        address: {
+                            type: "string",
+                            updateOnChange: false,
+                            validation: {
+                                maxLength: 255,
+                                minLength: 0,
+                            },
+                            mandatory: true,
+                            isList: false,
+                        },
+                        addressExt: {
+                            type: "string",
+                            updateOnChange: false,
+                            validation: {
+                                maxLength: 255,
+                                minLength: 0,
+                            },
+                            mandatory: false,
+                            isList: false,
+                        },
+                        postCode: {
+                            type: "number",
+                            precision: 0,
+                            isRaw: true,
+                            updateOnChange: false,
+                            validation: {
+                                minValue: 0,
+                            },
+                            mandatory: true,
+                            isList: false,
+                        },
+                        place: {
+                            type: "string",
+                            updateOnChange: false,
+                            validation: {
+                                maxLength: 255,
+                                minLength: 0,
+                            },
+                            mandatory: true,
+                            isList: false,
+                        },
+                        additionalRenters: {
+                            type: "string",
+                            updateOnChange: false,
+                            validation: {
+                                maxLength: 4000,
+                                minLength: 0,
+                            },
+                            mandatory: true,
+                            isList: false,
+                        },
+                    },
+                    type: "aggregate",
+                    updateOnChange: false,
+                    validation: { },
+                    mandatory: false,
+                    isList: true,
+                },
             },
         },
         "ui-schema": {
@@ -619,6 +706,154 @@ export const FORM_THREE: FormImportData = {
                                     ],
                                 },
                             ],
+                        },
+                        {
+                            type: "aggregate",
+                            id: "agg2",
+                            label: {
+                                de: "Kontakt Details",
+                            },
+                            description: { },
+                            elements: [{
+                                type: "property",
+                                id: "firstName",
+                                label: {
+                                    de: "Vorname",
+                                },
+                                description: { },
+                                formGridOptions: {
+                                    numberOfColumns: "6",
+                                    overlayOptions: {
+                                        isShowOverlay: false,
+                                        texts: {
+                                            textPre: { },
+                                            textPost: { },
+                                        },
+                                    },
+                                } as any,
+                                uiSchemaPage: 0,
+                            }, {
+                                type: "property",
+                                id: "lastName",
+                                label: {
+                                    de: "Nachname",
+                                },
+                                description: { },
+                                formGridOptions: {
+                                    numberOfColumns: "6",
+                                    overlayOptions: {
+                                        isShowOverlay: false,
+                                        texts: {
+                                            textPre: { },
+                                            textPost: { },
+                                        },
+                                    },
+                                },
+                                uiSchemaPage: 0,
+                            }, {
+                                type: "property",
+                                id: "address",
+                                label: {
+                                    de: "Adresse",
+                                },
+                                description: { },
+                                formGridOptions: {
+                                    numberOfColumns: "8",
+                                    overlayOptions: {
+                                        isShowOverlay: false,
+                                        texts: {
+                                            textPre: { },
+                                            textPost: { },
+                                        },
+                                    },
+                                },
+                                uiSchemaPage: 0,
+                            }, {
+                                type: "property",
+                                id: "addressExt",
+                                label: {
+                                    de: "Stiege/Top Nr.",
+                                },
+                                description: { },
+                                formGridOptions: {
+                                    numberOfColumns: "4",
+                                    overlayOptions: {
+                                        isShowOverlay: false,
+                                        texts: {
+                                            textPre: { },
+                                            textPost: { },
+                                        },
+                                    },
+                                },
+                                uiSchemaPage: 0,
+                            }, {
+                                type: "property",
+                                id: "postCode",
+                                label: {
+                                    de: "PLZ",
+                                },
+                                description: { },
+                                formGridOptions: {
+                                    numberOfColumns: "4",
+                                    overlayOptions: {
+                                        isShowOverlay: false,
+                                        texts: {
+                                            textPre: { },
+                                            textPost: { },
+                                        },
+                                    },
+                                },
+                                uiSchemaPage: 0,
+                            }, {
+                                type: "property",
+                                id: "place",
+                                label: {
+                                    de: "Ort",
+                                },
+                                description: { },
+                                formGridOptions: {
+                                    numberOfColumns: "8",
+                                    overlayOptions: {
+                                        isShowOverlay: false,
+                                        texts: {
+                                            textPre: { },
+                                            textPost: { },
+                                        },
+                                    },
+                                },
+                                uiSchemaPage: 0,
+                            }, {
+                                type: "property",
+                                id: "salutation",
+                                label: {
+                                    de: "Anrede",
+                                },
+                                description: { },
+                                formGridOptions: null,
+                                uiSchemaPage: 0,
+                            }, {
+                                type: "property",
+                                id: "additionalRenters",
+                                label: {
+                                    de: "Adresse JSON",
+                                },
+                                description: { },
+                                formGridOptions: null,
+                                uiSchemaPage: 0,
+                            }],
+                            csvUploadEnabled: false,
+                            editMode: 1,
+                            formGridOptions: {
+                                numberOfColumns: 12,
+                                overlayOptions: {
+                                    isShowOverlay: false,
+                                    texts: {
+                                        textPre: { },
+                                        textPost: { },
+                                    },
+                                },
+                            } as any,
+                            uiSchemaPage: 2,
                         },
                     ],
                 },

@@ -2,6 +2,7 @@ package com.gentics.contentnode.factory;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
@@ -40,25 +41,48 @@ public class NodeFeatureClosure implements AutoCloseable {
 		NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences().setFeature(feature, value);
 
 		if (node != null) {
-			if (value) {
-				node.activateFeature(feature);
+			Operator nodeFeature = () -> {
+				if (value) {
+					node.activateFeature(feature);
+				} else {
+					node.deactivateFeature(feature);
+				}
+			};
+
+			if (TransactionManager.getCurrentTransactionOrNull() ==  null) {
+				Trx.operate(nodeFeature);
 			} else {
-				node.deactivateFeature(feature);
+				nodeFeature.operate();
 			}
 		}
 	}
 
 	@Override
 	public void close() throws NodeException {
-		// Reset the original feature value
-		NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences().setFeature(feature, oldValue);
+		if (oldValue == true) {
+			// Reset the original feature value
+			NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences().setFeature(feature, oldValue);
+		}
 
 		if (node != null) {
-			if (oldValue) {
-				node.activateFeature(feature);
+			Operator nodeFeature = () -> {
+				if (oldValue) {
+					node.activateFeature(feature);
+				} else {
+					node.deactivateFeature(feature);
+				}
+			};
+
+			if (TransactionManager.getCurrentTransactionOrNull() == null) {
+				Trx.operate(nodeFeature);
 			} else {
-				node.deactivateFeature(feature);
+				nodeFeature.operate();
 			}
+		}
+
+		if (oldValue == false) {
+			// Reset the original feature value
+			NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences().setFeature(feature, oldValue);
 		}
 	}
 }

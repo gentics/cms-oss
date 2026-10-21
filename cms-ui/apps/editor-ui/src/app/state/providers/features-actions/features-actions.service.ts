@@ -44,6 +44,8 @@ export class FeaturesActionsService {
             [Feature.LINK_CHECKER]: false,
             [Feature.FORMS]: false,
             [Feature.AUTOMATIC_TRANSLATION]: false,
+            [Feature.UPLOAD_FILE_PROPERTIES]: false,
+            [Feature.UPLOAD_IMAGE_PROPERTIES]: false,
 
             nodeFeatures: {},
         };

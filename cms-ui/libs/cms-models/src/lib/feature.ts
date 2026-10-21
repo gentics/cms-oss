@@ -46,6 +46,16 @@ export enum Feature {
      * Has to be activated for the nodes as well, see {@link NodeFeature.AUTOMATIC_TRANSLATION}.
      */
     AUTOMATIC_TRANSLATION = 'automatic_translation',
+    /**
+     * If this feature is activated, a modal with the file properties can be opened after an upload.
+     * Has to be activated for the nodes as well, see {@link NodeFeature.UPLOAD_FILE_PROPERTIES}.
+     */
+    UPLOAD_FILE_PROPERTIES = 'upload_file_properties',
+    /**
+     * If this feature is activated, a modal with the image properties can be opened after an upload.
+     * Has to be activated for the nodes as well, see {@link NodeFeature.UPLOAD_IMAGE_PROPERTIES}.
+     */
+    UPLOAD_IMAGE_PROPERTIES = 'upload_image_properties',
 }
 
 /**

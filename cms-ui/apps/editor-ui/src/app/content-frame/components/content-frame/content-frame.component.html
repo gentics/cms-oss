@@ -62,6 +62,7 @@
         >
             <combined-properties-editor
                 [item]="currentItem"
+                [nodeId]="editorNodeId"
                 [formConfiguration]="currentItem?.type === 'form' ? currentFormConfig : null"
                 [isDisabled]="!saveButtonVisible"
                 [(itemClean)]="currentItemClean"

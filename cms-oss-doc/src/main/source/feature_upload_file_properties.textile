@@ -10,7 +10,7 @@ If you want to use this feature, you first have to enable it node.conf
 
 <javascript filename="conf/features.yml">
 feature:
-    UPLOAD_FILE_PROPERTIES: true
+    upload_file_properties: true
 </javascript>
 
 After that a modal window will appear after an upload, displaying the file properties and object properties.

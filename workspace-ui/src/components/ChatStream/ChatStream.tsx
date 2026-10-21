@@ -124,9 +124,18 @@ interface MessageInput {
     isStreaming?: boolean;
 }
 
+// TEMPORARY: GenAIx's warnings are hidden in the chat for now, to be shown again later: a
+// `status_note` of kind `warning` and a recoverable `error` (`RunNotice` kind `error`). A hidden part
+// stays an empty slot, so the part indices (`afterPart`, streamed deltas) stay as they are.
+function withoutWarnings(parts: Parts): Parts {
+    return parts.map((part) => (part?.type === 'status_note' && part.kind === 'warning' ? undefined : part));
+}
+
 // One message of the stream, from the history or the event stream: a confirmation as its card, an
 // agent message by its parts (`splitMessage`), any other as its sender's own turn.
-function messageEntry({ id, runId, role, parts, interactionId, isStreaming }: MessageInput, sessionId: string): Entry {
+function messageEntry({ id, runId, role, parts: allParts, interactionId, isStreaming }: MessageInput, sessionId: string): Entry {
+    const parts = withoutWarnings(allParts);
+
     if (interactionId) {
         return confirmationEntry(id, runId, parts);
     }
@@ -255,7 +264,8 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
 
     // Each notice after the last message of its run, else at the end.
     const placed: Item[] = [];
-    const unplaced: Notice[] = [...(notices ?? [])];
+    // TEMPORARY: a recoverable `error` is a warning and hidden for now (`withoutWarnings`).
+    const unplaced: Notice[] = (notices ?? []).filter((notice) => notice.kind !== 'error');
 
     entries.forEach((entry, index) => {
         placed.push(...splitMessage(entry, cutsAfter(index), sessionId));

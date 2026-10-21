@@ -1,4 +1,4 @@
-import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
+import { AccessControlledType, Feature, GcmsPermission, NodeFeature, SelectTagPartProperty } from '@gentics/cms-models';
 import {
     clickModalAction,
     dismissNotifications,
@@ -36,6 +36,7 @@ import { expect, Locator, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,
     editorAction,
+    ensureObjectPropertyGroupExpanded,
     findImage,
     findItem,
     findList,
@@ -656,5 +657,182 @@ test.describe('Media Management', () => {
 
         await expect(findItem(findList(page, ITEM_TYPE_IMAGE), entity.id)).toHaveCount(0);
         await expect(findItem(findList(page, ITEM_TYPE_FILE), entity.id)).toBeVisible();
+    });
+
+    test.describe('Upload Properties', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19822',
+        }],
+    }, () => {
+        const OBJECT_PROPERTY_TYPE_FILE = '10008';
+        const OBJECT_PROPERTY_TYPE_IMAGE = '10011';
+
+        /**
+         * Enables both upload features globally, but only activates the specified ones on the node.
+         */
+        async function setupWithUploadFeatures(page: Page, nodeFeatures: NodeFeature[]): Promise<void> {
+            await test.step('Enable upload features', async () => {
+                await IMPORTER.setupFeatures({
+                    [Feature.UPLOAD_FILE_PROPERTIES]: true,
+                    [Feature.UPLOAD_IMAGE_PROPERTIES]: true,
+                });
+                for (const feature of nodeFeatures) {
+                    await IMPORTER.client.node.activateFeature(IMPORTER.get(NODE_MINIMAL).id, feature).send();
+                }
+            });
+
+            await setupWithPermissions(page, [
+                {
+                    type: AccessControlledType.NODE,
+                    instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                    subObjects: true,
+                    perms: [
+                        { type: GcmsPermission.READ, value: true },
+                        { type: GcmsPermission.READ_ITEMS, value: true },
+                        { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                        { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    ],
+                },
+                ...[OBJECT_PROPERTY_TYPE_FILE, OBJECT_PROPERTY_TYPE_IMAGE].map((instanceId) => ({
+                    type: AccessControlledType.OBJECT_PROPERTY_TYPE,
+                    instanceId,
+                    subObjects: true,
+                    perms: [
+                        { type: GcmsPermission.READ, value: true },
+                        { type: GcmsPermission.UPDATE, value: true },
+                    ],
+                })),
+            ]);
+        }
+
+        /**
+         * Edits the properties and the color object-property in the upload properties modal and saves it.
+         */
+        async function editInUploadModal(page: Page, type: 'file' | 'image', id: number, name: string, description: string): Promise<void> {
+            const modal = page.locator('image-properties-modal');
+            await expect(modal).toBeVisible();
+
+            await test.step('Edit properties', async () => {
+                const form = modal.locator('combined-properties-editor .properties-content gtx-file-properties');
+                await form.locator('[formcontrolname="name"] input').fill(name);
+                await form.locator('[formcontrolname="description"] input').fill(description);
+            });
+
+            await test.step('Edit object-property', async () => {
+                const group = modal.locator(`combined-properties-editor .properties-tabs .tab-group[data-id="${TEST_CATEGORY_ID}"]`);
+                await ensureObjectPropertyGroupExpanded(group);
+                await group.locator(`.tab-link[data-id="object.${OBJECT_PROPERTY_COLOR}"]`).click();
+
+                const colorSelect = modal.locator('gentics-tag-editor select-tag-property-editor gtx-select');
+                await pickSelectValue(colorSelect, `${COLOR_ID}`);
+            });
+
+            await test.step('Save changes', async () => {
+                const saveReq = waitForResponseFrom(page, 'POST', `/rest/${type}/save/${id}`);
+                await clickModalAction(modal, 'confirm');
+                await saveReq;
+                await expect(modal).toHaveCount(0);
+            });
+        }
+
+        async function findUploadedItem(page: Page, type: 'file' | 'image', id: number): Promise<Locator> {
+            const list = findList(page, type);
+            return type === ITEM_TYPE_IMAGE
+                ? findImage(list, id)
+                : findItem(list, id);
+        }
+
+        async function loadUploadedItem(type: 'file' | 'image', id: number) {
+            return type === ITEM_TYPE_IMAGE
+                ? (await IMPORTER.client.image.get(id).send()).image
+                : (await IMPORTER.client.file.get(id).send()).file;
+        }
+
+        for (const { type, feature, fixture, extension } of [
+            { type: ITEM_TYPE_FILE, feature: NodeFeature.UPLOAD_FILE_PROPERTIES, fixture: FIXTURE_FILE_TXT1, extension: 'txt' },
+            { type: ITEM_TYPE_IMAGE, feature: NodeFeature.UPLOAD_IMAGE_PROPERTIES, fixture: FIXTURE_IMAGE_JPEG1, extension: 'jpg' },
+        ] as const) {
+            test(`should be possible to edit the properties and object-properties of an uploaded ${type} with "${feature}"`, async ({ page }) => {
+                await setupWithUploadFeatures(page, [feature]);
+
+                const uploadedFiles = await uploadFiles(page, type, [fixture]);
+                const entity = uploadedFiles[fixture.fixturePath];
+
+                const newName = `upload-properties-${type}.${extension}`;
+                const newDescription = `Description of the uploaded ${type}`;
+                await editInUploadModal(page, type, entity.id, newName, newDescription);
+
+                await test.step('Verify saved values', async () => {
+                    const loaded = await loadUploadedItem(type, entity.id);
+                    expect(loaded.name).toEqual(newName);
+                    expect(loaded.description).toEqual(newDescription);
+
+                    const colorProp = loaded.tags[`object.${OBJECT_PROPERTY_COLOR}`];
+                    expect(colorProp.active).toBe(true);
+                    const select = Object.values(colorProp.properties)
+                        .find((prop) => prop.type === 'SELECT') as SelectTagPartProperty;
+                    expect(select.selectedOptions.map((opt) => opt.id)).toEqual([COLOR_ID]);
+                });
+
+                await test.step('Verify values in the properties editor', async () => {
+                    const item = await findUploadedItem(page, type, entity.id);
+                    await expect(item).toContainText(newName);
+                    await itemAction(item, 'properties');
+
+                    await openFilePropertiesTab(page);
+                    const form = page.locator('content-frame combined-properties-editor .properties-content gtx-file-properties');
+                    await expect(form.locator('[formcontrolname="name"] input')).toHaveValue(newName);
+                    await expect(form.locator('[formcontrolname="description"] input')).toHaveValue(newDescription);
+
+                    await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
+                    const colorSelect = page.locator('content-frame gentics-tag-editor select-tag-property-editor gtx-select');
+                    await expect(colorSelect.locator('gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
+                });
+            });
+        }
+
+        test('should not open the upload properties modal when the features are not activated for the node', async ({ page }) => {
+            await setupWithUploadFeatures(page, []);
+
+            const files = await uploadFiles(page, ITEM_TYPE_FILE, [FIXTURE_FILE_TXT1]);
+            const images = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_JPEG1]);
+            const file = files[FIXTURE_FILE_TXT1.fixturePath];
+            const image = images[FIXTURE_IMAGE_JPEG1.fixturePath];
+
+            // An open modal would block the interaction with the lists
+            await itemAction(findItem(findList(page, ITEM_TYPE_FILE), file.id), 'properties');
+            await expect(page).toHaveURL(new RegExp(`detail:node/\\d+/file/${file.id}/`));
+            await itemAction(await findImage(findList(page, ITEM_TYPE_IMAGE), image.id), 'properties');
+            await expect(page).toHaveURL(new RegExp(`detail:node/\\d+/image/${image.id}/`));
+
+            await expect(page.locator('image-properties-modal')).toHaveCount(0);
+        });
+
+        test('should only open the upload properties modal for files when only "upload_file_properties" is active', async ({ page }) => {
+            await setupWithUploadFeatures(page, [NodeFeature.UPLOAD_FILE_PROPERTIES]);
+
+            await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_JPEG1]);
+            const uploaded = await uploadFiles(page, ITEM_TYPE_FILE, [FIXTURE_FILE_TXT1]);
+            const entity = uploaded[FIXTURE_FILE_TXT1.fixturePath];
+
+            // The modals are opened in upload order, so only the one for the second upload may be present
+            const modal = page.locator('image-properties-modal');
+            await expect(modal).toHaveCount(1);
+            await expect(modal.locator('.modal-title')).toContainText(entity.name);
+        });
+
+        test('should only open the upload properties modal for images when only "upload_image_properties" is active', async ({ page }) => {
+            await setupWithUploadFeatures(page, [NodeFeature.UPLOAD_IMAGE_PROPERTIES]);
+
+            await uploadFiles(page, ITEM_TYPE_FILE, [FIXTURE_FILE_TXT1]);
+            const uploaded = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_JPEG1]);
+            const entity = uploaded[FIXTURE_IMAGE_JPEG1.fixturePath];
+
+            // The modals are opened in upload order, so only the one for the second upload may be present
+            const modal = page.locator('image-properties-modal');
+            await expect(modal).toHaveCount(1);
+            await expect(modal.locator('.modal-title')).toContainText(entity.name);
+        });
     });
 });

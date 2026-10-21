@@ -205,6 +205,12 @@ public class FolderFactory extends AbstractFactory {
 	protected final static ServiceLoaderUtil<NodeService> nodeFactoryServiceLoader = ServiceLoaderUtil
 			.load(NodeService.class);
 
+	/**
+	 * Loader for {@link WastebinService}s
+	 */
+	protected final static ServiceLoaderUtil<WastebinService> wastebinServiceLoader = ServiceLoaderUtil
+			.load(WastebinService.class);
+
 	static {
 		// register the factory classes
 		try {
@@ -5876,8 +5882,8 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
-		public Map<Integer, Integer> purgeWastebin() throws NodeException {
-			Map<Integer, Integer> result = new HashMap<>();
+		public Map<String, Integer> purgeWastebin() throws NodeException {
+			Map<String, Integer> result = new HashMap<>();
 
 			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 				wastebinLogger.info("Start purging wastebin for " + this + " (" + getFolder().getName() + ")");
@@ -5909,7 +5915,7 @@ public class FolderFactory extends AbstractFactory {
 					t.commit(false);
 				}
 				wastebinLogger.info("Purged " + pageCount + (pageCount == 1 ? " page": " pages"));
-				result.put(Page.TYPE_PAGE_INTEGER, pageCount);
+				result.put("page", pageCount);
 
 				List<File> files = getFilesToPurge(this, deletedBefore);
 				int fileCount = files.size();
@@ -5918,7 +5924,7 @@ public class FolderFactory extends AbstractFactory {
 					t.commit(false);
 				}
 				wastebinLogger.info("Purged " + fileCount + (fileCount == 1 ? " file" : " files"));
-				result.put(File.TYPE_FILE_INTEGER, fileCount);
+				result.put("file", fileCount);
 
 				List<Folder> folders = getFoldersToPurge(this, deletedBefore);
 				int folderCount = folders.size();
@@ -5928,7 +5934,20 @@ public class FolderFactory extends AbstractFactory {
 					t.commit(false);
 				}
 				wastebinLogger.info("Purged " + folderCount + (folderCount == 1 ? " folder" : " folders"));
-				result.put(Folder.TYPE_FOLDER_INTEGER, folderCount);
+				result.put("folder", folderCount);
+
+				for (WastebinService service : wastebinServiceLoader) {
+					Map<String, Integer> serviceResult = service.purgeInNode(t,this, deletedBefore);
+
+					if (serviceResult == null || serviceResult.isEmpty()) {
+						continue;
+					}
+
+					// Merge the service-results with the regular results
+					for (Map.Entry<String, Integer> entry : serviceResult.entrySet()) {
+						result.compute(entry.getKey(), (key, value) -> value == null ? entry.getValue() : value + entry.getValue());
+					}
+				}
 			}
 
 			return result;

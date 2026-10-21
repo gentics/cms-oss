@@ -943,7 +943,7 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	 * @return map holding the numbers of purged objects per type
 	 * @throws NodeException
 	 */
-	Map<Integer, Integer> purgeWastebin() throws NodeException;
+	Map<String, Integer> purgeWastebin() throws NodeException;
 
 	/**
 	 * Get the templates assigned to the node

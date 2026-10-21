@@ -1,76 +1,86 @@
 @if (0 < filteredItems?.length) {
-  <div [ngClass]="type || ''">
-    <div class="list-header icon-checkbox-trigger">
-      <div class="select-all">
-        <icon-checkbox
-          [icon]="type | gtxTypeIcon"
-          [selected]="allSelected()"
-          (change)="toggleSelectAll($event)"
-        ></icon-checkbox>
-        {{ getItemCount() }} {{ type | gtxI18n:{ count: getItemCount() } }}
-      </div>
-      @if (listSize < filteredItems.length) {
-        <gtx-checkbox
-          [label]="'modal.show_all' | gtxI18n"
-          [checked]="listSize !== itemsPerPage"
-          (change)="toggleShowAll()"
-        ></gtx-checkbox>
-      }
-    </div>
-    <div class="list">
-      @for (item of filteredItems | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }; track (item.type + item.id)) {
-        <div>
-          <gtx-contents-list-item>
-            <gtx-checkbox
-              class="type-icon"
-              [checked]="isSelected(item)"
-              (change)="toggleSelection(item, $event)"
-            ></gtx-checkbox>
-            <div class="item-primary">
-              <span class="item-name">{{ item.name }}</span>
-              @if (item.type === 'page' || item.type === 'form') {
-                <div class="languages">
-                  @for (language of getLanguages(item); track language.code) {
-                    <div [title]="language.name">
-                      {{ language.code }}
-                    </div>
-                  }
-                </div>
-              }
-              <div class="filename">
-                {{ item.path }}{{ item.fileName }}
-              </div>
+    <div [ngClass]="type || ''">
+        <div class="list-header icon-checkbox-trigger">
+            <div class="select-all">
+                <icon-checkbox
+                    [icon]="type | gtxTypeIcon"
+                    [selected]="allSelected()"
+                    (change)="toggleSelectAll($event)"
+                ></icon-checkbox>
+                {{ getItemCount() }} {{ type | gtxI18n:{ count: getItemCount() } }}
             </div>
-            <div class="right-details">
-              <detail-chip
-                [title]="'editor.deleted_by_label' | gtxI18n:{ name: getDeletedByName(item) }"
-                ><icon>person</icon>{{ getDeletedByName(item) }}</detail-chip>
-                <detail-chip
-                  [title]="'editor.deleted_at_label' | gtxI18n:{ date: (item.deleted?.at | gtxI18nDate) }"
-                  ><icon>access_time</icon>{{ item.deleted.at | gtxI18nDate }}</detail-chip>
-                </div>
-              </gtx-contents-list-item>
-              @if (item.type === 'page') {
-                <div class="language-variants" [class.expanded]="isSelected(item) && 1 < getVariants(item).length">
-                  @for (variant of getVariants(item); track variant.id) {
-                    <div class="variant">
-                      <gtx-checkbox
-                        [checked]="selected[variant.id]"
-                        [disabled]="!isDeleted(variant)"
-                        (change)="toggleVariantSelection(variant, $event)"
-                      ></gtx-checkbox>
-                      <span class="language">{{ 'lang.' + variant.language | gtxI18n }}</span>
-                      {{ variant.name }}
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          }
+
+            @if (listSize < filteredItems.length) {
+                <gtx-checkbox
+                    [label]="'modal.show_all' | gtxI18n"
+                    [checked]="listSize !== itemsPerPage"
+                    (change)="toggleShowAll()"
+                ></gtx-checkbox>
+            }
         </div>
+
+        <div class="list">
+            @for (item of filteredItems | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }; track (item.type + item.id)) {
+                <div>
+                    <gtx-contents-list-item>
+                        <gtx-checkbox
+                            class="type-icon"
+                            [checked]="isSelected(item)"
+                            (change)="toggleSelection(item, $event)"
+                        ></gtx-checkbox>
+
+                        <div class="item-primary">
+                            <span class="item-name">{{ item.name }}</span>
+                            @if (item.type === 'page' || item.type === 'form') {
+                                <div class="languages">
+                                    @for (language of getLanguages(item); track language.code) {
+                                        <div [title]="language.name">{{ language.code }}</div>
+                                    }
+                                </div>
+                            }
+                            <div class="filename">
+                                {{ item.path }}{{ item.fileName }}
+                            </div>
+                        </div>
+
+                        <div class="right-details">
+                            @let deletedBy = item.deleted?.by | userFullName;
+                            @let deletedAt = item.deleted?.at | gtxI18nDate;
+
+                            <detail-chip [title]="'editor.deleted_by_label' | gtxI18n:{ name: deletedBy }">
+                                <icon>person</icon>{{ deletedBy }}
+                            </detail-chip>
+
+                            <detail-chip [title]="'editor.deleted_at_label' | gtxI18n:{ date: deletedAt }">
+                                <icon>access_time</icon>{{ deletedAt }}
+                            </detail-chip>
+                        </div>
+                    </gtx-contents-list-item>
+
+                    @if (item.type === 'page') {
+                        <div class="language-variants" [class.expanded]="isSelected(item) && 1 < getVariants(item).length">
+                            @for (variant of getVariants(item); track variant.id) {
+                                <div class="variant">
+                                    <gtx-checkbox
+                                        [checked]="selected[variant.id]"
+                                        [disabled]="!isDeleted(variant)"
+                                        (change)="toggleVariantSelection(variant, $event)"
+                                    ></gtx-checkbox>
+
+                                    <span class="language">{{ 'lang.' + variant.language | gtxI18n }}</span>
+
+                                    {{ variant.name }}
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
         <paging-controls
-          (pageChange)="currentPage = $event"
-          [class.hidden]="itemsPerPage < filteredItems.length"
+            [class.hidden]="itemsPerPage < filteredItems.length"
+            (pageChange)="currentPage = $event"
         ></paging-controls>
-      </div>
-    }
+    </div>
+}

@@ -5,6 +5,7 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.Level;
@@ -55,11 +56,17 @@ public enum CoreInternalSchedulerTask implements InternalSchedulerTask {
 
 				List<Node> nodes = t.getObjects(Node.class, ex.getValues());
 				for (Node node : nodes) {
-					Map<Integer, Integer> result = node.purgeWastebin();
-					out.add(String.format("Purged %d page(s), %d file(s), %d folder(s) for node %s",
-							result.getOrDefault(Page.TYPE_PAGE_INTEGER, 0),
-							result.getOrDefault(File.TYPE_FILE_INTEGER, 0),
-							result.getOrDefault(Folder.TYPE_FOLDER_INTEGER, 0), I18NHelper.getName(node)));
+					Map<String, Integer> result = node.purgeWastebin();
+					if (result == null || result.isEmpty()) {
+						out.add(String.format("Skipped purge for node %s", I18NHelper.getName(node)));
+						continue;
+					}
+
+					out.add(String.format("Purged %s for node %s",
+							result.entrySet().stream()
+									.map((entry) -> String.format("%d %s(s)", entry.getValue(), entry.getKey()))
+									.collect(Collectors.joining(", ")),
+							I18NHelper.getName(node)));
 				}
 			}
 		});

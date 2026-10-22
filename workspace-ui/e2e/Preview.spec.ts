@@ -130,7 +130,7 @@ test.describe('Selecting a part in the preview', () => {
         await page.goto(`#/sessions/${SESSION}`);
         await page.frameLocator(frameSelector).getByRole('link', { name: '1. Juli' }).click();
 
-        await expect(page.getByText('Selected: Text')).toBeVisible();
+        await expect(page.getByText('Selected: Link · Text')).toBeVisible();
         // Still the page: a followed link would have replaced it with whatever /elsewhere serves.
         await expect(page.frameLocator(frameSelector).getByText('Ab dem')).toBeVisible();
         await expect(page.getByTitle('Preview of the page in the CMS')).toHaveJSProperty('contentWindow.location.pathname', '/alohapage');
@@ -138,9 +138,9 @@ test.describe('Selecting a part in the preview', () => {
         // The first Escape closes the element menu and returns to the page, the second clears the selection.
         await page.keyboard.press('Escape');
         await expect(page.getByRole('menu')).toBeHidden();
-        await expect(page.getByText('Selected: Text')).toBeVisible();
+        await expect(page.getByText('Selected: Link · Text')).toBeVisible();
         await page.keyboard.press('Escape');
-        await expect(page.getByText('Selected: Text')).toBeHidden();
+        await expect(page.getByText('Selected: Link · Text')).toBeHidden();
     });
 
     test('keeps the selection across a reload, and clears it with a note when the part is gone', async ({ page }) => {
@@ -818,6 +818,142 @@ test.describe('Swapping an image', () => {
         await card.getByRole('radio', { name: 'editorial-desk.jpg' }).click();
         await card.getByRole('button', { name: 'Cancel' }).click();
 
+        await expect(card).toBeHidden();
+        expect(posted).toHaveLength(0);
+    });
+});
+
+test.describe('Editing a link', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
+
+    // A text part with a link to a CMS page, as the CMS renders it for the preview (`DynamicUrlFactory`), and a link to another site.
+    function linkPage(): string {
+        return `<!doctype html><body style="margin:0;font:16px sans-serif">
+            <p data-gcn-pageid="9142" data-gcn-tagid="12" data-gcn-tagname="content_2" data-gcn-i18n-constructname="Text" style="padding:30px">
+                Es gelten die <a href="/alohapage?nodeid=3&amp;language=1&amp;real=newview&amp;realid=9150">AGB</a> und die <a href="https://example.com/regeln">Regeln</a>.
+            </p></body>`;
+    }
+
+    // The CMS behind the link card: node 3 with root folder 7; the page AGB, which the link points to,
+    // in folder 8 next to Impressum, the page the link is on (9142) in the root folder.
+    async function stubCmsPages(page: Page) {
+        await page.route((url) => url.pathname === '/rest/node', (route) => route.fulfill({ json: { items: [{ id: 3, name: 'Corporate Website', folderId: 7 }] } }));
+        await page.route((url) => url.pathname === '/rest/page/load/9150', (route) => route.fulfill({
+            json: { page: { id: 9150, name: 'AGB', folderId: 8, cdate: 0, edate: 0 } },
+        }));
+        await page.route((url) => url.pathname === '/rest/page/load/9142', (route) => route.fulfill({
+            json: { page: { id: 9142, name: 'Neue Nutzungsbedingungen', folderId: 7, cdate: 0, edate: 0 } },
+        }));
+        await page.route((url) => url.pathname === '/rest/folder/getItems/8', (route) => route.fulfill({
+            json: { items: [{ id: 9150, name: 'AGB', type: 'page' }, { id: 9151, name: 'Impressum', type: 'page' }] },
+        }));
+        await page.route((url) => url.pathname === '/rest/folder/getItems/7', (route) => route.fulfill({
+            json: { items: [{ id: 9100, name: 'Willkommen', type: 'page' }] },
+        }));
+    }
+
+    test('selects a link on its own and sends its new text and URL word for word, the link named by its place and text', async ({ page }) => {
+        await stubS1Session(page, [markedPage()]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+
+        const link = page.frameLocator(frameSelector).getByRole('link', { name: '1. Juli' });
+
+        await link.hover();
+
+        // The outline is the link's, not the part's: its label sits at the link's top left.
+        const label = page.getByText('Link · Text', { exact: true });
+
+        await expect(label).toBeVisible();
+
+        const linkBox = (await link.boundingBox())!;
+        const labelBox = (await label.boundingBox())!;
+
+        expect(Math.abs(labelBox.x - linkBox.x)).toBeLessThan(2);
+        expect(Math.abs(labelBox.y - linkBox.y)).toBeLessThan(2);
+
+        await link.click();
+        await expect(page.getByText('Selected: Link · Text')).toBeVisible();
+        await expect(page.getByRole('menuitem', { name: 'Write it yourself' })).toHaveCount(0);
+        await page.getByRole('menuitem', { name: 'Edit link' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Link · Text' });
+        const text = card.getByRole('textbox', { name: 'Link text' });
+
+        await expect(card.getByText('Text · content_2 · Link')).toBeVisible();
+        await expect(text).toBeFocused();
+        await expect(text).toHaveValue('1. Juli');
+        await expect(card.getByRole('radio', { name: 'URL' })).toBeChecked();
+        await expect(card.getByRole('textbox', { name: 'URL' })).toHaveValue('/elsewhere');
+
+        await text.fill('1. August');
+        await card.getByRole('textbox', { name: 'URL' }).fill('https://example.com/agb');
+        await card.getByRole('button', { name: 'Apply' }).click();
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "content_2" (Text), link 1 of 1 ("1. Juli"), change it:' },
+                { type: 'text', text: '\nLink text: ' },
+                { type: 'verbatim', text: '1. August', source: 'user', label: 'Link text' },
+                { type: 'text', text: '\nTarget: ' },
+                { type: 'verbatim', text: 'https://example.com/agb', source: 'user', label: 'Target' },
+            ],
+        });
+        await expect(card).toBeHidden();
+    });
+
+    test('shows the CMS page a link leads to and sends another page picked as its reference', async ({ page }) => {
+        await stubS1Session(page, [linkPage()]);
+        await stubCmsPages(page);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('link', { name: 'AGB' }).click();
+        await page.getByRole('menuitem', { name: 'Edit link' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Link · Text' });
+
+        await expect(card.getByRole('radio', { name: 'CMS page' })).toBeChecked();
+        await expect(card.getByRole('radio', { name: 'AGB' })).toBeChecked();
+        // The list is the folder of the page the link points to, not the node's root folder.
+        await expect(card.getByRole('radio', { name: 'Impressum' })).toBeVisible();
+        await expect(card.getByText('Willkommen')).toHaveCount(0);
+
+        await card.getByRole('radio', { name: 'Impressum' }).click();
+        await card.getByRole('button', { name: 'Apply' }).click();
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "content_2" (Text), link 1 of 2 ("AGB"), change it:' },
+                { type: 'text', text: '\nTarget: ' },
+                { type: 'reference', ref: { type: 'page', id: '9151', node_id: 3, label: 'Impressum' } },
+            ],
+        });
+    });
+
+    test('sends nothing for an unchanged link and says so', async ({ page }) => {
+        await stubS1Session(page, [linkPage()]);
+        await stubCmsPages(page);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('link', { name: 'Regeln' }).click();
+        await page.getByRole('menuitem', { name: 'Edit link' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Link · Text' });
+
+        await expect(card.getByRole('textbox', { name: 'URL' })).toHaveValue('https://example.com/regeln');
+        await card.getByRole('textbox', { name: 'Link text' }).fill(' Regeln ');
+        await card.getByRole('button', { name: 'Apply' }).click();
+
+        await expect(page.getByText('Nothing changed, so nothing was sent.')).toBeVisible();
         await expect(card).toBeHidden();
         expect(posted).toHaveLength(0);
     });

@@ -23,6 +23,7 @@ export const cmsKeys = {
     folderLevel: (nodeId: number, folderId: number) => ['cms', 'nodes', nodeId, 'folders', folderId] as const,
     folderSearch: (nodeId: number, folderId: number, query: string) => ['cms', 'nodes', nodeId, 'folder-search', folderId, query] as const,
     images: (node: CmsNode | undefined, query: string) => ['cms', 'nodes', node?.id, 'images', query] as const,
+    folderPages: (node: CmsNode | undefined, folderId: number | undefined) => ['cms', 'nodes', node?.id, 'folder-pages', folderId] as const,
     page: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId] as const,
     publishPermission: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId, 'perm', 'publish'] as const,
     templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
@@ -167,6 +168,17 @@ export function useCmsImages(node: CmsNode | undefined, query: string) {
     return useQuery({
         queryKey: cmsKeys.images(node, query),
         queryFn: node ? ({ signal }) => searchCmsItems(node, 'image', query, { recursive: true, signal }) : skipToken,
+    });
+}
+
+/**
+ * The pages directly in the folder `folderId` of `node` (`searchCmsItems` with that folder, pages only,
+ * not recursive). Off while the node or the folder is not known.
+ */
+export function useCmsFolderPages(node: CmsNode | undefined, folderId: number | undefined) {
+    return useQuery({
+        queryKey: cmsKeys.folderPages(node, folderId),
+        queryFn: node && folderId !== undefined ? ({ signal }) => searchCmsItems(node, 'page', '', { folderId, signal }) : skipToken,
     });
 }
 

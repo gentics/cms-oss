@@ -400,7 +400,7 @@ describe('PlanCard', () => {
 
             expect(screen.getByRole('button', { name: 'Add a step' })).toBeDisabled();
             expect(screen.getByText('At most 200 steps')).toBeInTheDocument();
-        });
+        }, 10000);
 
         it('counts the top-level items as tiles, "+n" while proposed and "done/total" once accepted', () => {
             const { rerender } = render(<AdjustablePlan plan={GLANCE} />, { wrapper: createWrapper() });

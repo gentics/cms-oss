@@ -268,12 +268,13 @@ export async function elasticSearchCmsItems(node: CmsNode, type: CmsItemType, qu
  * which matches id, name or description: folders from `GET /rest/folder/getFolders/{root folder}`,
  * pages and images from `GET /rest/folder/getItems/{root folder}`, which leaves out folders. With
  * `recursive`, an empty `query` lists the objects below the root folder too, not only those in it.
+ * With `folderId`, that folder of the node takes the root folder's place.
  */
 export async function searchCmsItems(
     node: CmsNode,
     type: CmsItemType,
     query: string,
-    { elastic = false, recursive = false, signal }: { elastic?: boolean; recursive?: boolean; signal?: AbortSignal } = {},
+    { elastic = false, recursive = false, folderId = node.folderId, signal }: { elastic?: boolean; recursive?: boolean; folderId?: number; signal?: AbortSignal } = {},
 ): Promise<CmsItem[]> {
     if (elastic && query !== '') {
         try {
@@ -298,14 +299,14 @@ export async function searchCmsItems(
     }
 
     if (type === 'folder') {
-        const { folders } = await httpRequest<{ folders?: CmsItem[] }>(`/rest/folder/getFolders/${node.folderId}?${params}`, { ...CMS_GET, signal });
+        const { folders } = await httpRequest<{ folders?: CmsItem[] }>(`/rest/folder/getFolders/${folderId}?${params}`, { ...CMS_GET, signal });
 
         return folders ?? [];
     }
 
     params.set('type', type);
 
-    const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${node.folderId}?${params}`, { ...CMS_GET, signal });
+    const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${folderId}?${params}`, { ...CMS_GET, signal });
 
     return items ?? [];
 }

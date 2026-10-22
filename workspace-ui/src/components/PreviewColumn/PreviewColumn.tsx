@@ -1,20 +1,22 @@
 import type { TFunction } from 'i18next';
-import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, EyeIcon, ImagesIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
+import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, EyeIcon, ImagesIcon, LinkIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { PageElementInput } from '@/components/Composer/Composer';
 import { ImagePicker } from '@/components/ImagePicker/ImagePicker';
+import { LinkTargetPicker, type LinkTargetValue } from '@/components/LinkTargetPicker/LinkTargetPicker';
 import { PageSettings } from '@/components/PageSettings/PageSettings';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverClose, PopoverContent, PopoverTitle } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { type PageElementBlock, pageElementLabel, type PageSettingsChange } from '@/helper/composerParts/composerParts';
-import { type ElementBox, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
+import { pageElementLabel, type PageElementLink, type PageElementLinkChange, type PageElementTextBlock, type PageSettingsChange } from '@/helper/composerParts/composerParts';
+import { type ElementBox, linkTargetOf, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
 import type { ContextReference } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
 import { type LivePreview, previewKey } from '@/store/useWorkspaceEventStore';
@@ -63,28 +65,40 @@ function collapseWhiteSpace(text: string): string {
     return text.replace(/\s+/g, ' ').trim();
 }
 
-// Converts the preview's block into the form the chat uses (`PageElementBlock`), its kind translated, e.g. "Heading 1"; `undefined` for a whole part.
-function elementBlock(t: TFunction, { block }: PreviewElement): PageElementBlock | undefined {
-    return block && { index: block.index, count: block.count, label: t(`preview.block.${block.kind}`), excerpt: block.excerpt };
+// Converts the preview's text block into the form the chat uses (`PageElementTextBlock`), its kind translated, e.g. "Heading 1"; `undefined` for a whole part.
+function elementTextBlock(t: TFunction, { textBlock }: PreviewElement): PageElementTextBlock | undefined {
+    return textBlock && { index: textBlock.index, count: textBlock.count, label: t(`preview.textBlock.${textBlock.kind}`), excerpt: textBlock.excerpt };
+}
+
+// Converts the preview's link into the form the chat uses (`PageElementLink`), labelled "Link"; `undefined` when no link is meant.
+function elementLink(t: TFunction, { link }: PreviewElement): PageElementLink | undefined {
+    return link && { index: link.index, count: link.count, label: t('preview.link.label'), excerpt: link.excerpt };
 }
 
 // Short name on the hover outline, the menu, the header and the card titles: the construct name (else the
-// tag name), with the block kind in front for a block, e.g. "Heading 1 · Aloha Text (lang)".
+// tag name), with the text block kind or "Link" in front for a text block or link, e.g. "Heading 1 · Aloha Text (lang)".
 function elementName(t: TFunction, element: PreviewElement): string {
     const name = element.constructName || element.tagName;
-    const block = elementBlock(t, element);
+    const kind = elementLink(t, element)?.label ?? elementTextBlock(t, element)?.label;
 
-    return block ? `${block.label} · ${name}` : name;
+    return kind ? `${kind} · ${name}` : name;
 }
 
 // Full name on the cards' @-token, the same as on the token in the chat (`pageElementLabel`), e.g. "Aloha Text (lang) · pagecontent · Heading 1".
 function elementLabel(t: TFunction, element: PreviewElement): string {
-    return pageElementLabel({ ...element, block: elementBlock(t, element) });
+    return pageElementLabel({ ...element, textBlock: elementTextBlock(t, element), link: elementLink(t, element) });
 }
 
-// Whether `a` and `b` are the same part and the same block of it (or both the whole part).
+// Whether `a` and `b` are the same part and the same text block or link of it (or both the whole part).
 function isSameElement(a: PreviewElement | null, b: PreviewElement | null): boolean {
-    return a?.tagName === b?.tagName && a?.block?.index === b?.block?.index;
+    return a?.tagName === b?.tagName && a?.textBlock?.index === b?.textBlock?.index && a?.link?.index === b?.link?.index;
+}
+
+// The link card's target for an `href` read from the page (`linkTargetOf`): its CMS page, or its URL.
+function linkTargetValue(href: string): LinkTargetValue {
+    const target = linkTargetOf(href);
+
+    return target.type === 'page' ? { type: 'page', page: { id: target.pageId } } : { type: 'url', url: target.url };
 }
 
 // How far the outlines stand off a part (`outline-offset` in the CSS module); the focus mode leaves that much room.
@@ -117,9 +131,11 @@ export interface PreviewActions {
      * the file; rejects when it was not sent, so the card stays open.
      */
     onSendImage: (element: PageElementInput, image: ContextReference | File) => Promise<void>;
+    /** Sends a link's changed text and target as a turn; rejects when it was not sent, so the card stays open. */
+    onSendLink: (element: PageElementInput, change: PageElementLinkChange) => Promise<void>;
     /** Sends the changed page settings of the page as a turn; rejects when they were not sent, so the sheet stays open. */
     onSendSettings: (page: ContextReference, changes: PageSettingsChange[]) => Promise<void>;
-    /** Whether a turn can be sent now (feedback, new text, an image or page settings): not while a run is working or waiting. */
+    /** Whether a turn can be sent now (feedback, new text, an image, a link or page settings): not while a run is working or waiting. */
     canSendFeedback: boolean;
 }
 
@@ -144,11 +160,18 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  * does a click into the page outside the parts, which also closes the part's menu or card. When a
  * reload no longer has the selected part, the selection is cleared and a toast says so.
  *
- * Blocks: the CMS often stores several blocks in one tag, e.g. a headline and a paragraph in one Aloha
- * text. Then the block under the mouse is outlined and selected, not the whole tag (`blocksOf`). The
- * menu and the cards act on that block only, and the edit card starts from its text alone. The UI
+ * Text blocks: the CMS often stores several text blocks in one tag, e.g. a headline and a paragraph in one Aloha
+ * text. Then the text block under the mouse is outlined and selected, not the whole tag (`textBlocksOf`). The
+ * menu and the cards act on that text block only, and the edit card starts from its text alone. The UI
  * calls it e.g. "Heading 1 · Text"; the message names it by its position and the start of its text,
- * because the API has no field for a block inside a tag.
+ * because the API has no field for a text block inside a tag.
+ *
+ * Links: a link in a part (`linksOf`) is outlined and selected on its own, before its text block, and is
+ * called e.g. "Link · Text"; the message names it by its position and the start of its text. Its menu
+ * offers "Edit link" instead of "Write it yourself": the link card there starts from the link's text
+ * and target as the page has them (a CMS page for an internal link, `linkTargetOf`), the target a URL
+ * or a page of the node (`LinkTargetPicker`); Apply or Enter sends what changed (`onSendLink`), an
+ * unchanged link sends nothing.
  *
  * The parts the last CMS write changed (`changed_elements`) are tinted until the next update.
  *
@@ -218,8 +241,17 @@ export function PreviewColumn(props: PreviewColumnProps) {
     const [isImageOpen, setIsImageOpen] = useState(false);
     const [pickedImage, setPickedImage] = useState<CmsItem | File | null>(null);
     const canUseImage = canSendFeedback && !isSending && pickedImage !== null;
-    // The node whose images can replace a part's image; without it, no image can be offered.
+    // The node whose images can replace a part's image; without it, no image can be offered (nor a page as a link's target).
     const nodeId = preview.cms_ref.node_id;
+    const [isLinkOpen, setIsLinkOpen] = useState(false);
+    const [linkText, setLinkText] = useState('');
+    const [linkTarget, setLinkTarget] = useState<LinkTargetValue>({ type: 'url', url: '' });
+    // The link's text and target when the link card opened, to tell what changed.
+    const [linkOriginal, setLinkOriginal] = useState<{ text: string; target: LinkTargetValue }>({ text: '', target: { type: 'url', url: '' } });
+    const linkTextId = useId();
+    const linkTextRef = useRef<HTMLInputElement>(null);
+    const canApplyLink = canSendFeedback && !isSending && linkText.trim() !== ''
+        && (linkTarget.type === 'url' ? linkTarget.url.trim() !== '' : linkTarget.page !== null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const settingsRef = useRef<HTMLElement>(null);
     const settingsButtonRef = useRef<HTMLButtonElement>(null);
@@ -233,6 +265,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setIsFeedbackOpen(false);
         setIsEditOpen(false);
         setIsImageOpen(false);
+        setIsLinkOpen(false);
         setIsSettingsOpen(false);
     }
 
@@ -247,6 +280,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setIsFeedbackOpen(false);
         setIsEditOpen(false);
         setIsImageOpen(false);
+        setIsLinkOpen(false);
     }, () => {
         // A reload without the selected part: the selection is gone.
         setSelected(null);
@@ -254,6 +288,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setIsFeedbackOpen(false);
         setIsEditOpen(false);
         setIsImageOpen(false);
+        setIsLinkOpen(false);
         toast.add({ title: t('preview.selection.removed') });
     }, preview.changed_elements);
 
@@ -272,7 +307,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         return { type: 'page', id: String(id), ...(nodeId !== undefined ? { node_id: nodeId } : {}), ...(name ? { label: name } : {}) };
     }
 
-    // The selected part with its page, as the chat and the cards send it. A block is re-read from the page
+    // The selected part with its page, as the chat and the cards send it. A text block is re-read from the page
     // first (`currentOf`), so its excerpt matches the page after a reload.
     function pageElementOf(selection: PreviewElement): PageElementInput {
         const element = currentOf(selection);
@@ -281,7 +316,8 @@ export function PreviewColumn(props: PreviewColumnProps) {
             page: pageRef(),
             tagName: element.tagName,
             constructName: element.constructName,
-            ...(element.block ? { block: elementBlock(t, element) } : {}),
+            ...(element.textBlock ? { textBlock: elementTextBlock(t, element) } : {}),
+            ...(element.link ? { link: elementLink(t, element) } : {}),
         };
     }
 
@@ -296,6 +332,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setFeedback('');
         setIsEditOpen(false);
         setIsImageOpen(false);
+        setIsLinkOpen(false);
         setIsFeedbackOpen(true);
     }
 
@@ -307,6 +344,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setEditText(text);
         setIsFeedbackOpen(false);
         setIsImageOpen(false);
+        setIsLinkOpen(false);
         setIsEditOpen(true);
     }
 
@@ -315,7 +353,70 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setPickedImage(null);
         setIsFeedbackOpen(false);
         setIsEditOpen(false);
+        setIsLinkOpen(false);
         setIsImageOpen(true);
+    }
+
+    // The link card starts from the link's text and target as the page has them now.
+    function openLink(element: PreviewElement) {
+        const text = textOf(element);
+        const target = linkTargetValue(currentOf(element).link?.href ?? '');
+
+        hasMovedFocusRef.current = true;
+        setLinkOriginal({ text, target });
+        setLinkText(text);
+        setLinkTarget(target);
+        setIsFeedbackOpen(false);
+        setIsEditOpen(false);
+        setIsImageOpen(false);
+        setIsLinkOpen(true);
+    }
+
+    // What the link card changes: the text if it reads differently, the target if it is another URL or page.
+    function linkChange(): PageElementLinkChange {
+        const { text, target } = linkOriginal;
+        const change: PageElementLinkChange = {};
+
+        if (collapseWhiteSpace(linkText) !== collapseWhiteSpace(text)) {
+            change.text = linkText;
+        }
+
+        if (linkTarget.type === 'url' && (target.type !== 'url' || linkTarget.url.trim() !== target.url.trim())) {
+            change.target = linkTarget.url.trim();
+        } else if (linkTarget.type === 'page' && linkTarget.page && (target.type !== 'page' || linkTarget.page.id !== target.page?.id)) {
+            const { id, name } = linkTarget.page;
+
+            change.target = { type: 'page', id: String(id), ...(nodeId !== undefined ? { node_id: nodeId } : {}), ...(name ? { label: name } : {}) };
+        }
+
+        return change;
+    }
+
+    async function applyLink(element: PreviewElement) {
+        if (!canApplyLink) {
+            return;
+        }
+
+        const change = linkChange();
+
+        // Nothing to write: the card closes without a message, as the edit card's.
+        if (change.text === undefined && change.target === undefined) {
+            setIsLinkOpen(false);
+            toast.add({ title: t('preview.edit.unchanged') });
+
+            return;
+        }
+
+        setIsSending(true);
+
+        try {
+            await actions?.onSendLink(pageElementOf(element), change);
+            setIsLinkOpen(false);
+        } catch {
+            // Not sent: the caller has said why; the card and its values stay for another try.
+        } finally {
+            setIsSending(false);
+        }
     }
 
     async function applyImage(element: PreviewElement) {
@@ -508,7 +609,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     <div className={styles.overlay} aria-hidden="true">
                         {isFeedbackOpen && selectedBox && dimBands(selectedBox).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
                         {changedBoxes.map(({ tagName, box }) => <div key={tagName} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
-                        {selectedBox && <div ref={selectedBoxRef} className={`${styles.selected} ${isEditOpen || isImageOpen ? styles.editing : ''}`} style={boxStyle(selectedBox)} />}
+                        {selectedBox && <div ref={selectedBoxRef} className={`${styles.selected} ${isEditOpen || isImageOpen || isLinkOpen ? styles.editing : ''}`} style={boxStyle(selectedBox)} />}
                         {actions && hovered && !isSameElement(hovered.element, selected) && (
                             <div className={styles.hovered} style={boxStyle(hovered.box)}>
                                 <span className={styles.label}>{elementName(t, hovered.element)}</span>
@@ -529,8 +630,14 @@ export function PreviewColumn(props: PreviewColumnProps) {
                                 <SparklesIcon size={16} />
                                 {t('preview.feedback.give')}
                             </DropdownMenuItem>
-                            {/* An image part gets another image instead of new text, if the node to pick it from is known. */}
-                            {hasImage(selected)
+                            {/* A link gets a new text and target; an image part another image instead of new text, if the node to pick it from is known. */}
+                            {selected.link && (
+                                <DropdownMenuItem onClick={() => openLink(selected)}>
+                                    <LinkIcon size={16} />
+                                    {t('preview.link.edit')}
+                                </DropdownMenuItem>
+                            )}
+                            {!selected.link && (hasImage(selected)
                                 ? nodeId !== undefined && (
                                     <DropdownMenuItem onClick={openImage}>
                                         <ImagesIcon size={16} />
@@ -542,7 +649,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                                         <PencilIcon size={16} />
                                         {t('preview.edit.write')}
                                     </DropdownMenuItem>
-                                )}
+                                ))}
                             <DropdownMenuItem onClick={() => referenceInChat(selected)}>
                                 <AtSignIcon size={16} />
                                 {t('preview.selection.referenceInChat')}
@@ -645,6 +752,46 @@ export function PreviewColumn(props: PreviewColumnProps) {
                             <Button variant="primary" size="sm" disabled={!canUseImage} onClick={() => void applyImage(selected)}>
                                 <CheckIcon size={14} />
                                 {t('preview.image.use')}
+                            </Button>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            )}
+            {/* The link card, at the link like the image card; not modal either. */}
+            {selected?.link && (
+                <Popover open={isLinkOpen && Boolean(selectedBox)} onOpenChange={setIsLinkOpen} modal={false}>
+                    <PopoverContent anchor={selectedBoxRef} initialFocus={linkTextRef} finalFocus={false}>
+                        <div className={styles.cardHead}>
+                            <LinkIcon size={16} className={styles.cardIcon} aria-hidden="true" />
+                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
+                            <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.link.cancel')} title={t('preview.link.cancel')} />}>
+                                <XIcon size={16} />
+                            </PopoverClose>
+                        </div>
+                        <div className={styles.cardBody}>
+                            <span className={styles.token}>
+                                <AtSignIcon size={13} aria-hidden="true" />
+                                {elementLabel(t, selected)}
+                            </span>
+                            <Label htmlFor={linkTextId}>{t('preview.link.text')}</Label>
+                            <Input
+                                id={linkTextId}
+                                ref={linkTextRef}
+                                value={linkText}
+                                onChange={(event) => setLinkText(event.target.value)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter') {
+                                        event.preventDefault();
+                                        void applyLink(selected);
+                                    }
+                                }}
+                            />
+                            <LinkTargetPicker nodeId={nodeId} pageId={preview.cms_ref.id} value={linkTarget} onValueChange={setLinkTarget} />
+                        </div>
+                        <div className={styles.cardFoot}>
+                            <Button variant="primary" size="sm" disabled={!canApplyLink} onClick={() => void applyLink(selected)}>
+                                <CheckIcon size={14} />
+                                {t('preview.link.apply')}
                             </Button>
                         </div>
                     </PopoverContent>

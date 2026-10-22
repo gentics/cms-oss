@@ -38,7 +38,7 @@
             "label": "Seiten",
             "unnamed": "Seite {{id}}"
         },
-        "block": {
+        "textBlock": {
             "heading1": "Überschrift 1",
             "heading2": "Überschrift 2",
             "heading3": "Überschrift 3",
@@ -81,6 +81,22 @@
             "loading": "Bilder werden geladen …",
             "empty": "Keine Bilder gefunden.",
             "failed": "Die Bilder konnten nicht geladen werden."
+        },
+        "link": {
+            "label": "Link",
+            "edit": "Link bearbeiten",
+            "text": "Linktext",
+            "target": "Ziel",
+            "url": "URL",
+            "page": "CMS-Seite",
+            "search": "Seiten suchen",
+            "searchPlaceholder": "Alle Seiten durchsuchen",
+            "currentPage": "Seite {{id}}",
+            "apply": "Übernehmen",
+            "cancel": "Abbrechen",
+            "loading": "Seiten werden geladen …",
+            "empty": "Keine Seiten gefunden.",
+            "failed": "Die Seiten konnten nicht geladen werden."
         },
         "settings": {
             "open": "Seiteneinstellungen",
@@ -177,10 +193,16 @@
             "replaceWithWithoutType": " – Teil \"{{tagName}}\", ersetze seinen Text durch: ",
             "replaceImageWith": " – Teil \"{{tagName}}\" ({{constructName}}), ersetze sein Bild durch: ",
             "replaceImageWithWithoutType": " – Teil \"{{tagName}}\", ersetze sein Bild durch: ",
-            "namingBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
-            "namingWithoutTypeBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
-            "replaceWithBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: ",
-            "replaceWithWithoutTypeBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: "
+            "namingTextBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
+            "namingWithoutTypeTextBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
+            "replaceWithTextBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: ",
+            "replaceWithWithoutTypeTextBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: ",
+            "namingLink": " – Teil \"{{tagName}}\" ({{constructName}}), Link {{position}} von {{count}} („{{excerpt}}“): ",
+            "namingWithoutTypeLink": " – Teil \"{{tagName}}\", Link {{position}} von {{count}} („{{excerpt}}“): ",
+            "changeLinkLink": " – Teil \"{{tagName}}\" ({{constructName}}), Link {{position}} von {{count}} („{{excerpt}}“), ändere ihn:",
+            "changeLinkWithoutTypeLink": " – Teil \"{{tagName}}\", Link {{position}} von {{count}} („{{excerpt}}“), ändere ihn:",
+            "linkText": "Linktext",
+            "linkTarget": "Ziel"
         },
         "pageSettings": {
             "change": " – ändere seine Seiteneinstellungen:",

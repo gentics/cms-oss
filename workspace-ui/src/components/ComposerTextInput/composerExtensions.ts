@@ -251,7 +251,7 @@ const SettingTriggerExtension = triggerExtension('settingTrigger', '#', settingT
 const Reference = token(REFERENCE_NODE, { ref: null });
 const Setting = token(SETTING_NODE, { key: '', value: '', label: '' });
 const FileRef = token(FILE_REF_NODE, { fileId: '', mode: 'source', name: '' });
-const PageElement = token(PAGE_ELEMENT_NODE, { page: null, tagName: '', constructName: '', block: null, text: '' });
+const PageElement = token(PAGE_ELEMENT_NODE, { page: null, tagName: '', constructName: '', textBlock: null, link: null, text: '' });
 
 /**
  * The extensions of the field: inline content only (text sits in the field itself, no paragraphs),

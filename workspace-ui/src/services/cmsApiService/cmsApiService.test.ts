@@ -163,6 +163,20 @@ describe('searchCmsItems', () => {
         expect(url.searchParams.getAll('type')).toEqual(['image']);
     });
 
+    it('lists another folder of the node in the root folder\'s place when given one', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [{ id: 9150, name: 'AGB', type: 'page' }] }));
+
+        await expect(searchCmsItems(NODE, 'page', '', { folderId: 8 })).resolves.toEqual([{ id: 9150, name: 'AGB', type: 'page' }]);
+
+        const url = requestUrl(fetchMock);
+
+        expect(url.pathname).toBe('/rest/folder/getItems/8');
+        expect(url.searchParams.get('nodeId')).toBe('3');
+        expect(url.searchParams.has('search')).toBe(false);
+        expect(url.searchParams.has('recursive')).toBe(false);
+        expect(url.searchParams.getAll('type')).toEqual(['page']);
+    });
+
     it('searches with Elasticsearch when asked to, fuzzy and below the node root folder', async () => {
         const fetchMock = stubFetchSequence(Response.json({ hits: { total: 1, hits: [{ _id: 8871, _object: { id: 8871, name: 'Campaign launch', type: 'page' } }] } }));
 

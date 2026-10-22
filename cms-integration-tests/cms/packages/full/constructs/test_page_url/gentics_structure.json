@@ -1,0 +1,45 @@
+{
+  "globalId" : "a1f6.34781994-ce20-11f1-a9e5-1e2b46ff8f63",
+  "keyword" : "test_page_url",
+  "name" : {
+    "de" : "[Test] Seitenreferenz",
+    "en" : "[Test] Page Reference"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : false,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "a1f6.347834b0-ce20-11f1-8aae-1e2b46ff8f63",
+    "name" : {
+      "de" : "Seite",
+      "en" : "Page"
+    },
+    "keyword" : "page",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

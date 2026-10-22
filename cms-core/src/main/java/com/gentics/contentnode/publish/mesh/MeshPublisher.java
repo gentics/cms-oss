@@ -2093,6 +2093,11 @@ public class MeshPublisher implements AutoCloseable {
 			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
 			for (ImageVariant variant : variants) {
 				String uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
+
+				if (uuid == null) {
+					continue;
+				}
+
 				String fieldKey = "binarycontent";
 				String transform = variant.description.transform;
 

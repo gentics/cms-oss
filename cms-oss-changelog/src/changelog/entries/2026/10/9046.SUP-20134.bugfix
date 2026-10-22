@@ -1,0 +1,1 @@
+Editor User Interface: Fixed clearing of the page when canceling the selection of a new one. Also fixed an issue in the repo browser to open in the correct node/channel when selecting a page.

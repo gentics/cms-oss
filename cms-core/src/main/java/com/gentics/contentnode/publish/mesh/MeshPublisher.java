@@ -1084,6 +1084,20 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Remove the given publish directory from the start of the path, if the path starts with it
+	 * @param path path
+	 * @param publishDir publish directory (with or without leading and trailing slashes)
+	 * @return path without the publish directory
+	 */
+	public static String removePublishDir(String path, String publishDir) {
+		String prefix = cleanPathPrefix(publishDir);
+		if (StringUtils.isEmpty(prefix) || !path.startsWith(prefix + "/")) {
+			return path;
+		}
+		return path.substring(prefix.length());
+	}
+
+	/**
 	 * Check whether the branch is tagged with the given tag
 	 * @param branch branch
 	 * @param familyName tag family name
@@ -2096,12 +2110,13 @@ public class MeshPublisher implements AutoCloseable {
 			for (ImageVariant variant : variants) {
 				String fieldKey = "binarycontent";
 				String webroot = variant.information.getFilePath();
-				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
-						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
-				webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getPublishDir())) 
-						? webroot.split(node.getPublishDir())[1] : webroot;
-				webroot = (webroot.startsWith("/" + node.getFolder().getPublishDir()))
-						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
+				if (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository())) {
+					webroot = removePublishDir(webroot, node.getBinaryPublishDir());
+				}
+				if (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository())) {
+					webroot = removePublishDir(webroot, node.getPublishDir());
+				}
+				webroot = removePublishDir(webroot, node.getFolder().getPublishDir());
 
 				String uuid;
 				if (variant.information.getFileId() != 0) {
@@ -3769,6 +3784,7 @@ public class MeshPublisher implements AutoCloseable {
 		Map<TagmapEntryRenderer, Object> postponed = new HashMap<>();
 		Collection<String> roles = null;
 		List<MeshPublisherGisImageInitiator> gisInitiators = new ArrayList<>();
+		Set<String> renderedFields = new HashSet<>();
 
 		for (Map.Entry<TagmapEntryRenderer, Object> mapEntry : tagmapEntries.entrySet()) {
 			TagmapEntryRenderer entry = mapEntry.getKey();
@@ -3784,8 +3800,10 @@ public class MeshPublisher implements AutoCloseable {
 					roles = Collections.emptyList();
 				}
 			} else if (value == null) {
+				renderedFields.add(entry.getMapname());
 				fields.put(entry.getMapname(), null);
 			} else {
+				renderedFields.add(entry.getMapname());
 				switch (AttributeType.getForType(entry.getAttributeType())) {
 				case integer:
 				{
@@ -3950,6 +3968,18 @@ public class MeshPublisher implements AutoCloseable {
 		if (!ObjectTransformer.isEmpty(gisInitiators) && postSaveFuncConsumer != null) {
 			postSaveFuncConsumer.accept(resp -> {
 				handleGisInitiators(nodeId, gisInitiators);
+				return Single.just(resp);
+			});
+		}
+
+		// remove the GIS links of rendered fields, which do not contain GIS URLs (any more)
+		for (MeshPublisherGisImageInitiator initiator : gisInitiators) {
+			renderedFields.remove(initiator.getInitiatorForeignKey()[3]);
+		}
+		if (!preview && !renderedFields.isEmpty() && postSaveFuncConsumer != null
+				&& TransactionManager.getCurrentTransaction().getObject(Node.class, nodeId).isPublishImageVariants()) {
+			postSaveFuncConsumer.accept(resp -> {
+				Trx.operate(() -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, objectId, renderedFields));
 				return Single.just(resp);
 			});
 		}

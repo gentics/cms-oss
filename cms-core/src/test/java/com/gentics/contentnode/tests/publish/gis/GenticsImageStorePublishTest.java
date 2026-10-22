@@ -14,6 +14,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertPublishFS;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertPublishGISFS;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.waitForNextSecond;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.awt.image.BufferedImage;
@@ -407,6 +408,105 @@ public class GenticsImageStorePublishTest {
 			assertObject("Page after deletion of image", meshContext.client(), meshProject, page, true);
 		} else {
 			operate(() -> assertPublishFS(context.getPubDir(), image, node, false));
+		}
+	}
+
+	/**
+	 * Test that republishing succeeds after an image, which had variants published into Mesh, was deleted,
+	 * when the node has empty publish directories
+	 * @throws Exception
+	 */
+	@Test
+	public void testDeleteImageWithVariantsEmptyPublishDirs() throws Exception {
+		String publishDir = node.getPublishDir();
+		String binaryPublishDir = node.getBinaryPublishDir();
+
+		node = update(node, n -> {
+			n.setPublishDir("");
+			n.setBinaryPublishDir("");
+		});
+
+		try {
+			testDeleteImageWithVariants();
+		} finally {
+			node = update(node, n -> {
+				n.setPublishDir(publishDir);
+				n.setBinaryPublishDir(binaryPublishDir);
+			});
+		}
+	}
+
+	/**
+	 * Test that image variants are removed from Mesh, when the image is no longer used in the page
+	 * @throws Exception
+	 */
+	@Test
+	public void testRemoveImageFromPage() throws Exception {
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+			f.setPublishDir("testfolder");
+		}).build();
+
+		ImageFile image = (ImageFile) supply(() -> {
+			try {
+				return createImage(folder, "blume.jpg",
+						IOUtils.toByteArray(GenericTestUtils.getPictureResource("blume.jpg")));
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+		});
+
+		Page page = Builder.create(Page.class, p -> {
+			p.setFolderId(folder.getId());
+			p.setTemplateId(template.getId());
+			p.setName("Page");
+
+			getPartType(ImageURLPartType.class, p.getContentTag("gistag"), "image").setTargetImage(image);
+		}).publish().build();
+
+		// run publish
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		String meshProject = supply(() -> node.getMeshProject());
+
+		if (mesh && publishImageVariants) {
+			ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(meshProject,
+					supply(() -> MeshPublisher.getMeshUuid(image)), "binarycontent").blockingGet();
+			assertThat(variants.getVariants()).as("Image variants before removing the image from the page").hasSize(2);
+		}
+
+		// remove the image from the page (in the next second, so that a new page version is created)
+		waitForNextSecond();
+		Builder.update(page, p -> {
+			getPartType(ImageURLPartType.class, p.getContentTag("gistag"), "image").setTargetImage(null);
+		}).publish().build();
+
+		// republish
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		if (mesh && publishImageVariants) {
+			assertObject("Page after removing the image", meshContext.client(), meshProject, page, true, meshPage -> {
+				assertThat(meshPage.getFields().getStringField("content").getString()).as("Published page content")
+						.doesNotContain("/GenticsImageStore/");
+			});
+
+			int gisLinks = supply(() -> DBUtils.select(
+					"SELECT COUNT(*) c FROM meshpublish_imagestoretarget WHERE entity_type = ? AND entity_id = ?", ps -> {
+						ps.setInt(1, Page.TYPE_PAGE);
+						ps.setInt(2, page.getId());
+					}, DBUtils.firstInt("c")));
+			assertThat(gisLinks).as("GIS links of the page after removing the image").isZero();
+
+			ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(meshProject,
+					supply(() -> MeshPublisher.getMeshUuid(image)), "binarycontent").blockingGet();
+			assertThat(variants.getVariants()).as("Image variants after removing the image from the page").isEmpty();
 		}
 	}
 }

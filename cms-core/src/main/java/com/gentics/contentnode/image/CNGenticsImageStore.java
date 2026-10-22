@@ -1114,29 +1114,6 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	}
 
 	/**
-	 * Remove the entries from meshpublish_imagestoretarget with the given field keys of the object for the node
-	 * @param nodeId node ID
-	 * @param objType object type
-	 * @param objId object ID
-	 * @param fieldKeys field keys
-	 * @throws NodeException
-	 */
-	public static void removeFromMeshPublish(int nodeId, int objType, int objId, Collection<String> fieldKeys) throws NodeException {
-		if (!CollectionUtils.isEmpty(fieldKeys)) {
-			DBUtils.executeMassStatement(
-					"DELETE FROM meshpublish_imagestoretarget WHERE entity_type = ? AND node_id = ? AND entity_id = ? AND field_key IN", "",
-					fieldKeys, 4, new SQLExecutor() {
-						@Override
-						public void prepareStatement(PreparedStatement stmt) throws SQLException {
-							stmt.setInt(1, objType);
-							stmt.setInt(2, nodeId);
-							stmt.setInt(3, objId);
-						}
-					}, Transaction.DELETE_STATEMENT);
-		}
-	}
-
-	/**
 	 * Get the list of files, which used to have GIS variants in Mesh but don't have them any more
 	 * @param nodeId node ID
 	 * @return list of images

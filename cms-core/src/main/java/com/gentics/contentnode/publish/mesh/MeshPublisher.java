@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,7 +74,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
@@ -1081,20 +1079,6 @@ public class MeshPublisher implements AutoCloseable {
 			pathPrefix = pathPrefix.substring(0, pathPrefix.length() - 1);
 		}
 		return pathPrefix;
-	}
-
-	/**
-	 * Remove the given publish directory from the start of the path, if the path starts with it
-	 * @param path path
-	 * @param publishDir publish directory (with or without leading and trailing slashes)
-	 * @return path without the publish directory
-	 */
-	public static String removePublishDir(String path, String publishDir) {
-		String prefix = cleanPathPrefix(publishDir);
-		if (StringUtils.isEmpty(prefix) || !path.startsWith(prefix + "/")) {
-			return path;
-		}
-		return path.substring(prefix.length());
 	}
 
 	/**
@@ -2108,29 +2092,15 @@ public class MeshPublisher implements AutoCloseable {
 
 			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
 			for (ImageVariant variant : variants) {
+				String uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
 				String fieldKey = "binarycontent";
-				String webroot = variant.information.getFilePath();
-				if (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository())) {
-					webroot = removePublishDir(webroot, node.getBinaryPublishDir());
-				}
-				if (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository())) {
-					webroot = removePublishDir(webroot, node.getPublishDir());
-				}
-				webroot = removePublishDir(webroot, node.getFolder().getPublishDir());
-
-				String uuid;
-				if (variant.information.getFileId() != 0) {
-					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
-				} else {
-					uuid = null;
-				}
 				String transform = variant.description.transform;
 
 				Matcher m = CNGenticsImageStore.TRANSFORM_PATTERN.matcher(transform);
 				if (!m.matches()) {
 					throw new NodeException("Couldn't parse " + transform);
 				}
-				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest().setVariants(new ArrayList<>()));
+				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid, fieldKey), key -> new ImageManipulationRequest().setVariants(new ArrayList<>()));
 				imageManipulationRequest.setDeleteOther(true);
 
 				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();
@@ -3784,7 +3754,6 @@ public class MeshPublisher implements AutoCloseable {
 		Map<TagmapEntryRenderer, Object> postponed = new HashMap<>();
 		Collection<String> roles = null;
 		List<MeshPublisherGisImageInitiator> gisInitiators = new ArrayList<>();
-		Set<String> renderedFields = new HashSet<>();
 
 		for (Map.Entry<TagmapEntryRenderer, Object> mapEntry : tagmapEntries.entrySet()) {
 			TagmapEntryRenderer entry = mapEntry.getKey();
@@ -3800,10 +3769,8 @@ public class MeshPublisher implements AutoCloseable {
 					roles = Collections.emptyList();
 				}
 			} else if (value == null) {
-				renderedFields.add(entry.getMapname());
 				fields.put(entry.getMapname(), null);
 			} else {
-				renderedFields.add(entry.getMapname());
 				switch (AttributeType.getForType(entry.getAttributeType())) {
 				case integer:
 				{
@@ -3968,18 +3935,6 @@ public class MeshPublisher implements AutoCloseable {
 		if (!ObjectTransformer.isEmpty(gisInitiators) && postSaveFuncConsumer != null) {
 			postSaveFuncConsumer.accept(resp -> {
 				handleGisInitiators(nodeId, gisInitiators);
-				return Single.just(resp);
-			});
-		}
-
-		// remove the GIS links of rendered fields, which do not contain GIS URLs (any more)
-		for (MeshPublisherGisImageInitiator initiator : gisInitiators) {
-			renderedFields.remove(initiator.getInitiatorForeignKey()[3]);
-		}
-		if (!preview && !renderedFields.isEmpty() && postSaveFuncConsumer != null
-				&& TransactionManager.getCurrentTransaction().getObject(Node.class, nodeId).isPublishImageVariants()) {
-			postSaveFuncConsumer.accept(resp -> {
-				Trx.operate(() -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, objectId, renderedFields));
 				return Single.just(resp);
 			});
 		}

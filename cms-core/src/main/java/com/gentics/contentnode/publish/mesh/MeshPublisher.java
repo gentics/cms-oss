@@ -74,7 +74,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
@@ -2093,28 +2092,15 @@ public class MeshPublisher implements AutoCloseable {
 
 			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
 			for (ImageVariant variant : variants) {
+				String uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
 				String fieldKey = "binarycontent";
-				String webroot = variant.information.getFilePath();
-				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
-						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
-				webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getPublishDir())) 
-						? webroot.split(node.getPublishDir())[1] : webroot;
-				webroot = (webroot.startsWith("/" + node.getFolder().getPublishDir()))
-						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
-
-				String uuid;
-				if (variant.information.getFileId() != 0) {
-					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
-				} else {
-					uuid = null;
-				}
 				String transform = variant.description.transform;
 
 				Matcher m = CNGenticsImageStore.TRANSFORM_PATTERN.matcher(transform);
 				if (!m.matches()) {
 					throw new NodeException("Couldn't parse " + transform);
 				}
-				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest().setVariants(new ArrayList<>()));
+				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid, fieldKey), key -> new ImageManipulationRequest().setVariants(new ArrayList<>()));
 				imageManipulationRequest.setDeleteOther(true);
 
 				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();

@@ -33,18 +33,21 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.fum.FUMRequest;
-import com.gentics.contentnode.rest.model.fum.FUMResponseStatus;
 import com.gentics.contentnode.rest.model.fum.FUMResult;
 import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.util.FileUtil;
+
+import jakarta.ws.rs.core.Response.Status;
 
 public class FileUploadManipulatorFileSave {
 	
@@ -147,11 +150,11 @@ public class FileUploadManipulatorFileSave {
 				if (statusCode != HttpStatus.SC_OK) {
 					String msg = "Request to the File Upload Manipulator was not successful." + " Got HTTP status code: " + statusCode
 							+ ". Check your configuration!";
-					I18nString i18nMessage = new CNI18nString("rest.file.upload.fum_failure");
 
 					TransactionManager.execute(() -> ActionLogger.logCmd(ActionLogger.FUM_ERROR, com.gentics.contentnode.object.File.TYPE_FILE, file.getId(),
 							file.getFolder().getId(), file.getName() + ": HTTP Status Code " + statusCode));
-					throw new NodeException(i18nMessage.toString(), new Exception(msg)); 
+					throw new RestMappedException(msg, "rest.file.upload.fum_failure")
+							.setResponseCode(ResponseCode.FAILURE).setStatus(Status.INTERNAL_SERVER_ERROR);
 				}
 
 				FUMResult responseObject = mapper.readValue(post.getResponseBodyAsString(), FUMResult.class);
@@ -185,24 +188,30 @@ public class FileUploadManipulatorFileSave {
 					break;
 				}
 				case DENIED:
-				default:
 				{
-					String msg = "The file you tried to upload could not successfully be validated in the installed checks (FileUploadManipulator).";
-					I18nString i18nMessage = new CNI18nString("rest.file.upload.fum_failure");
-
-					if (responseObject.getStatus() == FUMResponseStatus.DENIED) {
-						msg = responseObject.getMsg();
-						i18nMessage = new CNI18nString("error while invoking file upload manipulator");
-					}
-
-					final String finalMsg = file.getName() + ": " + msg;
-
-					// Just delete the created file again
+					// delete the file
 					file.delete();
+
+					String msg = responseObject.getMsg();
+					final String finalMsg = file.getName() + ": " + msg;
 
 					TransactionManager.execute(() -> ActionLogger.logCmd(ActionLogger.FUM_DENIED, com.gentics.contentnode.object.File.TYPE_FILE, file.getId(),
 							file.getFolder().getId(), finalMsg));
-					throw new NodeException(msg, new Exception(i18nMessage.toString() + ": " + msg));
+
+					throw new RestMappedException(finalMsg, "rest.file.upload.fum_denied", msg)
+							.setStatus(Status.BAD_REQUEST).setResponseCode(ResponseCode.INVALIDDATA);
+				}
+				default:
+				{
+					// Just delete the created file again
+					file.delete();
+
+					String msg = "The file you tried to upload could not successfully be validated in the installed checks (FileUploadManipulator).";
+					final String finalMsg = file.getName() + ": " + msg;
+
+					TransactionManager.execute(() -> ActionLogger.logCmd(ActionLogger.FUM_DENIED, com.gentics.contentnode.object.File.TYPE_FILE, file.getId(),
+							file.getFolder().getId(), finalMsg));
+					throw new RestMappedException(finalMsg, "rest.file.upload.fum_failure");
 				}
 				}
 
@@ -213,9 +222,8 @@ public class FileUploadManipulatorFileSave {
 				TransactionManager.execute(() -> ActionLogger.logCmd(ActionLogger.FUM_ERROR, com.gentics.contentnode.object.File.TYPE_FILE, file.getId(),
 						file.getFolder().getId(), file.getName() + ":" + e.getLocalizedMessage()));
 				String msg = "The file you tried to upload could not successfully be validated in the installed checks (FileUploadManipulator).";
-				I18nString i18nMessage = new CNI18nString("rest.file.upload.fum_failure");
 
-				throw new NodeException(i18nMessage.toString(), new Exception(msg + ": " + e.getLocalizedMessage(), e));
+				throw new RestMappedException(msg, "rest.file.upload.fum_failure");
 			} finally {
 				if (!postponed) {
 					if (tempFile != null) {

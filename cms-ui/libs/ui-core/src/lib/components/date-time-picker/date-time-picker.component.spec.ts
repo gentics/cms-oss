@@ -34,7 +34,7 @@ import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { DateTimePickerComponent } from './date-time-picker.component';
 
-const TEST_TIMESTAMP = Date.UTC(2016, 2, 14, 16, 9, 23, 763) / 1000;
+const TEST_TIMESTAMP = new Date(2016, 2, 14, 16, 9, 23, 763).getTime() / 1000;
 
 let modalService: SpyModalService;
 let formatProvider: DateTimePickerFormatProvider;
@@ -155,7 +155,7 @@ describe('DateTimePickerComponent', () => {
 
         it('formats the timestamp in the input as a date when displayTime=false',
             componentTest(() => TestComponent, `
-                <gtx-date-time-picker value="1457971763" displayTime="false">
+                <gtx-date-time-picker value="${TEST_TIMESTAMP}" displayTime="false">
                 </gtx-date-time-picker>`,
             async (fixture) => {
                 expect(await getDisplayValue(fixture)).toBe('March 14, 2016');
@@ -168,7 +168,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}" displayTime="true">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('March 14, 2016 at 5:09:23 PM');
+                expect(await getDisplayValue(fixture)).toBe('March 14, 2016 at 4:09:23 PM');
             },
             ),
         );
@@ -178,7 +178,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-date-time-picker [value]="testModel" displayTime="true">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('March 14, 2016 at 5:09:23 PM');
+                expect(await getDisplayValue(fixture)).toBe('March 14, 2016 at 4:09:23 PM');
             },
             ),
         );

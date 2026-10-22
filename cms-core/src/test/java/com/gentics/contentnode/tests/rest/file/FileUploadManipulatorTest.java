@@ -177,10 +177,7 @@ public class FileUploadManipulatorTest {
 	 */
 	@Test
 	public void testInvalid() throws NodeException, ParseException, IOException {
-		if (!useMultipart) {
-			String msg = supply(() -> I18NHelper.get("rest.file.upload.fum_failure"));
-			exceptionChecker.expect(NodeException.class, msg);
-		}
+		exceptionChecker.expect(NodeException.class, I18NHelper.get("rest.file.upload.fum_failure"));
 		doUploadTest("invalid", uploadResponse -> {
 			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.FAILURE,
 					null,
@@ -303,9 +300,8 @@ public class FileUploadManipulatorTest {
 	 */
 	@Test
 	public void testDeny() throws NodeException, ParseException, IOException {
-		if (!useMultipart) {
-			exceptionChecker.expect(NodeException.class, FUMResource.DENY_MSG);
-		}
+		exceptionChecker.expect(NodeException.class,
+				I18NHelper.get("rest.file.upload.fum_denied", FUMResource.DENY_MSG));
 		doUploadTest("deny", uploadResponse -> {
 			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.FAILURE,
 					FUMResource.DENY_MSG,

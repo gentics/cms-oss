@@ -1136,7 +1136,8 @@ public class CNGenticsImageStore extends GenticsImageStore {
 				+ " from meshpublish_imagestoretarget mit "
 				+ " inner join imagestoretarget ist on mit.imagestoretarget_id = ist.id "
 				+ " inner join imagestoreimage isi on ist.imagestoreimage_id = isi.id "
-				+ " where mit.node_id = ? ", new SQLExecutor() {
+				+ " left join contentfile cf on isi.contentfile_id = cf.id "
+				+ " where mit.node_id = ? and (cf.id is null or cf.deleted = 0) ", new SQLExecutor() {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
 				stmt.setInt(1, nodeId);

@@ -130,7 +130,7 @@ test.describe('Selecting a part in the preview', () => {
         await page.goto(`#/sessions/${SESSION}`);
         await page.frameLocator(frameSelector).getByRole('link', { name: '1. Juli' }).click();
 
-        await expect(page.getByText('Selected: Text')).toBeVisible();
+        await expect(page.getByText('Selected: Link · Text')).toBeVisible();
         // Still the page: a followed link would have replaced it with whatever /elsewhere serves.
         await expect(page.frameLocator(frameSelector).getByText('Ab dem')).toBeVisible();
         await expect(page.getByTitle('Preview of the page in the CMS')).toHaveJSProperty('contentWindow.location.pathname', '/alohapage');
@@ -138,9 +138,9 @@ test.describe('Selecting a part in the preview', () => {
         // The first Escape closes the element menu and returns to the page, the second clears the selection.
         await page.keyboard.press('Escape');
         await expect(page.getByRole('menu')).toBeHidden();
-        await expect(page.getByText('Selected: Text')).toBeVisible();
+        await expect(page.getByText('Selected: Link · Text')).toBeVisible();
         await page.keyboard.press('Escape');
-        await expect(page.getByText('Selected: Text')).toBeHidden();
+        await expect(page.getByText('Selected: Link · Text')).toBeHidden();
     });
 
     test('keeps the selection across a reload, and clears it with a note when the part is gone', async ({ page }) => {
@@ -823,6 +823,142 @@ test.describe('Swapping an image', () => {
     });
 });
 
+test.describe('Editing a link', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
+
+    // A text part with a link to a CMS page, as the CMS renders it for the preview (`DynamicUrlFactory`), and a link to another site.
+    function linkPage(): string {
+        return `<!doctype html><body style="margin:0;font:16px sans-serif">
+            <p data-gcn-pageid="9142" data-gcn-tagid="12" data-gcn-tagname="content_2" data-gcn-i18n-constructname="Text" style="padding:30px">
+                Es gelten die <a href="/alohapage?nodeid=3&amp;language=1&amp;real=newview&amp;realid=9150">AGB</a> und die <a href="https://example.com/regeln">Regeln</a>.
+            </p></body>`;
+    }
+
+    // The CMS behind the link card: node 3 with root folder 7; the page AGB, which the link points to,
+    // in folder 8 next to Impressum, the page the link is on (9142) in the root folder.
+    async function stubCmsPages(page: Page) {
+        await page.route((url) => url.pathname === '/rest/node', (route) => route.fulfill({ json: { items: [{ id: 3, name: 'Corporate Website', folderId: 7 }] } }));
+        await page.route((url) => url.pathname === '/rest/page/load/9150', (route) => route.fulfill({
+            json: { page: { id: 9150, name: 'AGB', folderId: 8, cdate: 0, edate: 0 } },
+        }));
+        await page.route((url) => url.pathname === '/rest/page/load/9142', (route) => route.fulfill({
+            json: { page: { id: 9142, name: 'Neue Nutzungsbedingungen', folderId: 7, cdate: 0, edate: 0 } },
+        }));
+        await page.route((url) => url.pathname === '/rest/folder/getItems/8', (route) => route.fulfill({
+            json: { items: [{ id: 9150, name: 'AGB', type: 'page' }, { id: 9151, name: 'Impressum', type: 'page' }] },
+        }));
+        await page.route((url) => url.pathname === '/rest/folder/getItems/7', (route) => route.fulfill({
+            json: { items: [{ id: 9100, name: 'Willkommen', type: 'page' }] },
+        }));
+    }
+
+    test('selects a link on its own and sends its new text and URL word for word, the link named by its place and text', async ({ page }) => {
+        await stubS1Session(page, [markedPage()]);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+
+        const link = page.frameLocator(frameSelector).getByRole('link', { name: '1. Juli' });
+
+        await link.hover();
+
+        // The outline is the link's, not the part's: its label sits at the link's top left.
+        const label = page.getByText('Link · Text', { exact: true });
+
+        await expect(label).toBeVisible();
+
+        const linkBox = (await link.boundingBox())!;
+        const labelBox = (await label.boundingBox())!;
+
+        expect(Math.abs(labelBox.x - linkBox.x)).toBeLessThan(2);
+        expect(Math.abs(labelBox.y - linkBox.y)).toBeLessThan(2);
+
+        await link.click();
+        await expect(page.getByText('Selected: Link · Text')).toBeVisible();
+        await expect(page.getByRole('menuitem', { name: 'Write it yourself' })).toHaveCount(0);
+        await page.getByRole('menuitem', { name: 'Edit link' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Link · Text' });
+        const text = card.getByRole('textbox', { name: 'Link text' });
+
+        await expect(card.getByText('Text · content_2 · Link')).toBeVisible();
+        await expect(text).toBeFocused();
+        await expect(text).toHaveValue('1. Juli');
+        await expect(card.getByRole('radio', { name: 'URL' })).toBeChecked();
+        await expect(card.getByRole('textbox', { name: 'URL' })).toHaveValue('/elsewhere');
+
+        await text.fill('1. August');
+        await card.getByRole('textbox', { name: 'URL' }).fill('https://example.com/agb');
+        await card.getByRole('button', { name: 'Apply' }).click();
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "content_2" (Text), link 1 of 1 ("1. Juli"), change it:' },
+                { type: 'text', text: '\nLink text: ' },
+                { type: 'verbatim', text: '1. August', source: 'user', label: 'Link text' },
+                { type: 'text', text: '\nTarget: ' },
+                { type: 'verbatim', text: 'https://example.com/agb', source: 'user', label: 'Target' },
+            ],
+        });
+        await expect(card).toBeHidden();
+    });
+
+    test('shows the CMS page a link leads to and sends another page picked as its reference', async ({ page }) => {
+        await stubS1Session(page, [linkPage()]);
+        await stubCmsPages(page);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('link', { name: 'AGB' }).click();
+        await page.getByRole('menuitem', { name: 'Edit link' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Link · Text' });
+
+        await expect(card.getByRole('radio', { name: 'CMS page' })).toBeChecked();
+        await expect(card.getByRole('radio', { name: 'AGB' })).toBeChecked();
+        // The list is the folder of the page the link points to, not the node's root folder.
+        await expect(card.getByRole('radio', { name: 'Impressum' })).toBeVisible();
+        await expect(card.getByText('Willkommen')).toHaveCount(0);
+
+        await card.getByRole('radio', { name: 'Impressum' }).click();
+        await card.getByRole('button', { name: 'Apply' }).click();
+
+        await expect.poll(() => posted.length).toBe(1);
+        expect(posted[0]).toEqual({
+            parts: [
+                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
+                { type: 'text', text: ' – part "content_2" (Text), link 1 of 2 ("AGB"), change it:' },
+                { type: 'text', text: '\nTarget: ' },
+                { type: 'reference', ref: { type: 'page', id: '9151', node_id: 3, label: 'Impressum' } },
+            ],
+        });
+    });
+
+    test('sends nothing for an unchanged link and says so', async ({ page }) => {
+        await stubS1Session(page, [linkPage()]);
+        await stubCmsPages(page);
+        const posted = await stubSending(page);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('link', { name: 'Regeln' }).click();
+        await page.getByRole('menuitem', { name: 'Edit link' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Link · Text' });
+
+        await expect(card.getByRole('textbox', { name: 'URL' })).toHaveValue('https://example.com/regeln');
+        await card.getByRole('textbox', { name: 'Link text' }).fill(' Regeln ');
+        await card.getByRole('button', { name: 'Apply' }).click();
+
+        await expect(page.getByText('Nothing changed, so nothing was sent.')).toBeVisible();
+        await expect(card).toBeHidden();
+        expect(posted).toHaveLength(0);
+    });
+});
+
 test.describe('Page settings', () => {
     test.use({ viewport: { width: 1280, height: 800 } });
 
@@ -904,4 +1040,76 @@ test.describe('Page settings', () => {
         await expect(sheet).toBeHidden();
         expect(posted).toHaveLength(0);
     });
+});
+
+test.describe('The preview header in a narrow column', () => {
+    // Two pages, so the header has its page select too: the session wrote them one after the other.
+    async function stubTwoPages(page: Page) {
+        await page.route((url) => url.pathname === `/rest/proxy/genaix/sessions/${SESSION}/events`, (route) => {
+            const after = Number(new URL(route.request().url()).searchParams.get('after') ?? 0);
+            const update = (seq: number, id: number, name: string) => `id: ${seq}\nevent: preview.updated\ndata: ${JSON.stringify({
+                seq,
+                ts: '2026-10-07T09:00:00Z',
+                session_id: SESSION,
+                type: 'preview.updated',
+                cms_ref: { type: 'page', id, node_id: 3, name },
+                preview_url: `http://127.0.0.1:5173/alohapage?realid=${id}&nodeid=3&mode=view`,
+                mode: 'view',
+                changed_elements: [],
+            })}\n\n`;
+
+            return route.fulfill({
+                status: 200,
+                contentType: 'text/event-stream',
+                body: after === 0 ? update(1, 9142, 'Neue Nutzungsbedingungen ab Q3') + update(2, 9150, 'Allgemeine Geschäftsbedingungen') : '',
+            });
+        });
+        await page.route((url) => url.pathname === '/alohapage', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Seite</p>' }));
+    }
+
+    type Box = { x: number; y: number; width: number; height: number };
+
+    // The names of the controls that overlap another one, as "first × second".
+    function overlappingPairs(boxes: Record<string, Box>): string[] {
+        const entries = Object.entries(boxes);
+
+        return entries.flatMap(([name, box], i) => entries.slice(i + 1)
+            .filter(([, other]) => box.x < other.x + other.width - 0.5 && other.x < box.x + box.width - 0.5
+                && box.y < other.y + other.height - 0.5 && other.y < box.y + box.height - 0.5)
+            .map(([otherName]) => `${name} × ${otherName}`));
+    }
+
+    // The names of the controls that stick out of the header on the left or the right.
+    function outsideOf(header: Box, boxes: Record<string, Box>): string[] {
+        return Object.entries(boxes)
+            .filter(([, box]) => box.x < header.x - 0.5 || box.x + box.width > header.x + header.width + 0.5)
+            .map(([name]) => name);
+    }
+
+    for (const width of [1100, 900]) {
+        test(`keeps the title, the page select and the buttons apart and inside the header at ${width} px`, async ({ page }) => {
+            await page.setViewportSize({ width, height: 800 });
+            await stubTwoPages(page);
+            await page.goto(`#/sessions/${SESSION}`);
+
+            const region = page.getByRole('region', { name: 'Preview' });
+
+            await expect(region.getByRole('combobox', { name: 'Pages' })).toBeVisible();
+
+            const header = (await region.locator('header').first().boundingBox())!;
+            const controls = {
+                Title: region.getByRole('heading', { name: 'Preview' }),
+                Pages: region.getByRole('combobox', { name: 'Pages' }),
+                Open: region.getByRole('link', { name: 'Open' }),
+                'Page settings': region.getByRole('button', { name: 'Page settings' }),
+                Desktop: region.getByRole('button', { name: 'Desktop' }),
+                Mobile: region.getByRole('button', { name: 'Mobile · 390 px' }),
+                'Full screen': region.getByRole('button', { name: 'Full screen' }),
+            };
+            const boxes = Object.fromEntries(await Promise.all(Object.entries(controls).map(async ([name, control]) => [name, (await control.boundingBox())!] as const)));
+
+            expect(overlappingPairs(boxes)).toEqual([]);
+            expect(outsideOf(header, boxes)).toEqual([]);
+        });
+    }
 });

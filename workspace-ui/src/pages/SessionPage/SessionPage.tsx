@@ -10,7 +10,7 @@ import { EventLog } from '@/components/EventLog/EventLog';
 import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
 import { PlanBar } from '@/components/PlanBar/PlanBar';
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
-import { pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
+import { pageElementEditParts, pageElementImageParts, pageElementLinkNaming, pageElementLinkParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { type SendTurnInput, type StartFile, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
@@ -165,7 +165,8 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
  * (`pageElementParts`). New text written for a part by hand is sent the same way, as the page, a text
  * asking to replace the part's text, and the new text as a `verbatim` part (`pageElementEditParts`), and
  * so is a CMS image picked for a part, as a `reference` part (`pageElementImageParts`), or an image
- * uploaded for it, as the turn's file (`file_ref` part). Changed page
+ * uploaded for it, as the turn's file (`file_ref` part). A link's changed text and target go as the
+ * page, a text naming the link, and each new value (`pageElementLinkParts`). Changed page
  * settings go as the page, a text asking to change them, and each new value (`pageSettingsParts`). None needs a run
  * to be working or waiting: a second message would be refused (`409 run_already_active`), and none is an
  * answer to the run's question.
@@ -201,6 +202,7 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
                     ? send(pageElementImageParts(attrs), [{ file: image, mode: 'source' }])
                     : send(pageElementImageParts(attrs, image));
             }}
+            onSendLink={(element, change) => send(pageElementLinkParts(t, { ...element, text: pageElementLinkNaming(t, element) }, change))}
             onSendSettings={(page, changes) => send(pageSettingsParts(t, page, changes))}
             canSendFeedback={!run && !sendTurn.isPending}
         />

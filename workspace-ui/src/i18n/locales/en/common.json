@@ -38,7 +38,7 @@
             "label": "Pages",
             "unnamed": "Page {{id}}"
         },
-        "block": {
+        "textBlock": {
             "heading1": "Heading 1",
             "heading2": "Heading 2",
             "heading3": "Heading 3",
@@ -81,6 +81,22 @@
             "loading": "Loading images …",
             "empty": "No images found.",
             "failed": "The images could not be loaded."
+        },
+        "link": {
+            "label": "Link",
+            "edit": "Edit link",
+            "text": "Link text",
+            "target": "Target",
+            "url": "URL",
+            "page": "CMS page",
+            "search": "Search pages",
+            "searchPlaceholder": "Search all pages",
+            "currentPage": "Page {{id}}",
+            "apply": "Apply",
+            "cancel": "Cancel",
+            "loading": "Loading pages …",
+            "empty": "No pages found.",
+            "failed": "The pages could not be loaded."
         },
         "settings": {
             "open": "Page settings",
@@ -177,10 +193,16 @@
             "replaceWithWithoutType": " – part \"{{tagName}}\", replace its text with: ",
             "replaceImageWith": " – part \"{{tagName}}\" ({{constructName}}), replace its image with: ",
             "replaceImageWithWithoutType": " – part \"{{tagName}}\", replace its image with: ",
-            "namingBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
-            "namingWithoutTypeBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
-            "replaceWithBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: ",
-            "replaceWithWithoutTypeBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: "
+            "namingTextBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
+            "namingWithoutTypeTextBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
+            "replaceWithTextBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: ",
+            "replaceWithWithoutTypeTextBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: ",
+            "namingLink": " – part \"{{tagName}}\" ({{constructName}}), link {{position}} of {{count}} (\"{{excerpt}}\"): ",
+            "namingWithoutTypeLink": " – part \"{{tagName}}\", link {{position}} of {{count}} (\"{{excerpt}}\"): ",
+            "changeLinkLink": " – part \"{{tagName}}\" ({{constructName}}), link {{position}} of {{count}} (\"{{excerpt}}\"), change it:",
+            "changeLinkWithoutTypeLink": " – part \"{{tagName}}\", link {{position}} of {{count}} (\"{{excerpt}}\"), change it:",
+            "linkText": "Link text",
+            "linkTarget": "Target"
         },
         "pageSettings": {
             "change": " – change its page settings:",

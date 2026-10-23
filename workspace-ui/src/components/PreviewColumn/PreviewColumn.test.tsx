@@ -25,7 +25,7 @@ function loadedUrl(previewUrl: string): string {
 }
 
 // The column's actions on a part, unused here.
-const noActions = { onReferenceInChat: () => {}, onSendFeedback: () => Promise.resolve(), onSendEdit: () => Promise.resolve(), onSendImage: () => Promise.resolve(), onSendSettings: () => Promise.resolve(), canSendFeedback: true };
+const noActions = { onReferenceInChat: () => {}, onSendFeedback: () => Promise.resolve(), onSendEdit: () => Promise.resolve(), onSendImage: () => Promise.resolve(), onSendLink: () => Promise.resolve(), onSendSettings: () => Promise.resolve(), canSendFeedback: true };
 
 describe('PreviewColumn', () => {
     it('frames the CMS preview read-only', () => {

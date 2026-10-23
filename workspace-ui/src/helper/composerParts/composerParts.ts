@@ -108,16 +108,31 @@ export interface SettingAttrs {
 }
 
 /**
- * One block inside a page part, e.g. the headline of an Aloha text that also holds a paragraph (the
- * preview's `PreviewBlock`). The API has no field for a block inside a tag, so the naming text of the
- * message says which block is meant: by position, kind and the start of its text.
+ * One text block inside a page part, e.g. the headline of an Aloha text that also holds a paragraph (the
+ * preview's `PreviewTextBlock`). The API has no field for a text block inside a tag, so the naming text of the
+ * message says which text block is meant: by position, kind and the start of its text.
  */
-export interface PageElementBlock {
-    /** Position among the part's blocks, starting at 0. */
+export interface PageElementTextBlock {
+    /** Position among the part's text blocks, starting at 0. */
     index: number;
-    /** Total number of blocks in the part. */
+    /** Total number of text blocks in the part. */
     count: number;
     /** Its kind, already translated, e.g. "Heading 1". */
+    label: string;
+    /** The first characters of its text. */
+    excerpt: string;
+}
+
+/**
+ * One link inside a page part (the preview's `PreviewLink`). As for a text block, the API has no field for
+ * it, so the naming text of the message says which link is meant: by position and the start of its text.
+ */
+export interface PageElementLink {
+    /** Position among the part's links, starting at 0. */
+    index: number;
+    /** Total number of links in the part. */
+    count: number;
+    /** What the label calls it, already translated, e.g. "Link". */
     label: string;
     /** The first characters of its text. */
     excerpt: string;
@@ -131,35 +146,41 @@ export interface PageElementAttrs {
     tagName: string;
     /** The name of its type, e.g. "Text"; empty when unknown. */
     constructName: string;
-    /** The block of the part that is meant; `null` or absent means the whole part. */
-    block?: PageElementBlock | null;
+    /** The text block of the part that is meant; `null` or absent means the whole part. */
+    textBlock?: PageElementTextBlock | null;
+    /** The link of the part that is meant; `null` or absent means none. Never together with `textBlock`. */
+    link?: PageElementLink | null;
     /** What names the part in the message, e.g. ` – part "content_2" (Text): `. */
     text: string;
 }
 
-type PageElementName = Pick<PageElementAttrs, 'tagName' | 'constructName' | 'block'>;
+type PageElementName = Pick<PageElementAttrs, 'tagName' | 'constructName' | 'textBlock' | 'link'>;
 
 /**
  * The label of a page part on its chat token and on the preview's cards, e.g. "Text · content_2". For a
- * block, its kind is appended: "Text · content_2 · Heading 1".
+ * text block, its kind is appended: "Text · content_2 · Heading 1"; for a link, its label: "Text · content_2 · Link".
  */
-export function pageElementLabel({ tagName, constructName, block }: PageElementName): string {
-    return [constructName, tagName, block?.label].filter(Boolean).join(' · ');
+export function pageElementLabel({ tagName, constructName, textBlock, link }: PageElementName): string {
+    return [constructName, tagName, textBlock?.label, link?.label].filter(Boolean).join(' · ');
 }
 
 // Translates the naming text of a part. The i18n key is `key`, plus `WithoutType` when the part has no
-// construct name, plus `Block` when a block is meant (e.g. `replaceWithWithoutTypeBlock`).
-function nameElement(t: TFunction, key: string, { tagName, constructName, block }: PageElementName): string {
-    const name = `composer.pageElement.${key}${constructName ? '' : 'WithoutType'}${block ? 'Block' : ''}`;
+// construct name, plus `Link` when a link is meant or `TextBlock` when a text block is (e.g. `replaceWithWithoutTypeTextBlock`).
+function nameElement(t: TFunction, key: string, { tagName, constructName, textBlock, link }: PageElementName): string {
+    const name = `composer.pageElement.${key}${constructName ? '' : 'WithoutType'}${link ? 'Link' : (textBlock ? 'TextBlock' : '')}`;
 
-    return block
-        ? t(name, { tagName, constructName, position: block.index + 1, count: block.count, kind: block.label, excerpt: block.excerpt })
+    if (link) {
+        return t(name, { tagName, constructName, position: link.index + 1, count: link.count, excerpt: link.excerpt });
+    }
+
+    return textBlock
+        ? t(name, { tagName, constructName, position: textBlock.index + 1, count: textBlock.count, kind: textBlock.label, excerpt: textBlock.excerpt })
         : t(name, { tagName, constructName });
 }
 
 /**
  * The text that names a part of a page in a message (`PageElementAttrs.text`), in the user's language;
- * for a block, also its position, kind and the start of its text.
+ * for a text block, also its position, kind and the start of its text.
  */
 export function pageElementNaming(t: TFunction, element: PageElementName): string {
     return nameElement(t, 'naming', element);
@@ -176,7 +197,7 @@ export function pageElementParts({ page, text: naming }: PageElementAttrs, text:
 
 /**
  * The text that names a part of a page and asks to replace its text, in the user's language: what
- * precedes the new text of a hand edit (`pageElementEditParts`). For a block, also its position, kind
+ * precedes the new text of a hand edit (`pageElementEditParts`). For a text block, also its position, kind
  * and the start of its text.
  */
 export function pageElementReplaceNaming(t: TFunction, element: PageElementName): string {
@@ -221,6 +242,46 @@ export function pageElementImageParts({ page, text: naming }: PageElementAttrs, 
         { type: 'reference', ref: page },
         { type: 'text', text: normalizeText(naming) },
         ...(image ? [{ type: 'reference' as const, ref: image }] : []),
+    ];
+}
+
+/**
+ * The text that names a link in a part of a page and asks to change it, in the user's language: what
+ * precedes the changed text and target (`pageElementLinkParts`).
+ */
+export function pageElementLinkNaming(t: TFunction, element: PageElementName): string {
+    return nameElement(t, 'changeLink', element);
+}
+
+/** A link's new text and target, each only when it changed; the target is a URL or a CMS page `reference`. */
+export interface PageElementLinkChange {
+    text?: string;
+    target?: string | ContextReference;
+}
+
+/**
+ * The parts of a change of a link in a part of a page (the preview's link card): the page as a
+ * `reference` part, the naming text (`pageElementLinkNaming`) as a `text` part, then per changed field
+ * a text naming it followed by the new value, as a `verbatim` part the user wrote, unchanged and
+ * labelled with the field, or as the `reference` part of a CMS page, as in `pageSettingsParts`. The
+ * wording is interim, until GenAIx defines how a link change is sent.
+ */
+export function pageElementLinkParts(t: TFunction, { page, text: naming }: PageElementAttrs, { text, target }: PageElementLinkChange): UserMessagePart[] {
+    const textLabel = t('composer.pageElement.linkText');
+    const targetLabel = t('composer.pageElement.linkTarget');
+
+    return [
+        { type: 'reference', ref: page },
+        { type: 'text', text: normalizeText(naming).trimEnd() },
+        ...(text !== undefined ? [{ type: 'text' as const, text: `\n${textLabel}: ` }, { type: 'verbatim' as const, text, source: 'user' as const, label: textLabel }] : []),
+        ...(target === undefined
+            ? []
+            : [
+                { type: 'text' as const, text: `\n${targetLabel}: ` },
+                typeof target === 'string'
+                    ? { type: 'verbatim' as const, text: target, source: 'user' as const, label: targetLabel }
+                    : { type: 'reference' as const, ref: target },
+            ]),
     ];
 }
 

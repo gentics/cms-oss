@@ -1,0 +1,70 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.kinds {
+  display: flex;
+  gap: 16px;
+}
+
+.kind {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+/* design.md §12 "Listenzeile", as the rows of a selectable list (`MessageParts.module.css`); scrolls inside the card. */
+.pages {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  margin-top: 4px;
+  overflow-y: auto;
+}
+
+.page {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 6px;
+  border-radius: var(--corner-lg);
+  cursor: pointer;
+  transition: background var(--duration-state) var(--easing);
+
+  &:hover {
+    background: var(--bg-subtle);
+  }
+}
+
+.pageName {
+  overflow: hidden;
+  color: var(--fg-primary);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pagePath {
+  overflow: hidden;
+  margin-left: auto;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  margin: 0;
+  padding: 26px 0;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

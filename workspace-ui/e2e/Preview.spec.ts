@@ -1041,3 +1041,75 @@ test.describe('Page settings', () => {
         expect(posted).toHaveLength(0);
     });
 });
+
+test.describe('The preview header in a narrow column', () => {
+    // Two pages, so the header has its page select too: the session wrote them one after the other.
+    async function stubTwoPages(page: Page) {
+        await page.route((url) => url.pathname === `/rest/proxy/genaix/sessions/${SESSION}/events`, (route) => {
+            const after = Number(new URL(route.request().url()).searchParams.get('after') ?? 0);
+            const update = (seq: number, id: number, name: string) => `id: ${seq}\nevent: preview.updated\ndata: ${JSON.stringify({
+                seq,
+                ts: '2026-10-07T09:00:00Z',
+                session_id: SESSION,
+                type: 'preview.updated',
+                cms_ref: { type: 'page', id, node_id: 3, name },
+                preview_url: `http://127.0.0.1:5173/alohapage?realid=${id}&nodeid=3&mode=view`,
+                mode: 'view',
+                changed_elements: [],
+            })}\n\n`;
+
+            return route.fulfill({
+                status: 200,
+                contentType: 'text/event-stream',
+                body: after === 0 ? update(1, 9142, 'Neue Nutzungsbedingungen ab Q3') + update(2, 9150, 'Allgemeine Geschäftsbedingungen') : '',
+            });
+        });
+        await page.route((url) => url.pathname === '/alohapage', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Seite</p>' }));
+    }
+
+    type Box = { x: number; y: number; width: number; height: number };
+
+    // The names of the controls that overlap another one, as "first × second".
+    function overlappingPairs(boxes: Record<string, Box>): string[] {
+        const entries = Object.entries(boxes);
+
+        return entries.flatMap(([name, box], i) => entries.slice(i + 1)
+            .filter(([, other]) => box.x < other.x + other.width - 0.5 && other.x < box.x + box.width - 0.5
+                && box.y < other.y + other.height - 0.5 && other.y < box.y + box.height - 0.5)
+            .map(([otherName]) => `${name} × ${otherName}`));
+    }
+
+    // The names of the controls that stick out of the header on the left or the right.
+    function outsideOf(header: Box, boxes: Record<string, Box>): string[] {
+        return Object.entries(boxes)
+            .filter(([, box]) => box.x < header.x - 0.5 || box.x + box.width > header.x + header.width + 0.5)
+            .map(([name]) => name);
+    }
+
+    for (const width of [1100, 900]) {
+        test(`keeps the title, the page select and the buttons apart and inside the header at ${width} px`, async ({ page }) => {
+            await page.setViewportSize({ width, height: 800 });
+            await stubTwoPages(page);
+            await page.goto(`#/sessions/${SESSION}`);
+
+            const region = page.getByRole('region', { name: 'Preview' });
+
+            await expect(region.getByRole('combobox', { name: 'Pages' })).toBeVisible();
+
+            const header = (await region.locator('header').first().boundingBox())!;
+            const controls = {
+                Title: region.getByRole('heading', { name: 'Preview' }),
+                Pages: region.getByRole('combobox', { name: 'Pages' }),
+                Open: region.getByRole('link', { name: 'Open' }),
+                'Page settings': region.getByRole('button', { name: 'Page settings' }),
+                Desktop: region.getByRole('button', { name: 'Desktop' }),
+                Mobile: region.getByRole('button', { name: 'Mobile · 390 px' }),
+                'Full screen': region.getByRole('button', { name: 'Full screen' }),
+            };
+            const boxes = Object.fromEntries(await Promise.all(Object.entries(controls).map(async ([name, control]) => [name, (await control.boundingBox())!] as const)));
+
+            expect(overlappingPairs(boxes)).toEqual([]);
+            expect(outsideOf(header, boxes)).toEqual([]);
+        });
+    }
+});

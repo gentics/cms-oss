@@ -58,6 +58,7 @@
     "react-native-gesture-handler": "2.31.1",
     "underscore": "1.13.8",
     "uuid": "14.0.1",
-    "nanoid": "^3.3.18"
+    "nanoid": "^3.3.18",
+    "@grpc/grpc-js": "^1.14.5"
   }
 }

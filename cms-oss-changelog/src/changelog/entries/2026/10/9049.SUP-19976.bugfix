@@ -1,0 +1,1 @@
+Core: Scheduler tasks which are not allowed to run in parallel are no longer blocked until a restart of the CMS, when starting another scheduler task failed (e.g. due to a lost database connection).

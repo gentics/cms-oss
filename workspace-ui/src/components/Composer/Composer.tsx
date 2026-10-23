@@ -1,0 +1,378 @@
+import { TextSelection } from '@tiptap/pm/state';
+import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
+import { type DragEvent, type Ref, useImperativeHandle, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { useTranslation } from 'react-i18next';
+
+import { AttachmentList } from '@/components/AttachmentList/AttachmentList';
+import { isReferenceMenuOpen, isSettingMenuOpen } from '@/components/ComposerTextInput/composerExtensions';
+import { ComposerTextInput } from '@/components/ComposerTextInput/ComposerTextInput';
+import { type VerbatimSources, VerbatimSourcesContext } from '@/components/ComposerTextInput/verbatimSources';
+import { IconButton } from '@/components/IconButton/IconButton';
+import { ReferenceMenu } from '@/components/ReferenceMenu/ReferenceMenu';
+import { Button } from '@/components/ui/button';
+import { VoiceInput } from '@/components/VoiceInput/VoiceInput';
+import { attachmentSource, HARD_BREAK_NODE, PAGE_ELEMENT_NODE, type PageElementAttrs, pageElementNaming, textContent } from '@/helper/composerParts/composerParts';
+import { UPLOAD_ACCEPT } from '@/helper/uploadLimits/uploadLimits';
+import { useComposer } from '@/hooks/useComposer';
+import type { StartSessionInput } from '@/hooks/useGenaixQueries';
+import { useSpeechDictation } from '@/hooks/useSpeechDictation';
+import type { ContextReference } from '@/services/apiService/genaix/types';
+
+import styles from './Composer.module.css';
+
+/** A part of a page to add to the field (`ComposerHandle.insertPageElement`). */
+export type PageElementInput = Omit<PageElementAttrs, 'text'>;
+
+export interface ComposerHandle {
+    /** Replaces the field's content with `text` and opens the text prompt. */
+    setText: (text: string) => void;
+    /**
+     * Adds a part of a page as a token at the end of the field, followed by `text` if given, opens the
+     * text prompt and puts the cursor behind it, for the user to say what should happen
+     * (`PAGE_ELEMENT_NODE`).
+     */
+    insertPageElement: (element: PageElementInput, text?: string) => void;
+    /** Empties the field and drops the attachments, after a message was sent. */
+    reset: () => void;
+    /** Puts a reference token for each of `refs` at the start of the field, the caret at the end. */
+    addReferences: (refs: ContextReference[]) => void;
+}
+
+interface ComposerProps {
+    /** `start` the dashboard's prompt without a box, `chat` the box floating over a session's chat. */
+    variant: 'start' | 'chat';
+    onSubmit: (input: StartSessionInput) => void;
+    /** While the input is being sent: the send button is disabled and nothing is submitted twice. */
+    isSubmitting: boolean;
+    /**
+     * While sending: the share uploaded of each submitted file, 0 to 1, by its position in the
+     * submitted `files` (`StartSessionInput.onFileProgress`); a file without one is still waiting.
+     */
+    uploadProgress?: number[];
+    /**
+     * Chat: the session's run is working. The Stop button takes the place of send, and nothing is
+     * submitted meanwhile (a second message would be `409 run_already_active`).
+     */
+    isRunning?: boolean;
+    /** Chat: Stop was pressed and the run is stopping; Stop is disabled. */
+    isStopping?: boolean;
+    onStop?: () => void;
+    /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
+    sessionId?: string;
+    /** The field's placeholder instead of the variant's, e.g. "What's next?" after publishing. */
+    placeholder?: string;
+    ref?: Ref<ComposerHandle>;
+}
+
+// The texts that differ between the dashboard and the chat.
+const TEXT_KEYS = {
+    start: { placeholder: 'dashboard.placeholder', send: 'dashboard.send' },
+    chat: { placeholder: 'chat.placeholder', send: 'chat.send' },
+} as const;
+
+/**
+ * The prompt of the dashboard and of a session's chat: a field that takes typed or dictated text
+ * with passages locked as verbatim, files attached as a source or verbatim, and the send button.
+ * Enter or the send button submits the message parts and the files; a dictation only fills the
+ * field. On phones it puts voice first. Sending is the caller's. While a run is working
+ * (`isRunning`), Stop replaces send and calls `onStop`.
+ */
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, placeholder, ref }: ComposerProps) {
+    const { t } = useTranslation();
+    const {
+        editor,
+        fileInputRef,
+        isEmpty,
+        hasSelection,
+        attachments,
+        setText,
+        addReferences,
+        readInput,
+        reset,
+        markSelectionVerbatim,
+        openReferenceMenu,
+        openFilePicker,
+        addFiles,
+        toggleMode,
+        removeAttachment,
+    } = useComposer();
+    const [hasFocus, setHasFocus] = useState(false);
+    // While files are dragged over the composer, it looks as when it has the focus.
+    const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+    // Mobile: the text prompt stays collapsed behind the big mic until the user asks for it.
+    const [isTyping, setIsTyping] = useState(false);
+    const texts = TEXT_KEYS[variant];
+    const isChat = variant === 'chat';
+
+    function textInput() {
+        return editor.view.dom;
+    }
+
+    // Opens the collapsed text prompt (mobile) synchronously, so the field can take the focus.
+    function openTyping() {
+        flushSync(() => setIsTyping(true));
+        textInput().focus();
+    }
+
+    useImperativeHandle(ref, () => ({
+        setText: (text) => {
+            setText(text);
+            openTyping();
+        },
+        insertPageElement: (element, text = '') => {
+            // The text naming the part, in the user's language (`PAGE_ELEMENT_NODE`).
+            const attrs: PageElementAttrs = { ...element, text: pageElementNaming(t, element) };
+
+            openTyping();
+            editor.chain().focus('end').insertContent([{ type: PAGE_ELEMENT_NODE, attrs }, ...textContent(` ${text}`)]).run();
+        },
+        reset,
+        addReferences,
+    }));
+
+    // Where the current take starts in the field, and the space before it: a take is added after the
+    // text already there, not in its place. `null` until the take's first words.
+    const takeRef = useRef<{ from: number; prefix: string } | null>(null);
+
+    // Writes the take so far behind the text the field had when the take began.
+    function writeTake(text: string) {
+        const { doc } = editor.state;
+
+        if (!takeRef.current) {
+            const from = TextSelection.atEnd(doc).from;
+            const before = doc.resolve(from).nodeBefore;
+            const endsLine = !before || before.type.name === HARD_BREAK_NODE || (before.isText && /\s$/.test(before.text ?? ''));
+
+            takeRef.current = { from, prefix: endsLine ? '' : ' ' };
+        }
+
+        const { from, prefix } = takeRef.current;
+        const range = { from, to: TextSelection.atEnd(doc).from };
+        const chain = editor.chain();
+
+        (text ? chain.insertContentAt(range, textContent(prefix + text)) : chain.deleteRange(range))
+            .command(({ tr }) => {
+                tr.setSelection(TextSelection.atEnd(tr.doc));
+
+                return true;
+            })
+            .run();
+    }
+
+    // One recognizer for the inline and the big mic; the words go into the field, nothing is sent.
+    const dictation = useSpeechDictation({
+        onText: writeTake,
+        onEnd: () => {
+            takeRef.current = null;
+            textInput().focus();
+        },
+    });
+
+    // Cancelling throws the take away; the text before it stays.
+    function cancelDictation() {
+        if (takeRef.current) {
+            writeTake('');
+            takeRef.current = null;
+        }
+
+        textInput().focus();
+    }
+
+    function submit() {
+        const input = readInput();
+
+        // Nothing is submitted while a run holds the chat (a plan's run does not, `SessionComposer`).
+        if (isSubmitting || isRunning || !input) {
+            return;
+        }
+
+        onSubmit(input);
+    }
+
+    // Enter sends; while dictating, `VoiceInput` takes Enter and Esc before the field sees them, and
+    // while the @- or #-menu is open, Enter is the menu's.
+    function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Enter' && !event.shiftKey && !isReferenceMenuOpen(editor.state) && !isSettingMenuOpen(editor.state)) {
+            event.preventDefault();
+            submit();
+        }
+    }
+
+    // What a verbatim passage can be quoted from, besides typed text: the attached files, and in the
+    // chat the files already uploaded to the session.
+    const verbatimSources: VerbatimSources = {
+        attachments: attachments.map(({ id, file }) => ({ value: attachmentSource(id), label: file.name })),
+        sessionId,
+    };
+    const canSubmit = !isSubmitting && !isRunning && (!isEmpty || attachments.length > 0);
+    // Mobile, voice first: until the user types or dictates, only the big mic shows.
+    const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
+    // The submitted files are the attachments in their order: while sending they cannot be removed,
+    // and new ones only come after them, so the position still names the same attachment.
+    const progress = Object.fromEntries(attachments.flatMap(({ id }, index) => {
+        const share = uploadProgress[index];
+
+        return share === undefined ? [] : [[id, share]];
+    }));
+
+    // Voice input and send: on the dashboard at the end of the field's line, in the chat in the
+    // bottom right corner of the box, after the actions (draft `.comrow`).
+    const submitButtons = (
+        <>
+            <span className={styles.inlineVoice}>
+                <VoiceInput dictation={dictation} onCancel={cancelDictation} size={isChat ? 'sm' : 'md'} />
+            </span>
+
+            {isRunning && onStop && (
+                <IconButton
+                    variant="primary"
+                    size={isChat ? 'icon' : 'icon-lg'}
+                    label={t('chat.stop')}
+                    disabled={isStopping}
+                    onClick={onStop}
+                >
+                    <SquareIcon size={isChat ? 14 : undefined} />
+                </IconButton>
+            )}
+            {(!isRunning || !onStop) && (
+                <IconButton
+                    variant="primary"
+                    size={isChat ? 'icon' : 'icon-lg'}
+                    label={t(texts.send)}
+                    disabled={!canSubmit}
+                    onClick={submit}
+                >
+                    <ArrowUpIcon size={isChat ? 16 : undefined} />
+                </IconButton>
+            )}
+        </>
+    );
+
+    const actions = (
+        <div className={styles.actions}>
+            <Button variant="ghost" size="sm" onClick={openFilePicker}>
+                <PaperclipIcon size={16} />
+                {t('composer.file')}
+            </Button>
+            <input
+                ref={fileInputRef}
+                className={styles.fileInput}
+                type="file"
+                multiple
+                accept={UPLOAD_ACCEPT}
+                tabIndex={-1}
+                aria-label={t('composer.file')}
+                onChange={(event) => addFiles(event.target.files)}
+            />
+            <Button
+                variant="ghost"
+                size="sm"
+                // Keeps the caret where the `@` goes.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={openReferenceMenu}
+            >
+                <AtSignIcon size={16} />
+                {t('composer.context')}
+            </Button>
+            <Button
+                variant="ghost"
+                size="sm"
+                aria-pressed={hasSelection}
+                // Keeps the selection in the field, which a click would otherwise clear.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={markSelectionVerbatim}
+            >
+                <QuoteIcon size={16} />
+                {t('composer.verbatim')}
+            </Button>
+            {isChat && <span className={styles.submit}>{submitButtons}</span>}
+        </div>
+    );
+
+    // Only files are dropped here; dragged text is left to the field.
+    function dragsFiles(event: DragEvent) {
+        return Array.from(event.dataTransfer.types).includes('Files');
+    }
+
+    return (
+        <div
+            className={[styles.composer, isChat ? styles.chat : '', isVoiceFirst ? styles.voiceFirst : ''].filter(Boolean).join(' ')}
+            onDragOver={(event) => {
+                if (dragsFiles(event)) {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = 'copy';
+                    setIsDraggingFiles(true);
+                }
+            }}
+            onDragLeave={(event) => {
+                // Moving onto a child is not leaving.
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setIsDraggingFiles(false);
+                }
+            }}
+            onDrop={(event) => {
+                if (dragsFiles(event)) {
+                    event.preventDefault();
+                    setIsDraggingFiles(false);
+                    addFiles(event.dataTransfer.files);
+                }
+            }}
+        >
+            {/* The main input on phones (≤ 640 px, see the module); hidden on wider screens. */}
+            {dictation.isSupported && (
+                <div className={styles.voiceStart}>
+                    <VoiceInput dictation={dictation} onCancel={cancelDictation} size="xl" />
+                    {isVoiceFirst && (
+                        <Button variant="ghost" size="sm" onClick={openTyping}>
+                            <KeyboardIcon size={16} />
+                            {t('composer.typeInstead')}
+                        </Button>
+                    )}
+                </div>
+            )}
+
+            <div
+                className={[
+                    styles.prompt,
+                    hasFocus || isDraggingFiles ? styles.focus : '',
+                    dictation.isListening ? styles.listening : '',
+                ].filter(Boolean).join(' ')}
+            >
+                <div className={styles.attachments}>
+                    <AttachmentList
+                        attachments={attachments}
+                        onToggleMode={toggleMode}
+                        onRemove={removeAttachment}
+                        isSending={isSubmitting}
+                        progress={progress}
+                    />
+                </div>
+
+                <div className={styles.line}>
+                    <VerbatimSourcesContext value={verbatimSources}>
+                        <ComposerTextInput
+                            editor={editor}
+                            label={placeholder ?? t(texts.placeholder)}
+                            isEmpty={isEmpty}
+                            size={isChat ? 'base' : 'lg'}
+                            onKeyDown={handleKeyDown}
+                            onFocus={() => setHasFocus(true)}
+                            onBlur={() => setHasFocus(false)}
+                        />
+                    </VerbatimSourcesContext>
+
+                    {!isChat && submitButtons}
+                </div>
+
+                <ReferenceMenu editor={editor} sessionId={sessionId} />
+                <ReferenceMenu editor={editor} sessionId={sessionId} mode="setting" />
+
+                {/* In the chat the actions sit inside the box; on the dashboard below the prompt. */}
+                {isChat && actions}
+            </div>
+
+            {!isChat && actions}
+        </div>
+    );
+}

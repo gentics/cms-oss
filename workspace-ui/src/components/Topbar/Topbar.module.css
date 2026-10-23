@@ -1,0 +1,40 @@
+/* Topbar: 48 px, `--bg-surface`, line below (design.md §7, §11). */
+.topbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  /* Left: 4 px less, so the logo in the brand's padding sits where the draft has it. */
+  padding: 0 12px 0 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+}
+
+/* Gentics logomark as a mask in `--interactive`, 218:256, 20 × 24 px (design.md §9). */
+.logo {
+  flex: none;
+  width: 20px;
+  height: 24px;
+  background: var(--interactive);
+  mask: url('../../assets/gentics-logomark.png') center / contain no-repeat;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* The language code in its button (final_draft.html `.langbtn`). */
+.language {
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.05em;
+}
+
+/* The toggles of the left and the right column, on every screen; phones show a side column instead
+   of the center (WorkspaceLayout.module.css). */
+.columnToggle {
+  display: flex;
+  flex: none;
+}

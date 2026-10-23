@@ -1,0 +1,916 @@
+{
+    "topbar": {
+        "brand": "Gentics Workspace",
+        "home": "Back to the dashboard",
+        "switchLanguage": "Switch to {{language}}",
+        "languages": {
+            "en": "English",
+            "de": "Deutsch"
+        },
+        "darkMode": "Dark mode",
+        "lightMode": "Light mode",
+        "logout": "Log out"
+    },
+    "login": {
+        "username": "User name",
+        "password": "Password",
+        "submit": "Log in",
+        "singleSignOn": "Log in with SSO",
+        "errors": {
+            "invalidCredentials": "The user name or the password is wrong.",
+            "maintenance": "The CMS is in maintenance mode. Logging in is not possible right now.",
+            "failed": "The login failed.",
+            "singleSignOn": "Single sign-on is not available.",
+            "logout": "Logging out failed.",
+            "singleSignOnLogout": "You are logged out of the CMS, but still logged in with single sign-on."
+        }
+    },
+    "preview": {
+        "title": "Preview",
+        "open": "Open",
+        "frameTitle": "Preview of the page in the CMS",
+        "viewport": "Preview width",
+        "desktop": "Desktop",
+        "mobile": "Mobile · 390 px",
+        "fullScreen": "Full screen",
+        "leaveFullScreen": "Leave full screen",
+        "pages": {
+            "label": "Pages",
+            "unnamed": "Page {{id}}"
+        },
+        "block": {
+            "heading1": "Heading 1",
+            "heading2": "Heading 2",
+            "heading3": "Heading 3",
+            "heading4": "Heading 4",
+            "heading5": "Heading 5",
+            "heading6": "Heading 6",
+            "paragraph": "Paragraph",
+            "quote": "Quote",
+            "code": "Code block",
+            "list": "List",
+            "table": "Table"
+        },
+        "selection": {
+            "selected": "Selected: {{name}}",
+            "clear": "Clear selection",
+            "removed": "The selected part is no longer on the page",
+            "referenceInChat": "Reference in the chat",
+            "referenced": "Added as a reference — now write what should happen."
+        },
+        "feedback": {
+            "give": "Give feedback",
+            "label": "What should happen to this spot?",
+            "cancel": "Cancel",
+            "toChat": "In the chat",
+            "send": "Send"
+        },
+        "edit": {
+            "write": "Write it yourself",
+            "label": "New text",
+            "cancel": "Cancel",
+            "apply": "Apply",
+            "unchanged": "Nothing changed, so nothing was sent."
+        },
+        "image": {
+            "swap": "Swap the image",
+            "search": "Search images",
+            "use": "Use image",
+            "upload": "Upload image",
+            "cancel": "Cancel",
+            "loading": "Loading images …",
+            "empty": "No images found.",
+            "failed": "The images could not be loaded."
+        },
+        "settings": {
+            "open": "Page settings",
+            "title": "Page settings",
+            "close": "Close",
+            "apply": "Apply",
+            "loading": "Loading the page settings …",
+            "failed": "The page settings could not be loaded.",
+            "name": "Name",
+            "fileName": "Filename",
+            "description": "Description",
+            "template": "Template",
+            "priority": "Priority",
+            "niceUrl": "Nice URL",
+            "language": "Language",
+            "created": "Created",
+            "edited": "Last edited"
+        }
+    },
+    "workspace": {
+        "resizeLeft": "Width of the left column",
+        "resizeRight": "Width of the right column",
+        "resizeHint": "Drag · double-click resets",
+        "hideLeftColumn": "Hide the left column",
+        "showLeftColumn": "Show the left column",
+        "hideRightColumn": "Hide the right column",
+        "showRightColumn": "Show the right column"
+    },
+    "dashboard": {
+        "greeting": {
+            "night": "Still up, {{name}}",
+            "morning": "Good morning, {{name}}",
+            "afternoon": "Good afternoon, {{name}}",
+            "evening": "Good evening, {{name}}"
+        },
+        "placeholder": "What would you like to do?",
+        "send": "Start a session",
+        "startFailed": "The session could not be started"
+    },
+    "composer": {
+        "file": "File",
+        "verbatim": "Verbatim",
+        "typeInstead": "Type instead",
+        "verbatimHint": "Select the passage that should stay unchanged first.",
+        "verbatimNested": "The selection already contains a locked passage.",
+        "removeVerbatim": "Remove verbatim",
+        "verbatimSource": {
+            "user": "Typed by me",
+            "label": "Source: {{source}}"
+        },
+        "verbatimHasToken": "The selection contains a reference — mark plain text only.",
+        "removeToken": "Remove {{label}}",
+        "context": "Context",
+        "setting": {
+            "label": "Settings",
+            "chooseFolderFirst": "Set a folder chip first, then its templates show here"
+        },
+        "mention": {
+            "label": "Context",
+            "search": "Search context…",
+            "groups": {
+                "page": "Pages",
+                "folder": "Folders",
+                "image": "Images",
+                "file": "Files",
+                "project": "Project",
+                "template": "Templates",
+                "language": "Languages"
+            },
+            "clearScope": "Remove filter",
+            "loading": "Searching",
+            "failed": "The search could not be completed.",
+            "empty": "No context found for “{{query}}”.",
+            "emptyNoQuery": "No context found.",
+            "asText": "“{{query}}” as plain text",
+            "advanced": "Advanced folder search…",
+            "advancedDetail": "All folders · channels · deeper levels"
+        },
+        "attachment": {
+            "source": "as a source",
+            "verbatim": "verbatim",
+            "toggleMode": "verbatim / as a source",
+            "remove": "Remove",
+            "notAdded": "{{name}} was not attached",
+            "tooLarge": "It is {{size}}; files can be up to {{limit}}.",
+            "typeNotAccepted": "This file type is not supported: {{type}}",
+            "waiting": "waiting",
+            "progress": "{{percent}} %"
+        },
+        "pageElement": {
+            "naming": " – part \"{{tagName}}\" ({{constructName}}): ",
+            "namingWithoutType": " – part \"{{tagName}}\": ",
+            "replaceWith": " – part \"{{tagName}}\" ({{constructName}}), replace its text with: ",
+            "replaceWithWithoutType": " – part \"{{tagName}}\", replace its text with: ",
+            "replaceImageWith": " – part \"{{tagName}}\" ({{constructName}}), replace its image with: ",
+            "replaceImageWithWithoutType": " – part \"{{tagName}}\", replace its image with: ",
+            "namingBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
+            "namingWithoutTypeBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
+            "replaceWithBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: ",
+            "replaceWithWithoutTypeBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: "
+        },
+        "pageSettings": {
+            "change": " – change its page settings:",
+            "empty": "empty it"
+        }
+    },
+    "chat": {
+        "placeholder": "What should happen?",
+        "send": "Send",
+        "sendFailed": "The message could not be sent",
+        "sender": {
+            "user": "You",
+            "assistant": "Assistant",
+            "system": "System"
+        },
+        "thinking": "Thinking",
+        "loading": "Loading the conversation…",
+        "stop": "Stop",
+        "stopFailed": "The run could not be stopped",
+        "steps": {
+            "title": "Steps",
+            "current": "Step {{number}} of {{total}}: {{label}}",
+            "progress": "{{done}} of {{total}} steps done",
+            "collapse": "Hide the steps",
+            "expand": "Show the steps",
+            "status": {
+                "pending": "Pending",
+                "running": "In progress",
+                "waiting": "Waiting for you",
+                "done": "Done",
+                "skipped": "Skipped",
+                "failed": "Failed",
+                "removed": "Removed"
+            }
+        },
+        "file": "File",
+        "fileVerbatim": "File, word for word",
+        "planAccepted": "Plan accepted",
+        "planAdjusted_one": "Plan adjusted · {{count}} step",
+        "planAdjusted_other": "Plan adjusted · {{count}} steps",
+        "notice": {
+            "cancelled": "Stopped",
+            "failed": "The run failed",
+            "error": "Something went wrong, the run continues",
+            "auth": "No access to the {{connector}} connection"
+        },
+        "interaction": {
+            "title": {
+                "ask_user": "Question",
+                "choice": "Choose",
+                "confirm": "Confirm",
+                "form": "Details",
+                "settings_review": "Check settings"
+            },
+            "answer": "Your answer",
+            "comment": "Comment",
+            "choose": "Choose…",
+            "chooseFolder": "Choose folder…",
+            "otherFolder": "Other folder…",
+            "chooseFolderFirst": "Choose a folder first",
+            "loadingOptions": "Loading…",
+            "send": "Send",
+            "confirmed": "Confirmed",
+            "answered": "Answered",
+            "expired": "Expired",
+            "approve": "Yes",
+            "reject": "No",
+            "answerFailed": "The answer could not be sent",
+            "answerFirst": "Answer the question above first",
+            "setting": {
+                "node": "Website",
+                "folder": "Folder",
+                "template": "Template",
+                "language": "Language",
+                "filename": "File name",
+                "publish_at": "Publish at",
+                "file_folder": "Folder for files",
+                "image_folder": "Folder for images"
+            },
+            "source": {
+                "text": "From your text",
+                "context": "From the session",
+                "default": "Default"
+            },
+            "recommended": "Recommended",
+            "other": "Something else",
+            "otherAnswer": "Your own answer",
+            "otherPlaceholder": "Describe what you need",
+            "addComment": "Add a comment",
+            "required": "Selection required",
+            "enterValue": "Enter a value…",
+            "stillToChoose": "Still to choose: {{names}}",
+            "confirm": "Confirm"
+        },
+        "sideRun": "Answered beside the running plan"
+    },
+    "planBar": {
+        "label": "Open plan",
+        "expand": "Show plan",
+        "collapse": "Hide plan",
+        "actions": {
+            "release": "Release",
+            "publish": "Publish",
+            "request_review": "Request review",
+            "discard": "Discard"
+        },
+        "pending": {
+            "release": "Releasing…",
+            "publish": "Publishing…",
+            "request_review": "Requesting review…",
+            "discard": "Discarding…"
+        },
+        "count": {
+            "pending_one": "{{count}} page to publish",
+            "pending_other": "{{count}} pages to publish",
+            "published_one": "{{count}} published",
+            "published_other": "{{count}} published",
+            "review_requested_one": "{{count}} in review",
+            "review_requested_other": "{{count}} in review",
+            "failed_one": "{{count}} failed",
+            "failed_other": "{{count}} failed"
+        },
+        "gate": {
+            "retry": "Check again",
+            "anyway": {
+                "release": "Release anyway",
+                "publish": "Publish anyway",
+                "request_review": "Request review anyway"
+            }
+        },
+        "transitionFailed": "The plan could not be changed",
+        "review": "Review & release",
+        "stalled": "Tell GenAIx how to continue with this plan",
+        "discard": {
+            "title": "Discard this plan?",
+            "keep": "The plan is closed. Pages it already changed stay as drafts in the CMS.",
+            "restore": "The plan is closed and the pages it changed go back to their version from before it.",
+            "cancel": "Cancel"
+        },
+        "switcher": {
+            "label": "Open plans",
+            "count_one": "{{count}} open plan",
+            "count_other": "{{count}} open plans",
+            "untitled": "Untitled plan"
+        },
+        "publishing": {
+            "title": "Publishing…",
+            "pages_one": "{{count}} page goes online.",
+            "pages_other": "{{count}} pages go online.",
+            "failed": "Publishing failed",
+            "cancelled": "Publishing was stopped."
+        }
+    },
+    "handOff": {
+        "editThese": "Edit these"
+    },
+    "parts": {
+        "selectedCount": "{{count}} selected",
+        "statusNote": {
+            "info": "Note",
+            "warning": "Warning",
+            "skipped": "Skipped"
+        },
+        "file": {
+            "unnamed": "File",
+            "download": "Download"
+        },
+        "tree": {
+            "title": "Structure",
+            "expand": "Expand {{label}}",
+            "collapse": "Collapse {{label}}"
+        },
+        "list": {
+            "title": "Choose"
+        },
+        "properties": {
+            "title": "Properties"
+        },
+        "images": {
+            "title": "Images",
+            "image": "Image {{number}}"
+        },
+        "table": {
+            "title": "Table",
+            "yes": "Yes",
+            "no": "No",
+            "shown": "{{shown}} of {{total}}",
+            "select": "Select {{label}}",
+            "selectAll": "Select all rows"
+        },
+        "pageStructure": {
+            "title": "Page structure",
+            "verbatim": "Word for word",
+            "status": {
+                "planned": "Planned",
+                "created": "Created",
+                "updated": "Updated",
+                "locked": "Locked",
+                "failed": "Failed"
+            }
+        },
+        "construct": {
+            "title": "New tag type",
+            "created": "Created",
+            "drafted": "Not created yet",
+            "findings_one": "{{count}} finding",
+            "findings_other": "{{count}} findings",
+            "details": "Details",
+            "parts": "Parts",
+            "mandatory": "Required",
+            "template": "Template",
+            "validation": "Validation",
+            "valid": "The template is valid",
+            "invalid": "The template is not valid",
+            "line": "line {{line}}",
+            "severity": {
+                "error": "Error",
+                "warning": "Warning",
+                "info": "Info"
+            }
+        },
+        "apiCalls": {
+            "title": "CMS calls",
+            "toggle_one": "{{count}} CMS call",
+            "toggle_other": "{{count}} CMS calls",
+            "failed": "· {{count}} failed",
+            "call": "Call",
+            "status": "Status",
+            "summary": "What it did"
+        },
+        "plan": {
+            "title": "Plan",
+            "adjustedByYou": "Adjusted by you",
+            "adjust": "Adjust",
+            "accept": "Accept plan",
+            "step": "Step {{number}}",
+            "placeholder": "Describe the step",
+            "moveUp": "Move step up",
+            "moveDown": "Move step down",
+            "remove": "Remove step",
+            "add": "Add a step",
+            "cancel": "Cancel",
+            "done": "Done",
+            "status": {
+                "drafting": "Being drafted",
+                "revising": "Being revised",
+                "proposed": "Proposed",
+                "accepted": "Accepted",
+                "running": "Running",
+                "done": "Done",
+                "released": "Ready to publish",
+                "published": "Published",
+                "review_requested": "Waiting for review",
+                "discarded": "Discarded",
+                "superseded": "Replaced by a newer plan"
+            },
+            "restore": "Restore",
+            "change": {
+                "added": "New",
+                "changed": "Changed"
+            },
+            "invalid": {
+                "caption": "Adjust the highlighted steps",
+                "dependency_order": "Comes before a step it needs",
+                "other": "This step cannot be changed like this"
+            },
+            "glance": "At a glance",
+            "needsYou": {
+                "title": "Needs you",
+                "answer": "Answer"
+            },
+            "substeps_one": "{{count}} step",
+            "substeps_other": "{{count}} steps",
+            "maxItems": "At most {{count}} steps"
+        },
+        "citation": {
+            "title": "Sources"
+        }
+    },
+    "voice": {
+        "start": "Dictate",
+        "stop": "Stop dictating",
+        "unsupported": "Voice input is not available in this browser",
+        "listening": "Listening",
+        "cancel": "Cancel",
+        "tapToSpeak": "Tap to speak",
+        "tapToStop": "Tap to stop"
+    },
+    "sessions": {
+        "title": "Sessions",
+        "new": "New",
+        "newTitle": "New session — back to the start prompt",
+        "find": "Find a session",
+        "all": "All sessions",
+        "recent": "Recent sessions",
+        "showAll": "Show all sessions",
+        "showMore": "Show more",
+        "loading": "Loading sessions…",
+        "retry": "Try again",
+        "empty": "No sessions yet",
+        "noMatch": "No session matches “{{query}}”.",
+        "untitled": "Untitled session",
+        "delete": "Delete “{{title}}”",
+        "deleted": "“{{title}}” deleted",
+        "undo": "Undo",
+        "archiveFailed": "Deleting the session failed",
+        "restoreFailed": "Restoring the session failed"
+    },
+    "published": {
+        "one": "Published",
+        "many_one": "{{count}} page published",
+        "many_other": "{{count}} pages published",
+        "inReview": "Sent to review",
+        "manyInReview_one": "{{count}} page sent to review",
+        "manyInReview_other": "{{count}} pages sent to review",
+        "openPage": "Open the page",
+        "openSession": "Open this session",
+        "newSession": "Start a new session",
+        "placeholder": "What’s next?",
+        "continue": "Continue a session",
+        "notPublished": "This plan has not been published.",
+        "toReview": "Go to its review"
+    },
+    "review": {
+        "title": "Review",
+        "pageTitle": "Review & release",
+        "back": "Back to the chat",
+        "open": "Review & release",
+        "loading": "Loading the plan…",
+        "noPlan": "This session has no plan to review yet.",
+        "noPreview": "No preview yet.",
+        "checklist": "Checklist",
+        "noChecks": "No checks yet.",
+        "checking": "The quality gates are checking the plan…",
+        "blocking": "blocking",
+        "acknowledged": "acknowledged",
+        "passedChecks_one": "{{count}} check passed",
+        "passedChecks_other": "{{count}} checks passed",
+        "outcome": {
+            "passed": "All checks passed. The plan is released.",
+            "withWarnings_one": "Released with {{count}} warning.",
+            "withWarnings_other": "Released with {{count}} warnings.",
+            "warning": {
+                "release_one": "Not released: {{count}} check has a warning.",
+                "release_other": "Not released: {{count}} checks have warnings.",
+                "publish_one": "Not published: {{count}} check has a warning.",
+                "publish_other": "Not published: {{count}} checks have warnings.",
+                "request_review_one": "No review requested: {{count}} check has a warning.",
+                "request_review_other": "No review requested: {{count}} checks have warnings."
+            },
+            "blocking": {
+                "release_one": "Not released: {{count}} blocking check must be fixed.",
+                "release_other": "Not released: {{count}} blocking checks must be fixed.",
+                "publish_one": "Not published: {{count}} blocking check must be fixed.",
+                "publish_other": "Not published: {{count}} blocking checks must be fixed.",
+                "request_review_one": "No review requested: {{count}} blocking check must be fixed.",
+                "request_review_other": "No review requested: {{count}} blocking checks must be fixed."
+            }
+        },
+        "approvalChain": "Approval",
+        "publications": "Pages",
+        "closed": "This plan is closed and can no longer be changed.",
+        "closedReopen": "Reopen the plan to make corrections.",
+        "actionFailed": "The action could not be carried out",
+        "status": {
+            "drafting": "Drafting",
+            "proposed": "Proposed",
+            "accepted": "Accepted",
+            "running": "Running",
+            "done": "Done",
+            "released": "Released",
+            "published": "Published",
+            "review_requested": "In review",
+            "discarded": "Discarded",
+            "superseded": "Superseded"
+        },
+        "severity": {
+            "pass": "Passed",
+            "info": "Info",
+            "warn": "Warning",
+            "fail": "Failed"
+        },
+        "approval": {
+            "pending": "Pending",
+            "done": "Done",
+            "not_required": "Not required",
+            "rejected": "Rejected"
+        },
+        "publication": {
+            "pending": "Not published",
+            "published": "Published",
+            "review_requested": "Review requested",
+            "failed": "Failed"
+        },
+        "page": {
+            "issues_one": "{{count}} open issue",
+            "issues_other": "{{count}} open issues",
+            "canPublish": "You may publish this page.",
+            "needsReview": "Needs a review: you may not publish this page."
+        },
+        "actions": {
+            "release": "Release",
+            "publish": "Publish",
+            "publishRemaining": "Publish remaining",
+            "request_review": "Request review",
+            "discard": "Discard"
+        },
+        "gate": {
+            "title": "Not passed yet",
+            "acknowledgeAnd": "Acknowledge and {{action}}"
+        },
+        "discard": {
+            "title": "Discard this plan?",
+            "keep": "The plan is closed. Pages it already changed stay as drafts in the CMS.",
+            "restore": "The plan is closed and the pages it changed go back to their version from before it.",
+            "cancel": "Cancel",
+            "confirm": "Discard"
+        }
+    },
+    "todos": {
+        "title": "Open to-dos",
+        "groups": {
+            "released": "Ready to publish",
+            "review_requested": "Waiting for review",
+            "waiting_for_input": "Waiting for your answer"
+        }
+    },
+    "ui": {
+        "close": "Close",
+        "dismiss": "Dismiss",
+        "notifications": "Notifications"
+    },
+    "catalogue": {
+        "title": "Components",
+        "language": "Language",
+        "theme": {
+            "label": "Theme",
+            "light": "Light",
+            "dark": "Dark",
+            "system": "System"
+        },
+        "states": {
+            "default": "Default",
+            "checked": "Checked",
+            "indeterminate": "Indeterminate",
+            "invalid": "Invalid",
+            "disabled": "Disabled",
+            "placeholder": "Placeholder",
+            "selected": "Selected",
+            "filled": "Filled"
+        },
+        "buttons": {
+            "title": "Buttons",
+            "primary": "Primary",
+            "secondary": "Secondary",
+            "ghost": "Ghost",
+            "danger": "Danger",
+            "solid": "On dark surfaces",
+            "icon": "Icon buttons",
+            "save": "Save",
+            "add": "Add",
+            "edit": "Edit",
+            "send": "Send",
+            "delete": "Delete",
+            "iconXs": "Mini icon buttons",
+            "pressed": "Pressed (toggle on)",
+            "remove": "Remove",
+            "verbatim": "Verbatim",
+            "iconXl": "Large round icon button",
+            "speak": "Speak",
+            "link": "As a link",
+            "linkText": "To the buttons",
+            "quiet": "Quiet text button",
+            "sources": "Sources"
+        },
+        "checkbox": {
+            "title": "Checkbox",
+            "label": "Publish now"
+        },
+        "radio": {
+            "title": "Radio",
+            "campaign": "Campaign landing page",
+            "topic": "Topic page"
+        },
+        "input": {
+            "title": "Input",
+            "label": "User name",
+            "placeholder": "Enter a user name"
+        },
+        "textarea": {
+            "title": "Textarea",
+            "label": "Feedback",
+            "placeholder": "What should happen?",
+            "value": "Shorter, more active"
+        },
+        "select": {
+            "title": "Select",
+            "label": "Page",
+            "placeholder": "Choose a page",
+            "home": "Home",
+            "news": "News",
+            "contact": "Contact",
+            "fullWidth": "Full width"
+        },
+        "tabs": {
+            "title": "Tabs",
+            "preview": "Preview",
+            "history": "History",
+            "settings": "Settings",
+            "previewContent": "Preview of the page.",
+            "historyContent": "Earlier versions of the page.",
+            "settingsContent": "Page settings."
+        },
+        "tooltip": {
+            "title": "Tooltip",
+            "undo": "Undo"
+        },
+        "menu": {
+            "title": "Menu",
+            "trigger": "Options",
+            "page": "Page",
+            "rename": "Rename",
+            "save": "Save",
+            "more": "More",
+            "duplicate": "Duplicate",
+            "move": "Move",
+            "view": "View",
+            "lineNumbers": "Line numbers",
+            "tree": "Tree view",
+            "table": "Table",
+            "delete": "Delete",
+            "anchor": "Paragraph on the page",
+            "openAtAnchor": "Open at the paragraph"
+        },
+        "popover": {
+            "title": "Popover",
+            "open": "Give feedback",
+            "heading": "Feedback for this spot",
+            "close": "Done"
+        },
+        "dialog": {
+            "title": "Dialog",
+            "open": "Open dialog",
+            "heading": "Publish page",
+            "description": "The page goes live right away.",
+            "option": "Notify editors",
+            "cancel": "Cancel",
+            "confirm": "Publish"
+        },
+        "drawer": {
+            "title": "Drawer",
+            "open": "Open drawer",
+            "heading": "Sessions",
+            "description": "Your recent sessions.",
+            "option": "Show archived",
+            "close": "Close"
+        },
+        "toast": {
+            "title": "Toast",
+            "showInfo": "Show info",
+            "showSuccess": "Show success",
+            "showError": "Show error",
+            "showAction": "Show with action",
+            "info": "Draft saved",
+            "success": "Page published",
+            "error": "Publishing failed",
+            "errorDetail": "The CMS did not respond.",
+            "deleted": "Page deleted",
+            "undo": "Undo"
+        },
+        "parts": {
+            "title": "Message parts",
+            "fallback": "Fallback",
+            "variants": {
+                "textMarkdown": "Markdown",
+                "textPlain": "Plain text",
+                "noteInfo": "Info",
+                "noteWarning": "Warning",
+                "noteSkipped": "Skipped",
+                "treeNested": "Nested, with selection",
+                "treeFlat": "Flat, without title",
+                "listSingle": "Single choice, with description and reference",
+                "listMulti": "Multiple choice, preselected",
+                "properties": "Values, references, empty",
+                "imagesSingle": "Single choice",
+                "imagesMulti": "Multiple choice, preselected, without alt text",
+                "tableFull": "All column types, with total and source",
+                "tableSmall": "Small, without footer",
+                "structureDone": "All statuses, verbatim, with page",
+                "structurePlanned": "Planned, without page",
+                "draftValid": "Valid",
+                "draftIssues": "With errors, warning and info",
+                "draftMinimal": "Minimal",
+                "apiCalls": "Successful and failed calls",
+                "citations": "With markers and snippets",
+                "citationsBare": "Without markers and snippets",
+                "fileNamed": "With name",
+                "fileUnnamed": "Without name",
+                "unknownWithText": "Unknown type, with text",
+                "unknownWithoutText": "Unknown type, without text (shows nothing)",
+                "brokenTable": "Known type that fails to render"
+            }
+        }
+    },
+    "errors": {
+        "genaix": {
+            "malformed_request": "The request was not valid.",
+            "invalid_cursor": "The list position is no longer valid. Please reload the list.",
+            "subject_missing": "Your user could not be identified.",
+            "identity_invalid": "Your identity could not be verified.",
+            "unsupported_accept": "The server cannot send the requested format.",
+            "invalid_installation_token": "The connection to the AI service is not set up correctly.",
+            "session_forbidden": "You don't have access to this session.",
+            "session_not_found": "The session was not found.",
+            "run_not_found": "The run was not found.",
+            "file_not_found": "The file was not found.",
+            "interaction_not_found": "The question was not found.",
+            "plan_not_found": "The plan was not found.",
+            "unknown_workflow": "The workflow is not known.",
+            "run_already_active": "A run is already in progress in this session.",
+            "session_archived": "The session has been archived.",
+            "workflow_transition_invalid": "This step is not possible in the workflow right now.",
+            "plan_outdated": "The plan has changed in the meantime. Please check the current version.",
+            "plan_closed": "This plan is closed and can no longer be accepted.",
+            "plan_not_proposed": "This plan cannot be accepted right now.",
+            "plan_scope_violation": "This change is not part of the accepted plan.",
+            "interaction_already_answered": "This question has already been answered.",
+            "interaction_expired": "This question has expired.",
+            "events_pruned": "Older updates are no longer available. The session is being reloaded.",
+            "file_too_large": "The file is too large.",
+            "unsupported_media_type": "This file type is not supported.",
+            "validation_failed": "Some of the entered data is not valid.",
+            "passage_not_found": "A passage marked as quoted from a file does not occur in that file.",
+            "quality_gate_failed": "The result did not pass the quality check.",
+            "cms_object_locked": "The CMS object is locked by someone else.",
+            "mcp_connection_not_found": "The connection was not found.",
+            "mcp_connection_limit": "The maximum number of connections has been reached.",
+            "mcp_authorization_required": "The connection needs to be authorized.",
+            "mcp_authorization_rejected": "The authorization of the connection was rejected.",
+            "mcp_unreachable": "The connected service cannot be reached.",
+            "cms_request_failed": "The request to the CMS failed.",
+            "model_error": "The AI model returned an error.",
+            "model_rate_limited": "The AI model is busy. Please try again shortly.",
+            "rate_limited": "Too many requests. Please try again shortly.",
+            "service_unavailable": "The AI service is currently unavailable.",
+            "plan_not_revisable": "This plan is closed for good and can no longer be changed.",
+            "dependency_order": "A step comes before a step it depends on."
+        },
+        "cms": {
+            "AUTHREQUIRED": "Please log in to the CMS.",
+            "PERMISSION": "You don't have permission for this in the CMS.",
+            "NOTFOUND": "The CMS object was not found.",
+            "INVALIDDATA": "The CMS rejected the data as invalid.",
+            "LOCKED": "The CMS object is locked by someone else.",
+            "MAINTENANCEMODE": "The CMS is in maintenance mode.",
+            "NOTLICENSED": "This CMS feature is not licensed.",
+            "FAILURE": "An unexpected error occurred in the CMS."
+        },
+        "http": {
+            "unauthorized": "You are not logged in.",
+            "forbidden": "You don't have permission for this.",
+            "notFound": "The requested resource was not found.",
+            "tooManyRequests": "Too many requests. Please try again shortly.",
+            "server": "The server ran into an error.",
+            "failed": "The request failed."
+        },
+        "network": "The server could not be reached. Please check your connection.",
+        "noCmsConnection": "There is no CMS connection to work with.",
+        "invalidResponse": "The server sent a response that could not be read.",
+        "unknown": "An unexpected error occurred."
+    },
+    "folderSearch": {
+        "title": "Choose a folder",
+        "node": "Node",
+        "channelOf": "{{name}} (channel of {{master}})",
+        "search": "Search folders",
+        "placeholder": "Search folders in {{node}}",
+        "path": "Folder path",
+        "list": "Folders",
+        "recent": "Recent",
+        "allFolders": "All folders · {{total}}",
+        "inFolder": "In {{name}} · {{total}}",
+        "topMatches": "Top {{shown}} of {{total}} matches",
+        "matches_one": "{{count}} match",
+        "matches_other": "{{count}} matches",
+        "empty": "No folder matches “{{query}}” in {{node}}.",
+        "emptyLevel": "No subfolders.",
+        "showMore": "Show {{count}} more of {{remaining}}",
+        "open": "Open {{name}}",
+        "local": "Local",
+        "localHint": "Only in this channel",
+        "loading": "Loading folders…",
+        "failed": "The folders could not be loaded.",
+        "pick": "Pick a folder",
+        "cancel": "Cancel",
+        "use": "Use folder"
+    },
+    "eventLog": {
+        "title": "Events",
+        "empty": "No events yet.",
+        "copy": "Copy the JSON of event {{seq}} ({{type}})",
+        "copied": "Event {{seq}} copied",
+        "copyFailed": "The event could not be copied."
+    },
+    "planGlance": {
+        "create_folder_one": "folder",
+        "create_folder_other": "folders",
+        "create_page_one": "new page",
+        "create_page_other": "new pages",
+        "create_file_one": "file",
+        "create_file_other": "files",
+        "create_image_one": "image",
+        "create_image_other": "images",
+        "create_construct_one": "construct",
+        "create_construct_other": "constructs",
+        "create_one": "new object",
+        "create_other": "new objects",
+        "update_page_one": "page edited",
+        "update_page_other": "pages edited",
+        "update_one": "object edited",
+        "update_other": "objects edited",
+        "link_one": "link",
+        "link_other": "links",
+        "translate_one": "translation",
+        "translate_other": "translations",
+        "publish_page_one": "page to publish",
+        "publish_page_other": "pages to publish",
+        "publish_one": "object to publish",
+        "publish_other": "objects to publish",
+        "construct_one": "construct",
+        "construct_other": "constructs"
+    }
+}

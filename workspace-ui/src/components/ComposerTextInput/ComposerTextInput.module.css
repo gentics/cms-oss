@@ -1,0 +1,94 @@
+/* Tiptap's wrapper around the editor: the item that fills the composer's line. The editor's element
+   stays a block: Chrome draws no caret in an empty editable flex container. */
+.wrapper {
+  flex: 1;
+  min-width: 0;
+
+  > div {
+    align-items: center;
+  }
+}
+
+/* The text field of both composers: the editor's element. A locked verbatim passage is a node view
+   inside it (`ComposerTextInput`), styled by its attributes (design.md §12 "Verbatim-Textstelle"). */
+.field {
+  position: relative;
+  overflow-y: auto;
+  outline: none;
+  color: var(--fg-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  /* Out of the flow, where the text starts, so the caret stands at the start and not after it;
+     paler than muted text (draft `.input:empty:before`). */
+  &.empty::before {
+    position: absolute;
+    content: attr(data-placeholder);
+    color: rgba(var(--fg-secondary-rgb), 0.5);
+    pointer-events: none;
+  }
+
+  & [data-verbatim] {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 2px 0 3px;
+    border-bottom: 1px solid var(--interactive);
+    border-radius: var(--corner-xs);
+    background: rgba(var(--interactive-rgb), 0.14);
+    color: var(--fg-primary);
+
+    & > svg {
+      flex: none;
+      color: var(--interactive);
+    }
+  }
+
+  & [data-verbatim-text] {
+    white-space: pre-wrap;
+  }
+
+  /* A token (reference, file, setting) is a node view too (`TokenChip`): design.md §12 "@-Token". */
+  & [data-token] {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 270px;
+    padding: 0 2px 0 4px;
+    border: 1px solid rgba(var(--interactive-rgb), 0.3);
+    border-radius: var(--corner-sm);
+    background: rgba(var(--interactive-rgb), 0.13);
+    color: var(--fg-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    line-height: 1.6;
+    vertical-align: -2px;
+    white-space: nowrap;
+
+    & > svg {
+      flex: none;
+      color: var(--interactive);
+    }
+  }
+
+  & [data-token-label] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Dashboard: one large line of text on the surface (design.md §5.1, §11). */
+.lg {
+  max-height: 150px;
+  padding: 2px 0;
+  font-size: var(--font-size-lg);
+  line-height: 1.5;
+}
+
+/* Chat: the draft's `.input`, at most 150 px high, without its minimum height. */
+.base {
+  max-height: 150px;
+  padding: 5px 2px;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+}

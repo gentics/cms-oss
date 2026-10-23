@@ -1,0 +1,182 @@
+:root {
+  /* Design tokens from .claude/rules/design.md. Only the colour block changes per theme. */
+
+  /* Colours (§3.1) */
+  --fg-primary: #004c77;
+  --fg-primary-rgb: 0, 76, 119;
+  --fg-secondary: #3e4850;
+  --fg-secondary-rgb: 62, 72, 80;
+  --fg-muted: #697278;
+  --interactive: #029ddd;
+  --interactive-fill: #1aa4de;
+  --interactive-rgb: 2, 157, 221;
+  --bg-surface: #fff;
+  --bg-canvas: #fff;
+  --bg-subtle: #f3f6f8;
+  --bg-preview-stage: #eaf4fc;
+  --bg-solid: #004c77;
+  /* Text on `--bg-solid` in both themes, and its alpha base (§12 "Chat-Blasen": white, tokens .20). */
+  --fg-on-solid: #fff;
+  --fg-on-solid-rgb: 255, 255, 255;
+  --agent-message-bg: #f2f8fd;
+  --agent-message-border: rgba(var(--interactive-rgb), 0.18);
+  --border-subtle: rgba(var(--fg-primary-rgb), 0.12);
+  --border-strong: rgba(var(--fg-primary-rgb), 0.2);
+  --border-field: rgba(var(--fg-secondary-rgb), 0.4);
+  --shadow-tone-rgb: 0, 76, 119;
+  --error: #b3261e;
+  --error-rgb: 179, 38, 30;
+  --error-bg: #fdecea;
+  --warning: #8a5a00;
+  --warning-rgb: 138, 90, 0;
+  --warning-bg: #fff6e5;
+  --success: #1b6b4a;
+  --success-rgb: 27, 107, 74;
+  --success-bg: #eaf6f0;
+
+  /* Font families (§5) */
+  --font-sans: 'TWK Everett', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Font sizes (§5.1) */
+  --font-size-overline: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 17px;
+  --font-size-xl: 23px;
+  --font-size-2xl: 30px;
+
+  /* Radii (§6.1) */
+  --corner-xs: 4px;
+  --corner-sm: 6px;
+  --corner-md: 8px;
+  --corner-lg: 10px;
+  --corner-xl: 12px;
+  --corner-2xl: 14px;
+  --corner-3xl: 16px;
+  /* §12 "Erfolg nach dem Veröffentlichen": the success mark. */
+  --corner-mark: 24px;
+  --corner-full: 999px;
+
+  /* Shadows (§6.3) */
+  --elevation-1: 0 1px 2px rgba(var(--shadow-tone-rgb), 0.06);
+  --elevation-float: 0 6px 22px rgba(var(--shadow-tone-rgb), 0.13), 0 1px 2px rgba(var(--shadow-tone-rgb), 0.08);
+  --elevation-pop: 0 12px 34px rgba(var(--shadow-tone-rgb), 0.18);
+  --elevation-sheet: 0 18px 40px rgba(var(--shadow-tone-rgb), 0.18);
+  --elevation-modal: 0 18px 60px rgba(var(--shadow-tone-rgb), 0.28);
+  --elevation-toast: 0 12px 32px rgba(var(--shadow-tone-rgb), 0.32);
+
+  /* Motion (§10) */
+  --easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-state: 130ms;
+  --duration-popover: 160ms;
+  --duration-card: 250ms;
+  /* §8: the attention pulse; the blink of the voice input's recording dot. */
+  --duration-attention: 1s;
+  --duration-cursor-blink: 1s;
+  /* §8 "Lädt": one sweep of the skeleton shimmer. */
+  --duration-skeleton: 1.1s;
+  --press-scale: 0.97;
+  /* §10 "Erfolg": the success mark scales from .6 to 1, the one springing movement. */
+  --easing-success: cubic-bezier(0.2, 1.4, 0.4, 1);
+  --duration-success: 500ms;
+
+  /* Chat (§11, §12 "Chat-Blasen"): what stands in the agent's column is indented by its avatar
+     (26 px) plus the gap after it (9 px). */
+  --chat-indent: 35px;
+
+  /* Base text (§5): 13 px, line height 1.45 */
+  font: var(--font-size-base) / 1.45 var(--font-sans);
+  color-scheme: light dark;
+  color: var(--fg-primary);
+  background: var(--bg-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Theme: follows the OS unless `data-theme` on <html> forces one (design.md §1.3, §3.1). */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    /* Design tokens, dark theme (.claude/rules/design.md §3.1) */
+    --fg-primary: #ecedee;
+    --fg-primary-rgb: 152, 157, 162;
+    --fg-secondary: #c7cacd;
+    --fg-secondary-rgb: 172, 177, 182;
+    --fg-muted: #979a9c;
+    --interactive: #45b4e8;
+    --interactive-fill: #45b4e8;
+    --interactive-rgb: 69, 180, 232;
+    --bg-surface: #1b1d1f;
+    --bg-canvas: #0f1112;
+    --bg-subtle: #0f1112;
+    --bg-preview-stage: #0a0c0d;
+    --bg-solid: #2b2e31;
+    --agent-message-bg: var(--bg-surface);
+    --agent-message-border: var(--border-subtle);
+    --border-field: rgba(var(--fg-secondary-rgb), 0.34);
+    --shadow-tone-rgb: 0, 0, 0;
+    --error: #f2b5b1;
+    --error-rgb: 242, 181, 177;
+    --error-bg: #331a18;
+    --warning: #efc470;
+    --warning-rgb: 239, 196, 112;
+    --warning-bg: #2e2610;
+    --success: #8ad6b2;
+    --success-rgb: 138, 214, 178;
+    --success-bg: #15291f;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  /* Same dark tokens as above, for a forced dark theme. */
+  --fg-primary: #ecedee;
+  --fg-primary-rgb: 152, 157, 162;
+  --fg-secondary: #c7cacd;
+  --fg-secondary-rgb: 172, 177, 182;
+  --fg-muted: #979a9c;
+  --interactive: #45b4e8;
+  --interactive-fill: #45b4e8;
+  --interactive-rgb: 69, 180, 232;
+  --bg-surface: #1b1d1f;
+  --bg-canvas: #0f1112;
+  --bg-subtle: #0f1112;
+  --bg-preview-stage: #0a0c0d;
+  --bg-solid: #2b2e31;
+  --agent-message-bg: var(--bg-surface);
+  --agent-message-border: var(--border-subtle);
+  --border-field: rgba(var(--fg-secondary-rgb), 0.34);
+  --shadow-tone-rgb: 0, 0, 0;
+  --error: #f2b5b1;
+  --error-rgb: 242, 181, 177;
+  --error-bg: #331a18;
+  --warning: #efc470;
+  --warning-rgb: 239, 196, 112;
+  --warning-bg: #2e2610;
+  --success: #8ad6b2;
+  --success-rgb: 138, 214, 178;
+  --success-bg: #15291f;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+}

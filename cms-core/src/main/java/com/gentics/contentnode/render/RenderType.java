@@ -102,6 +102,13 @@ public class RenderType implements RenderInfo {
 	public final static int EM_ALOHA_READONLY = 9;
 
 	/**
+	 * preview mode for Aloha: renders like {@link #EM_ALOHA}, but without Aloha Editor (no settings, no scripts)
+	 * and with the editables annotated like the blocks (data-gcn-* attributes), e.g. for a preview that needs
+	 * to find the tags in the page
+	 */
+	public final static int EM_ALOHA_PREVIEW = 10;
+
+	/**
 	 * Parameter name for storing the page language
 	 */
 	private final static String LANGUAGE_PARAM = "language";
@@ -328,7 +335,19 @@ public class RenderType implements RenderInfo {
 		if ("aloha_readonly".equals(editMode)) {
 			return EM_ALOHA_READONLY;
 		}
+		if ("aloha_preview".equals(editMode)) {
+			return EM_ALOHA_PREVIEW;
+		}
 		return EM_PUBLISH;
+	}
+
+	/**
+	 * Check whether the given edit mode renders like the edit mode for Aloha ({@link #EM_ALOHA} or {@link #EM_ALOHA_PREVIEW})
+	 * @param editMode edit mode
+	 * @return true for {@link #EM_ALOHA} and {@link #EM_ALOHA_PREVIEW}
+	 */
+	public static boolean isAlohaEditMode(int editMode) {
+		return editMode == EM_ALOHA || editMode == EM_ALOHA_PREVIEW;
 	}
 
 	/**
@@ -352,6 +371,9 @@ public class RenderType implements RenderInfo {
 
 		case EM_ALOHA_READONLY:
 			return "aloha_readonly";
+
+		case EM_ALOHA_PREVIEW:
+			return "aloha_preview";
 
 		case EM_LIVEPREVIEW:
 		default:
@@ -391,6 +413,7 @@ public class RenderType implements RenderInfo {
 
 		case EM_ALOHA:
 		case EM_ALOHA_READONLY:
+		case EM_ALOHA_PREVIEW:
 			renderType = new RenderType(editMode, false, false, renderer, null, versionTimestamp);
 			break;
 

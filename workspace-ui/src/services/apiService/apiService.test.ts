@@ -1,0 +1,418 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import i18n from '@/i18n';
+import { HttpError } from '@/services/httpService/httpService';
+import { type StubbedUpload, stubUploads } from '@/test/stubUploads';
+
+import {
+    answerInteraction,
+    archiveSession,
+    cancelRun,
+    createSession,
+    GenaixApiError,
+    genaixRetry,
+    genaixRetryDelay,
+    getMe,
+    getPlanState,
+    getSession,
+    isRetryableGenaixError,
+    listMcpConnections,
+    listMessages,
+    listPlans,
+    listSessions,
+    listWorkflows,
+    postMessage,
+    putSessionAuthorization,
+    sessionFileContentUrl,
+    transitionPlan,
+    uploadSessionFile,
+} from './apiService';
+
+function stubFetch(response: Response) {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(response);
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    return fetchMock;
+}
+
+function problemResponse(status: number, problem: Record<string, unknown>, headers: Record<string, string> = {}) {
+    return Response.json(problem, { status, headers: { 'Content-Type': 'application/problem+json', ...headers } });
+}
+
+function apiError(status: number, problem?: Record<string, unknown>, headers: Record<string, string> = {}) {
+    return new GenaixApiError('/rest/proxy/genaix/x', status, problem as never, new Headers(headers));
+}
+
+describe('getMe', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('calls /me through the proxy path and returns the body', async () => {
+        const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ user: { subject: 'sub_test' } }));
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        await expect(getMe()).resolves.toEqual({ user: { subject: 'sub_test' } });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/me');
+    });
+});
+
+describe('GENAIX_API_BASE', () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+        vi.resetModules();
+    });
+
+    it('comes from VITE_GENAIX_API_BASE when it is set', async () => {
+        vi.stubEnv('VITE_GENAIX_API_BASE', '/proxy/genaix/v1');
+        vi.resetModules();
+
+        const fetchMock = stubFetch(Response.json({}));
+        const apiService = await import('./apiService');
+
+        await apiService.getMe();
+
+        expect(apiService.GENAIX_API_BASE).toBe('/proxy/genaix/v1');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/proxy/genaix/v1/me');
+    });
+});
+
+describe('genaixRequest errors', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('throws a GenaixApiError carrying the Problem, its code and the request id', async () => {
+        stubFetch(problemResponse(404, {
+            type: 'https://genaix.gentics.com/problems/session-not-found',
+            title: 'Session not found',
+            status: 404,
+            genaix_code: 'session_not_found',
+            request_id: 'req_body',
+        }));
+
+        const error = await listMessages('s-1').catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(GenaixApiError);
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error).toMatchObject({ status: 404, genaixCode: 'session_not_found', requestId: 'req_body' });
+        expect((error as GenaixApiError).problem?.title).toBe('Session not found');
+    });
+
+    it('takes the request id from X-GenAIx-Request-Id when the body is not a Problem', async () => {
+        stubFetch(new Response('Bad Gateway', { status: 502, headers: { 'X-GenAIx-Request-Id': 'req_header' } }));
+
+        const error = await getMe().catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(GenaixApiError);
+        expect(error).toMatchObject({ status: 502, genaixCode: undefined, problem: undefined, requestId: 'req_header' });
+    });
+
+    it('reads Retry-After when the Problem has no retry_after_seconds', async () => {
+        stubFetch(problemResponse(429, { type: 't', title: 't', status: 429, genaix_code: 'rate_limited' }, { 'Retry-After': '7' }));
+
+        await expect(getMe()).rejects.toMatchObject({ retryAfterSeconds: 7 });
+    });
+});
+
+describe('routes', () => {
+    afterEach(async () => {
+        vi.unstubAllGlobals();
+        await i18n.changeLanguage('en');
+    });
+
+    it('sends Accept: application/json and the same-origin credentials', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [] }));
+
+        await listWorkflows();
+
+        const init = fetchMock.mock.calls[0]![1]!;
+
+        expect(new Headers(init.headers).get('Accept')).toBe('application/json');
+        expect(init.credentials).toBe('same-origin');
+    });
+
+    it('sends the Workspace UI\'s language as Accept-Language, also with an upload', async () => {
+        await i18n.changeLanguage('de');
+
+        // A new response per call: the test reads two.
+        const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ items: [] }));
+        const uploads = stubUploads([{ status: 201, body: { id: 'f-1' } }]);
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        await listWorkflows();
+        await uploadSessionFile('s-1', new File(['text'], 'brief.txt'), 'verbatim');
+
+        expect(new Headers(fetchMock.mock.calls[0]![1]!.headers).get('Accept-Language')).toBe('de');
+        expect(new Headers(uploads[0]!.headers).get('Accept-Language')).toBe('de');
+
+        await i18n.changeLanguage('en');
+        await listWorkflows();
+
+        expect(new Headers(fetchMock.mock.calls[1]![1]!.headers).get('Accept-Language')).toBe('en');
+    });
+
+    it('listWorkflows returns the items of GET /workflows', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [{ id: 'free_chat' }] }));
+
+        await expect(listWorkflows()).resolves.toEqual([{ id: 'free_chat' }]);
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/workflows');
+    });
+
+    it('listSessions repeats array filters and passes the cursor', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [], next_cursor: null }));
+
+        await listSessions({ status: ['active', 'waiting_for_input'], q: 'terms' }, { limit: 25, cursor: 'c2' });
+
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions?status=active&status=waiting_for_input&q=terms&limit=25&cursor=c2');
+    });
+
+    it('listSessions without filters has no query string', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [], next_cursor: null }));
+
+        await listSessions();
+
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions');
+    });
+
+    it('archiveSession sends DELETE /sessions/{session_id} and resolves on 204', async () => {
+        const fetchMock = stubFetch(new Response(null, { status: 204 }));
+
+        await expect(archiveSession('s 1')).resolves.toBeUndefined();
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s%201');
+        expect(init?.method).toBe('DELETE');
+    });
+
+    it('listMessages pages the messages of one session', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [], next_cursor: null }));
+
+        await listMessages('s 1', { cursor: 'c2' });
+
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s%201/messages?cursor=c2');
+    });
+
+    it('postMessage posts the turn as JSON and returns the accepted ids', async () => {
+        const accepted = { message_id: 'm-1', run_id: 'r-1', session_id: 's-1' };
+        const fetchMock = stubFetch(Response.json(accepted, { status: 202 }));
+
+        await expect(postMessage('s-1', { content: 'Hello' })).resolves.toEqual(accepted);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/messages');
+        expect(init?.method).toBe('POST');
+        expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
+        expect(new Headers(init?.headers).get('Accept')).toBe('application/json');
+        expect(JSON.parse(init?.body as string)).toEqual({ content: 'Hello' });
+    });
+
+    it('createSession posts the session with its first message as JSON and returns the created session', async () => {
+        const created = { id: 's-1', status: 'active', run_id: 'r-1', message_id: 'm-1' };
+        const fetchMock = stubFetch(Response.json(created, { status: 201 }));
+        const body = { workflow: 'content_research', message: { parts: [{ type: 'text' as const, text: 'Hello' }] } };
+
+        await expect(createSession(body)).resolves.toEqual(created);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions');
+        expect(init?.method).toBe('POST');
+        expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
+        expect(JSON.parse(init?.body as string)).toEqual(body);
+    });
+
+    it('listMcpConnections loads the connections of one connector type', async () => {
+        const items = [{ id: 'c-1', connector: 'cms', default: true }];
+        const fetchMock = stubFetch(Response.json({ items }));
+
+        await expect(listMcpConnections('cms')).resolves.toEqual(items);
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/mcp/connections?connector=cms');
+    });
+
+    it('putSessionAuthorization puts the credential as JSON and returns the authorization', async () => {
+        const authorization = { connection_id: 'c-1', connector: 'cms', session_id: 's-1', status: 'authorized' };
+        const fetchMock = stubFetch(Response.json(authorization));
+        const body = { auth_type: 'bearer' as const, token: 'cmstok_secret', token_name: 'genaix-s-1', expires_at: '2026-10-08T09:00:00.000Z' };
+
+        await expect(putSessionAuthorization('s-1', 'c-1', body)).resolves.toEqual(authorization);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/authorizations/c-1');
+        expect(init?.method).toBe('PUT');
+        expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
+        expect(JSON.parse(init?.body as string)).toEqual(body);
+    });
+
+    it('getSession loads one session', async () => {
+        const fetchMock = stubFetch(Response.json({ id: 's 1', status: 'published' }));
+
+        await expect(getSession('s 1')).resolves.toEqual({ id: 's 1', status: 'published' });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s%201');
+    });
+
+    // Uploads go through XMLHttpRequest (upload progress), stubbed by `stubUploads`.
+    it('uploadSessionFile posts the file and its mode as multipart and returns the stored file', async () => {
+        const stored = { id: 'f-1', name: 'brief.txt', mode: 'verbatim' };
+        const uploads = stubUploads([{ status: 201, body: stored }]);
+        const file = new File(['text'], 'brief.txt', { type: 'text/plain' });
+
+        await expect(uploadSessionFile('s-1', file, 'verbatim')).resolves.toEqual(stored);
+
+        const [{ url, method, headers, body }] = uploads as [StubbedUpload];
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/files');
+        expect(method).toBe('POST');
+        expect(new Headers(headers).has('Content-Type')).toBe(false);
+        expect(body.get('file')).toBeInstanceOf(File);
+        expect((body.get('file') as File).name).toBe('brief.txt');
+        expect(body.get('mode')).toBe('verbatim');
+    });
+
+    it('uploadSessionFile reports the share uploaded so far', async () => {
+        stubUploads([{ status: 201, body: { id: 'f-1' }, progress: [0.25, 0.5, 1] }]);
+        const onProgress = vi.fn<(fraction: number) => void>();
+
+        await uploadSessionFile('s-1', new File(['text'], 'brief.txt'), 'source', onProgress);
+
+        expect(onProgress.mock.calls).toEqual([[0.25], [0.5], [1]]);
+    });
+
+    it('uploadSessionFile throws a GenaixApiError for an error response, as other requests do', async () => {
+        stubUploads([{
+            status: 413,
+            body: { type: 't', title: 'File too large', status: 413, genaix_code: 'file_too_large', request_id: 'req-1' },
+            headers: { 'Content-Type': 'application/problem+json' },
+        }]);
+
+        const error = await uploadSessionFile('s-1', new File(['text'], 'big.pdf'), 'source').catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(GenaixApiError);
+        expect(error).toMatchObject({ status: 413, genaixCode: 'file_too_large', requestId: 'req-1' });
+    });
+
+    it('uploadSessionFile throws a TypeError without a response, as fetch does, so it counts as retryable', async () => {
+        stubUploads([{}]);
+
+        const error = await uploadSessionFile('s-1', new File(['text'], 'brief.txt'), 'source').catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(TypeError);
+        expect(isRetryableGenaixError(error)).toBe(true);
+    });
+
+    it('cancelRun posts the cancel request of one run and returns the run', async () => {
+        const run = { id: 'r-1', status: 'cancelling', started_at: '2026-10-07T09:22:48Z', step_count: 2 };
+        const fetchMock = stubFetch(Response.json(run, { status: 202 }));
+
+        await expect(cancelRun('s-1', 'r-1', 'User pressed Stop.')).resolves.toEqual(run);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
+        expect(init?.method).toBe('POST');
+        expect(JSON.parse(init?.body as string)).toEqual({ reason: 'User pressed Stop.' });
+    });
+
+    it('answerInteraction posts the answer wrapped as InteractionAnswerRequest', async () => {
+        const interaction = { id: 'i-1', kind: 'confirm', status: 'answered' };
+        const fetchMock = stubFetch(Response.json(interaction));
+
+        await expect(answerInteraction('s-1', 'i-1', { approved: true })).resolves.toEqual(interaction);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/interactions/i-1');
+        expect(init?.method).toBe('POST');
+        expect(JSON.parse(init?.body as string)).toEqual({ answer: { approved: true } });
+    });
+
+    it('answerInteraction throws the 410 of an expired interaction as GenaixApiError', async () => {
+        stubFetch(problemResponse(410, { type: 't', title: 'Expired', status: 410, genaix_code: 'interaction_expired' }));
+
+        await expect(answerInteraction('s-1', 'i-1', { text: 'Yes' })).rejects.toMatchObject({ status: 410, genaixCode: 'interaction_expired' });
+    });
+
+    it('listSessions sends plan_status as a filter of its own', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [], next_cursor: null }));
+
+        await listSessions({ plan_status: ['released', 'review_requested'] });
+
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions?plan_status=released&plan_status=review_requested');
+    });
+
+    it('listPlans returns the page of GET /sessions/{session_id}/plans', async () => {
+        const plan = { id: 'pl-1', workflows: ['content_create'], status: 'done', version: 1, summary: '', created_at: '2026-10-13T09:00:00Z' };
+        const fetchMock = stubFetch(Response.json({ items: [plan] }));
+
+        await expect(listPlans('s-1')).resolves.toEqual({ items: [plan] });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/plans');
+    });
+
+    it('getPlanState loads the state of one plan', async () => {
+        const fetchMock = stubFetch(Response.json({ workflows: [{ id: 'content_create', version: '1.0.0' }], plan: { id: 'pl-1' } }));
+
+        await expect(getPlanState('s-1', 'pl-1')).resolves.toMatchObject({ plan: { id: 'pl-1' } });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/plans/pl-1');
+    });
+
+    it('transitionPlan posts the action as JSON to the plan\'s transitions', async () => {
+        const fetchMock = stubFetch(Response.json({ run_id: 'r-1', plan: { id: 'pl-1', status: 'released' }, session: { id: 's-1' } }, { status: 202 }));
+
+        await expect(transitionPlan('s-1', 'pl-1', { action: 'publish', acknowledge_checks: ['chk-1'] })).resolves.toMatchObject({ run_id: 'r-1' });
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/plans/pl-1/transitions');
+        expect(init?.method).toBe('POST');
+        expect(JSON.parse(init?.body as string)).toEqual({ action: 'publish', acknowledge_checks: ['chk-1'] });
+    });
+
+    it('transitionPlan throws a gate refusal as GenaixApiError with its checks', async () => {
+        stubFetch(Response.json({ type: 't', title: 't', status: 409, genaix_code: 'quality_gate_failed', acknowledgeable_checks: ['chk-1'] }, { status: 409 }));
+
+        await expect(transitionPlan('s-1', 'pl-1', { action: 'release' })).rejects.toMatchObject({
+            genaixCode: 'quality_gate_failed',
+            problem: { acknowledgeable_checks: ['chk-1'] },
+        });
+    });
+
+    it('sessionFileContentUrl points at the content route of a session file', () => {
+        expect(sessionFileContentUrl('s-1', 'f 1')).toBe('/rest/proxy/genaix/sessions/s-1/files/f%201/content');
+    });
+});
+
+describe('retries', () => {
+    it.each([
+        ['a network error', new TypeError('Failed to fetch'), true],
+        ['429', apiError(429), true],
+        ['503', apiError(503), true],
+        ['400', apiError(400), false],
+        ['404', apiError(404), false],
+        ['409', apiError(409), false],
+        ['500', apiError(500), false],
+        ['another error', new Error('boom'), false],
+    ])('isRetryableGenaixError: %s → %s', (_name, error, expected) => {
+        expect(isRetryableGenaixError(error)).toBe(expected);
+    });
+
+    it('genaixRetry stops after three retries', () => {
+        expect(genaixRetry(2, apiError(503))).toBe(true);
+        expect(genaixRetry(3, apiError(503))).toBe(false);
+        expect(genaixRetry(0, apiError(404))).toBe(false);
+    });
+
+    it('genaixRetryDelay waits retry_after_seconds when the server sent it', () => {
+        expect(genaixRetryDelay(0, apiError(429, { genaix_code: 'rate_limited', retry_after_seconds: 12 }))).toBe(12_000);
+    });
+
+    it('genaixRetryDelay otherwise doubles from 1 s up to 30 s', () => {
+        expect([0, 1, 2, 3, 4, 5, 6].map((n) => genaixRetryDelay(n, apiError(503)))).toEqual([1000, 2000, 4000, 8000, 16_000, 30_000, 30_000]);
+    });
+});

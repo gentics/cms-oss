@@ -953,6 +953,11 @@ public class ConstructFactory extends AbstractFactory {
 					NodeException {
 			assertEditable();
 
+			// validate the default values of the parts before saving anything (with this construct, because the parts are saved before the node assignment)
+			for (Part part : getParts()) {
+				PartFactory.validateDefaultValue(part, this);
+			}
+
 			Transaction t = TransactionManager.getCurrentTransaction();
 
 			boolean dicEntriesChanged = false;

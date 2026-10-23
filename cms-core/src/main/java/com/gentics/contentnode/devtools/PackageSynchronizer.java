@@ -87,6 +87,13 @@ public abstract class PackageSynchronizer {
 	public final static String FILES_DIR = "files";
 
 	/**
+	 * Name of the subdirectory containing internal files, which can be managed via REST API.
+	 * Served statically under the {@code /internal/{package}/files/*} URL, as opposed to
+	 * {@link #FILES_DIR}, which is served under {@code /static/{package}/files/*}
+	 */
+	public final static String FILES_INTERNAL_DIR = "files-internal";
+
+	/**
 	 * Name of the subdirectory containing the localized copies of localizable objects
 	 */
 	public final static String CHANNELS_DIR = "channels";

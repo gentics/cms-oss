@@ -40,7 +40,7 @@ custom_proxy:
 | *baseUrl*     | Base URL of the accessed resource.                                                                                                            | yes         |
 | *methods*     | Optional list of allowed HTTP methods. Possible values are DELETE, GET, HEAD, OPTIONS, POST, PUT                                              | no          |
 | *permission*  | GCMS Permission required for accessing the resource.                                                                                          | no          |
-| *headers*     | Optional list of request headers that will be added by the Proxy                                                                              | no          |
+| *headers*     | Optional list of request headers that will be added by the Proxy. They replace headers with the same name sent by the client.                 | no          |
 | *parameters*  | Optional parameters configuration. Parameters can be passed to the proxy as query parameters and will replace {{placeholder}} in the baseUrl. | no          |
 | *proxy*       | Optional HTTP proxy configuration                                                                                                             | no          |
 | *jwt*         | Settings for adding JWT to the forwarded request                                                                                              | no          |
@@ -53,12 +53,21 @@ The base URL for the proxy is @http(s)://[gcms.hostname]/rest/proxy/[key]@ where
 
 Any path after the @[key]@ section will be appended to the configured @baseUrl@.
 
-All headers and query parameters sent to the proxy endpoints will be forwarded to the external resource.
+All query parameters and headers sent to the proxy endpoints will be forwarded to the external resource, with the following exceptions:
+
+* The cookie @GCN_SESSION_SECRET@, which contains the session secret used to authenticate at the CMS, is removed from the @Cookie@ header. All other cookies are forwarded.
+* The header @Authorization@ is not forwarded, when it was used to authenticate at the CMS (with an API token). Otherwise it is forwarded.
+* Hop-by-hop headers (@Connection@, @Keep-Alive@, @Proxy-Authenticate@, @Proxy-Authorization@, @Proxy-Connection@, @TE@, @Trailer@, @Transfer-Encoding@, @Upgrade@ and all headers listed in the @Connection@ header) are not forwarded.
+* The headers @Host@ and @Content-Length@ are set for the forwarded request itself.
+
+Headers configured with *headers* and the JWT (see below) replace headers with the same name sent by the client.
+
+The response of the external resource is streamed to the client, so streamed responses (e.g. server-sent events) are forwarded as they arrive.
 
 h3. JWT
 
 By enabling the flag *jwt.enabled* on a custom proxy, the CMS will add a *Authorization: Bearer _token_* header containing a
-signed "JSON Web Token":https://jwt.io/ (JWT) to each forwarded request.
+signed "JSON Web Token":https://jwt.io/ (JWT) to each forwarded request. This header replaces an @Authorization@ header configured in *headers*.
 
 The JWT will be signed with the private key of the CMS (using algorithm _RS256_), which is created (when is does not exist) upon CMS start and
 stored as file @/cms/keys/private-key.jwk@.

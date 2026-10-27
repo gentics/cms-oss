@@ -18,6 +18,8 @@ Gentics CMS supports the Long Term Support (LTS) versions of MariaDB.
 
 NOTE: For MariaDB versions 11.6 and up, the setting @innodb_snapshot_isolation@ must be disabled in the configuration.
 
+NOTE: The database of Gentics CMS must use the character set @utf8mb4@. See "Database character set":admin_install.html#database-character-set.
+
 h4. Oracle MySQL
 
 |_.Major Version |_.Minor Versions     |_.Supported |_.Notes                   |

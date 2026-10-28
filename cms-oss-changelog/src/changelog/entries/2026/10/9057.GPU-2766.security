@@ -1,0 +1,1 @@
+Formgen: Updated to Expo SDK 58.0.20 and React Native 0.88 (React 19.3.0). Ref types were adapted to the React Native Strict TypeScript API. Fixes CVE-2026-85393 (node-forge).

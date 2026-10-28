@@ -15,7 +15,9 @@ import {
   TouchableOpacity,
   UIManager,
   useWindowDimensions,
-  View
+  View,
+  ScrollViewInstance,
+  ViewInstance,
 } from 'react-native';
 import { Host } from 'react-native-portalize';
 import CMSFormCaptcha from '../components/elements/cms/CmsCaptcha/CMSFormCaptcha';
@@ -275,9 +277,9 @@ const RendererScreen: React.FC<{
   const [reportResult, setReportResult] = useState<IReportResult | null>(null);
 
   // Neuer Ref für den ScrollView
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
   // Neuer Ref für den ErrorBlock
-  const errorBlockRef = useRef<View>(null);
+  const errorBlockRef = useRef<ViewInstance>(null);
   // ref of the first error element
   const firstErrorElementRef = useRef<any>(null);
   const firstErrorElementInfo = useRef<any>(null);

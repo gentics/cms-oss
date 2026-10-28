@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View } from 'react-native';
+import { View, ViewInstance } from 'react-native';
 import {
   CommonValidation,
   FormState,
@@ -30,7 +30,7 @@ function CMSBooleanElement(props: IFormComponentAttributes) {
     utils.getI18nText(props.formState, props.label) +
     (props.required ? ' *' : ''); 
 
-  const elementRef = useRef<View>(null);
+  const elementRef = useRef<ViewInstance>(null);
   const [localErrMsg, setLocalErrMsg] = useState(props.error);
 
   useEffect(() => {

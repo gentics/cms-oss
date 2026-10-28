@@ -16,6 +16,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   FlatList,
+  ScrollViewInstance,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { expertSearchTableTheme } from '@andp/core/src/styles/theme';
@@ -144,8 +145,8 @@ const TableView: React.FC<TableViewProps> = (props) => {
   // +-------------------------------------------------+
   // | Reference and Event Handler for the Scroll Bars |
   // +-------------------------------------------------+
-  const headerRef = useRef<ScrollView | null>(null);
-  const contentRef = useRef<ScrollView | null>(null);
+  const headerRef = useRef<ScrollViewInstance | null>(null);
+  const contentRef = useRef<ScrollViewInstance | null>(null);
   const onHeaderScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       contentRef.current?.scrollTo({

@@ -14,10 +14,11 @@ import {
   Platform,
   Pressable,
   View,
+  ViewInstance,
   Animated,
   Easing,
-  NativeSyntheticEvent,
-  TextInputKeyPressEventData,
+  TextInputKeyPressEvent,
+  KeyDownEvent,
   LayoutAnimation,
   ActivityIndicator,
   TouchableOpacity,
@@ -122,7 +123,7 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
       jsonpath,
     } = props;
 
-    const arrowToggleRef = useRef<View>(null);
+    const arrowToggleRef = useRef<ViewInstance>(null);
     const inputRef = useRef<any>(null);
     const containerRef = useRef<any>(null);
     const outFocusRef = useRef<any>(null);
@@ -307,7 +308,7 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
     };
 
     const handleInputKeyDownNative = (
-      e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+      e: TextInputKeyPressEvent,
     ) => {
       if (!dropdownData || dropdownData.length === 0) return;
       const key = e.nativeEvent.key;
@@ -341,7 +342,7 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
     };
 
     const handleKeyDown = (
-      e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+      e: TextInputKeyPressEvent | KeyDownEvent,
     ) => {
       if (!dropdownData || dropdownData.length === 0) return;
       const key = e.nativeEvent.key;

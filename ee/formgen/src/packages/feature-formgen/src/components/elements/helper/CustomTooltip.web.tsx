@@ -4,6 +4,7 @@ import {
   Platform,
   StyleSheet,
   LayoutChangeEvent,
+  ViewInstance,
 } from 'react-native';
 import { Portal } from 'react-native-portalize';
 import AndpText from '@andp/core/src/components/AndpText';
@@ -37,7 +38,7 @@ export default function CustomTooltip({
   children,
   closeOnOutsidePress = true,
 }: CustomTooltipProps) {
-  const anchorRef = useRef<View | null>(null);
+  const anchorRef = useRef<ViewInstance | null>(null);
 
   const visible = isVisible;
 

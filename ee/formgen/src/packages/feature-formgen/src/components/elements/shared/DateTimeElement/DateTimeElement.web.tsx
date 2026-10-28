@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, TouchableOpacity, Platform, Pressable } from 'react-native';
+import { View, TouchableOpacity, Platform, Pressable, ViewInstance } from 'react-native';
 import moment, { Moment } from 'moment';
 import { TFunction } from 'i18next';
 import { Portal } from 'react-native-portalize';
@@ -76,7 +76,7 @@ function DateTimeElement(props: IFormComponentAttributes) {
 
   const [isFocused, setIsFocused] = useState(false);
   const refInput = useRef<any>(null);
-  const arrowToggleRef = useRef<View>(null);
+  const arrowToggleRef = useRef<ViewInstance>(null);
   const inputContainerRef = useRef<any>(null);
   const [anchor, setAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [open, setOpen] = useState(false);

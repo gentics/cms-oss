@@ -5,6 +5,7 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -15,6 +16,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.logger.LogCollector;
 import com.gentics.contentnode.logger.StringListAppender;
@@ -47,6 +49,7 @@ public enum CoreInternalSchedulerTask implements InternalSchedulerTask {
 	 * Task that purges the wastebin
 	 */
 	purgewastebin("Purge Wastebin", "Purge objects from the wastebin, which are older than the configured maximum wastebin age", out -> {
+		AtomicBoolean success = new AtomicBoolean(true);
 		operate(t -> {
 			try (LogCollector logCollector = new LogCollector("wastebin",
 					new StringListAppender(PatternLayout.newBuilder().withPattern("%d %-5p - %m%n").build(), out))) {
@@ -56,21 +59,30 @@ public enum CoreInternalSchedulerTask implements InternalSchedulerTask {
 
 				List<Node> nodes = t.getObjects(Node.class, ex.getValues());
 				for (Node node : nodes) {
-					Map<String, Integer> result = node.purgeWastebin();
+					// purge every node in its own transaction, so that an error while purging a node (which might also close the transaction)
+					// does not prevent purging the other nodes
+					try (Trx nodeTrx = new Trx()) {
+						nodeTrx.getTransaction().setInstantPublishingEnabled(false);
+						Map<String, Integer> result = nodeTrx.getTransaction().getObject(node).purgeWastebin();
 					if (result == null || result.isEmpty()) {
 						out.add(String.format("Skipped purge for node %s", I18NHelper.getName(node)));
 						continue;
 					}
 
 					out.add(String.format("Purged %s for node %s",
-							result.entrySet().stream()
-									.map((entry) -> String.format("%d %s(s)", entry.getValue(), entry.getKey()))
-									.collect(Collectors.joining(", ")),
-							I18NHelper.getName(node)));
+								result.entrySet().stream()
+								.map((entry) -> String.format("%d %s(s)", entry.getValue(), entry.getKey()))
+								.collect(Collectors.joining(", ")), I18NHelper.getName(node)));
+						nodeTrx.success();
+					} catch (NodeException e) {
+						success.set(false);
+						out.add(String.format("Error while purging wastebin for node %s:", I18NHelper.getName(node)));
+						out.add(ExceptionUtils.getStackTrace(e));
+					}
 				}
 			}
 		});
-		return true;
+		return success.get();
 	}),
 
 	/**

@@ -5902,6 +5902,9 @@ public class FolderFactory extends AbstractFactory {
 					return result;
 				}
 
+				// folders without existing mother could not be purged, so move them into the root folder first
+				moveOrphanedFoldersToRoot(this);
+
 				List<Page> pages = getPagesToPurge(this, deletedBefore);
 				int pageCount = pages.size();
 				for (Page page : pages) {
@@ -7680,6 +7683,32 @@ public class FolderFactory extends AbstractFactory {
 			break;
 		}
 		return reducedList;
+	}
+
+	/**
+	 * Move the folders of the given node, which are in the wastebin, but whose mother does not exist (inconsistent data), into the root folder of the node,
+	 * so that they can be purged
+	 * @param node node
+	 * @throws NodeException
+	 */
+	private static void moveOrphanedFoldersToRoot(Node node) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		int nodeId = node.getMaster().getId();
+		Set<Integer> orphanedIds = DBUtils.select(
+				"SELECT folder.id FROM folder LEFT JOIN folder mother ON folder.mother = mother.id WHERE folder.node_id = ? AND folder.deleted > 0 AND folder.mother != 0 AND mother.id IS NULL",
+				ps -> ps.setInt(1, nodeId), DBUtils.IDS);
+		if (orphanedIds.isEmpty()) {
+			return;
+		}
+
+		int rootFolderId = node.getMaster().getFolder().getId();
+		for (int orphanedId : orphanedIds) {
+			wastebinLogger.warn("Mother of folder " + orphanedId + " does not exist, moving it into the root folder " + rootFolderId);
+			DBUtils.update("UPDATE folder SET mother = ? WHERE id = ?", rootFolderId, orphanedId);
+			t.dirtObjectCache(Folder.class, orphanedId, true);
+		}
+		t.dirtObjectCache(Folder.class, rootFolderId, true);
+		t.commit(false);
 	}
 
 	/**

@@ -24,6 +24,8 @@ import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.NoObjectTagSync;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Wastebin;
+import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.ExtensibleObject;
 import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.perm.PermHandler;
@@ -360,126 +362,129 @@ public abstract class AbstractFolder extends AbstractContentObject implements Fo
 		boolean wastebin = t.getNodeConfig().getDefaultPreferences().isFeature(Feature.WASTEBIN, getOwningNode());
 
 
-		if (isMaster()) {
-			// collect all subfolders
-			Set<Folder> subfolders = new HashSet<Folder>();
+		// when the folder is really deleted, also objects in the wastebin must be deleted (otherwise they would be left without existing mother folder)
+		try (WastebinFilter filter = new WastebinFilter(force || !wastebin ? Wastebin.INCLUDE : t.getWastebinFilter())) {
+			if (isMaster()) {
+				// collect all subfolders
+				Set<Folder> subfolders = new HashSet<Folder>();
 
-			try (ChannelTrx trx = new ChannelTrx(getChannel())) {
-				subfolders.addAll(getChildFolders());
-			}
+				try (ChannelTrx trx = new ChannelTrx(getChannel())) {
+					subfolders.addAll(getChildFolders());
+				}
 
-			// also check for channel local subfolders in subchannels
-			Collection<Node> allChannels = getNode().getAllChannels();
-			for (Node channel : allChannels) {
-				try (ChannelTrx trx = new ChannelTrx(channel)) {
-					List<Folder> channelChildren = getChildFolders();
+				// also check for channel local subfolders in subchannels
+				Collection<Node> allChannels = getNode().getAllChannels();
+				for (Node channel : allChannels) {
+					try (ChannelTrx trx = new ChannelTrx(channel)) {
+						List<Folder> channelChildren = getChildFolders();
 
-					for (Folder channelChild : channelChildren) {
-						Node folderChannel = channelChild.getChannel();
+						for (Folder channelChild : channelChildren) {
+							Node folderChannel = channelChild.getChannel();
 
-						if (folderChannel != null && channelChild.isMaster()
-								&& ObjectTransformer.getInt(folderChannel.getId(), -1) == ObjectTransformer.getInt(channel.getId(), -1)) {
-							subfolders.add(channelChild);
+							if (folderChannel != null && channelChild.isMaster()
+									&& ObjectTransformer.getInt(folderChannel.getId(), -1) == ObjectTransformer.getInt(channel.getId(), -1)) {
+								subfolders.add(channelChild);
+							}
 						}
 					}
 				}
-			}
 
-			for (Folder subfolder : subfolders) {
-				templatesToCheck.addAll(((AbstractFolder)subfolder).internalDelete(force));
-			}
-		}
-
-		// collect all nodes, for which objects must be deleted
-		List<Node> nodes = new ArrayList<Node>();
-		Node folderNode = hasChannel() ? getChannel() : getNode();
-		nodes.add(folderNode);
-		nodes.addAll(folderNode.getAllChannels());
-
-		// Delete Pages - has to be deleted before templates otherwise some templates wouldn't be removed in certain cases
-		if (isMaster()) {
-			PageSearch pageSearch = new PageSearch();
-			pageSearch.setInherited(false);
-
-			List<Page> pages = new ArrayList<Page>();
-
-			for (Node node : nodes) {
-				try (ChannelTrx cTrx = new ChannelTrx(node)) {
-					pages.addAll(getPages(pageSearch));
-				}
-			}
-			for (Page page : pages) {
-				page.delete(force);
-			}
-		}
-
-		// Delete Templates, but just the ones that should be really deleted
-		if (isMaster() && (!wastebin || (wastebin && force))) {
-			TemplateSearch templateSearch = new TemplateSearch();
-			templateSearch.setInherited(false);
-
-			List<Template> allTemplates = new ArrayList<Template>();
-
-			for (Node node : nodes) {
-				try (ChannelTrx cTrx = new ChannelTrx(node)) {
-					allTemplates.addAll(getTemplates(templateSearch));
+				for (Folder subfolder : subfolders) {
+					templatesToCheck.addAll(((AbstractFolder)subfolder).internalDelete(force));
 				}
 			}
 
-			// remove the templates, that are no master objects
-			for (Iterator<Template> i = allTemplates.iterator(); i.hasNext();) {
-				Template template = i.next();
-				if (!template.isMaster()) {
-					i.remove();
+			// collect all nodes, for which objects must be deleted
+			List<Node> nodes = new ArrayList<Node>();
+			Node folderNode = hasChannel() ? getChannel() : getNode();
+			nodes.add(folderNode);
+			nodes.addAll(folderNode.getAllChannels());
+
+			// Delete Pages - has to be deleted before templates otherwise some templates wouldn't be removed in certain cases
+			if (isMaster()) {
+				PageSearch pageSearch = new PageSearch();
+				pageSearch.setInherited(false);
+
+				List<Page> pages = new ArrayList<Page>();
+
+				for (Node node : nodes) {
+					try (ChannelTrx cTrx = new ChannelTrx(node)) {
+						pages.addAll(getPages(pageSearch));
+					}
+				}
+				for (Page page : pages) {
+					page.delete(force);
 				}
 			}
 
-			if (!allTemplates.isEmpty()) {
-				// Check permissions for template delete
-				if (!permHandler.checkPermissionBit(Folder.TYPE_FOLDER_INTEGER, this.getId(), PermHandler.PERM_TEMPLATE_DELETE)) {
-					throw new InsufficientPrivilegesException("You don't have the permission to delete templates from the folder " + this, 
-							"no_perm_del_template", this.getName(), this, PermType.deletetemplates);
+			// Delete Templates, but just the ones that should be really deleted
+			if (isMaster() && (!wastebin || (wastebin && force))) {
+				TemplateSearch templateSearch = new TemplateSearch();
+				templateSearch.setInherited(false);
+
+				List<Template> allTemplates = new ArrayList<Template>();
+
+				for (Node node : nodes) {
+					try (ChannelTrx cTrx = new ChannelTrx(node)) {
+						allTemplates.addAll(getTemplates(templateSearch));
+					}
 				}
 
-				Collection<Template> templatesToDelete = getTemplatesToDelete(allTemplates);
-
-				for (Template template : templatesToDelete) {
-					template.delete(force);
+				// remove the templates, that are no master objects
+				for (Iterator<Template> i = allTemplates.iterator(); i.hasNext();) {
+					Template template = i.next();
+					if (!template.isMaster()) {
+						i.remove();
+					}
 				}
 
-				allTemplates.removeAll(templatesToDelete);
-				templatesToCheck.addAll(allTemplates);
-			}
-		}
+				if (!allTemplates.isEmpty()) {
+					// Check permissions for template delete
+					if (!permHandler.checkPermissionBit(Folder.TYPE_FOLDER_INTEGER, this.getId(), PermHandler.PERM_TEMPLATE_DELETE)) {
+						throw new InsufficientPrivilegesException("You don't have the permission to delete templates from the folder " + this, 
+								"no_perm_del_template", this.getName(), this, PermType.deletetemplates);
+					}
 
-		// delete files
-		if (isMaster()) {
-			FileSearch fileSearch = new FileSearch();
-			fileSearch.setInherited(false);
-			Collection<File> files = new ArrayList<File>();
-			Collection<ImageFile> images = new ArrayList<ImageFile>();
+					Collection<Template> templatesToDelete = getTemplatesToDelete(allTemplates);
 
-			for (Node node : nodes) {
-				try (ChannelTrx cTrx = new ChannelTrx(node)) {
-					files.addAll(getFiles(fileSearch));
-					images.addAll(getImages(fileSearch));
+					for (Template template : templatesToDelete) {
+						template.delete(force);
+					}
+
+					allTemplates.removeAll(templatesToDelete);
+					templatesToCheck.addAll(allTemplates);
 				}
 			}
-			// Delete Files
-			for (File file : files) {
-				file.delete(force);
-			}
-			// Delete Images
-			for (ImageFile image : images) {
-				image.delete(force);
-			}
-		}
 
-		// delete forms
-		if (isMaster()) {
-			List<Form> forms = getForms(new FormSearch().setWastebin(t.getWastebinFilter()));
-			for (Form form : forms) {
-				form.delete(force);
+			// delete files
+			if (isMaster()) {
+				FileSearch fileSearch = new FileSearch();
+				fileSearch.setInherited(false);
+				Collection<File> files = new ArrayList<File>();
+				Collection<ImageFile> images = new ArrayList<ImageFile>();
+
+				for (Node node : nodes) {
+					try (ChannelTrx cTrx = new ChannelTrx(node)) {
+						files.addAll(getFiles(fileSearch));
+						images.addAll(getImages(fileSearch));
+					}
+				}
+				// Delete Files
+				for (File file : files) {
+					file.delete(force);
+				}
+				// Delete Images
+				for (ImageFile image : images) {
+					image.delete(force);
+				}
+			}
+
+			// delete forms
+			if (isMaster()) {
+				List<Form> forms = getForms(new FormSearch().setWastebin(t.getWastebinFilter()));
+				for (Form form : forms) {
+					form.delete(force);
+				}
 			}
 		}
 

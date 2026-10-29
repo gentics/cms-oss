@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
+import i18n from '@/i18n';
 
 import App from './App';
 
@@ -17,8 +18,11 @@ class ResizeObserverStub {
 const tokenCreated = { token: 'cmstok_app', id: 1, userId: 3, name: 'genaix-workspace-1', cdate: 1_790_752_317, expires: 0, lastUsed: 0, valid: true };
 const cmsUser = { id: 3, login: 'editor', firstName: 'Eddie', lastName: 'Tor' };
 
-/** Answers like a CMS: `GET /rest/user/me` with `me` (`401` without), no Keycloak, a login, empty GenAIx lists, the rest with a token. */
-function stubCms({ me }: { me?: typeof cmsUser } = {}) {
+/**
+ * Answers like a CMS: `GET /rest/user/me` with `me` (`401` without), no Keycloak, a login, the session's
+ * UI language `language` if given, empty GenAIx lists, the rest with a token.
+ */
+function stubCms({ me, language }: { me?: typeof cmsUser; language?: string } = {}) {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation((input) => {
         const url = String(input);
 
@@ -28,6 +32,10 @@ function stubCms({ me }: { me?: typeof cmsUser } = {}) {
 
         if (url === '/rest/keycloak') {
             return Promise.resolve(new Response('', { status: 404 }));
+        }
+
+        if (url === '/rest/i18n/get' && language) {
+            return Promise.resolve(Response.json({ responseInfo: { responseCode: 'OK' }, code: language }));
         }
 
         if (url === '/rest/auth/login') {
@@ -64,8 +72,10 @@ describe('App', () => {
         vi.stubGlobal('ResizeObserver', ResizeObserverStub);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         vi.unstubAllGlobals();
+        document.documentElement.lang = 'en';
+        await i18n.changeLanguage('en');
     });
 
     // The router resolves the route asynchronously, so the page is awaited with findByRole.
@@ -88,5 +98,37 @@ describe('App', () => {
 
         expect(await screen.findByRole('textbox', { name: 'What would you like to do?' })).toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledWith('/rest/auth/login', expect.objectContaining({ method: 'POST', body: JSON.stringify({ login: 'editor', password: 'secret' }) }));
+    });
+
+    it('takes the UI language of the CMS session once logged in', async () => {
+        stubCms({ me: cmsUser, language: 'de' });
+        renderApp();
+
+        expect(await screen.findByRole('textbox', { name: 'Was möchten Sie tun?' })).toBeInTheDocument();
+        expect(document.documentElement).toHaveAttribute('lang', 'de');
+    });
+
+    it('keeps a language the user switches to after taking the one of the CMS session, without telling the CMS', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubCms({ me: cmsUser, language: 'de' });
+
+        renderApp();
+
+        await user.click(await screen.findByRole('button', { name: 'Zu English wechseln' }));
+
+        expect(await screen.findByRole('textbox', { name: 'What would you like to do?' })).toBeInTheDocument();
+        expect(screen.queryByRole('textbox', { name: 'Was möchten Sie tun?' })).not.toBeInTheDocument();
+        expect(i18n.language).toBe('en');
+        expect(fetchMock).not.toHaveBeenCalledWith('/rest/i18n/set', expect.anything());
+    });
+
+    it('keeps the language when the CMS session has one the Workspace does not have', async () => {
+        const fetchMock = stubCms({ me: cmsUser, language: 'fr' });
+
+        renderApp();
+
+        expect(await screen.findByRole('textbox', { name: 'What would you like to do?' })).toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledWith('/rest/i18n/get', expect.anything());
+        expect(document.documentElement).not.toHaveAttribute('lang', 'fr');
     });
 });

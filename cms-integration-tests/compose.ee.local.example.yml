@@ -15,8 +15,6 @@ services:
     extends:
       file: compose.ee.yml
       service: cms
-    environment:
-      LICENSEKEY: "YOUR-LICENSEKEY-HERE"
 
   keycloak:
     extends:

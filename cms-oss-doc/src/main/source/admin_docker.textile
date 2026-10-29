@@ -26,8 +26,6 @@ h4. Environment variables
 | JAVA_XMS                | 1024m        | Initial JVM memory allocation pool                        |
 | JAVA_XMX                | 1024m        | Maximum JVM memory allocation pool                        |
 | JAVA_GC_OPTS            | -XX:+PrintGC | JVM GC settings                                           |
-| LICENSEKEY              | (empty)      | GCMS License key              |
-| LICENSEKEY_PATH         | /cms/keys/license.key     | Path to license key file in the container |
 | PRIVATEKEY_PATH         | /cms/keys/private-key.jwk | Path to the private key of the CMS in the container |
 | NODE_DB_HOST            | localhost    | MySQL host                                                |
 | NODE_DB_PORT            | 3306         | MySQL port                                                |
@@ -40,7 +38,7 @@ h4. Environment variables
 h4. Volumes
 
 |_.Volume path            |_.Description             |
-| /cms/keys               | License key and the private used by the CMS to issue JWTs |
+| /cms/keys               | The private key used by the CMS to issue JWTs |
 | /cms/data               | Uploaded binary files. |
 | /cms/cache              | Filesystem cache. |
 | /cms/logs               | Log files. |

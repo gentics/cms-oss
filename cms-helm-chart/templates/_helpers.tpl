@@ -83,15 +83,6 @@ Returns a full secretKeyRef block.
 {{- end -}}
 
 {{/*
-Name of the secret containing the CMS license key.
-Priority: local cms.license.secret (explicit override) → global license secret (umbrella chart)
-         → cms.fullname (sub-chart's own secret, when license.key is set locally).
-*/}}
-{{- define "cms.licenseSecretName" -}}
-{{- include "gentics-common.licenseSecretName" (dict "root" . "localSecret" .Values.cms.license.secret "fallbackName" (include "cms.fullname" .)) -}}
-{{- end -}}
-
-{{/*
 Image pull secrets for the main CMS image (secret NAME, string format).
 Three-state: set -> local wins (global ignored); set to "" -> no pull secret;
 absent -> global.imagePullSecrets, else gentics-common.defaultImagePullSecret.

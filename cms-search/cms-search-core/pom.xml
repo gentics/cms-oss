@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-search</artifactId>
-		<version>6.6.3-SNAPSHOT</version>
+		<version>9.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-search-core</artifactId>
@@ -81,18 +81,6 @@
 			<artifactId>cms-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-license</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-forms-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-multichannelling-core</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
 		</dependency>
@@ -107,7 +95,17 @@
 		<dependency>
 			<groupId>com.gentics.cms</groupId>
 			<artifactId>cms-forms-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-core</artifactId>
 			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-multichannelling-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 

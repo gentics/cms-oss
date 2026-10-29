@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -20,11 +21,10 @@ import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
 import com.gentics.contentnode.dbcopy.jaxb.JAXBTableType;
 import com.gentics.contentnode.etc.NodeConfig;
-import com.gentics.contentnode.etc.PrefixService;
 import com.gentics.contentnode.etc.RandomPrefixService;
-import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.DBHandle;
@@ -40,8 +40,10 @@ import com.gentics.lib.log.NodeLogger;
 */
 public class UdateChecker {
 
-	private final static ServiceLoaderUtil<PrefixService> prefixServiceLoader = ServiceLoaderUtil
-			.load(PrefixService.class);
+	/**
+	 * Pattern for valid globalprefixes (the globalprefix is stored in a varchar(4) column and is separated from the rest of global IDs by a dot)
+	 */
+	private final static Pattern GLOBALPREFIX_PATTERN = Pattern.compile("[0-9A-Za-z]{1,4}");
 	private static NodeLogger logger = NodeLogger.getNodeLogger(UdateChecker.class);
 	private UdateChecker() {// do not instantiate me ..
 	}
@@ -398,42 +400,35 @@ public class UdateChecker {
 
 	/**
 	 * Ensure that the correct globalprefix is stored in the database.
+	 * <ul>
+	 *   <li>If a globalprefix is configured with {@link ConfigurationValue#GLOBALPREFIX}, it will be stored in the database</li>
+	 *   <li>Otherwise, a globalprefix already stored in the database is kept</li>
+	 *   <li>Otherwise, a random globalprefix is generated and stored</li>
+	 * </ul>
 	 * @throws NodeException reading the configuration went wrong
-	 * @throws UnavailableException if the globalprefix in the Node DB is empty and a new one could not be determined from the license
+	 * @throws UnavailableException if the configured globalprefix is invalid
 	 * @throws SQLException	error while accessing database
 	 */
 	public static void ensureGlobalPrefix() throws UnavailableException, SQLException, NodeException {
 		NodeConfigRuntimeConfiguration config = NodeConfigRuntimeConfiguration.getDefault();
 		DBHandle handle = config.getNodeConfig().getSQLHandle(true).getDBHandle();
 
-		String licenseGlobalPrefix = getGlobalPrefix();
+		String configuredGlobalPrefix = ConfigurationValue.GLOBALPREFIX.get();
 		String storedGlobalPrefix = getStoredGlobalPrefix();
 
-		if (StringUtils.isEmpty(licenseGlobalPrefix) && StringUtils.isEmpty(storedGlobalPrefix)) {
-			throw new UnavailableException("No globalprefix set in Node DB and no license key is available");
+		if (!StringUtils.isEmpty(configuredGlobalPrefix) && !GLOBALPREFIX_PATTERN.matcher(configuredGlobalPrefix).matches()) {
+			throw new UnavailableException("Configured globalprefix {" + configuredGlobalPrefix
+					+ "} is invalid, it must consist of 1 to 4 letters or digits");
 		}
 
-		if (storedGlobalPrefix != null && licenseGlobalPrefix != null && !storedGlobalPrefix.equals(licenseGlobalPrefix)) {
-			logger.warn("Changing globalprefix in node DB from {" + storedGlobalPrefix + "} to {" + licenseGlobalPrefix + "}");
-			DB.update(handle, "UPDATE globalprefix SET globalprefix = ?", new Object[] { licenseGlobalPrefix });
-		} else if (storedGlobalPrefix == null) {
-			DB.update(handle, "INSERT INTO globalprefix (globalprefix) VALUES (?)", new Object[] { licenseGlobalPrefix });
+		if (storedGlobalPrefix == null) {
+			String globalPrefix = StringUtils.isEmpty(configuredGlobalPrefix) ? new RandomPrefixService().getGlobalPrefix() : configuredGlobalPrefix;
+			DB.update(handle, "INSERT INTO globalprefix (globalprefix) VALUES (?)", new Object[] { globalPrefix });
 			recreateTriggers();
+		} else if (!StringUtils.isEmpty(configuredGlobalPrefix) && !storedGlobalPrefix.equals(configuredGlobalPrefix)) {
+			logger.warn("Changing globalprefix in node DB from {" + storedGlobalPrefix + "} to {" + configuredGlobalPrefix + "}");
+			DB.update(handle, "UPDATE globalprefix SET globalprefix = ?", new Object[] { configuredGlobalPrefix });
 		}
-	}
-
-	/**
-	 * Finds a service implementation that is able to get or generate a global prefix
-	 */
-	private static String getGlobalPrefix() {
-		for (PrefixService service : prefixServiceLoader) {
-			String prefix = service.getGlobalPrefix();
-			if (!StringUtils.isEmpty(prefix)) {
-				return prefix;
-			}
-		}
-
-		return new RandomPrefixService().getGlobalPrefix();
 	}
 
 	/**

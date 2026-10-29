@@ -38,9 +38,9 @@ public enum ConfigurationValue {
 	CONF_FILES("CONF_FILES", "com.gentics.contentnode.config.files"),
 
 	/**
-	 * License key to use, if license key file does not exist
+	 * Global prefix, which will be stored in the database (overwriting an already stored global prefix)
 	 */
-	LICENSEKEY("LICENSEKEY", "com.gentics.contentnode.license-key"),
+	GLOBALPREFIX("GLOBALPREFIX", "com.gentics.contentnode.globalprefix"),
 
 	/**
 	 * Path to the keys directory

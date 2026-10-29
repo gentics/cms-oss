@@ -10,7 +10,6 @@ endprologue.
 
 h3. Configuration
 
-INFO: This feature requires that the used Gentics CMS license key covers Content Staging. Please contact your account manager for details.
 To activate Content Staging for your installation add the following setting to your node.conf and restart your application or container server, where Gentics CMS is hosted.
 
 <javascript filename="conf/features.yml">

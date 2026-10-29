@@ -33,11 +33,6 @@ cms:
   #annotations:
   #  custom: "whatever"
 
-  license:
-    key: null
-    #optionally - specify the secret name where the license key is already stored (key need to be "licensekey")
-    #secret: 
-
   nodeUserPassword: ""
   #optionally - specify the secret name where the node user password is already stored (key need to be "password")
   #nodeUserPasswordSecret: "cms.nodeuser.secret"

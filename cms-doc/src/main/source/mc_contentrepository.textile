@@ -4,8 +4,6 @@ This section describes how to publish a node and all of its channels into the sa
 
 endprologue.
 
-INFO: This feature is a purchasable addon that needs to be activated for your Gentics CMS license key by Gentics Support.
-
 h3. Gentics CMS Integration
 
 The Multichanneling Content Repositories can be used after enabling the __multichannelling_contentrepository__ feature. Once enabled it is possible to create Content Repositories that are multichanneling aware.

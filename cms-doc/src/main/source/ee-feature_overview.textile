@@ -10,8 +10,6 @@ for all features, if not documented otherwise.
 
 The list of features which require no Enterprise Edition licensing is available in the "OSS guides":https://www.gentics.com/Content.Node/cmp8/guides-oss/feature_overview.html.
 
-The features listed here need to be covered by the used license key. Please contact your account manager for details.
-
 h3. Automatic Translation
 
 See "Automatic Translation":feature_automatic_translation.html

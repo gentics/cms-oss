@@ -395,8 +395,7 @@
         "password": "Passwort",
         "user_name": "Benutzername",
         "activities_title": "Aktivitäten",
-        "packages": "Pakete",
-        "license_management": "Lizenz Management"
+        "packages": "Pakete"
     },
     "shared": {
         "assign_contentrepositories_to_nodes": "Nodes zu ContentRepository hinzfügen",
@@ -907,36 +906,6 @@
         "version_info_label_mesh": "Mesh Version",
         "version_info_label_portal_type": "Portal Typ",
         "version_info_label_portal_version": "Portal Version"
-    },
-    "license": {
-        "overview_title": "Übersicht",
-        "status": "Status",
-        "status_MISSING": "Fehlt",
-        "status_INVALID": "Invalide",
-        "status_EXPIRED": "Abgelaufen",
-        "status_VALID": "Valide",
-        "status_INSUFFICIENT": "Unzureichend",
-        "status_NOT_NEEDED": "Nicht benötigt",
-        "uuid": "ID",
-        "issuer": "Aussteller",
-        "subject": "Betreff",
-        "features": "Features",
-        "issuedAt": "Ausgestellt am",
-        "validUntil": "Valide bis",
-        "unlimitedValidity": "Unlimitiert",
-        "openSource": "OpenSource",
-        "featureName": "Produkt",
-        "upload_license": "Lizenz hochladen",
-        "upload_file": "Lizenzdatei hochladen",
-        "file_upload_button": "Lizenzdatei auswählen",
-        "selected_file": "Ausgwählte Datei",
-        "enter_license": "Lizenz direkt eingeben",
-        "enter_license_plceholder": "Lizenz hier eingeben",
-        "pushToContentRepositories": "Lizenz zu ContentRepositories weiterleiten",
-        "cr_license_differs": "Die Lizenz von dem ContentRepository eine andere, als die CMS verwendete",
-        "push_license_to_cr_button": "Lizenz übertragen",
-        "push_license_to_all_crs_button": "Lizenz auf alle übertragen",
-        "contentRepository_info_modal_title": "Lizenzinformationen von „{{ entityName }}“"
     },
     "widget": {
         "cms_status_title": "CMS-Status",

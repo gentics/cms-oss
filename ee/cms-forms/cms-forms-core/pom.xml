@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-forms</artifactId>
-		<version>6.6.3-SNAPSHOT</version>
+		<version>9.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-forms-core</artifactId>
@@ -45,14 +45,6 @@
 			<artifactId>cms-multichannelling-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-license</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics</groupId>
-			<artifactId>license-checker</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.groovy</groupId>
 			<artifactId>groovy</artifactId>
 		</dependency>
@@ -73,12 +65,6 @@
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-license</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>

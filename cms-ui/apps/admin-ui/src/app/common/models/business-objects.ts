@@ -36,7 +36,6 @@ import {
     User,
     PackageDependencyEntity,
     ContentPackageImportError,
-    ContentRepositoryLicense,
 
 } from '@gentics/cms-models';
 import { Permission } from '@gentics/mesh-models';
@@ -115,7 +114,6 @@ export type TagStatusBO = TagStatus & BusinessObject;
 export type ScheduleExecutionBO = ScheduleExecution & BusinessObject;
 export type ScheduleBO = Schedule & BusinessObject;
 export type ScheduleTaskBO = ScheduleTask & BusinessObject;
-export type ContentRepositoryLicenseBO = ContentRepositoryLicense & BusinessObject;
 
 export type PageBO = Page & BusinessObject;
 export type FileBO = File & BusinessObject;

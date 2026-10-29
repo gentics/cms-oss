@@ -57,12 +57,12 @@ import com.gentics.contentnode.object.search.IndexType;
 import com.gentics.contentnode.object.search.Indexer;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredFeature;
+import com.gentics.contentnode.rest.model.PublishableContentItem;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.StagingStatus;
 import com.gentics.contentnode.rest.resource.impl.AbstractContentNodeResource;
-import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.SearchParameterBean;
 import com.gentics.contentnode.rest.resource.search.SearchResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
@@ -237,7 +237,10 @@ public class SearchResourceImpl extends AbstractContentNodeResource implements S
 								hit.put(OBJECT_ATTRIBUTE, new JSONObject(mapper.writeValueAsString(ModelBuilder.getFile((File) object, fillRefs))));
 								break;
 							case "form":
-								hit.put(OBJECT_ATTRIBUTE, new JSONObject(mapper.writeValueAsString(FormResourceImpl.TRANSFORM2REST.apply((Form)object))));
+								PublishableContentItem restForm = ModelBuilder.getForm((Form) object);
+								if (restForm != null) {
+									hit.put(OBJECT_ATTRIBUTE, new JSONObject(mapper.writeValueAsString(restForm)));
+								}
 								break;
 							}
 

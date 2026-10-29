@@ -15,8 +15,6 @@ endprologue.
 
 h3. Activation steps
 
-INFO: This feature is a custom tool that needs to be activated for your Gentics CMS license key. Please contact your account manager for details.
-
 # Activate and configure the feature in the respective configuration files
 # Configure a scheduler tasks for regularly checking external links in a background job
 # Configure the Link Checker Custom Tool for the Editor User Interface

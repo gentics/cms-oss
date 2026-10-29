@@ -5,7 +5,6 @@ RUN apk upgrade --no-cache
 FROM eclipse-temurin-upgraded
 
 ENV CONF_FILES="" \
-    LICENSEKEY=1111-1111-1111-1111-1111-1111-1111-1111 \
     KEYS_PATH="keys" \
     NODE_DB=node_utf8 \
     NODE_DB_USER=node \

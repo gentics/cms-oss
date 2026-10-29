@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-linkchecker</artifactId>
-		<version>6.6.3-SNAPSHOT</version>
+		<version>9.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-linkchecker-core</artifactId>
@@ -80,21 +80,11 @@
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-license</artifactId>
-		</dependency>
 
 		<!--Test dependencies -->
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-license</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>

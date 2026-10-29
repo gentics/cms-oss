@@ -112,11 +112,11 @@ h4. CONF_FILES
 |_. Configuration   | -                                                                                                                          |
 |_. Default         |                                                                                                                            |
 
-h4. LICENSEKEY
+h4. GLOBALPREFIX
 
-|_. Description     | License Key                                |
-|_. Env             | @LICENSEKEY@                               |
-|_. System Property | @com.gentics.contentnode.license-key@      |
+|_. Description     | Global prefix (1 to 4 letters or digits). If set, it is stored in the database at startup and replaces the stored global prefix. If not set, the stored global prefix is kept (new installations get a random global prefix). |
+|_. Env             | @GLOBALPREFIX@                             |
+|_. System Property | @com.gentics.contentnode.globalprefix@     |
 |_. Configuration   | -                                          |
 |_. Default         |                                            |
 

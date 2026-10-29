@@ -5,8 +5,9 @@
 
     <parent>
         <groupId>com.gentics</groupId>
-        <artifactId>cms</artifactId>
-        <version>6.6.3-SNAPSHOT</version>
+        <artifactId>cms-oss</artifactId>
+        <version>9.0.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>com.gentics.cms</groupId>
@@ -18,6 +19,12 @@
     </organization>
     <description>Contains source of cms-formgen react App</description>
     <name>Gentics CMS Formgen</name>
+    <licenses>
+        <license>
+            <name>BUSL-1.1</name>
+            <url>https://github.com/gentics/cms-oss/blob/dev/ee/LICENSE</url>
+        </license>
+    </licenses>
     <url>http://www.gentics.com</url>
 
     <properties>

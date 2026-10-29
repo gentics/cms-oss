@@ -133,9 +133,9 @@ public class Initializer {
 	/**
 	 * Initialize GCMS. This will
 	 * <ol>
-	 *   <li>Make the license check (and do autoactivation, if necessary and configured)</li>
 	 *   <li>Initialize the cache</li>
 	 *   <li>Initialize the key provider (generating a keypair, if necessary)</li>
+	 *   <li>Ensure that the globalprefix is stored in the database</li>
 	 *   <li>Setup the database (ensure that connection can be made and database exists, install initial dump, if database is empty, apply changelog, create/fix triggers)</li>
 	 *   <li>Initialize velocity rendering engine</li>
 	 *   <li>Initialize JAXB</li>

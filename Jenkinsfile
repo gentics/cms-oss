@@ -7,8 +7,12 @@ JobContext.set(this)
 
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
+final def helmRepositoryProd   = 'https://repo.gentics.com/repository/helm/';
+final def helmRepositoryTest   = 'https://repo.gentics.com/repository/helm-snapshots/';
+
 def branchName                 = null
 def version                    = null
+def helmVersion                = null
 def releaseVersion             = ""
 def tagName                    = null
 def dockerImageTag             = null
@@ -16,6 +20,7 @@ def runJUnitTests              = true
 
 def imageHost                  = "push.docker.gentics.com"
 def imageRepo                  = "docker-snapshots"
+def helmRepository             = helmRepositoryProd;
 
 pipeline {
     agent {
@@ -90,9 +95,11 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
         booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker images")
+        booleanParam(name: 'runHelmBuild',              defaultValue: false, description: "Whether to run the helm build steps.")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client and image for testing)")
+        string(name:       'meshPluginsVersion',        defaultValue: "",  description: "Optional version of mesh plugins (for testing)")
         string(name:       'alohaEditorVersion',        defaultValue: "",  description: "Optional version of aloha editor")
     }
 
@@ -224,7 +231,7 @@ spec:
                 script {
                     def mvnGoal       = "package"
                     def mvnProjects   = ""
-                    def mvnArguments  = " "
+                    def mvnArguments  = " -Dnodejs.npm.bin=/opt/node/bin/npm "
 
                     branchName       = GitHelper.fetchCurrentBranchName()
 
@@ -249,7 +256,7 @@ spec:
                         mvnArguments += skipDBs
                         if (params.singleTest) {
                             mvnGoal = "test"
-                            mvnProjects = " -am -pl 'cms-core,cms-oss-server'"
+                            mvnProjects = " -am -pl 'cms-core,cms-oss-server,cms-cluster/cms-cluster-core,cms-linkchecker/cms-linkchecker-core,cms-search/cms-search-core,cms-translation/cms-translation-core,cms-server,ee/cms-forms/cms-forms-core,ee/cms-multichannelling/cms-multichannelling-core,ee/cms-contentstaging/cms-contentstaging-core'"
                             mvnArguments += "  -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest
                         }
                     } else {
@@ -259,7 +266,7 @@ spec:
 
                     // when deploying for the test systems, we do not build the changelog or doc
                     if (params.deployTesting) {
-                        mvnProjects = " -am -pl '!cms-oss-changelog,!cms-oss-doc'"
+                        mvnProjects = " -am -pl '!cms-oss-changelog,!cms-oss-doc,!cms-doc'"
                     }
 
                     // Update chrome to the latest version
@@ -307,7 +314,7 @@ spec:
                     if (mvnGoal == "deploy") {
                         // Fix for NPE when uploading pom to Artifactory that includes <?m2e ?> directives
                         // See: https://www.jfrog.com/jira/browse/RTFACT-17932
-                        sh "find . -maxdepth 3 -type f -name 'pom.xml' -print0 | xargs -0 sed -i -r 's/<\\?m2e[[:blank:]]+[[:alnum:]]+[[:blank:]]*\\?>//g'"
+                        sh "find . -maxdepth 4 -type f -name 'pom.xml' -print0 | xargs -0 sed -i -r 's/<\\?m2e[[:blank:]]+[[:alnum:]]+[[:blank:]]*\\?>//g'"
                     }
 
                     // Set custom mesh version (if configured)
@@ -322,10 +329,22 @@ spec:
                         MavenHelper.setProperty("alohaeditor.version", params.alohaEditorVersion.trim())
                     }
 
+                    // Set custom mesh plugins version (if configured)
+                    if (params.meshPluginsVersion?.trim() != "") {
+                        echo "Setting Mesh Plugins version to " + params.meshPluginsVersion.trim()
+                        MavenHelper.setProperty("mesh.forms.plugin.version", params.meshPluginsVersion.trim())
+                    }
+
+                    // Add credentials for the private npm repository (used by formgen)
+                    withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
+                        sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
+                    }
+
                     // Login to docker.gentics.com so that the tests can pull all Mesh images
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
-                    withEnv(["TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                    // MESH_LICENSEKEY: Mesh license key for the forms publish tests (until Mesh does not require a license any more)
+                    withEnv(["TESTCONTAINERS_RYUK_DISABLED=true", "MESH_LICENSEKEY=${mesh_enterprise_licensekey_2}"]) {
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
                             " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }
@@ -334,7 +353,7 @@ spec:
                         // Fix for NPE when uploading pom to Artifactory that includes <?m2e ?> directives
                         // See: https://www.jfrog.com/jira/browse/RTFACT-17932
                         // Revert the workaround again for the GIT commit
-                        sh "find . -maxdepth 3 -type f -name 'pom.xml' -print0 -exec git checkout {} \\;"
+                        sh "find . -maxdepth 4 -type f -name 'pom.xml' -print0 -exec git checkout {} \\;"
                         MavenHelper.setVersion(version)
 
                         // Add the modified pom.xml and the generated changelog file
@@ -361,6 +380,14 @@ spec:
                                 junit testResults: "base-lib/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyBaseLibResults
                                 junit testResults: "cms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "cms-cluster/cms-cluster-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "cms-linkchecker/cms-linkchecker-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "cms-search/cms-search-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "cms-translation/cms-translation-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "cms-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "ee/cms-forms/cms-forms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "ee/cms-multichannelling/cms-multichannelling-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "ee/cms-contentstaging/cms-contentstaging-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
                         }
                     }
@@ -385,12 +412,12 @@ spec:
                     if (params.runReleaseBuild) {
                         imageRepo = "docker-products"
                     }
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms"
                     def imageNameWithTag = "${imageName}:${branchName}"
 
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
-                    sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
+                    sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
 
                     if (!params.omitScan) {
                         scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
@@ -417,7 +444,7 @@ spec:
 
             steps {
                 script {
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms"
                     def imageNameWithTag = "${imageName}:${branchName}"
 
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
@@ -435,6 +462,39 @@ spec:
             }
 		}
 
+        stage("Build Helm Chart") {
+            when {
+                expression {
+                    return env.BUILD_SKIPPED != "true" && params.runHelmBuild
+                }
+            }
+            steps {
+                script {
+                    helmVersion = version ?: MavenHelper.getVersion()
+                    if (Boolean.valueOf(params.deployTesting)) {
+                        //helm version need a semantic version ci-devtest is not valid - prefix test versions with 0-
+                        helmVersion = "0-${helmVersion}"
+                    }
+
+                    withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                       sh 'REPO_USERNAME=$repoUsername REPO_PASSWORD=$repoPassword .jenkins/build-helm-chart.sh ' + helmVersion
+                    }
+
+                    if (Boolean.valueOf(params.deploy) || Boolean.valueOf(params.deployTesting)) {
+                        if (Boolean.valueOf(params.deployTesting)) {
+                            helmRepository = helmRepositoryTest;
+                        }
+
+                        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                            def helmPackageFilename = "cms-${helmVersion}.tgz"
+                            echo "Deploying CMS Helm Chart"
+                            sh "curl -u ${repoUsername}:${repoPassword} ${helmRepository} --upload-file target/${helmPackageFilename}"
+                        }
+                    }
+                }
+            }
+        }
+
         stage("UI Integration Tests") {
 			when {
 				expression {
@@ -449,7 +509,7 @@ spec:
                     def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;
                     def testJob = build(job: '/CMP_DEV/CMS/cms-ui-integration-tests/' + branchName,
                         parameters: [
-                            string(name: 'variant', value: 'OSS'),
+                            string(name: 'variant', value: 'EE'),
                             string(name: 'cmsVersion', value: integrationCmsVersion),
                             // TODO: Get Mesh Version from POM?
                             // string(name: 'meshVersion', value: '2.1.0')

@@ -5,8 +5,8 @@
 
 	<parent>
 		<groupId>com.gentics</groupId>
-		<artifactId>cms</artifactId>
-		<version>6.6.3-SNAPSHOT</version>
+		<artifactId>cms-oss</artifactId>
+		<version>9.0.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms</groupId>
@@ -22,25 +22,7 @@
 				<artifactId>cms-oss-bom</artifactId>
 				<type>pom</type>
 				<scope>import</scope>
-				<version>${cms-oss.version}</version>
-			</dependency>
-
-			<!-- License Check -->
-			<dependency>
-				<groupId>com.gentics.cms</groupId>
-				<artifactId>cms-license</artifactId>
 				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.gentics</groupId>
-				<artifactId>license-checker</artifactId>
-				<version>${license.checker.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.gentics.cms</groupId>
-				<artifactId>cms-license</artifactId>
-				<version>${project.version}</version>
-				<type>test-jar</type>
 			</dependency>
 
 			<!-- Content Staging -->

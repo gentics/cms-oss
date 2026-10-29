@@ -20,7 +20,6 @@ The following guidelines can be used to enhance your ticket with additional and 
     ** Add Screenshots/Screencasts if possible.
     ** Add pageIds when pages are affected.
 * On which system did the problem occur? [System URL/Name]
-* License key of the installation.
 * __[Optional]__ Add a regression window. When did the bug first appear?
 
 The ticket can be send via email to __servicedesk [at] jira-gentics [dot] atlassian [dot] net__ or created via our "ticket tracker system":https://support.gentics.com.

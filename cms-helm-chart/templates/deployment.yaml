@@ -45,14 +45,6 @@ spec:
         {{- toYaml .Values.lifecycle | nindent 12 }}
         {{- end }}
         env:
-          {{- $globalLicense := (($.Values.global | default dict).license) | default dict -}}
-          {{- if or $.Values.cms.license.secret $globalLicense.key $.Values.cms.license.key $.Values.cms.licenseKey }}
-          - name: LICENSEKEY
-            valueFrom:
-              secretKeyRef:
-                name: {{ include "cms.licenseSecretName" . }}
-                key: licensekey
-          {{- end }}
           - name: NODE_DB_HOST
             value: {{ include "cms.databaseHost" . | quote }}
           - name: NODE_DB_PORT

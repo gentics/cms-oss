@@ -8,13 +8,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,14 +31,11 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
-import com.gentics.contentnode.rest.model.request.LoginWithRsaRequest;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.impl.RsaAuthenticationResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
-import com.gentics.contentnode.security.RsaTokenValidator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.etc.StringUtils;
 
@@ -64,18 +58,6 @@ public class AuthenticationSandboxTest {
 	 * A test password
 	 */
 	public String TESTPASSWORD = "monkey";
-
-	/**
-	 * Path to the private key used to test the RSA login
-	 */
-	final static public String RSALOGIN_KEY_PRIVATE =
-			"/com/gentics/testutils/resources/rsalogin/private_key.der";
-
-	/**
-	 * Path to the public key used to test the RSA login
-	 */
-	final static public String RSALOGIN_KEY_PUBLIC =
-			"/com/gentics/testutils/resources/rsalogin/public_key.der";
 
 	final static public String JWT_PATH = "/support-user-token.jwt";
 	final static public String JWT_PUBLIC_KEY_PATH = "/support-login-public-key.jwk";
@@ -152,93 +134,6 @@ public class AuthenticationSandboxTest {
 		TransactionManager.getCurrentTransaction().commit(false);
 
 		testLogin(systemUser.getLogin(), TESTPASSWORD, ResponseCode.NOTFOUND);
-	}
-
-	/**
-	 * Test login using a special RSA token int the form
-	 * "rsa-rsahexsignature|salt|expirationtimestamp"
-	 *
-	 * @throws Exception
-	 */
-	@Test
-	public void testLoginWithRsaToken() throws Exception {
-		RsaAuthenticationResourceImpl rsaAuthenticationResource  = new RsaAuthenticationResourceImpl();
-		RsaTokenValidator rsaTokenValidator = rsaAuthenticationResource.getRsaTokenValidator();
-
-		// Load the private key from generic test utils
-		InputStream privateKeyStream = AuthenticationSandboxTest.class.getResourceAsStream(RSALOGIN_KEY_PRIVATE);
-		if (privateKeyStream == null) {
-			throw new FileNotFoundException("Private key {" + RSALOGIN_KEY_PRIVATE + "} not found within classpath.");
-		}
-		PrivateKey privateKey = rsaTokenValidator.loadPrivateKey(privateKeyStream);
-
-		// Load the public key from generic test utils
-		InputStream inputStream = AuthenticationSandboxTest.class.getResourceAsStream(RSALOGIN_KEY_PUBLIC);
-		if (inputStream == null) {
-			throw new FileNotFoundException("Public key {" + RSALOGIN_KEY_PUBLIC + "} not found within classpath.");
-		}
-		rsaTokenValidator.setPublicKey(rsaTokenValidator.loadPublicKey(inputStream));
-
-		String salt = new BigInteger(130, new SecureRandom()).toString(32);
-		int currentTimestamp = (int)(System.currentTimeMillis() / 1000L);
-		int expirationTimestamp = currentTimestamp + 3600; // 1 hour
-
-		// Create a new request and fill the data
-		LoginWithRsaRequest request = new LoginWithRsaRequest();
-		request.setUsername("system");
-		request.setSalt(salt);
-		request.setExpirationTimestamp(expirationTimestamp);
-		request.setRsaSignature(
-				RsaTokenValidator.generateSignature(privateKey, salt, expirationTimestamp));
-
-		// Check if the login with a valid signature returns OK
-		LoginResponse response = rsaAuthenticationResource.loginWithRsa(request, "0");
-
-		assertEquals("Login response code has to be OK", ResponseCode.OK,
-				response.getResponseInfo().getResponseCode());
-
-		// Check if an invalid signature returns NOTFOUND
-		request.setRsaSignature(
-				RsaTokenValidator.generateSignature(privateKey, "nonesense", expirationTimestamp));
-		response = rsaAuthenticationResource.loginWithRsa(request, "0");
-
-		assertEquals("Login response code has to be NOTFOUND", ResponseCode.NOTFOUND,
-				response.getResponseInfo().getResponseCode());
-
-		// The login with an expirationTimestamp of 1 year in the future must fail
-		expirationTimestamp = currentTimestamp + 31536000;
-		request.setExpirationTimestamp(expirationTimestamp);
-		request.setRsaSignature(
-				RsaTokenValidator.generateSignature(privateKey, salt, expirationTimestamp));
-		response = rsaAuthenticationResource.loginWithRsa(request, "0");
-
-		assertEquals("Login with invalid timestamp response code has to be NOTFOUND",
-				ResponseCode.NOTFOUND, response.getResponseInfo().getResponseCode());
-
-		// The login with an expired timestamp must fail
-		expirationTimestamp = currentTimestamp - 1000;
-		request.setExpirationTimestamp(expirationTimestamp);
-		request.setRsaSignature(
-				RsaTokenValidator.generateSignature(privateKey, salt, expirationTimestamp));
-		response = rsaAuthenticationResource.loginWithRsa(request, "0");
-
-		assertEquals("Login with expired timestamp response code has to be NOTFOUND",
-				ResponseCode.NOTFOUND, response.getResponseInfo().getResponseCode());
-
-		// Login with /auth/login, using a "rsa-"-token-password
-		expirationTimestamp = currentTimestamp + 3600; // 1 hour
-		String rsaTokenPassword = "rsa-"
-				+ RsaTokenValidator.generateSignature(privateKey, salt, expirationTimestamp)
-				+ "|" + salt
-				+ "|" + expirationTimestamp;
-
-		LoginRequest loginRequest = new LoginRequest();
-		loginRequest.setLogin("system");
-		loginRequest.setPassword(rsaTokenPassword);
-		response = getAuthResource().login(loginRequest);
-
-		assertEquals("Login with RSA token password has to be OK",
-				ResponseCode.OK, response.getResponseInfo().getResponseCode());
 	}
 
 	@Test

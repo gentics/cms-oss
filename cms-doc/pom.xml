@@ -3,8 +3,8 @@
 
 	<parent>
 		<groupId>com.gentics</groupId>
-		<artifactId>cms</artifactId>
-		<version>6.6.3-SNAPSHOT</version>
+		<artifactId>cms-oss</artifactId>
+		<version>9.0.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms</groupId>
@@ -31,7 +31,7 @@
 				<artifactId>cms-oss-bom</artifactId>
 				<type>pom</type>
 				<scope>import</scope>
-				<version>${cms-oss.version}</version>
+				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -40,7 +40,7 @@
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-restapi</artifactId>
-			<version>${cms-oss.version}</version>
+			<version>${project.version}</version>
 			<classifier>sources</classifier>
 			<scope>runtime</scope>
 		</dependency>
@@ -144,27 +144,27 @@
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-oss-doc</artifactId>
-			<version>${cms-oss.version}</version>
+			<version>${project.version}</version>
 			<type>zip</type>
 		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-oss-doc</artifactId>
-			<version>${cms-oss.version}</version>
+			<version>${project.version}</version>
 			<type>zip</type>
 			<classifier>assets</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-oss-doc</artifactId>
-			<version>${cms-oss.version}</version>
+			<version>${project.version}</version>
 			<type>zip</type>
 			<classifier>oss-content</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-restapi</artifactId>
-			<version>${cms-oss.version}</version>
+			<version>${project.version}</version>
 			<type>jar</type>
 			<classifier>javadoc</classifier>
 		</dependency>

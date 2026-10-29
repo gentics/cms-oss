@@ -103,7 +103,12 @@ public abstract class AbstractFormPublishTest {
 
 	public static File andpPluginConfigDir;
 
-	public static File licenseKeyFile;
+	/**
+	 * Name of the environment variable, which must contain the Mesh license key
+	 */
+	public final static String MESH_LICENSEKEY_ENV = "MESH_LICENSEKEY";
+
+	public static String meshLicenseKey;
 
 	public static ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
@@ -119,7 +124,9 @@ public abstract class AbstractFormPublishTest {
 			assertThat(andpPluginJarFile).as("ANDP Plugin File").exists().canRead().isFile();
 			andpPluginConfigDir = new File(FormPublishTest.class.getResource("/andp/config").toURI());
 
-			licenseKeyFile = new File(FormPublishTest.class.getResource("/license.key").toURI());
+			// the forms plugin requires a licensed Mesh
+			meshLicenseKey = System.getenv(MESH_LICENSEKEY_ENV);
+			assertThat(meshLicenseKey).as("Mesh license key (environment variable " + MESH_LICENSEKEY_ENV + ")").isNotBlank();
 		} catch (URISyntaxException e) {
 			fail("Error while preparing plugin", e);
 		}
@@ -143,7 +150,7 @@ public abstract class AbstractFormPublishTest {
 			.withFileSystemBind(formsPluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY)
 			.withFileSystemBind(andpPluginJarFile.getAbsolutePath(), "/plugins/" + andpPluginFileName, BindMode.READ_ONLY)
 			.withFileSystemBind(andpPluginConfigDir.getAbsolutePath(), "/plugins/andp", BindMode.READ_ONLY)
-			.withFileSystemBind(licenseKeyFile.getAbsolutePath(), "/mesh/license.key", BindMode.READ_ONLY);
+			.withEnv("LICENSEKEY", meshLicenseKey);
 
 	protected static final Logger log = LoggerFactory.getLogger(AbstractFormPublishTest.class);
 

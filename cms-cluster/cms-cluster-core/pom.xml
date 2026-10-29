@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-cluster</artifactId>
-		<version>6.6.3-SNAPSHOT</version>
+		<version>9.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-cluster-core</artifactId>
@@ -46,14 +46,6 @@
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-license</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics</groupId>
-			<artifactId>license-checker</artifactId>
 		</dependency>
 
 		<!-- External Dependencies -->

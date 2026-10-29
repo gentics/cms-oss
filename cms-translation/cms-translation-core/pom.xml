@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.gentics.cms</groupId>
     <artifactId>cms-translation</artifactId>
-    <version>6.6.3-SNAPSHOT</version>
+    <version>9.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>cms-translation-core</artifactId>
@@ -67,10 +67,6 @@
     <dependency>
       <groupId>com.gentics.cms</groupId>
       <artifactId>cms-translation-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.gentics.cms</groupId>
-      <artifactId>cms-license</artifactId>
     </dependency>
     <dependency>
       <groupId>com.gentics.cms-oss</groupId>

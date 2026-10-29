@@ -1,0 +1,140 @@
+/* Catalogue page: plain CSS with the design.md tokens, no Tailwind. */
+.page {
+  min-height: 100svh;
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--fg-primary);
+}
+
+.headerControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.segments {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--corner-lg);
+  background: var(--bg-subtle);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-2xl);
+  background: var(--bg-surface);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stateLabel {
+  font-size: var(--font-size-xs);
+  color: var(--fg-muted);
+}
+
+.stateDemo,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Message parts: one column at the chat's width (design.md §11, max. 740 px), wide enough for tables
+   and image grids; the part type as a code name. */
+.parts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 740px;
+}
+
+.partType {
+  margin: 8px 0 0;
+  color: var(--fg-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.partDemo {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The popover example's content: title, a field and its button, stacked. */
+.popover {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+}

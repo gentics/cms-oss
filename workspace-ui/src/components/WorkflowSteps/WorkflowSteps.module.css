@@ -1,0 +1,96 @@
+/* Where the agent is in its workflow: a quiet line above its message, aligned with the bubble (avatar
+   26 px + 9 px gap), meta text as design.md §5.1 `--font-size-xs` in `--fg-muted`. Status colours as
+   §3.3, always with icon and word. */
+.steps {
+  margin-left: var(--chat-indent);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.needsYou {
+  flex: none;
+  color: var(--warning);
+}
+
+.needsYou::before {
+  content: '·';
+  margin-right: 4px;
+}
+
+/* Under the summary text, past the chevron. */
+.list {
+  margin: 2px 0 0 22px;
+  padding: 0;
+  list-style: none;
+  animation: rise var(--duration-card) var(--easing);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 0;
+}
+
+.step > svg {
+  flex: none;
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status::before {
+  content: '·';
+  margin-right: 6px;
+}
+
+.running {
+  color: var(--fg-secondary);
+}
+
+.running > svg {
+  color: var(--interactive);
+}
+
+.waiting > svg,
+.step.waiting .status {
+  color: var(--warning);
+}
+
+.done > svg {
+  color: var(--success);
+}
+
+.failed > svg,
+.failed .status {
+  color: var(--error);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

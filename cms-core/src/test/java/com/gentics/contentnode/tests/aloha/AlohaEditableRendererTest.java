@@ -3,7 +3,9 @@ package com.gentics.contentnode.tests.aloha;
 import static org.junit.Assert.assertEquals;
 
 import com.gentics.contentnode.aloha.AlohaRenderer;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.testutils.GenericTestUtils;
 import java.io.InputStream;
@@ -86,5 +88,35 @@ public class AlohaEditableRendererTest {
 		AlohaRenderer renderer = new AlohaRenderer();
 		
 		assertEquals("Check if processing { " + filename + " } returns expected output", result, renderer.replaceEditables(template, new RenderResult()));		
+	}
+
+	/**
+	 * Will do the same as {@link #replaceEditables()}, but in the preview mode for Aloha ({@link RenderType#EM_ALOHA_PREVIEW}),
+	 * which renders the editables like the edit mode, but additionally annotates them with data- attributes. Without these
+	 * attributes, the result must be the same as in edit mode.
+	 */
+	@Test
+	public void replaceEditablesPreview() throws Exception {
+		InputStream inputStream = this.getClass().getResourceAsStream("editableinputs/" + filename);
+		InputStream resultStream = this.getClass().getResourceAsStream("editableresults/" + filename);
+
+		String template = IOUtils.toString(inputStream);
+		String result = IOUtils.toString(resultStream);
+
+		testContext.getContext().getNodeConfig().getDefaultPreferences().unsetFeature("aloha_annotate_editables");
+		AlohaRenderer renderer = new AlohaRenderer();
+
+		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+		int editMode = renderType.getEditMode();
+
+		try {
+			renderType.setEditMode(RenderType.EM_ALOHA_PREVIEW);
+			String rendered = renderer.replaceEditables(template, new RenderResult());
+
+			assertEquals("Check if processing { " + filename + " } returns the output of the edit mode", result,
+					rendered.replaceAll(" data-gcn-[a-z0-9-]+=\"[^\"]*\"", ""));
+		} finally {
+			renderType.setEditMode(editMode);
+		}
 	}
 }

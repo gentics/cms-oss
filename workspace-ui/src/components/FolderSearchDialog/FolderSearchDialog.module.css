@@ -1,0 +1,166 @@
+/* The advanced folder search (draft `.fdp`): a dialog of full height (design.md §11, max. 720 × 600 px)
+   whose list scrolls between the search above and the footer below. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 16px;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  max-width: 280px;
+}
+
+.search {
+  padding: 0 16px 8px;
+}
+
+/* Where the list stands: the node, the folders opened, the current one in `--fg-primary`. */
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  min-height: 28px;
+  padding: 0 14px 4px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+
+  & b {
+    padding: 0 4px;
+    color: var(--fg-primary);
+    font-weight: 500;
+  }
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+
+  & > span {
+    padding: 0 4px;
+  }
+}
+
+.body {
+  flex: 1;
+  min-height: 240px;
+  overflow-y: auto;
+  padding: 2px 10px 8px;
+}
+
+.groupHead {
+  padding: 8px 8px 2px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* A folder, as an entry of the @-menu (design.md §12 "Popover / Menü"). */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--corner-md);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(var(--interactive-rgb), .07);
+  }
+
+  &[aria-selected='true'] {
+    background: rgba(var(--interactive-rgb), .15);
+    box-shadow: inset 0 0 0 1.5px rgba(var(--interactive-rgb), .55);
+  }
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--corner-full);
+  background: rgba(var(--interactive-rgb), .11);
+  color: var(--interactive);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name,
+.detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name {
+  font-weight: 500;
+
+  & mark {
+    border-radius: var(--corner-xs);
+    background: rgba(var(--interactive-rgb), .28);
+    color: inherit;
+  }
+}
+
+.detail {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* design.md §12 "Badge". */
+.badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), .12);
+  color: var(--fg-primary);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+/* Loading, failed or nothing there (design.md §8 "Leer"). */
+.note {
+  padding: 26px 12px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.picked {
+  flex: 1;
+  align-self: center;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  & b {
+    color: var(--fg-primary);
+    font-weight: 500;
+  }
+}

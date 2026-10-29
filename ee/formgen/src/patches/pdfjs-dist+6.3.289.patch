@@ -1,8 +1,8 @@
 diff --git a/node_modules/pdfjs-dist/build/pdf.mjs b/node_modules/pdfjs-dist/build/pdf.mjs
-index a33949b..a0144da 100644
+index c55a629..ccfedab 100644
 --- a/node_modules/pdfjs-dist/build/pdf.mjs
 +++ b/node_modules/pdfjs-dist/build/pdf.mjs
-@@ -15048,7 +15048,7 @@ class PDFWorker {
+@@ -16417,7 +16417,7 @@ class PDFWorker {
        }
        const worker = await import(
        /*webpackIgnore: true*/

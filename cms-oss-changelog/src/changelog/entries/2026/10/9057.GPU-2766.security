@@ -1,1 +1,1 @@
-Formgen: Updated to Expo SDK 58.0.20 and React Native 0.88 (React 19.3.0). Ref types were adapted to the React Native Strict TypeScript API. Fixes CVE-2026-85393 (node-forge).
+Formgen: Updated to Expo SDK 58.0.21 and React Native 0.88.1 (React 19.3.0). Ref types were adapted to the React Native Strict TypeScript API. Also updated react-pdf to 11 (pdfjs-dist 6.3.289; the PDF preview now requires Chrome 125 / Safari 18 or newer), i18next to 26, react-i18next to 17, he to 2 and react-native-recaptcha-that-works to 2. Fixes CVE-2026-85393 (node-forge).

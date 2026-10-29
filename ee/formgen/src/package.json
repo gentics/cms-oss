@@ -39,9 +39,9 @@
     "patch-package": "^8.0.0",
     "prettier": "^3.6.2",
     "react-native-web": "~0.21.4",
-    "sass": "^1.92.1",
-    "semver": "7.6.3",
-    "typescript": "^5.9.2"
+    "sass": "^1.107.0",
+    "semver": "7.8.5",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "babel-plugin-transform-import-meta": "^2.3.3",
@@ -54,7 +54,7 @@
   "overrides": {
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-native": "0.88.0",
+    "react-native": "0.88.1",
     "react-native-gesture-handler": "3.3.0",
     "react-native-worklets": "0.13.0",
     "underscore": "1.13.8",

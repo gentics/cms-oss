@@ -45,6 +45,11 @@ export interface PreviewElement {
     tagName: string;
     /** The name of its type (construct), e.g. "Text" (`data-gcn-i18n-constructname`); empty when missing. */
     constructName: string;
+    /**
+     * The marked element's own `id`, when it has one (an editable: `GENTICS_EDITABLE_<id>`). A tag with several
+     * editables marks each of them with the same tag name; the id says which of them is meant.
+     */
+    elementId?: string;
     /** Set when one text block of the part is meant instead of the whole part (see `textBlocksOf`). */
     textBlock?: PreviewTextBlock;
     /** Set when one link of the part is meant (see `linksOf`); never together with `textBlock`. */
@@ -76,6 +81,7 @@ export function previewElementOf(element: Element, textBlock?: Element | null, l
     const annotations = {
         tagName: element.getAttribute('data-gcn-tagname') ?? '',
         constructName: element.getAttribute('data-gcn-i18n-constructname') ?? '',
+        ...(element.id ? { elementId: element.id } : {}),
     };
 
     if (link) {
@@ -237,15 +243,24 @@ function boxOf(element: Element): ElementBox {
     return { top, left, width, height };
 }
 
-function findPart(doc: Document, tagName: string): Element | null {
-    return doc.querySelector(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`);
+// The part `element` is in: the marked element with its `elementId` (`null` if that one is gone, not another
+// element of the tag), else the tag's first marked element.
+function findPart(doc: Document, { tagName, elementId }: PreviewElement): Element | null {
+    if (elementId === undefined) {
+        return doc.querySelector(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`);
+    }
+
+    const element = doc.getElementById(elementId);
+
+    return element?.matches(MARKED) && element.getAttribute('data-gcn-tagname') === tagName ? element : null;
 }
 
 // Finds `element` on the current page: its part, the link at `link.index` or the text block at `textBlock.index`
 // in it. `null` if the part is gone, if after a reload the part has no link at that position any more,
 // or if that position no longer holds a text block of the same kind (e.g. the headline was removed).
-function findTarget(doc: Document, { tagName, textBlock, link }: PreviewElement): Element | null {
-    const part = findPart(doc, tagName);
+export function findTarget(doc: Document, element: PreviewElement): Element | null {
+    const { textBlock, link } = element;
+    const part = findPart(doc, element);
 
     if (part && link) {
         return linksOf(part)[link.index] ?? null;
@@ -269,7 +284,7 @@ function findTarget(doc: Document, { tagName, textBlock, link }: PreviewElement)
  * following a link in it; a click into the page outside the parts and Escape in the frame clear the
  * selection. The boxes follow scrolling,
  * resizing and changes to the page. `changed` (tag names, from `changed_elements`) gives the boxes of
- * the parts the last CMS write changed; a name not on the page has none. `textOf` reads the current
+ * the parts the last CMS write changed, one per marked element of each tag; a name not on the page has none. `textOf` reads the current
  * text of a part, text block or link (`partTextOf`), `hasImage` whether it shows an image (`isImagePart`; a
  * text block or link never does), `currentOf` returns a part, text block or link as it is on the page now (see there).
  *
@@ -294,7 +309,7 @@ export function usePreviewElements(
     const [doc, setDoc] = useState<Document | null>(null);
     const [hovered, setHovered] = useState<{ element: PreviewElement; box: ElementBox } | null>(null);
     const [selectedBox, setSelectedBox] = useState<ElementBox | null>(null);
-    const [changedBoxes, setChangedBoxes] = useState<{ tagName: string; box: ElementBox }[]>([]);
+    const [changedBoxes, setChangedBoxes] = useState<{ key: string; tagName: string; box: ElementBox }[]>([]);
     // One string, so a new array with the same names does not measure again.
     const changedKey = changed.join('\n');
     const [hoveredTarget, setHoveredTarget] = useState<{ node: Element; element: PreviewElement } | null>(null);
@@ -380,11 +395,9 @@ export function usePreviewElements(
 
             setHovered(hoveredTarget?.node.isConnected ? { element: hoveredTarget.element, box: boxOf(hoveredTarget.node) } : null);
             setSelectedBox(selectedNode ? boxOf(selectedNode) : null);
-            setChangedBoxes(changedKey.split('\n').flatMap((tagName) => {
-                const node = tagName ? findPart(doc!, tagName) : null;
-
-                return node ? [{ tagName, box: boxOf(node) }] : [];
-            }));
+            // `changed_elements` names tags: every marked element of a changed tag (one per editable) is tinted.
+            setChangedBoxes(changedKey.split('\n').flatMap((tagName) => (tagName ? Array.from(doc!.querySelectorAll(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`)) : [])
+                .map((node, index) => ({ key: `${tagName}#${index}`, tagName, box: boxOf(node) }))));
 
             if (selected && !selectedNode) {
                 callbacks.current.onSelectedGone();
@@ -425,7 +438,7 @@ export function usePreviewElements(
     // Whether a part shows an image (`isImagePart`). Always false for a text block (`textBlocksOf` never splits a
     // part that shows an image) and for a link, which is edited as a link.
     const hasImage = useCallback((element: PreviewElement) => {
-        const node = doc && !element.textBlock && !element.link ? findPart(doc, element.tagName) : null;
+        const node = doc && !element.textBlock && !element.link ? findPart(doc, element) : null;
 
         return node ? isImagePart(node) : false;
     }, [doc]);
@@ -434,7 +447,7 @@ export function usePreviewElements(
     // and after a reload a text block's or link's text (or a link's target) may have changed, so it is re-read
     // before a message is sent. Returns `element` unchanged if the page no longer has it.
     const currentOf = useCallback((element: PreviewElement) => {
-        const part = doc && (element.textBlock || element.link) ? findPart(doc, element.tagName) : null;
+        const part = doc && (element.textBlock || element.link) ? findPart(doc, element) : null;
         const node = part ? findTarget(doc!, element) : null;
 
         if (!part || !node) {

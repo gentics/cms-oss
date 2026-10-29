@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isImagePart, linkOf, linksOf, linkTargetOf, markedElementOf, partTextOf, previewElementOf, textBlockOf, textBlocksOf } from './usePreviewElements';
+import { findTarget, isImagePart, linkOf, linksOf, linkTargetOf, markedElementOf, partTextOf, previewElementOf, textBlockOf, textBlocksOf } from './usePreviewElements';
 
 // A page as the CMS renders it with tagmarkers=true: a marked text part inside a marked
 // container part, and unmarked page structure around them.
@@ -220,5 +220,50 @@ describe('linkTargetOf', () => {
         expect(linkTargetOf('/alohapage?realid=abc')).toEqual({ type: 'url', url: '/alohapage?realid=abc' });
         expect(linkTargetOf('mailto:info@example.com')).toEqual({ type: 'url', url: 'mailto:info@example.com' });
         expect(linkTargetOf('')).toEqual({ type: 'url', url: '' });
+    });
+});
+
+describe('a tag with several editables', () => {
+    // As the CMS renders a tag with two editable parts in tagmarkers mode: each editable carries the tag's
+    // markers and the id of its own stored value.
+    function twoEditables(withSecond = true) {
+        document.body.innerHTML = `
+            <div data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_101"><h2>Erste Überschrift</h2></div>
+            ${withSecond ? '<div data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_102"><p>Zweiter Teil, Absatz eins</p><p id="second">Absatz zwei</p></div>' : ''}`;
+    }
+
+    it('remembers which of the tag\'s elements is meant, by its id', () => {
+        twoEditables();
+
+        const second = document.getElementById('GENTICS_EDITABLE_102')!;
+
+        expect(previewElementOf(second, document.getElementById('second'))).toEqual({
+            tagName: 'teaser',
+            constructName: 'Teaser',
+            elementId: 'GENTICS_EDITABLE_102',
+            textBlock: { index: 1, count: 2, kind: 'paragraph', excerpt: 'Absatz zwei' },
+        });
+    });
+
+    it('finds a text block of the second editable again, not in the first one', () => {
+        twoEditables();
+
+        const element = previewElementOf(document.getElementById('GENTICS_EDITABLE_102')!, document.getElementById('second'));
+
+        expect(findTarget(document, element)).toBe(document.getElementById('second'));
+        expect(findTarget(document, { tagName: 'teaser', constructName: 'Teaser', elementId: 'GENTICS_EDITABLE_102' })).toBe(document.getElementById('GENTICS_EDITABLE_102'));
+    });
+
+    it('finds nothing when that editable is gone, rather than another one of the tag', () => {
+        twoEditables(false);
+
+        expect(findTarget(document, { tagName: 'teaser', constructName: 'Teaser', elementId: 'GENTICS_EDITABLE_102' })).toBeNull();
+    });
+
+    it('finds a part without an id by its tag name, as before', () => {
+        document.body.innerHTML = '<p data-gcn-tagid="12" data-gcn-tagname="content_2">Text</p>';
+
+        expect(previewElementOf(document.querySelector('p')!)).toEqual({ tagName: 'content_2', constructName: '' });
+        expect(findTarget(document, { tagName: 'content_2', constructName: '' })).toBe(document.querySelector('p'));
     });
 });

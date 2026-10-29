@@ -1,0 +1,1 @@
+Formgen: Updated to Expo SDK 58 and React Native 0.88. The PDF preview (react-pdf 11) now requires Chrome 125 / Safari 18 or newer. Fixes CVE-2026-85393 (node-forge).

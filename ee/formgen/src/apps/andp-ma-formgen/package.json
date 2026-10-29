@@ -33,7 +33,7 @@
     "react-dom": "19.3.0",
     "react-i18next": "^17.1.9",
     "react-native": "0.88.1",
-    "react-native-get-random-values": "~1.11.0",
+    "react-native-get-random-values": "~2.1.0",
     "react-native-reanimated": "4.7.1",
     "react-native-safe-area-context": "~5.10.1",
     "react-native-svg": "15.16.0",

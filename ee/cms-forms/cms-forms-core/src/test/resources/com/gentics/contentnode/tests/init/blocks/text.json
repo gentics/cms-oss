@@ -1,0 +1,21 @@
+{
+    "elements": [
+        {
+            "globalId": "15efbb3c-0991-43b4-89b9-1a0d0a14eef9",
+            "name": "text_15efbb3c_0991_43b4_89b9_1a0d0a14eef9",
+            "type": "text",
+            "active": true,
+            "elements": [],
+            "text_i18n": {
+                "de": "Irgendein Text"
+            }
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

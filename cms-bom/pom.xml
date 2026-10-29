@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.gentics</groupId>
+		<artifactId>cms</artifactId>
+		<version>6.6.3-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-bom</artifactId>
+	<packaging>pom</packaging>
+	<name>Gentics CMS - Bill Of Materials</name>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Import dependencies from Gentics CMS OSS -->
+			<dependency>
+				<groupId>com.gentics.cms-oss</groupId>
+				<artifactId>cms-oss-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${cms-oss.version}</version>
+			</dependency>
+
+			<!-- License Check -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-license</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics</groupId>
+				<artifactId>license-checker</artifactId>
+				<version>${license.checker.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-license</artifactId>
+				<version>${project.version}</version>
+				<type>test-jar</type>
+			</dependency>
+
+			<!-- Content Staging -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-contentstaging</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-contentstaging-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-contentstaging-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- Link Checker -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-linkchecker</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-linkchecker-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-linkchecker-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- Search -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-search-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-search-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- Keycloak -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-keycloak</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- Clustering -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-cluster</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-cluster-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-cluster-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.hazelcast</groupId>
+				<artifactId>hazelcast</artifactId>
+				<version>${hazelcast.version}</version>
+			</dependency>
+
+			<!-- Forms -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-forms-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-forms-core</artifactId>
+				<version>${project.version}</version>
+				<type>test-jar</type>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-forms-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.mesh.plugin.commercial</groupId>
+				<artifactId>mesh-forms-plugin</artifactId>
+				<version>${mesh.forms.plugin.version}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.andp</groupId>
+				<artifactId>mesh-acta-nova-plugin</artifactId>
+				<version>${mesh.andp.plugin.version}</version>
+				<type>jar</type>
+			</dependency>
+
+			<!-- Multichannelling -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-multichannelling-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-multichannelling-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-multichannelling-core</artifactId>
+				<version>${project.version}</version>
+				<type>test-jar</type>
+			</dependency>
+
+			<!-- Translation -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-translation-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-translation-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.jsoup</groupId>
+				<artifactId>jsoup</artifactId>
+				<version>${jsoup.version}</version>
+			</dependency>
+
+			<!-- FormGen -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>formgen</artifactId>
+				<type>zip</type>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>

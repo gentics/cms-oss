@@ -1,0 +1,180 @@
+{{- if .Values.cms.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "cms.fullname" . }}-backup
+  labels:
+    app.kubernetes.io/name: {{ include "cms.name" . }}
+    helm.sh/chart: {{ include "cms.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  schedule: "{{ .Values.cms.backup.schedule }}"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.cms.backup.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cms.backup.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: {{ .Values.cms.backup.timeLimitSeconds }}
+      template:
+        spec:
+          serviceAccountName: {{ include "cms.serviceAccountName" . }}
+          securityContext:
+            {{- if .Values.cms.backup.podSecurityContext }}
+            {{- toYaml .Values.cms.backup.podSecurityContext | nindent 12 }}
+            {{- else }}
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+            {{- end }}
+          restartPolicy: Never
+          containers:
+          - name: backup
+            {{- if .Values.cms.backup.image }}
+            image: "{{ include "gentics-common.image" (dict "root" . "image" .Values.cms.backup.image) }}"
+            {{- else }}
+            image: "{{ include "cms.image" . }}"
+            {{- end }}
+            
+            {{- if ((.Values.cms.backup.image).pullPolicy)}}
+            imagePullPolicy: {{ .Values.cms.backup.image.pullPolicy }}
+            {{- else }}
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{- end }}
+            
+            {{- if .Values.cms.backup.securityContext }}
+            securityContext:
+            {{- toYaml .Values.cms.backup.securityContext | nindent 14 }}
+            {{- else if .Values.securityContext }}
+            securityContext:
+            {{- toYaml .Values.securityContext | nindent 14 }}
+            {{- end }}
+            command: ["/bin/bash"]
+            args:
+              - "/backup.sh"
+            env:
+              {{- if $.Values.database.passwordSecret }}
+              - name: MYSQL_PWD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $.Values.database.passwordSecret }}
+                    key: password
+              {{- else if $.Values.database.password }}
+              - name: MYSQL_PWD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ template "cms.fullname" . }}
+                    key: database-password
+              {{- else }}
+              - name: MYSQL_PWD
+                value: "{{ required "Either database.password or database.passwordSecret are required!" "" }}"
+              {{- end }}
+            volumeMounts:
+              - mountPath: /backup
+                name: backup
+                subPath: db
+              - mountPath: /cms/data
+                name: data
+                subPath: cms/data
+                readOnly: true
+              - mountPath: /cms/keys
+                name: data
+                subPath: cms/keys
+                readOnly: true
+              {{- if not .Values.cms.persistence.onlyData }}
+              - mountPath: /cms/conf
+                name: data
+                subPath: cms/conf
+                readOnly: true
+              - mountPath: /cms/ui-conf
+                name: data
+                subPath: cms/ui-conf
+                readOnly: true
+              - mountPath: /cms/packages
+                name: data
+                subPath: cms/packages
+                readOnly: true
+              - mountPath: /cms/content-packages
+                name: data
+                subPath: cms/content-packages
+                readOnly: true
+              - mountPath: /cms/logs
+                name: data
+                subPath: cms/logs
+                readOnly: true
+              - mountPath: /cms/publish
+                name: data
+                subPath: cms/publish
+                readOnly: true
+              - mountPath: /cms/scheduler-commands
+                name: data
+                subPath: cms/scheduler-commands
+                readOnly: true
+              {{- end }}
+              - mountPath: /backup.sh
+                name: config-cms
+                subPath: backup.sh
+              {{- range .Values.cmsExtraVolumes }}
+              - name: {{ .name }}
+                {{- toYaml .mount | nindent 16 }}
+                readOnly: true
+              {{- end }}
+              {{- if .Values.cmsExtraVolumeMounts }}
+              {{- range .Values.cmsExtraVolumeMounts }}
+              - mountPath: {{ .mountPath }}
+                name: {{ .name }}
+                subPath: {{ .subPath }}
+                readOnly: true
+              {{- end }}
+              {{- end }}
+            resources:
+              {{- toYaml .Values.cms.backup.resources | nindent 14 }}
+          {{- /* Three-state, matching the chart-wide pull secret logic: set -> use it;
+               set to "" -> no pull secret; absent -> fall back to the CMS chain
+               (image.pullSecret -> global.imagePullSecrets -> defaultImagePullSecret). */}}
+          {{- if not (kindIs "invalid" ((.Values.cms.backup.image).pullSecret)) }}
+          {{- if .Values.cms.backup.image.pullSecret }}
+          imagePullSecrets:
+            - name: {{ .Values.cms.backup.image.pullSecret }}
+          {{- end }}
+          {{- else }}
+          {{- include "cms.imagePullSecrets" . | nindent 10 }}
+          {{- end }}
+          volumes:
+            - name: config-cms
+              configMap:
+                name: {{ include "cms.fullname" . }}-config
+            - name: data
+            {{- if .Values.cms.persistence.enabled }}
+              persistentVolumeClaim:
+                claimName: {{ include "cms.fullname" . }}-data
+            {{- else }}
+              emptyDir: {}
+            {{- end }}
+            - name: backup
+            {{- if .Values.cms.backup.persistence.enabled }}
+              persistentVolumeClaim:
+                {{- if .Values.cms.backup.persistence.existingClaim }}
+                claimName: {{ .Values.cms.backup.persistence.existingClaim }}
+                {{- else }}
+                claimName: {{ include "cms.fullname" . }}-backup
+                {{- end }}
+            {{- else }}
+              emptyDir: {}
+            {{- end }}
+            {{- range .Values.cmsExtraVolumes }}
+            - name: {{ .name }}
+              {{- toYaml .volume | nindent 14 }}
+            {{- end }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 8 }}
+        {{- end }}
+{{- end }}

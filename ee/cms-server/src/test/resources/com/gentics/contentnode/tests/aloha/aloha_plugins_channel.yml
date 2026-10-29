@@ -1,0 +1,12 @@
+feature:
+  link_checker: true
+  multichannelling: true
+aloha_plugins_node:
+  "Test Channel":
+    - "common/characterpicker"
+    - "extra/cite"
+    - "common/format"
+  "LinkChecker Test Channel":
+    - "common/characterpicker"
+    - "extra/cite"
+    - "common/format"

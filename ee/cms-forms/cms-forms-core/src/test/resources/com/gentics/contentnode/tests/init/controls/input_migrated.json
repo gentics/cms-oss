@@ -1,0 +1,96 @@
+{
+	"adminEmailAddress": "",
+	"adminEmailSubject": {},
+	"adminEmailPageId": 0,
+	"adminEmailNodeId": 0,
+	"adminEmailTemplate": {},
+	"successPageId": 4711,
+	"successNodeId": 42,
+	"successUrl": {},
+	"templateContext": "theme-red",
+	"schema": {
+		"properties": {
+			"input_e6729f2b_5e93_4e15_8670_c401fe9581a2": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 20.0
+				},
+				"mandatory": true,
+				"isList": false,
+				"name": "input_e6729f2b_5e93_4e15_8670_c401fe9581a2"
+			},
+			"input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 10.0
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a"
+			},
+			"input_inactive": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "input_inactive"
+			}
+		}
+	},
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+		"pages": [
+			{
+				"elements": [
+					{
+						"type": "property",
+						"id": "input_e6729f2b_5e93_4e15_8670_c401fe9581a2",
+						"label": {
+							"de": "Verpflichtend",
+							"en": "Mandatory"
+						},
+						"description": {},
+						"formGridOptions": {
+							"numberOfLines": 1
+						}
+					},
+					{
+						"type": "property",
+						"id": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a",
+						"label": {
+							"de": "Nicht verpflichtend",
+							"en": "Not mandatory"
+						},
+						"description": {},
+						"formGridOptions": {
+							"numberOfLines": 1
+						}
+					},
+					{
+						"type": "property",
+						"id": "input_inactive",
+						"label": {
+							"de": "Inaktiv",
+							"en": "Inactive"
+						},
+						"description": {},
+						"formGridOptions": {
+							"numberOfLines": 1,
+							"hidden": true
+						}
+					}
+				]
+			}
+		]
+	}
+}

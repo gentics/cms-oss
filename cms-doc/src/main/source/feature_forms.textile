@@ -1,0 +1,788 @@
+h2. Gentics CMS Forms
+
+With the feature _forms_ it is possible to manage forms in Gentics CMS.
+* Forms are created and edited in the Editor User Interface.
+* Forms can be included into pages.
+* Forms can be published into Mesh ContentRepositories (Gentics Mesh Forms Plugin is required).
+* Forms are rendered on the client side by *FormGen*.
+
+NOTE: See the "Forms Migration Guide":forms_migration.html when updating from an older CMP Version (<= CMP 8.4).
+
+endprologue.
+
+h3. Configuration
+
+In order to use the feature, it must be activated in the configuration:
+
+<shell filename="conf/features.yml">
+feature:
+	forms: true
+</shell>
+
+Each form is based on a form type, which must also be configured.
+For each of these types, a list of available form elements and their settings must be created.
+
+Elements in the context of forms are defined as things an editor can place into the form. These come in two types: *Controls* and *Blocks*.
+
+Controls are Elements, the frontend user can interact with and which stores/handles form data.
+Blocks on the other hand are only for visual extras to the form, such as extra description texts or grouping of elements.
+
+h4. General configuration
+
+The general configuration for the forms is defined the following way:
+
+<shell filename="conf/forms.yml">
+forms:
+  formGenTranslations:
+    form_loading:
+      en: "Loading ..."
+    custom_key:
+      en: "Example"
+  types:
+    generic:
+      nameI18n:
+        en: Generic Type
+      # See below for all options
+    otherType:
+      nameI18n:
+        en: Another Type
+</shell>
+
+h4. Form-Type Configuration
+
+|_. Field |_. Type |_. Required |_. Description |
+| +nameI18n+ | translation map | required | Human-readable name of the form type, keyed by language code. |
+| +pluginName+ | string | required | Name of the Gentics Mesh plugin that handles submissions for this form type. |
+| +descriptionI18n+ | translation map | optional | Optional description of the form type, keyed by language code. |
+| +submitOnce+ | boolean | optional | If +true+, the form can only be submitted once per user. Intended for polls and surveys. |
+| +external+ | boolean | optional | If +true+, the form is treated as an external form and not a Gentics Mesh Forms Plugin form. |
+| +controls+ | map of control configs | required | Defines all available input controls for this form type. The map key is the control ID used to reference the control in form definitions. See controls table below. |
+| +blocks+ | map of block configs | optional | Defines all available layout and structural blocks for this form type. The map key is the block ID. See blocks table below. |
+| +captchaOptions+ | list of select options | optional | Defines which captcha types are available for this form type. Each option has a +value+ key and a +labelI18n+ translation map. |
+| +templateOptions+ | list of select options | optional | Defines available styling variations (themes) for the form type. Each option has a +value+ key and a +labelI18n+ translation map. |
+| +userEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the confirmation email sent to the user upon form submission. |
+| +adminEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the notification email sent to the administrator when a user submits the form. |
+| +flows+ | list of flow configs | optional | Defines the available form flows for this type. A flow controls the sequence of screens (e.g. form, summary, success) presented to the user. The first entry is used as the default. Each flow has an +id+, +labelI18n+, +nameTranslationKey+, and a list of +steps+. Each step defines a +reactClass+ (the screen component), navigation +buttons+, and optional +variables+ passed to the component. See the Form flows section below. |
+| +pluginConfiguration+ | object | optional | Arbitrary configuration object passed to the Mesh plugin to configure type-specific behaviour. Structure depends on the plugin. |
+| +captchaOptions+ | list of select options | optional | Defines which captchas can be used for the form. |
+
+h5. FormGen settings
+
+Settings under +pluginConfiguration.formgenSettings+ are passed on to FormGen. Currently supported:
+
+|_. Setting |_. Type |_. Default |_. Description |
+| +maxFileSizeToPreviewMB+ | number | 2.5 | Maximum file size (MB) up to which uploaded files show a preview in the +binary+ control. If not set, 2.5 MB is used by default. |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    generic:
+      pluginConfiguration:
+        formgenSettings:
+          maxFileSizeToPreviewMB: 5
+</shell>
+
+h5. Internal and external forms
+
+Forms come in two kinds, *internal* and *external*, which are handled differently. Which kind a form is, is determined by its form type and configured per form type via the +external+ flag (in combination with +pluginName+) in the General configuration above.
+
+|_. Kind |_. Configuration |_. Handled by |
+| *Internal form* | +external: false+ (the default when the flag is omitted) | A Gentics Mesh plugin, named by +pluginName+ (e.g. the Gentics Mesh Forms Plugin for +pluginName: "forms"+), which processes and stores the submissions. |
+| *External form* | +external: true+ | Treated as an external form and *not* by the Gentics Mesh Forms Plugin. Editing forms is restricted and only allows editors to add block elements. |
+
+*Internal forms* are the forms managed by this feature: they are created and edited in the Editor and their submissions are processed by the configured Mesh plugin. This is the default, and all examples in this document are internal form types.
+
+NOTE: The +external+ flag is a property of the form *type*, not of an individual form. All forms created from a form type therefore share the same kind.
+
+h5. Captchas
+
+Each option is defined by a +value+ (the identifier stored on the form) and a localized +labelI18n+.
+
+|_. Value |_. Label (en) |_. Label (de) |_. Description |
+| +recaptcha_checkbox+ | Recaptcha: Checkbox | Recaptcha: Häckchen | Google reCAPTCHA rendered as an explicit "I'm not a robot" checkbox |
+| +recaptcha_invisible+ | Recaptcha: Background | Recaptcha: Hintergrund | Google reCAPTCHA that runs invisibly in the background (no checkbox) |
+| +friendly_auto+ | Friendly Captcha | Friendly Captcha | Friendly Captcha that starts its verification automatically |
+| +friendly_button+ | Friendly Captcha: Button | Friendly Captcha: Button | Friendly Captcha triggered via a button |
+| +friendly_background+ | Friendly Captcha: Background | Friendly Captcha: Hintergrund | Friendly Captcha that runs in the background |
+
+IMPORTANT: +captchaOptions+ only selects *which* captcha variant is used. The provider credentials and endpoints themselves — e.g. the reCAPTCHA / Friendly Captcha *site key*, *secret / verification key* and the verification URL — are *not* part of the form configuration. They must be configured in the forms plugin configuration (+config.yml+ of the forms plugin), the same place where e.g. the +binary+ +allowedTypes+ are defined.
+
+h4. Element Configuration
+
+This section describes what can be configured *per element* as defined in the formtype configuration (forms.yml).
+
+The following Properties are available for all settings:
+
+|_. Property |_. type |_. required |_. Description |
+| +labelI18n+ | translation | true | Label of the element, which will be displayed in the UI. |
+| +descriptionI18n+ | translation | false | Description for the element. |
+| +settings+ | list of settings | false | Setting definitions for the element. |
+| +aggregate+ | boolean | false | Only when it's a +control+. Marks this control as aggregate which may contain other elements, and handles it's content differently. See +aggregate+ control for more info. |
+| +container+ | boolean | false | Only when it's a +block+. Marks this block as a container element, which may contain other elements. |
+| +whitelist+ | list of string | false |  Only when either +aggregate+ or +container+ is +true+. List of other controls/blocks which are allowed to be put into this element as *direct* child. |
+
+h5. Default Control-Types
+
+The following controls are supported with the default FormGen app:
+
+|_. Control |_. Plugin |_. Aggregate |_. Description |
+| +string+ | shared | no | Single-line text input |
+| +number+ | shared | no | Integer/numeric input |
+| +datetime+ | shared | no | Date input in +yyyy-MM-dd+ format. Supports a placeholder (label) and default value. |
+| +time+ | shared | no | Time input in +HH:MM+ format. Supports a placeholder (label) and default value. |
+| +boolean+ | shared | no | Checkbox control. Configures the value stored when checked and the default checked state. |
+| +catalog+ | shared | no | Selection control (dropdown or radio buttons). Editors define the available options as key-value pairs. An additional free-text option can optionally be enabled. |
+| +binary+ | shared | no | File upload control. maximum file size in MB, whether multiple uploads are allowed, and a filter for allowed file types (images, videos, documents). |
+| +usermail+ | +forms+ only | no | Email address input for the form submitter. When filled out, a confirmation email is sent to the entered address. Configures placeholder, maximum length, email subject, and email template. |
+| +adminmail+ | +forms+ only | no | Works like the +catalog+, but the selected value determines where the submitted form data will be sent to. Usually used in contact forms to direct the email to the correct department. |
+| +aggregate+ | +acta-nova+ only | yes | Acts as a sub-forms, where the values are aggregated together as one single array value. |
+| +lazyCatalog + | +acta-nova+ only | no | Version of +catalog+, but with a reference to predefined options from acta-nova, which are lazy loaded. |
+| +reference+ | +acta-nova+ only | no | Picker for an Acta-Nova element. |
+
+In the following sections, there's an overview of the settings each control-type supports.
+
+h6. +string+ control
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +defaultValue+ | string | true | — | Default value |
+| +maxLength+ | number | true | +validation.maxLength+ | Maximum number of allowed characters |
+| +validation+ | select | true | +validation.regexValidation+ | Validators based on regular expressions with error messages. The value has to be a validation object, see the table below for more info. |
+| +numberOfLines+ | number | false | — | Number of lines (renders the input as a multiline text field) |
+
+The Validation object has the following properties
+
+|_. Property |_. type |_. Description |
+| +key+ | string | Acts as an ID between the various validation options |
+| +regex+ | string | A *java* regex string to validate against |
+| +errorMessage+ | translation object | The error message for the frontend user |
+
+Example:
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        string:
+          labelI18n:
+            de: String Beispiel
+            en: String example
+          settings:
+            - id: defaultValue
+              type: string
+              labelI18n:
+                de: Standardbefüllung
+                en: Default value
+              backend: true
+            - id: maxLength
+              type: number
+              labelI18n:
+                de: Maximallänge
+                en: Maximum Length
+              backend: true
+              propertyPath: validation.maxLength
+            - id: validation
+              type: select
+              labelI18n:
+                de: Validierung
+                en: Validation
+              backend: true
+              propertyPath: validation.regexValidation
+              options:
+                - value:
+                    key: "email"
+                    regex: "^(([^<>()\\[\\]\\\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\\\.,;:\\\
+                      s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\\
+                      .[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$"
+                    errorMessage:
+                      de: "Das soll ne eMail Adresse sein?"
+                  labelI18n:
+                    de: "E-Mail"
+                    en: "Mail"
+</shell>
+
+h6. +number+ control
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +defaultValue+ | number | true | — | Default value |
+| +minValue+ | number | true | +validation.minValue+ | Minimum value for number inputs |
+| +maxValue+ | number | true | +validation.maxValue+ | Maximum value for number inputs |
+
+Example:
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        number:
+          labelI18n:
+            de: Nummer Beispiel
+            en: Number example
+          settings:
+            - id: defaultValue
+              type: number
+              labelI18n:
+                de: Standardbefüllung
+                en: Default value
+              backend: true
+            - id: minValue
+              type: number
+              labelI18n:
+                de: Minimalwert
+                en: Minimum value
+              backend: true
+              propertyPath: validation.minValue
+            - id: maxValue
+              type: number
+              labelI18n:
+                de: Maximalwert
+                en: Maximum value
+              backend: true
+              propertyPath: validation.maxValue
+</shell>
+
+h6. +datetime+ control
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +defaultValue+ | date | true | — | Default value |
+| +dateOnly+ | boolean | true | +dateOnly+ | Only a date (without time component) can be selected |
+
+Example:
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        number:
+          labelI18n:
+            de: Nummer Beispiel
+            en: Number example
+          settings:
+            - id: defaultValue
+              type: date
+              labelI18n:
+                de: Standardbefüllung
+                en: Default value
+              backend: true
+            - id: dateOnly
+              type: boolean
+              labelI18n:
+                de: Nur datum
+                en: Date only
+              backend: true
+</shell>
+
+h6. +time+ control
+
+Same as +datetime+ but without the +dateOnly+ setting:
+
+|_. Setting |_. type |_. backend |_. Description |
+| +defaultValue+ | date | true | Default value |
+
+h6. +boolean+ control
+
+|_. Setting |_. type |_. backend |_. Description |
+| +storedValue+ | string | false | Value that is submitted by this checkbox in the form-report, when the checkbox is checked. Defaults to "X". |
+| +defaultValue+ | boolean | true | This checkbox is checked by default |
+
+h6. +catalog+ control
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +selectOptions+ | options | true | — | List of selectable key/value pairs |
+| +customOption+ | boolean | false | — | Allows entering an additional selection option |
+| +isList+ | boolean | true | +isList+ | Multiselection (allows selecting multiple options) |
+| +radio+ | boolean | false | — | Render as radio buttons (single value) or checkboxes (multivalue) |
+
+h6. +binary+ control
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +maxFilesize+ | number | true | +validation.binary.maxFilesize+ | Max. allowed filesize (MB) |
+| +allowedTypes+ | select | true | +validation.binary.allowedTypes+ | Selection list of allowed file types (the categories selected in the CMS — the same +allowedTypes+ that the plugin then resolves into +allowedFileTypes+ & +allowedFileNames+. The options should be defined in +config.yml+ of forms plugin). |
+| +multiple+ | boolean | true | +isList+ | Allow upload of multiple files |
+
+h6. +usermail+ control
+
+Sends an email to the entered address after the form was submitted.
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +maxLength+ | number | true | +validation.maxLength+ | Maximum number of allowed characters |
+| +mailsubject+ | translation | true | — | Subject of the email sent to the user |
+| +mailtemplate+ | select | true | — | Email template if set then the defined template inside forms plugin and the configured +userEmailTemplateOptions+ is overwritten. |
+
+h6. +adminmail+ control
+
+Element to specify which admin mail addresses submission notifications should be sent to. If such an element is present in the form, the form's +email+ property is ignored, and the recipients are instead taken from the selected option keys (which are mapped to the configured mail addresses). When no +adminmail+ element is present, mail sending falls back to the admin email configured on the form (+email+).
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +selectOptions+ | options | true | — | List of selectable key/value pairs |
+
+h6. +aggregate+ control
+
+An special element which creates a sub-form, where multiple entries can be created/submitted, aggregated under one common name.
+
+An example would be, a list of attendees for an event, where each attendee has and input for +firstName+, +lastName+, and +email+. The aggregate would hold info for the three controls, but these can be entered *n* times, and the reports receives a single list value with all the attendees.
+
+|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
+| +showFilter+ | boolean | false | none | If the aggregation table should add a filter input, where displayed elements are filtered by the input's content. |
+| +showOnlyFirstLine+ | boolean | false | none | If true, then each element is displayed as individual collapsible. Only the first element is always displayed, even when collapsed. |
+| +buttonDisplayStyle+ | select | false | none | How the buttons for adding/editing/removing elements should be displayed. Possible option-values: +icon+, +text+, +icontext+ |
+
+h6. +lazyCatalog+ control
+
+Special +catalog+ component, which primarily works the same. The main difference is where it loads the options from.
+This is mainly used for conditional options, where the evaluation for these options is handled in the backend, so no special configuration is required here. For all catalog settings, see the regular +catalog+ control.
+
+h6. +reference+ control
+
+Special +catalog+ component, which requires a search input, and the options are searched in the backend. Options are references to elements within Acta-Nova, the user has access to.
+
+For all catalog settings, see the regular +catalog+ control.
+
+h5. Default Block-elements
+
+|_. Block |_. Label |_. container |_. Settings |
+| +spacer+ | Spacer | false | none |
+| +group+ | Group | true | none |
+| +conditionalcontainer+ | Conditional container | true | none (contents are only active when the checked element has the expected value) |
+| +sectionheadline+ | Headline | false | +text+ |
+| +text+ | Text | false | +text+ |
+
+NOTE: +container: true+ means the block can contain other elements (+group+, +conditionalcontainer+).
+
+h6. +spacer+ block
+
+Simply an empty block, used to create space between elements.
+
+h6. +group+ block
+
+A simple container element, which groups elements together. If the group has a display condition which isn't met, all child-elements won't be rendered either.
+This can be used to manage element conditions in a more central way, Instead of having to set the condition on each element individually.
+
+h6. +text+ block
+
+A simple block element which renders the text content which was entered.
+
+|_. Setting |_. type |_. Description |
+| +text+ or +value+ | string or translation | The text that should be rendered. May be simple text or HTML (use `richContent: true`). |
+
+h6. +conditionalcontainer+ block
+
+Deprecated: The same as +group+, just here for compatibility reasons. Use +group+ if possible.
+
+h6. +sectionheadline+ block
+
+Mainly the same as +text+, except that the text content is always escaped (i.E. no richContent), and put in a +<h2>+ element.
+
+Deprecated: Use the +text+ block instead with custom formatting.
+
+h4. Element settings
+
+A setting is simply a property of the element, which an editor can change.
+Settings are defined on each element configuration individually and can be configured to your projects needs.
+
+The following setting types are available
+
+|_. Type |_. Value |_. Description |
+| +string+ | string | Depending on the configuration, a simple text input, a textarea, or a rich-content input via aloha editor. |
+| +translation+ | translation object | Similar to +string+, but each language may have a different string content. |
+| +number+ | number (float) | Accepts any numeric value including decimals. |
+| +integer+ | number (integer) | Accepts whole numbers only. |
+| +boolean+ | boolean | A checkbox that yields +true+ or +false+. |
+| +date+ | ISO date string | A date picker. Set +allowTime: true+ to also allow time selection. |
+| +select+ | string (one of options) | A dropdown with a fixed list of options defined in the configuration. Set +multiple: true+ to allow selecting more than one value. |
+| +options+ | list of key-value pairs | Lets the form editor define the selectable options at authoring time. |
+| +user+ | unknown | Select which has the +userOptions+ from the form-type as options. The option itself references a user value from the frontend, like the email address or the first/last name. |
+| +reference+ | CMS object reference | A picker for referencing CMS objects (pages, files, or images). |
+
+Each setting has the following properties:
+
+|_. Property |_. Type |_. Required |_. Description |
+| +id+ | string | true | ID of the setting. If no +propertyPath+ is used, then this ID is the property name the value gets stored in, in the element. |
+| +labelI18n+ | translation-object | true | The name of the setting in multiple languages, which is seen only by the editor. |
+| +descriptionI18n+ | translation-object | false | A description for the setting. |
+| +required+ | boolean | false | If the editor is required to fill out this property. |
+| +backend+ | boolean | false | Only available in +control+ elements. If +true+, then the value is not stored in the `ui-schema`, but in the `schema`, and can be read/used in the Plugin. Additionally, the value will then not be sent to the frontend/formgen. |
+| +propertyPath+ | string | false | The path, relative to the element root, where the property should be saved instead. Default is `formGridOptions.<id>` |
+| +condition+ | condition object | false | If set, the setting will only be *visible* when the condition is met. |
+
+h5. +string+ setting
+
+String settings have the following additional properties
+
+|_. Property |_. Type |_. Required |_. Description |
+| +multiline+ | boolean | If the input should be rendered as textarea instead, to allow multiline text. |
+| +multiple+ | boolean | If the editor should be able to enter multiple string values. A list of inputs will be rendered in that case. |
+| +richContent+ | boolean | false | If `true`, then the input will be rendered as a contenteditable with Aloha. Implicitly allows multiline content. |
+| +aloha+ | object | false | Configuration for aloha. Only used when +richContent+ is +true+. See section Aloha Configuration for more information. |
+
+h5. +translation+ setting
+
+Shares the properties with +string+, except that there's no +multiple+ property.
+
+h5. +date+ setting
+
+Date settings have the following additional properties
+
+|_. Property |_. Type |_. Required |_. Description |
+| +allowTime+ | boolean | false | If the date-picker should allow time input/picking as well. |
+
+h5. +select+ settings
+
+Select settings have the following additional properties
+
+|_. Property |_. Type |_. Required |_. Description |
+| +options+ | list of select options | true | The options which are displayed/selectable for the editor. |
+| +multiple+ | boolean | false | If the editor is able to select multiple options. |
+
+h5. +options+ setting
+
+Option settings have the following additional properties
+
+|_. Property |_. Type |_. Required |_. Description |
+| +multiple+ | boolean or 'editable' | false | If the select in the frontend can select multiple options. If set to 'editable', then the editor can set the multiple flag. |
+
+h5. +user+ setting
+
+User settings have the following additional properties
+
+|_. Property |_. Type |_. Required |_. Description |
+| +multiple+ | boolean | false | If the editor is able to select multiple options. |
+
+h5. +reference+ setting
+
+|_. Property |_. Type |_. Required |_. Description |
+| +referenceTypes+ | list of 'page', 'file', 'image', 'folder' | true | The item types that are allowed to be selected/picked from the CMS. |
+| +publishAs+ | 'content', 'url', or 'meshlink' | true | How the resolved reference should be published to mesh. +content+ publishes the item content (i.E. rendered page); +url+ publishes the URL to the item reachable from the frontend; and +meshlink+ renders the resolvable mesh link. |
+| +allowedMarkupLanguageIds+ | list of numbers | false | List of markup-ids, where pages have templates with matching markup-ids are allowed to be picked. |
+| +multiple+ | boolean | false | If the editor is able to select multiple references. |
+| +onlyInCurrentNode+ | false | If the editor may only pick items from the current node from the form. |
+| +titleI18n+ | translation object | false | Custom title for the repository browser. |
+
+h4. Setting conditions
+
+Settings may not always be relevant, and can be hidden with conditions. Only when a condition resolves to +true+, the setting may be displayed.
+Conditions are identified by their unique property key, to make writing/reading them as straight forward as possible.
+
+Conditions are separated into two groups:
+
+* Modifier Condition
+* Source Condition
+
+Modifier conditions are the three basic operations +or+, +and+, and +not+.
+Meanwhile, source conditions require a source element, from where the value is get and to match the actions against.
+
+The list of source conditions and a description on how to use them:
+
+|_. Condition |_. Needs source |_. Value Type |_. Description |
+| +or+ | false | list of conditions | Evaluates to true, if any of the provided conditions are true |
+| +and+ | false | list of conditions | Evaluates to true, only if all provided conditions are true |
+| +not+ | false | condition | Evaluates to true, if the provided condition is false |
+| +equals+ | true | anything |If the source value equals exactly the provided value. |
+| +matches+ | true | string | If the source value matches the provided regex string. |
+| +contains+ | true | anything | If the source value (has to be a list) contains the provided value. |
+| +includedIn+ | true | list of anything | If the source value is contained within the provided list. |
+| +biggerThan+ | true | number | If the source value is bigger than the provided value. |
+| +lowerThan+ | true | number | If the source value is lower than the provided value. |
+| +empty+ | true | boolean | Checks if the source value is empty, and then checks if the provided value is the same. |
+| +visible+ | true | boolean | Checks if the source value (usually a control source) is visible, and then checks if the provided value is the same. |
+| +disabled+ | true | boolean | Checks if the source value (usually a schema source) is disabled, and checks if the provided value is the same. |
+
+h5. Source Types
+
+Sources are also defined by the unique key, and work the following way
+
+|_. Type |_. Description |
+| +setting+ | ID of the setting, which manages the value. Will check the settings +backend+ and +propertyPath+ to get the element value. |
+| +schema+ | JSON path to the property in the schema of the element. Only works in +control+ elements. |
+| +control+ | ID of another control within the form to load/check against. |
+
+h5. Conditions Example
+
+<shell>
+condition:
+  and:
+    - not:
+        equals: true
+        source:
+          setting: foobar1
+    - or:
+      - empty: true
+        source:
+          control: otherSetting
+      - biggerThan: 15
+        source:
+          control: attendeeCount
+</shell>
+
+h4. Aloha Configuration
+
+Configuration for +string+ or +translation+ settings, which only works when the +richContent+ (aka. AlohaEditor itself) is enabled for the setting. The Configuration is then applied to that single setting alone.
+
+|_. Field |_. Value |_. Description |
+| +plugins+ | list of strings | The plugins that are enabled for this setting. The following Plugins are *always* loaded and cannot be disabled: +common/ui+, +common/contenthandler+, +common/block+. On default, the following Plugins are applied if none are configured: +common/format+, +common/link+. |
+| +settings+ | object | Arbitrary settings for Aloha. Please see the "Configuration of Aloha Settings":aloha_gcn_settings.html page for more information. |
+
+Example configuration:
+
+<shell filename="conf/forms.yml">
+text:
+  labelI18n:
+    de: "Text"
+    en: "Text"
+  settings:
+  - type: "translation"
+    id: "text"
+    labelI18n:
+      de: "Text"
+      en: "Text"
+    required: false
+    backend: false
+    richContent: true
+    aloha:
+      plugins:
+        - "common/format"
+        - "common/link"
+        - "common/list"
+      settings:
+        plugins:
+          format:
+            config: ['b', 'i']
+</shell>
+
+h4. Form flows
+
+A form flow controls the sequence of screens a user is guided through when filling out a form — for example the form itself, an optional summary, and a final success screen. Each form type defines its flows in the +flows+ list of the General configuration; the first entry is used as the default. A flow determines which screens are shown, which buttons appear on each screen, and which additional variables are passed to the screen components.
+
+This allows the form process to be tailored to a project's needs, for example:
+
+* Show or hide individual buttons (such as a print button on the summary screen).
+* Pass variables that enable additional behaviour in a screen (such as showing detailed information in the summary).
+* Add or remove screens, for example by inserting a summary step before submission.
+
+The example configuration below defines two flows for the +generic+ type: a +default+ flow leading straight from the form to the success screen, and a +with_summary+ flow that inserts a summary screen in between.
+
+A flow has the following top-level fields:
+
+|_. Field |_. Type |_. Required |_. Description |
+| +id+ | string | required | Unique identifier of the flow. Used to reference the flow from a form. |
+| +labelI18n+ | translation map | required | Human-readable name of the flow, keyed by language code. |
+| +nameTranslationKey+ | string | optional | Translation key for the flow name. |
+| +steps+ | list of step configs | required | The ordered sequence of screens the user is guided through. See the step fields below. |
+
+Each entry in +steps+ describes a single screen:
+
+|_. Field |_. Type |_. Required |_. Description |
+| +reactClass+ | string | required | The screen component to render, e.g. +FormScreen+, +SummaryScreen+ or +SuccessScreen+. The available components are provided by FormGen. |
+| +buttonLabelTranslationKey+ | string | optional | Translation key for the label of the button on the preceding screen that navigates to this step. |
+| +nameTranslationKey+ | string | optional | Translation key for the screen title. |
+| +descriptionTranslationKey+ | string | optional | Translation key for the screen description. |
+| +buttons+ | list of button configs | optional | The navigation buttons shown in the screen footer. See the button fields below. |
+| +variables+ | list of key-value pairs | optional | Additional values passed to the screen component as properties. Each entry has a +name+ and a +value+ (e.g. +showDetails: true+ to let the summary screen show detailed information, or +showProgress+ to control the progress display — see below). |
+
+Each entry in +buttons+ describes a single footer button:
+
+|_. Field |_. Type |_. Required |_. Description |
+| +reactClass+ | string | required | The button component to render, e.g. +SubmitButton+, +CancelButton+, +PreviousPageButton+, +NextPageButton+, +PrintPdfButton+ or +DetailInfoButton+. The available components are provided by FormGen. |
+| +labelTranslationKey+ | string | optional | Translation key for the button label. |
+| +mobileDisabled+ | boolean | optional | If +true+, the button is hidden on mobile devices (where the button component supports it). |
+
+h5. Flow variable +showProgress+
+
+The progress display shows the user which page of a multi-page form is currently open and allows navigating between the already visited pages. It is rendered above the form on the web platform and only if the form actually has pages.
+
+Whether the progress display is shown can be controlled per flow step with the +showProgress+ variable:
+
+|_. Variable |_. Type |_. Default |_. Description |
+| +showProgress+ | boolean | see below | If +true+, the progress display is shown on this step. If +false+, it is hidden. If the variable is not configured, the screen type decides (see below). |
+
+The value may be configured either as a real boolean (+true+ / +false+) or as the string +"true"+ / +"false"+; both are interpreted the same way. Any other value is treated as if the variable were not configured at all.
+
+If +showProgress+ is *not* configured, the screen type of the step decides:
+
+|_. +reactClass+ |_. Progress display by default |
+| +FormScreen+ | shown |
+| +SummaryScreen+ | shown |
+| +PaymentScreen+ | shown |
+| all other screens (e.g. +SuccessScreen+) | hidden |
+
+If +showProgress+ *is* configured, only the configured value counts — the screen type is then not taken into account.
+
+The following example shows a success screen that — contrary to the default — also displays the progress:
+
+<div class="code_container">
+<pre class="brush: plain; toolbar: false; gutter: true;">
+- buttonLabelTranslationKey: form_flow_btn_success
+  reactClass: SuccessScreen
+  nameTranslationKey: form_flow_name_success
+  descriptionTranslationKey: form_flow_desc_success
+  buttons: []
+  variables:
+    - name: showProgress
+      value: true
+</pre>
+</div>
+
+NOTE: +showProgress+ only affects the progress display itself. The header of a form opened as a dialog (including its back button) is always rendered and is not influenced by this variable.
+
+NOTE: The screen and button components available as +reactClass+ values are provided by *FormGen* and can be extended per project. For configuring and customizing these components see the "FormGen Customizing Guide":formgen.html.
+
+NOTE: Assign at least one language to the node where you will be creating forms.
+
+After this, the forms feature must be enabled for every node that should contain forms. Enable it per node in the *Node Management* tab of the administration interface, under the node's *Features*.
+
+Once the feature is enabled for a node, an additional *Form Types* tab appears for that node. Use it to assign the form types that should be available when creating forms in that node.
+
+h3. Translations
+
+Translations can be managed in two ways: Globally or per Type.
+Usually all common translations are managed globally, and if a type has some additional translations, then these are added per type.
+
+Configuration for these is quite simple: Create a property `formGenTranslations` under `forms` for a global configuration, and `formGenTranslations` under `forms.types.<type>` for a type specific one.
+
+Each key under the `formGenTranslations` property is then the translation key, and has a translation object as a default value. The translations themself are managed via a custom tool in the CMS.
+
+Example:
+
+<shell filename="conf/forms.yml">
+forms:
+  formGenTranslations:
+    global_translation_key_1:
+      de: Beispiel 1
+      en: Example 1
+    global_translation_key_2:
+      de: Beispiel 2
+      en: Example 2
+  types:
+    generic:
+      formGenTranslations:
+        generic_type_translation_key_1:
+          de: Typen specifische übersetzung 1
+          en: Type specific translation 1
+</shell>
+
+h3. Implementation using Handlebars
+
+For including forms into pages using Handlebars, a tagtype with two parts needs to be created:
+
+!images/gcn_dialogs/form_hbs_tagtype.png!
+
+The Handlebars Part should have the following template:
+
+<div class="code_container">
+<pre class="brush: plain; toolbar: false; gutter: true;">
+{{#gtx_form cms.tag.parts.form type="java"}}
+    {{{this}}}
+{{else}}
+    {{gtx_i18n de="Kein Formular ausgewählt" en="No Form selected"}}
+{{/gtx_form}}
+</pre>
+</div>
+
+For details on the +gtx_form+ helper see "Rendering with Handlebars":handlebars.html#gtx_form
+
+h3. Rendering and customizing with FormGen
+
+The forms configured above are rendered by *FormGen*. FormGen offers a wide range of configuration and customization options, such as custom form controls, lifecycle hooks, navigation buttons, overlays, screens and styling.
+
+For all details on configuring and customizing the renderer, see the "FormGen Customizing Guide":formgen.html
+
+NOTE: Customizations will not be available when previewing a form directly - only when embedded in a page. The direct preview in the CMS uses a bundled version of FormGen. You can however specify the +FORMGEN_PATH+ Environment Variable to the directory where a built FormGen is located to override it.
+
+h3. E-mail template pages
+
+It is possible to create special pages in the CMS, which can be used as templates for mails, which are sent by forms (either admin mails or user mails).
+
+The pages must be created from templates, which use the markup language +Forms e-mail template+ and must render valid "Handlebars":https://handlebarsjs.com/ code.
+
+Those pages will be excluded from publishing, they will neither be written into the filesystem nor into a Content.Repository.
+
+h3. Forms Frontend Rendering
+
+Forms are rendered on Client side with a provided React Component (=FormGen). The compiled JavaScript Application need to be part of your Portal so the Application can be included by the Forms-Directive.
+You have two Options:
+
+* Download Pre-Compiled Ready to Use React-App and include in your portal
+* Download Formgen Source Code and add it to your project for customization (build step required)
+
+h4. Use pre-compiled Frontend FormGen
+
+You can download the builded Files from our Artifact-Server : https://repo.gentics.com/repository/maven-releases/com/gentics/cms/formgen/6.5.x/formgen-6.5.x.zip (use the correct CMS Version number)
+Or download it via maven dependency Plugin 
+
+<shell>
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-dependency-plugin</artifactId>
+    <version>3.6.1</version>
+    <executions>
+      <execution>
+        <id>copy-formgen</id>
+        <phase>prepare-package</phase>
+        <goals>
+          <goal>unpack</goal>
+        </goals>
+        <configuration>
+          <artifactItems>
+            <artifactItem>
+              <groupId>com.gentics.cms</groupId>
+              <artifactId>formgen</artifactId>
+              <version>6.5.0</version>
+              <type>zip</type>
+              <outputDirectory>/formgen</outputDirectory>
+            </artifactItem>
+          </artifactItems>
+        </configuration>
+      </execution>
+    </executions>
+  </plugin>
+</shell>
+
+Place the downloaded Files in /portal/public/cpa/formgen (portal-php) or /portal/data/static/cpa/formgen (portal-java)
+
+h4. Download Sources & building
+
+You can download the source Files from our Artifact-Server : https://repo.gentics.com/repository/maven-releases/com/gentics/cms/formgen/6.5.x/formgen-6.5.x-src.zip (use the correct CMS Version number)
+Or also download it via maven dependeny Plugin (see step nefore), just add the <classifier>src</classifier> to the artifactItem
+
+You can now customize FormGen (see the "FormGen Customizing Guide":formgen.html).
+
+h5. Building
+
+For Building you need node and npm.
+In the extracted source Folder run
+
+<shell>
+npm ci
+// and in apps/andp-ma-formgen
+npm run build
+//you get a dist/_expo/ containing the builded Formgen
+//Place it in
+//portal-java: /portal/data/static/cpa/formgen/_expo
+//portal-php:  /portal/public/cpa/formgen/_expo
+</shell>
+
+
+h3. Redirect After Submission (successUrl)
+
+A successUrl can be configured in the form properties to specify the page the user should be navigated to after successfully submitting a form.
+
+h4. Default Behavior
+
+Because flows are individually configurable and an automatic redirect would restrict the flow execution, the navigation does not happen automatically. Instead, a button is displayed on the success screen whenever a successUrl is configured. The user must actively trigger the redirect by clicking the button.
+
+This behavior is built into the default flow and requires no additional implementation.
+
+h4. Behavior With Customized Flows
+
+If the flow is overridden or extended for a specific project, the default behavior no longer applies. In this case, the redirect logic must be implemented explicitly. Two options are available:
+
+* *Custom Elements:* The logic for evaluating the successUrl and triggering the navigation is implemented directly within the custom element.
+* *Hook postSubmitForm:* The redirect is handled via the postSubmitForm hook, which is called after the form has been submitted successfully.
+
+In both cases, ensure that the successUrl is read from the form data and that the navigation is executed at the correct point in the flow.
+
+NOTE: The redirect handling for customized flows — custom elements or the +postSubmitForm+ hook — is implemented and configured in *FormGen* (see the "FormGen Customizing Guide":formgen.html).
+
+.

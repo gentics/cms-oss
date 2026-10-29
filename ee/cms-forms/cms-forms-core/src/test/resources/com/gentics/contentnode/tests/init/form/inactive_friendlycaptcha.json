@@ -1,0 +1,16 @@
+{
+	"email": "",
+	"mailsubject_i18n": {},
+	"mailsource_pageid": 0,
+	"mailsource_nodeid": 0,
+	"mailtemp_i18n": {},
+	"templateContext": "",
+	"type": "GENERIC",
+	"elements": [
+		{
+			"name": "friendlycaptcha",
+			"type": "friendlycaptcha",
+			"active": false
+		}
+	]
+}

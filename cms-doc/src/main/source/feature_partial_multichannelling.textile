@@ -1,0 +1,23 @@
+h2. Partial Multichannelling
+
+The feature +Partial Multichannelling+ extends the feature +Multichannelling+ with the option to localize pages partially.
+In a partially localized page, selected root tags can be localized, all other root tags will be inherited.
+
+endprologue.
+
+h3. Activation
+
+The Feature +Partial Multichannelling+ can be activated by adding the line
+
+<shell filename="conf/features.yml">
+feature:
+  partial_multichannelling: true
+</shell>
+
+to the configuration file +/cms/conf/features.yml+.
+
+NOTE: After changing the configuration file, the CMS must be restarted or the configuration must be reloaded via the admin UI for the changes to fully take effect.
+
+h3. Activation per Node
+
+After the feature has been activated globally, it can be activated for individual nodes and channels.

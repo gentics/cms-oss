@@ -1,0 +1,39 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubject": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplate": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {}
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "id": "spacer_1ab13d3c_4e4e_46f2_b9d8_31e6811a12c5",
+                        "type": "property",
+                        "label": {},
+                        "description": {},
+                        "formGridOptions": {
+                            "type": "spacer"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

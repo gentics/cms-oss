@@ -1,0 +1,196 @@
+
+Erstellen und Bearbeiten von Seiten und Inhalten
+
+
+
+<p>In Gentics CMS können Sie Seiten und deren Inhalte ohne technische Programmierkenntnisse erstellen und bearbeiten.</p><p>Je nach Online-Projekt können das sein:</p><ul class="aloha-list-disc"><li>Startseite</li><li>Inhaltsseiten</li><li>Blog-Post, etc.</li></ul><p>Welche Inhalte Sie erstellen und verwalten können, variiert je nach&nbsp;Online-Projekt. In diesem Handbuch beschreiben wir, wie Sie allgemeine Seiten und deren Inhalte erstellen und bearbeiten können.</p><h2 id="heading_Erstellen_einer_neuen_Seite"><span role="annotation">1&nbsp;</span>Erstellen einer neuen Seite<br></h2><p>Durch den Klick auf den Button “+ Seite” (siehe Abbildung unten, rote Markierung) erstellen Sie im Seitenbereich eine neue Seite. Diese wird im aktuellen Ordner (erkennbar an der Breadcrumb-Navigation; siehe Abbildung unten, blaue Markierung bzw. grüne Markierung) erstellt.</p>
+
+    <figure data-imageid="404" data-tagname="manimage1" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/404?sid=58&nodeId=3&fingerprint=8adc04b46a33bea99c7e9ff1bfea7f7d" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Im darauffolgenden Dialog, müssen Sie einen Namen und Dateinamen für die neue Seite eingeben. Sie können darüber hinaus eine Beschreibung für die Seite angeben. Wenn der Dateiname von Ihnen nicht gewählt wird, dann wird dieser automatisch vom System gesetzt.&nbsp;<br></p><h3 id="_erstellen_einer_neuen_seite"><a target='_blank' rel='noopener noreferrer' class='' data-gentics-gcn-url='https://www.gentics.com/Content.Node/guides/manuals/user-manual/' data-gentics-gcn-anchor='_erstellen_einer_neuen_seite' href="https://www.gentics.com/Content.Node/guides/manuals/user-manual/#_erstellen_einer_neuen_seite"></a><a target='_blank' rel='noopener noreferrer' class='' data-gentics-gcn-url='https://www.gentics.com/Content.Node/guides/manuals/user-manual/' data-gentics-gcn-anchor='_erstellen_einer_neuen_seite' href="https://www.gentics.com/Content.Node/guides/manuals/user-manual/#_erstellen_einer_neuen_seite"></a></h3>
+
+    <figure data-imageid="284" data-tagname="manimage2" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/284?sid=58&nodeId=3&fingerprint=d2f3ea880a9dbdf9a4d671789060fbae" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Sie müssen auch eine Vorlage für die Seite auswählen. Die Wahl der Vorlage bestimmt die Art und Struktur der Seite, die Sie erstellen. Welche Vorlagen Ihnen zur Verfügung stehen sind vom jeweiligen Online-Projekt abhängig.</p><p>Typische Vorlagen-Arten für Seiten sind</p><ul class="aloha-list-disc"><li>Vorlagen für Inhaltsseiten</li><li>Vorlagen für Startseiten</li><li>Vorlagen für Übersichtsseiten</li></ul><p>Sollte eine Vorlage im aktuellen Ordner nicht zur Verfügung stehen, so haben Sie die Möglichkeit über den Link "Mit Vorlage verknüpfen" einen Dialog zu öffnen und die fehlende Vorlage mit dem aktuellen Ordner zu verknüpfen.</p><p>Im Feld "Priorität" (siehe untenstehende Abbildung) können Sie jeder Seite eine Ordnungszahl zuweisen. In manchen Online-Projekten wird diese Ordnungszahl für die Sortierung von Seiten in Übersichten verwendet. Die Ordnungszahl kann entweder direkt in das Feld "Priorität" eingetragen werden oder über den Slider daneben eingestellt werden.</p>
+
+    <figure data-imageid="362" data-tagname="manimage3" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/362?sid=58&nodeId=3&fingerprint=040d3888fdaa294d8186058ede87a980" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Nach Klick auf den Button “OK” wechselt Gentics CMS in den Bearbeitungsmodus. Dieser ist standardmäßig im Vollbildmodus.</p>
+
+    <figure data-imageid="382" data-tagname="manimage4" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/382?sid=58&nodeId=3&fingerprint=5a5df89f6e8b255881e9c8ab3d53a508" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h2 id="heading_Vorschaumodus_als_Vollbild"><span role="annotation">2&nbsp;</span>Vorschaumodus als Vollbild<br></h2><p>Klickt man auf eine bereits bestehende Seite, wird diese im Vorschaumodus gezeigt. Sie können den Vorschaumodus auch als Vollbild nutzen. Wählen Sie dazu im Seiten-Kontextmenü die Option “Vollbild” (siehe untenstehende Abbildung, grüne Markierung) aus.</p>
+
+    <figure data-imageid="370" data-tagname="manimage5" title="Vorschau Vollbildmodus">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/370?sid=58&nodeId=3&fingerprint=b96cb27c802417b80c779dc39b75d568" alt="Vorschau Vollbildmodus" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Zum Beenden des Vollbildmodus gehen Sie wieder in das Seiten-Kontextmenü und wählen die Option “Vollbild beenden” aus.</p>
+
+    <figure data-imageid="376" data-tagname="manimage6" title="Vorschau Vollbild Beenden">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/376?sid=58&nodeId=3&fingerprint=d52b09191a32366b1c930363ca733c12" alt="Vorschau Vollbild Beenden" style="max-width: 100%; height: auto;">
+    </figure>
+<h2 id="heading_Bearbeiten_einer_bestehenden_Seite"><span role="annotation">3&nbsp;</span>Bearbeiten einer bestehenden Seite<br></h2><p>Bereits bestehende Seiten können Sie jederzeit bearbeiten. Dazu klicken Sie im Seitenbereich auf das Seiten-Kontextmenü und wählen den dort den ersten Menüpunkt “Bearbeiten” (siehe untenstehende Abbildung, rote Markierung) aus.</p>
+
+    <figure data-imageid="369" data-tagname="manimage7" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/369?sid=58&nodeId=3&fingerprint=ffd38083a5439991e78dcd862f71cfee" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Nach dem Klick auf die Option&nbsp;“Bearbeiten”&nbsp;wechselt&nbsp;Gentics&nbsp;CMS direkt in den Bearbeitungsmodus der gewählten Seite. Der Bearbeitungsmodus wird im Kopfbereich der Seite mit dem Text "EDIT MODE" gekennzeichnet und öffnet sich standardmäßig im Vollbildmodus, um eine optimale Bearbeitung zu ermöglichen.<br></p>
+
+    <figure data-imageid="394" data-tagname="manimage8" title="Bearbeitunsmodus">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/394?sid=58&nodeId=3&fingerprint=061d4ab0d387bb3460ab120bd0df1c13" alt="Bearbeitunsmodus" style="max-width: 100%; height: auto;">
+    </figure>
+<h2 id="heading_Gentics_CMS_Bearbeitungsmodus"><span role="annotation">4&nbsp;</span>Gentics CMS Bearbeitungsmodus<br></h2><p>Neue und bestehende Seiten und deren Inhalte bearbeiten und erstellen Sie im Gentics CMS Bearbeitungsmodus. Sie können entweder eine neue Seite durch Klick auf den Button “+ SEITE” erstellen, oder durch Klick auf “Bearbeiten” im Seiten-Kontextmenü eine bestehende Seite (in untenstehender Abbildung rot markiert) bearbeiten.</p>
+
+    <figure data-imageid="390" data-tagname="manimage9" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/390?sid=58&nodeId=3&fingerprint=dc77576d76f85e40f6b0386140e7f667" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Im Gentics CMS Vorschaumodus können Sie durch Klick auf den Button mit dem Stift-Symbol(siehe untenstehende Abbildung, blaue Markierung) auch in den Bearbeitungsmodus wechseln.</p>
+
+    <figure data-imageid="372" data-tagname="manimage10" title="Bearbeitungsmodus Schaltflächen">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/372?sid=58&nodeId=3&fingerprint=b27ea766417a600ee359d115f2e7e6df" alt="Bearbeitungsmodus Schaltflächen" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Die orange markierten und nummerierten Bereiche der untenstehenden Abbildung beziehen sich auf die folgenden verfügbaren Elemente und Funktionen im Bearbeitungsmodus:</p><p>1: Hier sehen Sie anhand des Seitennamens, welche Seite Sie gerade bearbeiten<br></p><p>2: Status der Seite (in der untenstehende Abbildung ist diese Seite im Status offline &amp; “BEARBEITET”)<br></p><p>3: Mit dem Button “SPEICHERN” speichern Sie die Seite ohne sie zu veröffentlichen</p><p>4: Im Kontextmenü des Bearbeitungsmodus können Sie die Seiten-Eigenschaften einsehen und verändern, Versionen der Seite einsehen und wiederherstellen, das Zeitmanagement der Seite einsehen und aktivieren, sowie die Seite veröffentlichen oder vom Server nehmen. Zudem können Sie hier den Vollbildmodus verlassen oder zur Vorschau wechseln.</p><p>5: Beenden des Bearbeitungsmodus und Schließen der Seitenansicht<br></p><p>6: Jeder Bereich der Seite, in denen Sie Inhalte erstellen und bearbeiten können, ist durch farbige Rahmen markiert</p>
+
+    <figure data-imageid="374" data-tagname="manimage11" title="Bearbeitungsmodus Erklärung">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/374?sid=58&nodeId=3&fingerprint=b2eade65e9c589496c870778b688fb4d" alt="Bearbeitungsmodus Erklärung" style="max-width: 100%; height: auto;">
+    </figure>
+<h2 id="heading_Aloha_Editor_Menue"><span role="annotation">5&nbsp;</span>Aloha Editor Menü<br></h2><p>Um Inhalte wie Texte, Bilder, Videos etc. in den bearbeitbaren Bereichen einer Seite einfach zu erstellen oder zu bearbeiten, stellt Ihnen Gentics CMS als Werkzeug den Aloha Editor zur Verfügung.<br></p><p>An folgendem Beispiel sehen Sie die Möglichkeiten, die Ihnen Aloha Editor in seinem Menü anbieten kann. Diese Möglichkeiten sind sehr flexibel einstell- und erweiterbar und ist von der Ausgestaltung Ihrer Gentics CMS Installation bzw. Ihres Online-Projekts abhängig.</p><ul class="aloha-list-disc"><li>Formatieren und Einfärben von Text und Texthintergrund</li><li>Einfügen eines Links bzw. Verweises auf interne Seiten, interne Dateien oder externe URLs</li><li>Einfügen von Listen - nummeriert, mit Bullet-Points&nbsp; Definitionen-Liste</li><li>Formatieren von Absätzen &amp; Überschriften</li><li>Einfügen von Content-Elementen</li></ul><p><br></p>
+
+    <figure data-imageid="395" data-tagname="manimage13" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/395?sid=58&nodeId=3&fingerprint=855492921e74e5723f79e38ece652d2b" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h3><span role="annotation">5.1&nbsp;</span>Formatieren von Text</h3><p><br>Um einen Text zu formatieren, markieren Sie diesen und klicken auf einen der Buttons für Formatierungen Kursiv oder Fett (siehe untenstehende Abbildung, rote Markierung). Sie sehen die Änderung der Formatierung sofort.</p>
+
+    <figure data-imageid="375" data-tagname="manimage14" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/375?sid=58&nodeId=3&fingerprint=06af33fb1cd1bcb37ab5518a7033701c" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h3 id="heading_Einfuegen_von_einem_externen_Link"><span role="annotation">5.2&nbsp;</span>Einfügen von einem externen Link<br></h3><p>Markieren Sie den Text bzw. Textteil den Sie verlinken wollen. Klicken Sie dann auf das Link-Icon (siehe untenstehende Abbildung, rote Markierung). Nach Klick auf das Link-Icon öffnet sich der Dialog zum Setzen der URL und anderen Link-Einstellungen. Sie haben Sie die Wahl einen Link zu einer externen Website, einer Inhaltsseite in Gentics CMS, einer bestimmten Stelle in einer Inhaltsseite in Gentics CMS (d.h. einen Anker), einem Bild oder einer Datei zu setzen.<br></p>
+
+    <figure data-imageid="406" data-tagname="manimage15" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/406?sid=58&nodeId=3&fingerprint=4b7d05b84e18a978e26166eeaad6ac3a" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Um einen externen Link zu setzen, schreiben Sie die jeweilige Webadresse (komplett mit http:// oder https://) in das entsprechende Textfeld (siehe untenstehende Abbildung rote Markierung). Zusätzlich sind der gewünschte Anker (Sprungmarke innerhalb der Seite), ob sich der Link in einem neuen Tab öffnen soll und die Link-Sprache einstellbar. Klick auf "Übernehmen" erstellt den Link.</p>
+
+    <figure data-imageid="381" data-tagname="manimage16" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/381?sid=58&nodeId=3&fingerprint=712b27eb4a042f9a9a68fc5096a0a815" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Um den externen Link zu entfernen (ohne den Text zu löschen), klicken Sie auf das aktive Link-Icon (in untenstehender Abbildung rot markiert). Ein Klick auf den Pfeil neben dem Link-Symbol öffnet den Bearbeitunsdialog erneut.</p>
+
+    <figure data-imageid="403" data-tagname="manimage19" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/403?sid=58&nodeId=3&fingerprint=9915dda5dc022f212c598afe45255ff9" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h3><span role="annotation">5.3&nbsp;</span>Auf eine Inhaltsseite, ein Bild oder eine Datei in Gentics CMS verlinken</h3><p>Markieren Sie den Text bzw. Textteil den Sie verlinken wollen. Klicken Sie dann wie beim Erstellen eines externen Links auf das Link-Icon. Nach Klick auf das Hand-Icon (in untenstehender Abbildung rot markiert) öffnet sich der Dialog für die Auswahl der Zielseite/-datei.</p>
+
+    <figure data-imageid="401" data-tagname="manimage20" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/401?sid=58&nodeId=3&fingerprint=0be2992d8df062841348fb15b7b32d2e" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>In der folgenden Dialogmaske können Sie zur gewünschten Seite navigieren und diese auswählen (in untenstehender Abbildung rot markiert). Gleichermaßen können Sie statt einer Seite über diesen Dialog ein Bild oder eine Datei als Link-Ziel auswählen.</p><p>Wenn Sie den Namen der Seite oder einen Teil von der Seite, die Sie verknüpfen möchten, wissen, können Sie den Suchbegriff in das Suchfeld (in untenstehender Abbildung blau markiert) eingeben und Gentics CMS schlägt automatisch eine Liste mit einer oder mehreren Seiten mit dem Suchbegriff vor.<br></p>
+
+    <figure data-imageid="363" data-tagname="manimage21" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/363?sid=58&nodeId=3&fingerprint=6bed110b84e1febca6173dc0e865c9c2" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Um die Verlinkung zu bestätigen, klicken Sie auf den Button “Auswählen”. Bestehende Links zu Inhaltsseiten in Gentics CMS funktionieren auch nach Verschieben oder Umbenennung der verlinkten Inhaltsseite.</p><p>Wird die verlinkte Inhaltsseite gelöscht, wird der Link automatisch entfernt. Der Text des Links bleibt bestehen. Wenn Sie der Ersteller der Inhaltsseite sind in welcher der Link erstellt wurde, werden Sie von Gentics CMS mit einer Nachricht informiert, dass die verlinkte Zielseite gelöscht wurde.</p><h3 id="heading_Einfuegen_von_Listen"><span role="annotation">5.4&nbsp;</span>Einfügen von Listen</h3><p>Es gibt zwei Möglichkeiten eine Liste zu erstellen, die jeweils zum gleichen Ergebnis führen.</p><ul class="aloha-list-disc"><li>Geben Sie alle Listenelemente ein, markieren Sie den eingegebenen Text und klicken Sie auf den Button der gewünschten Listenart (untenstehende Abbildung rot markiert).</li><li>Klicken Sie auf die Stelle im Text an der Sie eine Liste eingeben wollen, klicken dann auf den Button der gewünschten Listenart&nbsp;(untenstehende Abbildung rot markiert) und fangen an zu schreiben. Mit jedem Enter wird ein neuer Listeneintrag erzeugt. Wenn Sie keinen Listeneintrag mehr schreiben wollen, klicken Sie noch einmal auf den Button der Liste.</li></ul>
+
+    <figure data-imageid="387" data-tagname="manimage25" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/387?sid=58&nodeId=3&fingerprint=fc41df9b2cab3ff0d040ca3b581c5914" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h3 id="heading_Formatieren_von_Ueberschriften"><span role="annotation">5.5&nbsp;</span>Formatieren von Überschriften</h3><p>Sie können Ihre Texte durch das Einfügen und Formatieren von Überschriften strukturieren. Dafür markieren Sie den Text, der eine Überschrift werden soll und klicken auf den Button "Typography" (in untenstehender Abbildung rot markiert). Sie können dann aus den vorhandenen Möglichkeiten auswählen und dem markierten Text ein Überschriftformat zuweisen .</p>
+
+    <figure data-imageid="396" data-tagname="manimage26" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/396?sid=58&nodeId=3&fingerprint=362261e2c827770251fcc32e96984115" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h3 id="heading_Einfuegen_von_Content_Elementen"><span role="annotation">5.6&nbsp;</span>Einfügen von Content Elementen</h3><p>Zusätzlich zu Text können Sie auch andere Arten von Inhalten in Gentics CMS einfügen. Diese Inhalte sind vielfältig und je nach Online-Projekt unterschiedlich.</p><p>Allgemeine Inhalte sind über den "Einfügen"-Tab verfügbar:</p><ul class="aloha-list-decimal aloha-list-disc"><li>Sonderzeichen</li><li>Trennlinien</li><li>Tabellen</li><li>Inhaltverzeichnisse</li></ul>
+
+    <figure data-imageid="379" data-tagname="manimage12" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/379?sid=58&nodeId=3&fingerprint=53de58e14af5fb3337de0ae1b86c0e96" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Gentics CMS stellt auch spezielle Content Elemente (sogentannte Tags) zur Verfügung. Um einen Tag einzufügen, klicken Sie im Text an die Stelle, an der Sie den Tag einfügen wollen und klicken dann im Aloha Editor Menü auf den “Tagtypen”-Reiter (in untenstehender Abbildung rot markiert).</p><p>Dort sehen Sie die Liste der verfügbaren Tag-Kategorien und ein Klick auf den Pfeil öffnet die Liste der Tags innerhalb der Kategorie&nbsp;(in untenstehender Abbildung blau markiert). Durch Klick auf den gewünschten Tag wird dieser an der aktuellen Stelle im Text eingefügt.</p>
+
+    <figure data-imageid="367" data-tagname="manimage29" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/367?sid=58&nodeId=3&fingerprint=096e6fac4da7048c2b98eb3e6919b8ee" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>An der Stelle, an der das Content-Element eingefügt wird, erscheinen der Platzhalter für den eingefügten Tag und dessen Icons zum Verschieben, Bearbeiten und Löschen&nbsp;(in untenstehender Abbildung rot markiert)</p>
+
+    <figure data-imageid="400" data-tagname="manimage30" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/400?sid=58&nodeId=3&fingerprint=f20dbb8d079c1483a90aa27316e6c024" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Der eingefügte Tag lässt sich durch Klicken und Ziehen auf das Pfeilsymbol verschieben. Ein Klick auf das blaue Stift-Symbol öffnet die Dialogmaske für die Einstellungen des jeweiligen Tags. Die genauen Informationen unterscheiden sich je nach Tag-Typ. Es kann dabei verpflichtende und optionale Felder geben.</p>
+
+    <figure data-imageid="399" data-tagname="manimage18" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/399?sid=58&nodeId=3&fingerprint=74c6b9b4057fa0e8b7ac1b3af5b4b55a" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Wird ein internes Objekt für die Befüllung des Tags benötigt, öffnet ein Klick auf das Ordner-Symbol den Dialog für die Objekt-Auswahl&nbsp;(in obenstehender Abbildung rot markiert), bzw. im Falle von Bildern oder Dateien öffnet ein Klick auf das Wolken-Symbol&nbsp;(in obenstehender Abbildung blau markiert) den Dialog um direkt eine Datei oder ein Bild von Ihrem Computer hochzuladen.</p>
+
+    <figure data-imageid="366" data-tagname="manimage31" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/366?sid=58&nodeId=3&fingerprint=58984b3cdeff6162b46ab0a67d9e4588" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Durch Klick auf das rote Mistkübel-Symbol wird ein eingefügter Tag wieder gelöscht.&nbsp;</p><p>Wenn Sie alle gewünschten bzw. benötigten Infos des Content-Elements eingegeben haben, bestätigen Sie das Einfügen durch Klick auf den “OK” Button am Ende der Dialogmaske</p><h3 id="heading_Einfuegen_von_Tabellen"><span role="annotation">5.7&nbsp;</span>Einfügen von Tabellen</h3><p>Sie können an jeder Stelle im bearbeitbaren Bereich Tabellen einfügen. Im "Einfügen"-Reiter&nbsp;(in untenstehender Abbildung rot markiert), öffnet ein Klick auf das Tabellen-Icon (in untenstehender Abbildung blau markiert) die Auswahl für die Tabellengröße (in untenstehender Abbildung grün markiert). Ziehen Sie die Maus über die Fläche um die gewünschte Anzahl an Spalten und Zeilen zu bestimmen. Durch Klick auf die Fläche wird eine Tabelle in der entsprechenden Größe eingefügt.&nbsp;In untenstehender Abbildung wird die Größe der einzufügenden Tabelle mit 3 Spalten und Zeilen festgelegt.</p>
+
+    <figure data-imageid="388" data-tagname="manimage32" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/388?sid=58&nodeId=3&fingerprint=4d04f04e9b06b8d77aa4448c363ceb91" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Sie können nach dem Einfügen einer Tabelle jederzeit die Spalten und Zeilen einfügen und löschen.</p><p>Wenn Sie Spalten bearbeiten wollen (Spalten löschen, Spalten einfügen, Spalten löschen Spalten als Tabellenkopf formatieren) markieren Sie diese zu bearbeitenden Spalten durch Mausklick (Position für Markierung der Spalte 1 in untenstehender Abbildung mit Pfeil markiert).</p><p>Mehrere Spalten markieren Sie mit Maus-Klick und gleichzeitig gedrückter Shift-Taste.</p><p>Nach Markierung haben Sie die folgenden Möglichkeiten der Spaltenbearbeitung:</p><ul class="aloha-list-disc"><li>Zeile oberhalb/unterhalb der Markierung einfügen&nbsp;(rote Markierung)</li><li>Spalte links/rechts der Markierung einfügen (blaue Markierung)</li><li>Zellen zusammenführen, zusammengeführte Zellen aufteilen, markierte Spalten/Zeilen löschen und markierte Spalten/Zeilen als Tabellen-Header formatieren (grüne Markierung)</li><li>Die Icons ganz links dienen zum Löschen der ganzen Tabelle, Einfügen einer Tabellenbeschreibung und Einfügen einer Tabellen-Zusammenfassung (violette Markierung)</li></ul>
+
+    <figure data-imageid="383" data-tagname="manimage34" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/383?sid=58&nodeId=3&fingerprint=6eb65d4b06cf88667f68381039c56800" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h2 id="heading_Vorschau_von_Seiten"><span role="annotation">6&nbsp;</span>Vorschau von Seiten<br></h2><p>Sie können während der Bearbeitung durch Klick auf den Button “Vorschau” (in untenstehender Abbildung rot markiert) die Seite in einer Vorschau ansehen. Dabei sehen Sie die Seite so wie sie ein Besucher Ihres Online-Projektes veröffentlicht sehen würde.</p><p>CMS-Hilfen wie die Markierung der bearbeitbaren Bereiche oder die Icons von Content-Elementen sind nicht sichtbar in der Vorschau (siehe untenstehende Abbildung).</p><p>Durch Klick auf “Seite bearbeiten” Button können Sie wieder in den Bearbeitungsmodus zurückkehren. Durch Klick auf das “Kreuz” Icon verlassen Sie sowohl Vorschau als auch Bearbeitungsmodus.</p>
+
+    <figure data-imageid="386" data-tagname="manimage39" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/386?sid=58&nodeId=3&fingerprint=05731c6c5b08236c1fba3991d1286f81" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h2 id="heading_Speichern_von_Seiten"><span role="annotation">7&nbsp;</span>Speichern von Seiten<br></h2><p>Wenn Sie Ihre Änderungen an einer Seite Speichern wollen, klicken Sie auf den Button “Speichern” (in untenstehender Abbildung, blaue Markierung).</p><p>Sie erhalten nach erfolgter Speicherung einen kurzen Hinweis eingeblendet, dass die Seite erfolgreich gespeichert wurde (siehe untenstehende Abbildung, rote Markierung). Diese Änderungen sind allerdings in ihrem Online-Projekt noch nicht veröffentlicht d.h. für dessen Besucher nicht sichtbar.</p><p>Der Hinweis enthält außerdem einen Link, um die Seite im Anschluss an das Speichern sofort zu “VERÖFFENTLICHEN”. Sie müssen also nicht extra das Kontextmenü öffnen, und dort den Menüpunkt “Veröffentlichen” wählen.</p>
+
+    <figure data-imageid="393" data-tagname="manimage40" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/393?sid=58&nodeId=3&fingerprint=302da879de6e0b383814b7379d4f23c2" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<h2 id="heading_Seiten_Eigenschaften_einsehen_und_veraendern"><span role="annotation">8&nbsp;</span>Seiten-Eigenschaften einsehen und verändern<br></h2><p>Wenn Sie im Kontextmenü Bearbeitungsmodus (siehe untenstehende Abbildungen, blaue Markierungen) den Punkt “Eigenschaften” wählen, können Sie alle allgemeinen und projektspezifischen Eigenschaften der Seite einsehen und bei Bedarf ändern.</p>
+
+    <figure data-imageid="391" data-tagname="manimage41" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/391?sid=58&nodeId=3&fingerprint=467297735c7c0423d5fd6e21857583eb" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+
+
+    <figure data-imageid="392" data-tagname="manimage42" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/392?sid=58&nodeId=3&fingerprint=3bb9e025e26857cab9ce08cd2e948ae5" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Im Reiter “Allgemein” (siehe untenstehende Abbildung, grüne Markierung) finden Sie den CMS-Namen der Seite, deren Dateinamen im Online-Projekt, die Beschreibung der Seite, die Vorlage auf der die Seite basiert sowie deren Sortier-Priorität. Diese Eigenschaften können Sie auch ändern. Diese Änderungen müssen dann per Klick auf den Button “Speichern” (siehe untenstehende Abbildung, rote Markierung) abgeschlossen werden. Die Seite ist nach den Änderungen im Status bearbeitet und muss veröffentlicht werden, damit die Änderungen wirksam werden.</p><p>Durch Klick auf das “Schließen”-Icon (siehe untenstehende Abbildung, pinke Markierung) kehren in die vorige Ansicht zurück. Wenn Sie Änderungen vorgenommen haben und diese noch nicht gespeichert haben, werden Sie beim Verlassen von Gentics CMS gefragt, ob Sie die Änderungen speichern oder verwerfen wollen.</p><p>Durch Klick auf das Kontextmenü (siehe untenstehende Abbildung, blaue Markierung), können Sie direkt in den Bearbeitungsmodus wechseln oder die Seite direkt veröffentlichen.</p>
+
+    <figure data-imageid="365" data-tagname="manimage43" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/365?sid=58&nodeId=3&fingerprint=0d6d0dd9483cc1fba4d75fc1b0fc9632" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Als nächstes finden Sie die Liste aller in dieser Seite verwendeten Content Elemente (“Tags” genannt, siehe untenstehende Abbildung, rote Markierung). Diese Information ist speziell für Entwickler interessant, die das Aussehen der Seiten in Gentics CMS bestimmen.</p>
+
+    <figure data-imageid="377" data-tagname="manimage44" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/377?sid=58&nodeId=3&fingerprint=55eea0744ff7732086300cd88d6d12fd" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Darunter können alle verfügbaren&nbsp;<i>projektspezifischen</i>&nbsp;Eigenschaften der Seite eingesehen, verändert und gespeichert werden (siehe untenstehende Abbildung, blaue Markierung). Gentics CMS zeigt Ihnen dabei optisch, welche der Eigenschaften befüllt sind (grüne Markierung). In mehrsprachigen Online-Projekten haben Sie hier die Möglichkeit, eine Änderung gleich auf alle Sprachvarianten anzuwenden (rote Markierung).</p>
+
+    <figure data-imageid="398" data-tagname="manimage45" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/398?sid=58&nodeId=3&fingerprint=18ecbbc5391d66ae66c41780acb09d32" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Diese projektspezifischen Eigenschaften sind je nach Online-Projekt unterschiedlich, weil sie Teil der Implementierung Ihres Projekts sind. Typische Beispiele dafür sind:</p><ul class="aloha-list-disc"><li>für welche Zielgruppe eine Seite gedacht ist</li><li>ob diese Seite in einer Seitenübersicht ausgeblendet werden soll</li></ul><p>Falls die Seite in mehreren Sprachvarianten verfügbar ist, werden Ihre Änderungen an den projektspezifischen Eigenschaften standardmäßig nur für die aktuelle Sprache gespeichert. Wenn Sie Ihre Änderungen auf alle Sprachvarianten anwenden möchten, wählen Sie den Button “Speichern und auf Sprachversionen vergeben”.</p><h2 id="heading_Versionen_der_Seite_einsehen_und_wiederherstellen"><span role="annotation">9&nbsp;</span>Versionen der Seite einsehen und wiederherstellen<br></h2><p>Die Informationen zu Seitenversionen, Vergleichen und Wiederherstellen von Seiten finden Sie&nbsp;<a target='_self' class='' data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='10007.34' data-gentics-aloha-object-online='true' data-gentics-gcn-anchor='' href="/alohapage?nodeid=3&amp;language=1&amp;sid=58&amp;real=newview&amp;realid=34">bei der Beschreibung des Seitenbereichs</a>.&nbsp;</p><h2 id="heading_Zeitmanagement_der_Seite_einsehen_und_veraendern"><span role="annotation">10&nbsp;</span>Zeitmanagement der Seite einsehen und verändern<br></h2><p>Die Informationen zu Zeitmanagement von Seiten und zeitgesteuertes Veröffentlichen von Inhalten finden Sie&nbsp;<a target='_self' class='' data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='10007.34' data-gentics-aloha-object-online='true' data-gentics-gcn-anchor='' href="/alohapage?nodeid=3&amp;language=1&amp;sid=58&amp;real=newview&amp;realid=34">bei der Beschreibung des Seitenbereichs</a>.</p><h2 id="heading_Seite_Veroeffentlichen"><span role="annotation">11&nbsp;</span>Seite Veröffentlichen<br></h2><p>Wenn Sie im Bearbeitungsmodus Kontextmenü den Punkt “Veröffentlichen” wählen (siehe untenstehende Abbildungen, blaue Markierungen), können Sie eine gespeicherte Seite online stellen, d.h. diese für die Besucher Ihres Online-Projektes sichtbar machen.</p><p>Wenn Sie keine Rechte zur Veröffentlichung im CMS haben, wird die Anforderung nach Veröffentlichung an den entsprechend berechtigten Content-Manager weitergeleitet. Erst nach dessen Freigabe wird die Seite endgültig veröffentlicht und der Status der Seite auf “Veröffentlicht” gestellt.</p>
+
+    <figure data-imageid="397" data-tagname="manimage46" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/397?sid=58&nodeId=3&fingerprint=c321d3fd4665360e521c1c060f72e64a" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+
+
+    <figure data-imageid="378" data-tagname="manimage47" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/378?sid=58&nodeId=3&fingerprint=4d64df0a2539396361e3000d8c916cde" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Wenn Veröffentlichung möglich ist und erfolgt ist, erhalten Sie eine Bestätigung, dass die Veröffentlichung durchgeführt wurde. (siehe untenstehende Abbildung).</p>
+
+    <figure data-imageid="385" data-tagname="manimage48" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/385?sid=58&nodeId=3&fingerprint=89d3ece9ade77c41d622fe7e1d8a8a24" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p>Die Seite hat dann den Status “Veröffentlicht” (siehe untenstehende Abbildung, blaue Markierung)</p>
+
+    <figure data-imageid="380" data-tagname="manimage49" title="">
+        <img src="/GenticsImageStore/825/auto/prop/rest/file/content/load/380?sid=58&nodeId=3&fingerprint=3f3c29fe6fedf62e02787064ff52d592" alt="" style="max-width: 100%; height: auto;">
+    </figure>
+<p><br></p>

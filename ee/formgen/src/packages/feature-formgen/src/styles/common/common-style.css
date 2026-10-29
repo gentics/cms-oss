@@ -1,0 +1,22 @@
+/* 
+ +-------------------------------------------------+
+ | Example hover styling for string input elements |
+ +-------------------------------------------------+
+ .string-element:hover {
+  outline: 2px solid black;
+  border-radius: 6px;
+  outline-style: dashed;
+  box-shadow: 0 4px 12px rgba(0, 206, 209, 0.25);
+} */
+[data-class="binary-file-delete-btn"],
+[data-class="binary-file-download-btn"] {
+  outline: 2px solid rgba(0,0,0,0) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0) !important;
+  transition: 0.1s ease-in-out !important;
+}
+[data-class="binary-file-delete-btn"]:hover,
+[data-class="binary-file-download-btn"]:hover {
+  outline: 2px solid rgba(174, 174, 174, 0.399) !important;
+  box-shadow: 0 2px 10px rgba(113, 113, 113, 0.399) !important;
+  transition: 0.1s ease-in-out !important;
+}

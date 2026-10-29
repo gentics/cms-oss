@@ -1,0 +1,157 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.gentics.cms</groupId>
+		<artifactId>cms-search</artifactId>
+		<version>6.6.3-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>cms-search-core</artifactId>
+	<packaging>jar</packaging>
+	<organization>
+		<name>Gentics Software</name>
+		<url>http://www.gentics.com/</url>
+	</organization>
+	<description>Core implementation of the CMS Search</description>
+	<name>Gentics CMS Search - Core</name>
+	<url>http://www.gentics.com</url>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<executions>
+					<execution>
+						<?m2e ignore?>
+						<id>default-test</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<!-- Include unit tests within integration-test phase. -->
+								<include>**/*Test.java</include>
+								<include>**/*TestSuite.java</include>
+								<include>**/*IntegrationTest.java</include>
+								<include>**/*SandboxTest.java</include>
+							</includes>
+							<excludedGroups>com.gentics.contentnode.tests.category.MeshTest</excludedGroups>
+						</configuration>
+					</execution>
+					<execution>
+						<?m2e ignore?>
+						<id>mesh-publish-test</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<forkCount>${surefire.forkcount.mesh}</forkCount>
+							<groups>com.gentics.contentnode.tests.category.MeshTest</groups>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Internal dependencies -->
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-search-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-license</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-multichannelling-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.jayway.jsonpath</groupId>
+			<artifactId>json-path</artifactId>
+		</dependency>
+
+		<!--Test dependencies -->
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-core</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-core</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-multichannelling-core</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics</groupId>
+			<artifactId>generic-testutils</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.ee10</groupId>
+			<artifactId>jetty-ee10-servlet</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>		
+	</dependencies>
+</project>

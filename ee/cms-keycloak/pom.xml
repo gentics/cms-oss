@@ -1,0 +1,78 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.gentics</groupId>
+		<artifactId>cms</artifactId>
+		<version>6.6.3-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-keycloak</artifactId>
+	<packaging>jar</packaging>
+	<organization>
+		<name>Gentics Software</name>
+		<url>http://www.gentics.com/</url>
+	</organization>
+	<description>Keycloak Integration</description>
+	<name>Gentics CMS Keycloak Integration</name>
+	<url>http://www.gentics.com</url>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-license</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.ee10</groupId>
+			<artifactId>jetty-ee10-servlet</artifactId>
+		</dependency>
+
+		<!--Test dependencies -->
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-core</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics</groupId>
+			<artifactId>generic-testutils</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+</project>

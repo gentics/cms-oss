@@ -1,0 +1,15 @@
+{
+	"successUrl": {
+		"de": "http://node/Content.node/home/Page.de.html",
+		"en": "http://node/Content.node/home/Page.en.html"
+	},
+	"schema": {
+        "properties": {}
+    },
+	"uiSchema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		}
+	}
+}

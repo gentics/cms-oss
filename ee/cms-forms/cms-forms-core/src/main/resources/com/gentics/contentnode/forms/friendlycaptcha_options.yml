@@ -1,0 +1,12 @@
+- value: friendlycaptcha_auto
+  labelI18n:
+    de: "Friendly Captcha"
+    en: "Friendly Captcha"
+- value: friendlycaptcha_button
+  labelI18n:
+    de: "Friendly Captcha: Button"
+    en: "Friendly Captcha: Button"
+- value: friendlycaptcha_background
+  labelI18n:
+    de: "Friendly Captcha: Hintergrund"
+    en: "Friendly Captcha: Background"

@@ -1,0 +1,140 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.gentics</groupId>
+        <artifactId>cms</artifactId>
+        <version>6.6.3-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.gentics.cms</groupId>
+    <artifactId>formgen</artifactId>
+    <packaging>pom</packaging>
+    <organization>
+        <name>Gentics Software</name>
+        <url>http://www.gentics.com/</url>
+    </organization>
+    <description>Contains source of cms-formgen react App</description>
+    <name>Gentics CMS Formgen</name>
+    <url>http://www.gentics.com</url>
+
+    <properties>
+        <!-- The directory where the nodejs installation resides in -->
+        <nodejs.npm.bin>ASSIGN_ME</nodejs.npm.bin>
+        <npm.workingDirectory>src</npm.workingDirectory>
+
+        <!-- If the UI should skip npm install -->
+        <ui.skip.install>false</ui.skip.install>
+        <!-- If the UI module should skip the build process -->
+        <ui.skip.build>false</ui.skip.build>
+        <!-- If the UI module should skip the assembly step -->
+        <ui.skip.assembly>false</ui.skip.assembly>
+        <!-- If the UI module should skip unit/component testing -->
+        <ui.skip.test>false</ui.skip.test>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>formgen</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <attach>true</attach>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>assembly/formgen.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>src</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <attach>true</attach>
+                            <appendAssemblyId>true</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>assembly/src.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <target name="Setup target directory">
+                                <mkdir dir="${project.build.directory}"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>initialize</phase>
+
+                        <configuration>
+                            <target name="Install node dependencies" unless="${ui.skip.install}">
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="ci --no-audit --no-fund"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm run build</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>compile</phase>
+
+                        <configuration>
+                            <target name="Build formgen" unless="${ui.skip.build}">
+                                <exec
+                                    dir="${npm.workingDirectory}/apps/andp-ma-formgen"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <env key="APP_BASE_URL" value="/formgen" />
+                                    <arg line="run build" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

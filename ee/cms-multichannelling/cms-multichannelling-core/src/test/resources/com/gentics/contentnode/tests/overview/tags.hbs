@@ -1,0 +1,15 @@
+{{#each cms.tag.parts.ds.items}}
+{{#each tags}}
+id:{{id}}
+	tag.id:{{tag.id}}
+	name:{{name}}
+	visible:{{visible}}
+	empty:{{empty}}
+	istag:{{istag}}
+	rendered:[{{gtx_render this}}]
+	parts:
+{{#each parts}}
+		rendered:[{{gtx_render this}}]
+{{/each}}
+{{/each}}
+{{/each}}

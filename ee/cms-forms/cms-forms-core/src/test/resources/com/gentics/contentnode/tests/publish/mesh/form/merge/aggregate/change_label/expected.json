@@ -1,0 +1,44 @@
+{
+	"ui-schema": {
+		"pages": [
+			{
+				"pagename": {
+					"de-AT": "1. Seite",
+					"en-AT": "1st Page"
+				},
+				"elements": [
+					{
+						"type": "aggregate",
+						"id": "aggregate_element",
+						"label": {
+							"de-AT": "Aggregat",
+							"en-AT": "Aggregate"
+						},
+						"elements": [
+							{
+								"type": "property",
+								"id": "first_element",
+								"label": {
+									"de-AT": "Erstes Element extern",
+									"en-AT": "First Element formgrid"
+								},
+								"description": {
+									"de-AT": "Erstes Element Beschreibung",
+									"en-AT": "First Element Description"
+								},
+								"formGridOptions": {
+									"numberOfColumns": "6"
+								},
+								"uiSchemaPage": 0
+							}
+						],
+						"formGridOptions": {
+							"numberOfColumns": "8"
+						},
+						"uiSchemaPage": 0
+					}
+				]
+			}
+		]
+	}
+}

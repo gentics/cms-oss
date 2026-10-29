@@ -1,0 +1,16 @@
+{
+    "email": "",
+    "mailsubject_i18n": {
+        "de": "Es sind neue Daten da",
+        "en": "New data arrived"
+    },
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {
+        "de": "useremail",
+        "en": "useremail"
+    },
+    "templateContext": "theme-red",
+    "type": "GENERIC",
+    "elements": []
+}

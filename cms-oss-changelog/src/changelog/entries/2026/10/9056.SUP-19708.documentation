@@ -1,0 +1,1 @@
+Administration: The "installation guide":https://www.gentics.com/Content.Node/cmp8/guides-oss/admin_install.html#database-character-set now explicitly states that the CMS database and all of its tables must use the character set utf8mb4, and describes how to check and convert existing installations.

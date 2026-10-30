@@ -21,7 +21,7 @@ Create a backup of your MySQL database.
 <shell>
   # stop Gentics CMS
   # dump the database
-  mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 3306 -p node_utf8 > /Node/tmp/node_utf8.sql
+  mysqldump --max_allowed_packet=512M --default-character-set=utf8mb4 -u root -h 127.0.0.1 -P 3306 -p node_utf8 > /Node/tmp/node_utf8.sql
 </shell>
 
 h3. File Backup

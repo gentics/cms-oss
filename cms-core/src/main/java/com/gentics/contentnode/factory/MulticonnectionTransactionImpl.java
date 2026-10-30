@@ -353,7 +353,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 	 *         All written data will be lost.
 	 * @throws SQLException
 	 */
-	private Connection getConnectionForCurrentThread() throws SQLException {
+	private Connection getConnectionForCurrentThread() {
 		// Unfortunately the apache pooling library doesn't support threading:
 		// If one thread requests and gets an object from the pool and then 
 		// later requests another one (before returning the first one) it should
@@ -397,15 +397,33 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 				String msg = "Worker thread {" + threadName + "} could not get a connection from multiconnection pool.";
 
 				logger.fatal(msg, e);
-				throw new SQLException(msg, e);
+				throw new RuntimeException(msg, e);
 			}
 
 			getPublishThreadInfo().increaseTimeWaitingDB((System.currentTimeMillis() - waitStart));
 
 			if (c == null) {
-				throw new SQLException("Worker thread {" + threadName + "} did not get a connection from multiconnection pool.");
-			} else if (c.isClosed()) {
-				throw new SQLException("Worker thread {" + threadName + "} requested a connection from the pool, but it has been closed already.");
+				throw new RuntimeException("Worker thread {" + threadName + "} did not get a connection from multiconnection pool.");
+			} else {
+				boolean closed = false;
+				try {
+					closed = c.isClosed();
+				} catch (SQLException e) {
+					closed = true;
+				}
+
+				if (closed) {
+					// give the connection back
+					try {
+						connectionPool.returnObject(c);
+					} catch (Exception e) {
+						logger.warn("Could not return connection to pool: " + e.getMessage(), e);
+					}
+					assignmentStack.set(0);
+					assignedConnection.set(null);
+
+					throw new RuntimeException("Worker thread {" + threadName + "} requested a connection from the pool, but it has been closed already.");
+				}
 			}
 
 			assignedConnection.set(c);

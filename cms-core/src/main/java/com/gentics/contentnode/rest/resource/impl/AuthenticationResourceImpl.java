@@ -195,6 +195,7 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 			LoginResponse response = tryLoginWithService(username, password);
 
 			if (response != null) {
+				trx.success();
 				return response;
 			}
 

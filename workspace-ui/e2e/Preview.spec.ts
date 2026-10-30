@@ -1113,3 +1113,42 @@ test.describe('The preview header in a narrow column', () => {
         });
     }
 });
+
+test.describe('A tag with several editables in the preview', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
+
+    // As the CMS renders a tag with two editable parts with tagmarkers=true: both carry the tag's markers,
+    // each has the id of its own stored value.
+    function twoEditablesPage(): string {
+        return `<!doctype html><body style="margin:0;font:16px sans-serif">
+            <div data-gcn-pageid="9142" data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_101" style="padding:20px"><h2>Erste Überschrift</h2></div>
+            <div data-gcn-pageid="9142" data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_102" style="padding:20px"><p>Zweiter Teil, Absatz eins</p><p>Absatz zwei</p></div>
+        </body>`;
+    }
+
+    test('selects a paragraph in the second editable and keeps it across a reload', async ({ page }) => {
+        const { loadedUrls, sendNextUpdate } = await stubS1Session(page, [twoEditablesPage()]);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Absatz zwei').click();
+
+        await expect(page.getByText('Selected: Paragraph · Teaser')).toBeVisible();
+        await expect(page.getByText('The selected part is no longer on the page')).toHaveCount(0);
+
+        sendNextUpdate();
+        await expect.poll(() => loadedUrls.length).toBe(2);
+        await expect(page.frameLocator(frameSelector).getByText('Absatz zwei')).toBeVisible();
+        await expect(page.getByText('Selected: Paragraph · Teaser')).toBeVisible();
+        await expect(page.getByText('The selected part is no longer on the page')).toHaveCount(0);
+    });
+
+    test('tints every editable of a changed tag', async ({ page }) => {
+        await stubS1Session(page, [twoEditablesPage()], [['teaser']]);
+        await page.goto(`#/sessions/${SESSION}`);
+
+        await expect(page.frameLocator(frameSelector).getByText('Absatz zwei')).toBeVisible();
+        await expect(page.locator('[data-changed-part="teaser"]')).toHaveCount(2);
+    });
+});

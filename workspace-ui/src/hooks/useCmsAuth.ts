@@ -1,14 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { leaveAfterLogout, startSingleSignOn } from '@/helper/keycloak/keycloak';
-import { getCmsUser, loginToCms, logoutFromCms } from '@/services/cmsApiService/cmsApiService';
+import { getCmsUiLanguage, getCmsUser, loginToCms, logoutFromCms } from '@/services/cmsApiService/cmsApiService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 /** Query key of the logged-in CMS user (`GET /rest/user/me`); `null` data means not logged in. */
 export const CMS_USER_QUERY_KEY = ['cms', 'user'] as const;
 
 const SINGLE_SIGN_ON_QUERY_KEY = ['cms', 'singleSignOn'] as const;
+
+const UI_LANGUAGE_QUERY_KEY = ['cms', 'uiLanguage'] as const;
+
+// The languages the Workspace has (`src/i18n/locales`).
+const UI_LANGUAGES = ['de', 'en'];
 
 /**
  * The CMS user of the browser's CMS session cookie, `null` without a valid session. Fetched again
@@ -80,4 +87,33 @@ export function useCmsLogout() {
             useErrorNotificationStore.getState().addError({ messageKey: 'login.errors.logout', detailKey: errorMessageKey(error) });
         },
     });
+}
+
+/**
+ * Takes the UI language of the CMS session (`getCmsUiLanguage`), once per page load after `enabled`
+ * (a CMS session exists): `de` or `en` becomes the Workspace's language and the page's `lang`. Another
+ * language, or an error, leaves the current one (German until then, `src/i18n`). Each answer is applied
+ * once: a language the user switches to afterwards is not switched back.
+ */
+export function useCmsUiLanguage(enabled: boolean) {
+    const { i18n } = useTranslation();
+    const language = useQuery({ queryKey: UI_LANGUAGE_QUERY_KEY, queryFn: getCmsUiLanguage, enabled, staleTime: Infinity, retry: false });
+
+    // The answer applied last; the effect runs again when the UI language changes.
+    const appliedRef = useRef<string | undefined>(undefined);
+
+    useEffect(() => {
+        const code = language.data;
+
+        if (!code || code === appliedRef.current) {
+            return;
+        }
+
+        appliedRef.current = code;
+
+        if (UI_LANGUAGES.includes(code) && code !== i18n.language) {
+            document.documentElement.lang = code;
+            void i18n.changeLanguage(code);
+        }
+    }, [language.data, i18n]);
 }

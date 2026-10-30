@@ -89,9 +89,9 @@ function elementLabel(t: TFunction, element: PreviewElement): string {
     return pageElementLabel({ ...element, textBlock: elementTextBlock(t, element), link: elementLink(t, element) });
 }
 
-// Whether `a` and `b` are the same part and the same text block or link of it (or both the whole part).
+// Whether `a` and `b` are the same part (the same element of its tag) and the same text block or link of it (or both the whole part).
 function isSameElement(a: PreviewElement | null, b: PreviewElement | null): boolean {
-    return a?.tagName === b?.tagName && a?.textBlock?.index === b?.textBlock?.index && a?.link?.index === b?.link?.index;
+    return a?.tagName === b?.tagName && a?.elementId === b?.elementId && a?.textBlock?.index === b?.textBlock?.index && a?.link?.index === b?.link?.index;
 }
 
 // The link card's target for an `href` read from the page (`linkTargetOf`): its CMS page, or its URL.
@@ -608,7 +608,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     <iframe key={`${pageKey}@${preview.seq}`} ref={frameRef} className={styles.frame} src={url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
                     <div className={styles.overlay} aria-hidden="true">
                         {isFeedbackOpen && selectedBox && dimBands(selectedBox).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
-                        {changedBoxes.map(({ tagName, box }) => <div key={tagName} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
+                        {changedBoxes.map(({ key, tagName, box }) => <div key={key} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
                         {selectedBox && <div ref={selectedBoxRef} className={`${styles.selected} ${isEditOpen || isImageOpen || isLinkOpen ? styles.editing : ''}`} style={boxStyle(selectedBox)} />}
                         {actions && hovered && !isSameElement(hovered.element, selected) && (
                             <div className={styles.hovered} style={boxStyle(hovered.box)}>

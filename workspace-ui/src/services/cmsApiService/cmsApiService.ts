@@ -126,6 +126,22 @@ export async function logoutFromCms(): Promise<void> {
     await httpRequest<unknown>('/rest/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' } });
 }
 
+/**
+ * The UI language of the CMS session, e.g. `de`: `GET /rest/i18n/get`. A new session starts with the
+ * language the user chose last in the CMS's own UI. An answer with a `responseInfo.responseCode` other
+ * than `OK`, or without a language, is thrown as an `HttpError`.
+ */
+export async function getCmsUiLanguage(): Promise<string> {
+    const url = '/rest/i18n/get';
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; code?: string }>(url, CMS_GET);
+
+    if (response.responseInfo?.responseCode !== 'OK' || !response.code) {
+        throw new HttpError(url, 200, response);
+    }
+
+    return response.code;
+}
+
 /** The Keycloak settings the CMS offers its UIs (`GET /rest/keycloak`, the `cms-keycloak` module). */
 export interface CmsKeycloakConfig {
     'auth-server-url': string;

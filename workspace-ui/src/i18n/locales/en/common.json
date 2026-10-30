@@ -934,5 +934,16 @@
         "publish_other": "objects to publish",
         "construct_one": "construct",
         "construct_other": "constructs"
+    },
+    "guidelineEditor": {
+        "label": "Guideline"
+    },
+    "planGuidelines": {
+        "title": "Guidelines",
+        "add": "Add guideline",
+        "available": "Available guidelines",
+        "remove": "Remove {{name}}",
+        "missing": "{{name}} was removed or renamed",
+        "saveFailed": "The guidelines could not be saved"
     }
 }

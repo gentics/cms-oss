@@ -21,6 +21,7 @@ import {
     listPlans,
     listSessions,
     listWorkflows,
+    patchSession,
     postMessage,
     putSessionAuthorization,
     sessionFileContentUrl,
@@ -256,6 +257,22 @@ describe('routes', () => {
 
         await expect(getSession('s 1')).resolves.toEqual({ id: 's 1', status: 'published' });
         expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s%201');
+    });
+
+    it('patchSession posts the patch with X-HTTP-Method-Override: PATCH, as the CMS proxy forwards no PATCH', async () => {
+        const context = { references: [], guidelines: ['corporate/tone-of-voice.default', 'corporate/seo-basics'], connection_ids: [] };
+        const fetchMock = stubFetch(Response.json({ id: 's 1', context }));
+
+        await expect(patchSession('s 1', { context })).resolves.toEqual({ id: 's 1', context });
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+        const headers = new Headers(init?.headers);
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s%201');
+        expect(init?.method).toBe('POST');
+        expect(headers.get('X-HTTP-Method-Override')).toBe('PATCH');
+        expect(headers.get('Content-Type')).toBe('application/json');
+        expect(JSON.parse(init?.body as string)).toEqual({ context });
     });
 
     // Uploads go through XMLHttpRequest (upload progress), stubbed by `stubUploads`.

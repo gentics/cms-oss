@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createWrapper } from '@/test/renderWithProviders';
 
-import { useCanPublishCmsPages, useCmsSearch } from './useCmsQueries';
+import { useCanPublishCmsPages, useCmsGuidelines, useCmsSearch } from './useCmsQueries';
 
 const NODE = { id: 3, name: 'Corporate Website', folderId: 7 };
 
@@ -114,6 +114,56 @@ describe('useCanPublishCmsPages', () => {
         const { result, fetchMock } = renderPermission([], {});
 
         expect(result.current).toBe(true);
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
+
+describe('useCmsGuidelines', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    const entry = (name: string, directory = false) => ({ path: `guidelines/${name}`, name, directory, size: 0, lastModified: 0 });
+
+    // Two packages: `corporate` with guidelines, `legal` without a guidelines folder (404).
+    function stubPackages() {
+        const fetchMock = vi.fn<typeof fetch>(async (input) => {
+            const url = new URL(String(input), 'http://app.test');
+
+            if (url.pathname === '/rest/devtools/nodes/3/packages') {
+                return Response.json({ items: [{ name: 'corporate' }, { name: 'legal' }] });
+            }
+
+            if (url.pathname === '/rest/devtools/packages/corporate/files-internal') {
+                return Response.json({ items: [entry('archive', true), entry('20_seo-basics.md'), entry('10_tone-of-voice.default.md'), entry('README.md')] });
+            }
+
+            return Response.json({ messages: [] }, { status: 404 });
+        });
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        return fetchMock;
+    }
+
+    it('lists the guidelines of every package of the node by priority, leaving out directories and other files', async () => {
+        const fetchMock = stubPackages();
+        const { result } = renderHook(() => useCmsGuidelines(3), { wrapper: createWrapper() });
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+        expect(result.current.data?.map(({ slug }) => slug)).toEqual(['corporate/tone-of-voice.default', 'corporate/seo-basics']);
+        expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([
+            '/rest/devtools/nodes/3/packages',
+            '/rest/devtools/packages/corporate/files-internal?path=guidelines',
+            '/rest/devtools/packages/legal/files-internal?path=guidelines',
+        ]);
+    });
+
+    it('asks nothing without a node', () => {
+        const fetchMock = stubPackages();
+        const { result } = renderHook(() => useCmsGuidelines(undefined), { wrapper: createWrapper() });
+
+        expect(result.current.isPending).toBe(true);
         expect(fetchMock).not.toHaveBeenCalled();
     });
 });

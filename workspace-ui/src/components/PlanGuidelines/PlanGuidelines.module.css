@@ -1,0 +1,48 @@
+/* The session's guidelines in the plan card: an overline, the guidelines as tokens, then "Add guideline"
+   (design.md §12 "`@`-Token / Referenz", "Popover / Menü"). */
+.guidelines {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* Overline (design.md §5.1). */
+.title {
+  flex-basis: 100%;
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* A guideline that no longer exists: status chip of the warning family, icon and text (design.md §3.3). */
+.missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid rgba(var(--warning-rgb), 0.45);
+  border-radius: var(--corner-sm);
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: var(--font-size-sm);
+}

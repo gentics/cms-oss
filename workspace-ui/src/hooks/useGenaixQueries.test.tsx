@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { pendingFileSource } from '@/helper/composerParts/composerParts';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
 import { GenaixApiError } from '@/services/apiService/apiService';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { stubUploads } from '@/test/stubUploads';
 
@@ -19,6 +20,7 @@ import { useAnswerInteraction,
     useSession,
     useSessionMessages,
     useSessions,
+    useSetSessionGuidelines,
     useStartSession,
     useWorkflows,
 } from './useGenaixQueries';
@@ -497,6 +499,61 @@ describe('GenAIx query hooks', () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1');
         expect(result.current.data).toEqual({ id: 's-1', status: 'review_requested' });
+    });
+
+    describe('useSetSessionGuidelines', () => {
+        const ref = { type: 'page' as const, id: '8871', node_id: 3 };
+        const context = { node_id: 3, references: [ref], guidelines: ['corporate/tone-of-voice.default'], connection_ids: [] };
+        const guidelines = ['corporate/tone-of-voice.default', 'corporate/seo-basics'];
+
+        it('reads the session, then sends its whole context with only the guidelines changed', async () => {
+            const fetchMock = stubFetch(
+                Response.json({ id: 's-1', context }),
+                Response.json({ id: 's-1', context: { ...context, guidelines } }),
+            );
+
+            const { result } = renderHook(() => useSetSessionGuidelines('s-1'), { wrapper });
+
+            await act(() => result.current.mutateAsync(guidelines));
+
+            expect(fetchMock.mock.calls.map(([url, init]) => [init?.method ?? 'GET', url])).toEqual([
+                ['GET', '/rest/proxy/genaix/sessions/s-1'],
+                ['POST', '/rest/proxy/genaix/sessions/s-1'],
+            ]);
+            expect(new Headers(fetchMock.mock.calls[1]![1]?.headers).get('X-HTTP-Method-Override')).toBe('PATCH');
+            expect(JSON.parse(fetchMock.mock.calls[1]![1]?.body as string)).toEqual({ context: { ...context, guidelines } });
+        });
+
+        it('puts the updated session into the cache that useSession reads', async () => {
+            const fetchMock = stubFetch(
+                Response.json({ id: 's-1', context }),
+                Response.json({ id: 's-1', context }),
+                Response.json({ id: 's-1', context: { ...context, guidelines } }),
+            );
+
+            const { result } = renderHook(() => ({ session: useSession('s-1'), set: useSetSessionGuidelines('s-1') }), { wrapper });
+
+            await waitFor(() => expect(result.current.session.isSuccess).toBe(true));
+            await act(() => result.current.set.mutateAsync(guidelines));
+
+            await waitFor(() => expect(result.current.session.data?.context.guidelines).toEqual(guidelines));
+            expect(fetchMock).toHaveBeenCalledTimes(3);
+        });
+
+        it('exposes a refusal as an error notification and does not retry it', async () => {
+            useErrorNotificationStore.setState({ errors: [] });
+
+            const fetchMock = stubFetch(Response.json({ id: 's-1', context }), problem(409, 'session_archived'));
+
+            const { result } = renderHook(() => useSetSessionGuidelines('s-1'), { wrapper });
+
+            act(() => result.current.mutate(guidelines));
+
+            await waitFor(() => expect(result.current.isError).toBe(true));
+            expect(result.current.error).toMatchObject({ genaixCode: 'session_archived' });
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+            expect(useErrorNotificationStore.getState().errors).toEqual([expect.objectContaining({ messageKey: 'planGuidelines.saveFailed' })]);
+        });
     });
     describe('usePlanState', () => {
         it('loads the state of one plan, and nothing without a plan', async () => {

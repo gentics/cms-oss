@@ -3,6 +3,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlanCard } from '@/components/PlanCard/PlanCard';
+import { PlanGuidelines } from '@/components/PlanGuidelines/PlanGuidelines';
 import { PlanSwitcher } from '@/components/PlanSwitcher/PlanSwitcher';
 import { Button } from '@/components/ui/button';
 import { isAcceptedOnCard } from '@/helper/planActions/planActions';
@@ -35,7 +36,8 @@ interface PlanBarProps {
  * place a plan is shown: the other plans are not in the conversation. Its head (`PlanHead`) always shows where the
  * plan is, the publish outcome of its pages and the transitions its status allows.
  *
- * Expanded, the plan itself shows above the head (`PlanCard`): its steps. While it is proposed, Adjust
+ * Expanded, the plan itself shows above the head (`PlanCard`): its steps, below the session's guidelines
+ * (`PlanGuidelines`), to which the user adds while the plan is proposed. While it is proposed, Adjust
  * and Accept plan are in the head with its other actions (`PlanAdjustActions`, `usePlanAdjustment`),
  * also while the bar is collapsed; Adjust expands it, so that the steps are adjusted in view.
  *
@@ -96,6 +98,7 @@ export function PlanBar({ sessionId, plan, openPlans = [], onPickPlan, onHeightC
             <section className={styles.bar} aria-label={t('planBar.label')}>
                 {!isHeadOnly && (
                     <div id={panelId} className={styles.panel} hidden={!isExpanded}>
+                        <PlanGuidelines plan={plan} sessionId={sessionId} />
                         <PlanCard plan={plan} sessionId={sessionId} adjustment={adjustment} />
                     </div>
                 )}

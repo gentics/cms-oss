@@ -18,6 +18,7 @@ import {
     listSessions,
     listSessionUploads,
     listWorkflows,
+    patchSession,
     postMessage,
     type SessionFilters,
     transitionPlan,
@@ -124,6 +125,33 @@ export function useUnarchiveSession() {
     return useMutation({
         mutationFn: (sessionId: string) => unarchiveSession(sessionId),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
+        ...retryOptions,
+    });
+}
+
+/**
+ * PATCH /sessions/{session_id} with the session's guidelines (slugs, `helper/guidelines`). `context` is
+ * replaced wholesale, so the session is read first and its context sent complete, with only
+ * `guidelines` changed; the updated session goes into the cache that `useSession` reads. Retried like a
+ * query: the call is idempotent. A failure is an error notification.
+ */
+export function useSetSessionGuidelines(sessionId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (guidelines: string[]) => {
+            const { context } = await getSession(sessionId);
+
+            return patchSession(sessionId, { context: { ...context, guidelines } });
+        },
+        onSuccess: (session) => {
+            queryClient.setQueryData(genaixKeys.session(sessionId), session);
+
+            return queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() });
+        },
+        onError: (error) => {
+            useErrorNotificationStore.getState().addError({ messageKey: 'planGuidelines.saveFailed', detailKey: errorMessageKey(error) });
+        },
         ...retryOptions,
     });
 }

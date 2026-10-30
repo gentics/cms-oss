@@ -430,3 +430,88 @@ export async function listCmsLanguages(nodeId: number, signal?: AbortSignal): Pr
 export function cmsImageUrl(nodeId: number, imageId: number): string {
     return `/rest/file/content/load/${imageId}?${new URLSearchParams({ nodeId: String(nodeId) })}`;
 }
+
+/** A devtools package (`rest/model/devtools/Package.java`), as far as the guidelines need it. */
+export interface CmsPackage {
+    name: string;
+}
+
+/** The devtools packages assigned to the node `nodeId`, all of them: `GET /rest/devtools/nodes/{nodeId}/packages`. */
+export async function listCmsNodePackages(nodeId: number, signal?: AbortSignal): Promise<CmsPackage[]> {
+    const { items } = await httpRequest<{ items?: CmsPackage[] }>(`/rest/devtools/nodes/${nodeId}/packages`, { ...CMS_GET, signal });
+
+    return items ?? [];
+}
+
+/** A file or directory in a package's `files-internal` storage (`rest/model/devtools/PackageFile.java`). */
+export interface CmsPackageFile {
+    /** Relative to the storage's root, e.g. `guidelines/10_tone-of-voice.default.md`. */
+    path: string;
+    /** The last path segment. */
+    name: string;
+    directory: boolean;
+    /** Bytes; 0 for a directory. */
+    size: number;
+    /** Seconds since the epoch. */
+    lastModified: number;
+}
+
+// The `files-internal` routes of the package `packageName`, with `path` as the query.
+function packageFilesUrl(packageName: string, path: string, content: boolean): string {
+    return `/rest/devtools/packages/${encodeURIComponent(packageName)}/files-internal${content ? '/content' : ''}?${new URLSearchParams({ path })}`;
+}
+
+/**
+ * The files and directories in the directory `path` of the package's `files-internal` storage, directories
+ * first: `GET /rest/devtools/packages/{name}/files-internal?path=`. A directory that does not exist yet
+ * answers `404`, here an empty list: a package without guidelines has no `guidelines` folder.
+ */
+export async function listCmsPackageInternalFiles(packageName: string, path: string, signal?: AbortSignal): Promise<CmsPackageFile[]> {
+    try {
+        const { items } = await httpRequest<{ items?: CmsPackageFile[] }>(packageFilesUrl(packageName, path, false), { ...CMS_GET, signal });
+
+        return items ?? [];
+    } catch (error) {
+        if (error instanceof HttpError && error.status === 404) {
+            return [];
+        }
+
+        throw error;
+    }
+}
+
+/** The text of the file `path` in the package's `files-internal` storage: `GET …/files-internal/content?path=`. */
+export async function loadCmsPackageInternalFile(packageName: string, path: string, signal?: AbortSignal): Promise<string> {
+    const url = packageFilesUrl(packageName, path, true);
+    // The CMS answers the file as it is, with the type it guesses from the name; errors are JSON.
+    const response = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/markdown, text/plain, */*' }, signal });
+
+    if (!response.ok) {
+        throw await toHttpError(url, response);
+    }
+
+    return response.text();
+}
+
+/**
+ * Creates or replaces the file `path` in the package's `files-internal` storage with `text`:
+ * `POST …/files-internal/content?path=` as multipart, the content in the part `file`. `201` without a body.
+ */
+export async function saveCmsPackageInternalFile(packageName: string, path: string, text: string): Promise<void> {
+    const url = packageFilesUrl(packageName, path, true);
+    const body = new FormData();
+
+    // No `Content-Type` header: the browser adds the multipart boundary.
+    body.append('file', new Blob([text], { type: 'text/markdown' }), path.split('/').pop());
+
+    const response = await fetch(url, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }, body });
+
+    if (!response.ok) {
+        throw await toHttpError(url, response);
+    }
+}
+
+/** Deletes the file `path` from the package's `files-internal` storage: `DELETE …/files-internal/content?path=`, `204`. */
+export async function deleteCmsPackageInternalFile(packageName: string, path: string): Promise<void> {
+    await httpRequest<void>(packageFilesUrl(packageName, path, true), { ...CMS_GET, method: 'DELETE' });
+}

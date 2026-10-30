@@ -26,6 +26,7 @@ export type SessionAuthorizationRequest = GenaixSchema<'SessionAuthorizationRequ
 export type Session = GenaixSchema<'Session'>;
 export type SessionCreate = GenaixSchema<'SessionCreate'>;
 export type SessionContext = GenaixSchema<'SessionContext'>;
+export type SessionPatch = GenaixSchema<'SessionPatch'>;
 export type SessionCreated = GenaixSchema<'SessionCreated'>;
 export type SessionStatus = GenaixSchema<'SessionStatus'>;
 export type SessionPage = GenaixSchema<'SessionPage'>;

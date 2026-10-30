@@ -1,5 +1,6 @@
 import { keepPreviousData, type QueryClient, skipToken, useInfiniteQuery, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { type Guideline, guidelineFromFile, GUIDELINES_DIR, sortGuidelines } from '@/helper/guidelines/guidelines';
 import {
     canPublishCmsPage,
     type CmsItem,
@@ -8,7 +9,9 @@ import {
     isCmsFeatureActive,
     listCmsFolders,
     listCmsLanguages,
+    listCmsNodePackages,
     listCmsNodes,
+    listCmsPackageInternalFiles,
     listCmsTemplates,
     loadCmsPage,
     searchCmsItems,
@@ -28,6 +31,7 @@ export const cmsKeys = {
     publishPermission: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId, 'perm', 'publish'] as const,
     templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
     languages: (nodeId: number) => ['cms', 'nodes', nodeId, 'languages'] as const,
+    guidelines: (nodeId: number) => ['cms', 'nodes', nodeId, 'guidelines'] as const,
 };
 
 /**
@@ -221,5 +225,30 @@ export function useCmsTemplates(folderId: number | undefined, nodeId: number | u
     return useQuery({
         queryKey: cmsKeys.templates(folderId, nodeId),
         queryFn: folderId === undefined ? skipToken : ({ signal }) => listCmsTemplates(folderId, nodeId, signal),
+    });
+}
+
+// Every guideline of the node `nodeId`: the files in `files-internal/guidelines/` of each of its
+// packages that are named as guidelines (`guidelineFromFile`), by priority.
+async function listCmsGuidelines(nodeId: number, signal: AbortSignal): Promise<Guideline[]> {
+    const packages = await listCmsNodePackages(nodeId, signal);
+    const perPackage = await Promise.all(packages.map(async ({ name }) => {
+        const files = await listCmsPackageInternalFiles(name, GUIDELINES_DIR, signal);
+
+        return files.flatMap((file) => (file.directory ? [] : guidelineFromFile(name, file.name) ?? []));
+    }));
+
+    return sortGuidelines(perPackage.flat());
+}
+
+/**
+ * The guidelines of the node `nodeId`, default and available ones, by priority (`listCmsGuidelines`).
+ * Asked anew on every mount, as a Chief Content Creator may have added or renamed one meanwhile. Off
+ * without a node.
+ */
+export function useCmsGuidelines(nodeId: number | undefined) {
+    return useQuery({
+        queryKey: cmsKeys.guidelines(nodeId ?? 0),
+        queryFn: nodeId === undefined ? skipToken : ({ signal }) => listCmsGuidelines(nodeId, signal),
     });
 }

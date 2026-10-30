@@ -1,0 +1,13 @@
+/* A guideline's Markdown to edit: the label above the field (design.md §4.2, §12 "Eingabefelder"). */
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* The file name next to the label: mono, as file names are (design.md §5), meta in `--fg-muted`. */
+.fileName {
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-weight: 400;
+}

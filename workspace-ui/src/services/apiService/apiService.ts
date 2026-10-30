@@ -23,6 +23,7 @@ import type {
     SessionCreated,
     SessionFile,
     SessionPage,
+    SessionPatch,
     SessionStatus,
     TransitionAccepted,
     TransitionRequest,
@@ -209,6 +210,17 @@ export function putSessionAuthorization(sessionId: string, connectionId: string,
 // GET /sessions/{session_id}
 export function getSession(sessionId: string): Promise<Session> {
     return genaixRequest<Session>(`/sessions/${encodeURIComponent(sessionId)}`);
+}
+
+// PATCH /sessions/{session_id}, sent as `POST` with `X-HTTP-Method-Override: PATCH` because the CMS
+// proxy forwards no `PATCH` (rc.3): `200` with the updated session. `context` is replaced wholesale, so
+// it is sent complete. `409 session_archived` for an archived session.
+export function patchSession(sessionId: string, body: SessionPatch): Promise<Session> {
+    return genaixRequest<Session>(`/sessions/${encodeURIComponent(sessionId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-HTTP-Method-Override': 'PATCH' },
+        body: JSON.stringify(body),
+    });
 }
 
 // The headers of an XHR response, for the `Response` its error is read from.

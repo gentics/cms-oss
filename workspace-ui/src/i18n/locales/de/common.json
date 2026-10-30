@@ -934,5 +934,16 @@
         "publish_other": "Objekte zu veröffentlichen",
         "construct_one": "Baustein",
         "construct_other": "Bausteine"
+    },
+    "guidelineEditor": {
+        "label": "Richtlinie"
+    },
+    "planGuidelines": {
+        "title": "Richtlinien",
+        "add": "Richtlinie hinzufügen",
+        "available": "Verfügbare Richtlinien",
+        "remove": "{{name}} entfernen",
+        "missing": "{{name}} wurde entfernt oder umbenannt",
+        "saveFailed": "Die Richtlinien konnten nicht gespeichert werden"
     }
 }

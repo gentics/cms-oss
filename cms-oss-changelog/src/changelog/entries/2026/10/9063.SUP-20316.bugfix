@@ -1,0 +1,1 @@
+Core: Now the publisher checks only the schemas, known to the current node, for the update need.

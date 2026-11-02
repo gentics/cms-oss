@@ -173,12 +173,6 @@ export const GROUP_ROOT: GroupImportData = {
             ],
         },
         {
-            type: AccessControlledType.LICENSING,
-            perms: [
-                { type: GcmsPermission.UPDATE, value: false },
-            ],
-        },
-        {
             type: AccessControlledType.CONTENT_ADMIN,
             perms: [
                 { type: GcmsPermission.SYSTEM_INFORMATION, value: false },

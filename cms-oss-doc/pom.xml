@@ -29,8 +29,7 @@
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-restapi</artifactId>
 			<version>${project.version}</version>
-			<type>zip</type>
-			<classifier>doc</classifier>
+			<classifier>sources</classifier>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -59,6 +58,96 @@
 			<classifier>javadoc</classifier>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-cluster-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-contentstaging-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-linkchecker-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-multichannelling-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-search-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- API modules for the REST API documentation (enunciate) -->
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-cluster-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-contentstaging-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-linkchecker-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-multichannelling-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-search-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-translation-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.webcohesion.enunciate</groupId>
+			<artifactId>enunciate-core-annotations</artifactId>
+			<version>${enunciate.version}</version>
+		</dependency>
 
 
 		<!-- Source dependencies needed for aggregation -->
@@ -81,6 +170,25 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>com.webcohesion.enunciate</groupId>
+				<artifactId>enunciate-maven-plugin</artifactId>
+				<version>${enunciate.version}</version>
+				<executions>
+					<execution>
+						<?m2e ignore?>
+						<id>docs</id>
+						<goals>
+							<goal>docs</goal>
+						</goals>
+						<configuration>
+							<docsDir>${project.build.directory}/restapi</docsDir>
+							<docsSubdir>.</docsSubdir>
+							<configFile>src/conf/enunciate.xml</configFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>

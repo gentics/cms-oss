@@ -24,7 +24,6 @@ export type GtxIcon =
     'role' |
     'operations' |
     'auto-update' |
-    'licensing' |
     'system-maintenance' |
     'error' |
     'import-export' |
@@ -157,10 +156,6 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
     },
     'auto-update': {
         matIconPrimary: 'autorenew',
-        matIconSecondary: null,
-    },
-    'licensing': {
-        matIconPrimary: 'license',
         matIconSecondary: null,
     },
     'system-maintenance': {

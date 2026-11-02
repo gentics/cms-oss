@@ -39,13 +39,11 @@
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
-		<module>cms-bom</module>
 		<module>cms-cluster</module>
 		<module>cms-linkchecker</module>
 		<module>cms-search</module>
 		<module>cms-translation</module>
 		<module>cms-server</module>
-		<module>cms-doc</module>
 		<module>ee/cms-multichannelling</module>
 		<module>ee/cms-forms</module>
 		<module>ee/cms-contentstaging</module>

@@ -55,6 +55,14 @@ feature:
 
 +autocomplete_folder_path+ will automatically generate meaningful folder path name as you type the folder name.
 
+h3. Automatic Translation
+
+See "Automatic Translation":feature_automatic_translation.html
+
+h3. Clustering
+
+See "Cluster Support":admin_cluster.html
+
 h3. Construct Autoenable
 
 <shell filename="conf/features.yml">
@@ -87,6 +95,11 @@ This enables the "Devtools":devtools_overview.html on the system.
 h3. Disable instant delete
 
 See "Disable instant delete":feature_disable_instant_delete.html
+
+h3. Elasticsearch
+
+This feature enables indexing of backend data in an instance of "Elasticsearch":https://www.elastic.co/products/elasticsearch.
+See "Indexing with Elasticsearch":feature_elasticsearch.html for installation and setup details.
 
 h3. Filesystem Attributes
 
@@ -226,6 +239,11 @@ the filename will be "testpage.en.html" (or e.g. "testpage1.en.html", if the
 former filename already exists). When the page properties are modified and
 the filename set to empty, this will also include the language code into
 the filename.
+
+h3. Link Checker
+
+This feature enables the link checker.
+See "Link Checker":feature_link_checker.html for details.
 
 h3. Live URLs
 

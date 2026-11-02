@@ -8,17 +8,6 @@
 	</formats>
 
 	<dependencySets>
-		<!-- Copy the restapi lib doc -->
-		<dependencySet>
-			<useStrictFiltering>true</useStrictFiltering>
-			<outputDirectory>/restapi</outputDirectory>
-			<unpack>true</unpack>
-			<includes>
-				<!--  groupId:artifactId:type:version[:classifier] -->
-				<include>com.gentics.cms-oss:cms-restapi:*:doc</include>
-			</includes>
-		</dependencySet>
-
 		<!-- Copy the api javadoc -->
 		<dependencySet>
 			<useStrictFiltering>true</useStrictFiltering>
@@ -27,6 +16,56 @@
 			<includes>
 				<!--  groupId:artifactId:type:version[:classifier] -->
 				<include>com.gentics.cms-oss:base-api:*:javadoc</include>
+			</includes>
+		</dependencySet>
+
+		<!-- Copy the EE REST API javadoc -->
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/cluster-restapi-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<include>com.gentics.cms:cms-cluster-api:*:javadoc</include>
+			</includes>
+		</dependencySet>
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/contentstaging-restapi-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<include>com.gentics.cms:cms-contentstaging-api:*:javadoc</include>
+			</includes>
+		</dependencySet>
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/forms-restapi-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<include>com.gentics.cms:cms-forms-api:*:javadoc</include>
+			</includes>
+		</dependencySet>
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/linkchecker-restapi-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<include>com.gentics.cms:cms-linkchecker-api:*:javadoc</include>
+			</includes>
+		</dependencySet>
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/multichannelling-restapi-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<include>com.gentics.cms:cms-multichannelling-api:*:javadoc</include>
+			</includes>
+		</dependencySet>
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/search-restapi-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<include>com.gentics.cms:cms-search-api:*:javadoc</include>
 			</includes>
 		</dependencySet>
 
@@ -59,6 +98,14 @@
 			<outputDirectory>/</outputDirectory>
 			<includes>
 				<include>**</include>
+			</includes>
+		</fileSet>
+		<!-- REST API documentation (enunciate) -->
+		<fileSet>
+			<directory>${basedir}/target/restapi</directory>
+			<outputDirectory>/restapi</outputDirectory>
+			<includes>
+				<include>**/*</include>
 			</includes>
 		</fileSet>
 		<!-- Attach aggregated javadoc -->

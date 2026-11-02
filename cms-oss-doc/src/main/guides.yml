@@ -1,5 +1,5 @@
-title: Gentics CMS-OSS Documentation
-description: This documentation contains information useful for Gentics CMS implementors, developers and users. Due to extensive changes introduced with Gentics CMS 6.0 some parts of the guides are currently work in progress.
+title: Gentics CMS Documentation
+description: This documentation contains information useful for Gentics CMS implementors, developers and users.
 
 authors:
   Documentation Team:
@@ -32,10 +32,13 @@ index:
       url: userinterfaces
     - title: "API Tokens"
       text: "How users can create and manage their own API Tokens"
-      url: api_token
-    - title: "Features"
+      url: api_tokens
+    - title: "Open source Features"
       url: oss-feature_overview
-      text: "Overview of Gentics CMS features"
+      text: "Overview of Gentics CMS open source features"
+    - title: "Enterprise Edition Features"
+      url: ee-feature_overview
+      text: "Overview of Gentics CMS enterprise edition features"
     - title: "System Requirements"
       text: "Gentics CMS System Requirements."
       url: faq_system_requirements
@@ -45,6 +48,9 @@ index:
     - title: "Changelog CMS OSS"
       text: "The Gentics CMS OSS Changelog (online version)"
       ext-url: "https://www.gentics.com/Content.Node/cmp8/changelog-oss/"
+    - title: "Changelog CMS EE"
+      text: "The Gentics CMS EE Changelog (online version)"
+      ext-url: "https://www.gentics.com/cmp/changelog/"
     - title: "Downloads"
       text: "Gentics CMS related downloads"
       url: downloads
@@ -139,12 +145,37 @@ index:
     - title: "Authentication via REST API"
       url: rest_auth
       text: Describes possible authentication methods for the REST API
+    - title: "Keycloak"
+      url: feature_keycloak
+      text: How to authenticate Gentics CMS users using Keycloak
 
   Fileupload:
     - title: "File upload"
       url: fileupload
       text: "Explains the different file uploaders available"
 
+  Multichannelling:
+    - title: "Administration"
+      url: mc_admin
+      text: Administrative Information about this Feature
+    - title: "Basic Concept"
+      url: mc_basic
+      text: Read about the Basic Concept of Multichannelling
+    - title: "Working with Channels"
+      url: mc_work
+      text: Find information about how to work with channels
+# TODO: Fix permission restriction in admin UI, then create new screenshots for mc_permission and re-enable the link.
+#    - title: "Permissions in Channels"
+#      url: mc_permissions
+    - title: "Restricting Inheritance"
+      url: mc_restrictions
+      text: It is possible to exclude objects from multichannelling and to restrict inheritance
+    - title: "Channel Synchronization"
+      url: mc_channelsync
+      text: Synchronize objects between a Channel and its Master
+    - title: "Multichannelling aware content repository"
+      url: mc_contentrepository
+      text: Publish a node and all of its channels into a single content repository
 
   Java API:
     - title: "Java API JavaDoc"
@@ -155,9 +186,27 @@ index:
     - title: "API Documentation"
       ext-url: restapi/index.html
       text: Contains the REST API Documentation
-    - title: "API JavaDoc"
+    - title: "OSS API JavaDoc"
       ext-url: restapi-javadoc/index.html
-      text: Contains the REST API JavaDoc
+      text: Contains the opensource REST API JavaDoc
+    - title: "Cluster API JavaDoc"
+      ext-url: cluster-restapi-javadoc/index.html
+      text: Contains the clustering REST API JavaDoc
+    - title: "Contentstaging API JavaDoc"
+      ext-url: contentstaging-restapi-javadoc/index.html
+      text: Contains the contentstaging REST API JavaDoc
+    - title: "Forms API JavaDoc"
+      ext-url: forms-restapi-javadoc/index.html
+      text: Contains the forms REST API JavaDoc
+    - title: "Linkchecker API JavaDoc"
+      ext-url: linkchecker-restapi-javadoc/index.html
+      text: Contains the linkchecker REST API JavaDoc
+    - title: "Multichannelling API JavaDoc"
+      ext-url: multichannelling-restapi-javadoc/index.html
+      text: Contains the multichannelling REST API JavaDoc
+    - title: "Search API JavaDoc"
+      ext-url: search-restapi-javadoc/index.html
+      text: Contains the search REST API JavaDoc
     - title: "Authentication"
       url: rest_auth
       text: Describes possible authentication methods for the REST API
@@ -201,6 +250,9 @@ index:
     - title: "Overview"
       url: gcn_js_api_overview
       text: An overview of the Gentics CMS JavaScript API, and how to use it
+    - title: "Multichannelling"
+      url: gcn_js_api_multichannelling
+      text: How to use multichannelling feature with the Gentics CMS JS API
     - title: "API Documentation"
       ext-url: gcnjsapi/jsdoc/index.html
       text: Contains the API Documentation

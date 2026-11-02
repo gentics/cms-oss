@@ -10,26 +10,13 @@ for all features, if not documented otherwise.
 
 The list of features which require no Enterprise Edition licensing is available in the "OSS guides":https://www.gentics.com/Content.Node/cmp8/guides-oss/feature_overview.html.
 
-h3. Automatic Translation
-
-See "Automatic Translation":feature_automatic_translation.html
-
 h3. Channel Synchronization
 
 See "Channel Synchronization":feature_channelsync.html
 
-h3. Clustering
-
-See "Cluster Support":admin_cluster.html
-
 h3. Content Staging
 
 See "Content Staging":feature_content_staging.html
-
-h3. Elasticsearch
-
-This feature enables indexing of backend data in an instance of "Elasticsearch":https://www.elastic.co/products/elasticsearch.
-See "Indexing with Elasticsearch":feature_elasticsearch.html for installation and setup details.
 
 h3. Forms
 
@@ -44,11 +31,6 @@ h3. Keycloak
 The keycloak feature allows SSO to the CMS via "Keycloak":http://www.keycloak.org/
 
 See "SSO with Keycloak":feature_keycloak.html for details.
-
-h3. Link Checker
-
-This feature enables the link checker.
-See "Link Checker":feature_link_checker.html for details.
 
 h3. Multichanneling
 

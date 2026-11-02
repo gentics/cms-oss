@@ -266,7 +266,7 @@ spec:
 
                     // when deploying for the test systems, we do not build the changelog or doc
                     if (params.deployTesting) {
-                        mvnProjects = " -am -pl '!cms-oss-changelog,!cms-oss-doc,!cms-doc'"
+                        mvnProjects = " -am -pl '!cms-oss-changelog,!cms-oss-doc'"
                     }
 
                     // Update chrome to the latest version
@@ -412,7 +412,7 @@ spec:
                     if (params.runReleaseBuild) {
                         imageRepo = "docker-products"
                     }
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
 
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
@@ -444,7 +444,7 @@ spec:
 
             steps {
                 script {
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
 
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")

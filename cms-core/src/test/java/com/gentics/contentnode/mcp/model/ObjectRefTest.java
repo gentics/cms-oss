@@ -11,9 +11,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
+import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.Folder;
+import com.gentics.contentnode.rest.model.Group;
+import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.Node;
 import com.gentics.contentnode.rest.model.Page;
+import com.gentics.contentnode.rest.model.Template;
+import com.gentics.contentnode.rest.model.User;
 
 /**
  * Unit tests for {@link ObjectRef}.
@@ -151,5 +156,76 @@ public class ObjectRefTest {
 		ObjectRef ref = MAPPER.readValue("{\"type\":\"node\",\"id\":1,\"somethingElse\":true}", ObjectRef.class);
 
 		assertThat(ref).isEqualTo(ObjectRef.of(Type.NODE, 1));
+	}
+
+	@Test
+	public void testForFolder() {
+		Folder folder = new Folder();
+		folder.setId(57);
+		folder.setGlobalId("A547.57");
+		folder.setName("News");
+		folder.setNodeId(3);
+		folder.setPath("/Home/News/");
+
+		assertThat(ObjectRef.forFolder(folder))
+				.isEqualTo(new ObjectRef(Type.FOLDER, 57, "A547.57", 3, "News", "/Home/News/", null, null, null));
+	}
+
+	@Test
+	public void testForFile() {
+		File file = new File();
+		file.setId(12);
+		file.setGlobalId("A547.12");
+		file.setName("report.pdf");
+		file.setPath("/Home/Downloads/");
+		file.setNiceUrl("/downloads/report");
+		file.setLiveUrl("https://www.example.com/Downloads/report.pdf");
+
+		assertThat(ObjectRef.forFile(file, 3)).isEqualTo(new ObjectRef(Type.FILE, 12, "A547.12", 3, "report.pdf",
+				"/Home/Downloads/", null, "/downloads/report", "https://www.example.com/Downloads/report.pdf"));
+	}
+
+	@Test
+	public void testForImage() {
+		Image image = new Image();
+		image.setId(77);
+		image.setName("logo.png");
+		image.setUrl("/preview/logo.png");
+		image.setLiveUrl("https://www.example.com/logo.png");
+
+		assertThat(ObjectRef.forImage(image, null))
+				.isEqualTo(new ObjectRef(Type.IMAGE, 77, null, null, "logo.png", null, null, null, "/preview/logo.png"));
+	}
+
+	@Test
+	public void testForTemplate() {
+		Template template = new Template();
+		template.setId(9);
+		template.setGlobalId("A547.9");
+		template.setName("Article");
+
+		assertThat(ObjectRef.forTemplate(template, 3))
+				.isEqualTo(new ObjectRef(Type.TEMPLATE, 9, "A547.9", 3, "Article", null, null, null, null));
+	}
+
+	@Test
+	public void testForUser() {
+		User user = new User();
+		user.setId(35);
+		user.setLogin("mcp.test");
+		user.setFirstName("Mia");
+
+		assertThat(ObjectRef.forUser(user))
+				.isEqualTo(new ObjectRef(Type.USER, 35, null, null, "mcp.test", null, null, null, null));
+	}
+
+	@Test
+	public void testForGroup() throws Exception {
+		Group group = new Group();
+		group.setId(7);
+		group.setName("Editors");
+
+		assertThat(new ObjectMapper().convertValue(ObjectRef.forGroup(group), Map.class))
+				.isEqualTo(Map.of("type", "group", "id", 7, "name", "Editors"));
 	}
 }

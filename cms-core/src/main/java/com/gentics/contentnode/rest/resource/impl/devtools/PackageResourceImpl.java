@@ -377,74 +377,12 @@ public class PackageResourceImpl implements PackageResource {
 
 	@Override
 	@GET
-	@Path("/packages/{name}/files")
-	public PackageFileListResponse listFiles(@PathParam("name") String name, @QueryParam("path") @DefaultValue("") String path) throws NodeException {
-		return listFiles(name, path, PackageSynchronizer.FILES_DIR);
-	}
-
-	@Override
-	@GET
-	@Path("/packages/{name}/files/content")
-	public Response getFile(@PathParam("name") String name, @QueryParam("path") String path) throws NodeException {
-		return getFile(name, path, PackageSynchronizer.FILES_DIR);
-	}
-
-	@Override
-	@POST
-	@Path("/packages/{name}/files/content")
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response saveFile(@PathParam("name") String name, @QueryParam("path") String path, MultiPart multiPart) throws NodeException {
-		return saveFile(name, path, multiPart, PackageSynchronizer.FILES_DIR);
-	}
-
-	@Override
-	@DELETE
-	@Path("/packages/{name}/files/content")
-	public Response deleteFile(@PathParam("name") String name, @QueryParam("path") String path) throws NodeException {
-		return deleteFile(name, path, PackageSynchronizer.FILES_DIR);
-	}
-
-	@Override
-	@GET
-	@Path("/packages/{name}/files-internal")
-	public PackageFileListResponse listFilesInternal(@PathParam("name") String name, @QueryParam("path") @DefaultValue("") String path) throws NodeException {
-		return listFiles(name, path, PackageSynchronizer.FILES_INTERNAL_DIR);
-	}
-
-	@Override
-	@GET
-	@Path("/packages/{name}/files-internal/content")
-	public Response getFileInternal(@PathParam("name") String name, @QueryParam("path") String path) throws NodeException {
-		return getFile(name, path, PackageSynchronizer.FILES_INTERNAL_DIR);
-	}
-
-	@Override
-	@POST
-	@Path("/packages/{name}/files-internal/content")
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response saveFileInternal(@PathParam("name") String name, @QueryParam("path") String path, MultiPart multiPart) throws NodeException {
-		return saveFile(name, path, multiPart, PackageSynchronizer.FILES_INTERNAL_DIR);
-	}
-
-	@Override
-	@DELETE
-	@Path("/packages/{name}/files-internal/content")
-	public Response deleteFileInternal(@PathParam("name") String name, @QueryParam("path") String path) throws NodeException {
-		return deleteFile(name, path, PackageSynchronizer.FILES_INTERNAL_DIR);
-	}
-
-	/**
-	 * List files and directories contained in the given directory of the package's given files storage.
-	 * @param name Package name
-	 * @param path directory path, relative to the files storage root (defaults to the root)
-	 * @param filesDirName name of the package subdirectory backing the files storage
-	 *        ({@link PackageSynchronizer#FILES_DIR} or {@link PackageSynchronizer#FILES_INTERNAL_DIR})
-	 * @return list of files and directories
-	 */
-	private PackageFileListResponse listFiles(String name, String path, String filesDirName) throws NodeException {
+	@Path("/packages/{name}/{mode}")
+	public PackageFileListResponse listFiles(@PathParam("name") String name, @PathParam("mode") String mode, @QueryParam("path") @DefaultValue("") String path)
+			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			MainPackageSynchronizer packageSynchronizer = getPackage(name);
-			java.nio.file.Path base = getFilesRoot(packageSynchronizer, filesDirName);
+			java.nio.file.Path base = getFilesRoot(packageSynchronizer, mode);
 			java.nio.file.Path dir = resolveFilesPath(base, path);
 
 			PackageFileListResponse response = new PackageFileListResponse();
@@ -478,18 +416,13 @@ public class PackageResourceImpl implements PackageResource {
 		}
 	}
 
-	/**
-	 * Load the content of the file at the given path in the package's given files storage.
-	 * @param name Package name
-	 * @param path file path, relative to the files storage root
-	 * @param filesDirName name of the package subdirectory backing the files storage
-	 *        ({@link PackageSynchronizer#FILES_DIR} or {@link PackageSynchronizer#FILES_INTERNAL_DIR})
-	 * @return the file content
-	 */
-	private Response getFile(String name, String path, String filesDirName) throws NodeException {
+	@Override
+	@GET
+	@Path("/packages/{name}/{mode}/{path: .*}")
+	public Response getFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			MainPackageSynchronizer packageSynchronizer = getPackage(name);
-			java.nio.file.Path base = getFilesRoot(packageSynchronizer, filesDirName);
+			java.nio.file.Path base = getFilesRoot(packageSynchronizer, mode);
 			java.nio.file.Path target = resolveFilesPath(base, path);
 
 			if (!Files.isRegularFile(target)) {
@@ -512,19 +445,15 @@ public class PackageResourceImpl implements PackageResource {
 		}
 	}
 
-	/**
-	 * Create or update the file at the given path in the package's given files storage.
-	 * @param name Package name
-	 * @param path file path, relative to the files storage root, at which to store the uploaded content
-	 * @param multiPart multipart request containing the file data
-	 * @param filesDirName name of the package subdirectory backing the files storage
-	 *        ({@link PackageSynchronizer#FILES_DIR} or {@link PackageSynchronizer#FILES_INTERNAL_DIR})
-	 * @return response
-	 */
-	private Response saveFile(String name, String path, MultiPart multiPart, String filesDirName) throws NodeException {
+	@Override
+	@POST
+	@Path("/packages/{name}/{mode}/{path: .*}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response saveFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path, MultiPart multiPart)
+			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			MainPackageSynchronizer packageSynchronizer = getPackage(name);
-			java.nio.file.Path base = getFilesRoot(packageSynchronizer, filesDirName);
+			java.nio.file.Path base = getFilesRoot(packageSynchronizer, mode);
 			java.nio.file.Path target = resolveFilesPath(base, path);
 
 			if (StringUtils.isBlank(path) || Files.isDirectory(target)) {
@@ -545,18 +474,13 @@ public class PackageResourceImpl implements PackageResource {
 		}
 	}
 
-	/**
-	 * Delete the file at the given path in the package's given files storage.
-	 * @param name Package name
-	 * @param path file path, relative to the files storage root
-	 * @param filesDirName name of the package subdirectory backing the files storage
-	 *        ({@link PackageSynchronizer#FILES_DIR} or {@link PackageSynchronizer#FILES_INTERNAL_DIR})
-	 * @return response
-	 */
-	private Response deleteFile(String name, String path, String filesDirName) throws NodeException {
+	@Override
+	@DELETE
+	@Path("/packages/{name}/{mode}/{path: .*}")
+	public Response deleteFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			MainPackageSynchronizer packageSynchronizer = getPackage(name);
-			java.nio.file.Path base = getFilesRoot(packageSynchronizer, filesDirName);
+			java.nio.file.Path base = getFilesRoot(packageSynchronizer, mode);
 			java.nio.file.Path target = resolveFilesPath(base, path);
 
 			if (!Files.exists(target)) {
@@ -580,12 +504,16 @@ public class PackageResourceImpl implements PackageResource {
 	/**
 	 * Get the root directory of the package's given files storage (may not exist on disk yet)
 	 * @param packageSynchronizer package synchronizer
-	 * @param filesDirName name of the package subdirectory backing the files storage
+	 * @param mode files storage, which is also the name of the package subdirectory backing it
 	 *        ({@link PackageSynchronizer#FILES_DIR} or {@link PackageSynchronizer#FILES_INTERNAL_DIR})
 	 * @return files storage root directory
+	 * @throws EntityNotFoundException if mode is not a known files storage
 	 */
-	private java.nio.file.Path getFilesRoot(MainPackageSynchronizer packageSynchronizer, String filesDirName) {
-		return packageSynchronizer.getPackagePath().resolve(filesDirName).normalize();
+	private java.nio.file.Path getFilesRoot(MainPackageSynchronizer packageSynchronizer, String mode) throws NodeException {
+		if (!PackageSynchronizer.FILES_DIR.equals(mode) && !PackageSynchronizer.FILES_INTERNAL_DIR.equals(mode)) {
+			throw new EntityNotFoundException(I18NHelper.get("package.files.storage_notfound", mode));
+		}
+		return packageSynchronizer.getPackagePath().resolve(mode).normalize();
 	}
 
 	/**

@@ -37,62 +37,20 @@ import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for managing the files and files-internal storages of a devtool package. Parameterized to run the
- * same set of checks against both storages, since they only differ in which subdirectory/REST methods back them.
+ * same set of checks against both storages, which are selected by the mode parameter of the REST methods.
  */
 @RunWith(Parameterized.class)
 @GCNFeature(set = { Feature.DEVTOOLS })
 public class PackageResourceFilesTest {
 	private final static String PACKAGE_NAME = "testpackage";
 
-	@FunctionalInterface
-	private interface ListFiles {
-		PackageFileListResponse call(PackageResource resource, String name, String path) throws Exception;
-	}
-
-	@FunctionalInterface
-	private interface GetOrDeleteFile {
-		Response call(PackageResource resource, String name, String path) throws Exception;
-	}
-
-	@FunctionalInterface
-	private interface SaveFile {
-		Response call(PackageResource resource, String name, String path, MultiPart multiPart) throws Exception;
-	}
-
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> data() {
-		return Arrays.asList(
-				new Object[] {
-						"files", PackageSynchronizer.FILES_DIR,
-						(ListFiles) PackageResource::listFiles,
-						(GetOrDeleteFile) PackageResource::getFile,
-						(SaveFile) PackageResource::saveFile,
-						(GetOrDeleteFile) PackageResource::deleteFile },
-				new Object[] {
-						"files-internal", PackageSynchronizer.FILES_INTERNAL_DIR,
-						(ListFiles) PackageResource::listFilesInternal,
-						(GetOrDeleteFile) PackageResource::getFileInternal,
-						(SaveFile) PackageResource::saveFileInternal,
-						(GetOrDeleteFile) PackageResource::deleteFileInternal });
+		return Arrays.asList(new Object[] { PackageSynchronizer.FILES_DIR }, new Object[] { PackageSynchronizer.FILES_INTERNAL_DIR });
 	}
 
 	@Parameter(0)
-	public String variantName;
-
-	@Parameter(1)
-	public String filesDirName;
-
-	@Parameter(2)
-	public ListFiles listFiles;
-
-	@Parameter(3)
-	public GetOrDeleteFile getFile;
-
-	@Parameter(4)
-	public SaveFile saveFile;
-
-	@Parameter(5)
-	public GetOrDeleteFile deleteFile;
+	public String mode;
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -111,13 +69,13 @@ public class PackageResourceFilesTest {
 			trx.success();
 		}
 		resource = new PackageResourceImpl();
-		filesRoot = new File(new File(syncContext.getPackagesRoot(), PACKAGE_NAME), filesDirName);
+		filesRoot = new File(new File(syncContext.getPackagesRoot(), PACKAGE_NAME), mode);
 	}
 
 	@Test
 	public void testListFilesEmpty() throws Exception {
 		try (Trx trx = new Trx()) {
-			PackageFileListResponse response = listFiles.call(resource, PACKAGE_NAME, "");
+			PackageFileListResponse response = resource.listFiles(PACKAGE_NAME, mode, "");
 			assertThat(response.getItems()).isEmpty();
 			trx.success();
 		}
@@ -130,7 +88,7 @@ public class PackageResourceFilesTest {
 		Files.createDirectories(filesRoot.toPath().resolve("sub"));
 
 		try (Trx trx = new Trx()) {
-			PackageFileListResponse response = listFiles.call(resource, PACKAGE_NAME, "");
+			PackageFileListResponse response = resource.listFiles(PACKAGE_NAME, mode, "");
 			List<PackageFile> files = response.getItems();
 
 			assertThat(files).hasSize(3);
@@ -153,7 +111,7 @@ public class PackageResourceFilesTest {
 		writeFile("top.txt", "top");
 
 		try (Trx trx = new Trx()) {
-			PackageFileListResponse response = listFiles.call(resource, PACKAGE_NAME, "sub");
+			PackageFileListResponse response = resource.listFiles(PACKAGE_NAME, mode, "sub");
 			assertThat(response.getItems()).hasSize(1);
 			assertThat(response.getItems().get(0).getName()).isEqualTo("nested.txt");
 			assertThat(response.getItems().get(0).getPath()).isEqualTo("sub/nested.txt");
@@ -164,7 +122,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = EntityNotFoundException.class)
 	public void testListFilesNonExistentPath() throws Exception {
 		try (Trx trx = new Trx()) {
-			listFiles.call(resource, PACKAGE_NAME, "doesnotexist");
+			resource.listFiles(PACKAGE_NAME, mode, "doesnotexist");
 			trx.success();
 		}
 	}
@@ -173,7 +131,7 @@ public class PackageResourceFilesTest {
 	public void testListFilesPathIsFile() throws Exception {
 		writeFile("a.txt", "a");
 		try (Trx trx = new Trx()) {
-			listFiles.call(resource, PACKAGE_NAME, "a.txt");
+			resource.listFiles(PACKAGE_NAME, mode, "a.txt");
 			trx.success();
 		}
 	}
@@ -181,7 +139,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = InvalidRequestException.class)
 	public void testListFilesPathTraversal() throws Exception {
 		try (Trx trx = new Trx()) {
-			listFiles.call(resource, PACKAGE_NAME, "../../etc");
+			resource.listFiles(PACKAGE_NAME, mode, "../../etc");
 			trx.success();
 		}
 	}
@@ -189,7 +147,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = EntityNotFoundException.class)
 	public void testListFilesMissingPackage() throws Exception {
 		try (Trx trx = new Trx()) {
-			listFiles.call(resource, "doesnotexist", "");
+			resource.listFiles("doesnotexist", mode, "");
 			trx.success();
 		}
 	}
@@ -199,7 +157,7 @@ public class PackageResourceFilesTest {
 		writeFile("data.bin", "hello world");
 
 		try (Trx trx = new Trx()) {
-			Response response = getFile.call(resource, PACKAGE_NAME, "data.bin");
+			Response response = resource.getFile(PACKAGE_NAME, mode, "data.bin");
 			assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 			File entity = (File) response.getEntity();
 			assertThat(new String(Files.readAllBytes(entity.toPath()), StandardCharsets.UTF_8)).isEqualTo("hello world");
@@ -210,7 +168,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = EntityNotFoundException.class)
 	public void testGetFileMissingFile() throws Exception {
 		try (Trx trx = new Trx()) {
-			getFile.call(resource, PACKAGE_NAME, "doesnotexist.txt");
+			resource.getFile(PACKAGE_NAME, mode, "doesnotexist.txt");
 			trx.success();
 		}
 	}
@@ -219,7 +177,7 @@ public class PackageResourceFilesTest {
 	public void testGetFilePathIsDirectory() throws Exception {
 		Files.createDirectories(filesRoot.toPath().resolve("sub"));
 		try (Trx trx = new Trx()) {
-			getFile.call(resource, PACKAGE_NAME, "sub");
+			resource.getFile(PACKAGE_NAME, mode, "sub");
 			trx.success();
 		}
 	}
@@ -227,7 +185,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = InvalidRequestException.class)
 	public void testGetFilePathTraversal() throws Exception {
 		try (Trx trx = new Trx()) {
-			getFile.call(resource, PACKAGE_NAME, "../../etc/passwd");
+			resource.getFile(PACKAGE_NAME, mode, "../../etc/passwd");
 			trx.success();
 		}
 	}
@@ -235,7 +193,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = EntityNotFoundException.class)
 	public void testGetFileMissingPackage() throws Exception {
 		try (Trx trx = new Trx()) {
-			getFile.call(resource, "doesnotexist", "a.txt");
+			resource.getFile("doesnotexist", mode, "a.txt");
 			trx.success();
 		}
 	}
@@ -244,7 +202,7 @@ public class PackageResourceFilesTest {
 	public void testSaveFileCreate() throws Exception {
 		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("hello");
 		try (Trx trx = new Trx()) {
-			Response response = saveFile.call(resource, PACKAGE_NAME, "sub/new.txt", multiPart);
+			Response response = resource.saveFile(PACKAGE_NAME, mode, "sub/new.txt", multiPart);
 			assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
 			trx.success();
 		}
@@ -260,7 +218,7 @@ public class PackageResourceFilesTest {
 
 		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("new content");
 		try (Trx trx = new Trx()) {
-			Response response = saveFile.call(resource, PACKAGE_NAME, "existing.txt", multiPart);
+			Response response = resource.saveFile(PACKAGE_NAME, mode, "existing.txt", multiPart);
 			assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
 			trx.success();
 		}
@@ -274,7 +232,7 @@ public class PackageResourceFilesTest {
 		Files.createDirectories(filesRoot.toPath().resolve("sub"));
 		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("data");
 		try (Trx trx = new Trx()) {
-			saveFile.call(resource, PACKAGE_NAME, "sub", multiPart);
+			resource.saveFile(PACKAGE_NAME, mode, "sub", multiPart);
 			trx.success();
 		}
 	}
@@ -283,7 +241,7 @@ public class PackageResourceFilesTest {
 	public void testSaveFilePathTraversal() throws Exception {
 		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("data");
 		try (Trx trx = new Trx()) {
-			saveFile.call(resource, PACKAGE_NAME, "../../etc/passwd", multiPart);
+			resource.saveFile(PACKAGE_NAME, mode, "../../etc/passwd", multiPart);
 			trx.success();
 		}
 	}
@@ -292,7 +250,7 @@ public class PackageResourceFilesTest {
 	public void testSaveFileMissingPackage() throws Exception {
 		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("data");
 		try (Trx trx = new Trx()) {
-			saveFile.call(resource, "doesnotexist", "a.txt", multiPart);
+			resource.saveFile("doesnotexist", mode, "a.txt", multiPart);
 			trx.success();
 		}
 	}
@@ -302,7 +260,7 @@ public class PackageResourceFilesTest {
 		writeFile("todelete.txt", "bye");
 
 		try (Trx trx = new Trx()) {
-			Response response = deleteFile.call(resource, PACKAGE_NAME, "todelete.txt");
+			Response response = resource.deleteFile(PACKAGE_NAME, mode, "todelete.txt");
 			assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 			trx.success();
 		}
@@ -313,7 +271,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = EntityNotFoundException.class)
 	public void testDeleteFileNonExistent() throws Exception {
 		try (Trx trx = new Trx()) {
-			deleteFile.call(resource, PACKAGE_NAME, "doesnotexist.txt");
+			resource.deleteFile(PACKAGE_NAME, mode, "doesnotexist.txt");
 			trx.success();
 		}
 	}
@@ -322,7 +280,7 @@ public class PackageResourceFilesTest {
 	public void testDeleteFilePathIsDirectory() throws Exception {
 		Files.createDirectories(filesRoot.toPath().resolve("sub"));
 		try (Trx trx = new Trx()) {
-			deleteFile.call(resource, PACKAGE_NAME, "sub");
+			resource.deleteFile(PACKAGE_NAME, mode, "sub");
 			trx.success();
 		}
 	}
@@ -330,7 +288,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = InvalidRequestException.class)
 	public void testDeleteFilePathTraversal() throws Exception {
 		try (Trx trx = new Trx()) {
-			deleteFile.call(resource, PACKAGE_NAME, "../../etc/passwd");
+			resource.deleteFile(PACKAGE_NAME, mode, "../../etc/passwd");
 			trx.success();
 		}
 	}
@@ -338,7 +296,7 @@ public class PackageResourceFilesTest {
 	@Test(expected = EntityNotFoundException.class)
 	public void testDeleteFileMissingPackage() throws Exception {
 		try (Trx trx = new Trx()) {
-			deleteFile.call(resource, "doesnotexist", "a.txt");
+			resource.deleteFile("doesnotexist", mode, "a.txt");
 			trx.success();
 		}
 	}

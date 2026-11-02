@@ -19,16 +19,14 @@ import com.gentics.contentnode.factory.Session;
  * <p>
  * If no session is given (only possible for a tool whose
  * {@code McpToolProvider#requiresAuthentication()} is {@code false}), a fixed backend language ID
- * is set instead, the same way {@code PublishWorker}/{@code Publisher}/{@code JobController} (and
- * the annotation-scan tool path, {@code McpToolRegistry#invoke}) already do for their own
- * sessionless background work - without it, {@code ContentNodeHelper#getLanguageId()} has nothing
+ * is set instead, the same way {@code PublishWorker}/{@code Publisher}/{@code JobController}
+ * already do for their own sessionless background work - without it, {@code ContentNodeHelper#getLanguageId()} has nothing
  * to return, which makes i18n-translated messages fall back to their raw, untranslated key.
  * </p>
  */
 public final class McpSessionBinding implements AutoCloseable {
 	/**
-	 * Language ID used when no session is bound. Same convention as
-	 * {@code com.gentics.contentnode.mcp.McpToolRegistry#BACKEND_LANGUAGE_ID}.
+	 * Language ID used when no session is bound.
 	 */
 	private static final int BACKEND_LANGUAGE_ID = 2;
 

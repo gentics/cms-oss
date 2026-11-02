@@ -293,13 +293,6 @@ public class OSSRunner {
 	 * Register the manually implemented MCP tools (see
 	 * {@link com.gentics.contentnode.mcp.ManualMcpTools}) on the MCP server, if the MCP endpoint
 	 * is enabled.
-	 *
-	 * <p>
-	 * Note: the classpath scan for {@code @McpTool}-annotated REST resource methods
-	 * ({@code com.gentics.contentnode.mcp.McpToolRegistry#scanAndRegister}) is intentionally not
-	 * called anymore - tools are now registered manually. See
-	 * {@code docs/mcp-server-integration.md}.
-	 * </p>
 	 */
 	private static void registerMcpTools() {
 		MCPServer.getServer().ifPresent(ManualMcpTools::registerAll);

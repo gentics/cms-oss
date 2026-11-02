@@ -5,9 +5,9 @@ Gentics CMS OSS server, so that the CMS can act as an MCP (Model Context Protoco
 
 | Ticket | Scope | Status |
 | --- | --- | --- |
-| **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **authentication + manual tool registration implemented (§10); `list_nodes` tool + shared `ObjectRef` (§11)** |
+| **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **authentication + manual tool registration implemented (§10); `list_nodes` tool + shared `ObjectRef` (§11); annotation-based registration removed (§13)** |
 | GPU-2666 | Integrate the MCP server as a servlet under `/mcp` | implemented |
-| GPU-2667 | Wire up 10 more endpoints spanning varied argument shapes; harden `McpToolRegistry` | implemented (§9) |
+| GPU-2667 | Wire up 10 more endpoints spanning varied argument shapes; harden `McpToolRegistry` | implemented (§9), later removed (§13) |
 | GPU-2672 | (follow-up) | open |
 | GPU-2674 | (follow-up) | open |
 
@@ -238,6 +238,11 @@ npx @modelcontextprotocol/inspector
 
 ## 7. GPU-2665 — exposing REST endpoints as MCP tools
 
+> **Removed (§13).** Everything this section describes - `@McpTool`/`@McpToolParam`,
+> `McpToolRegistry`, the ClassGraph dependency and the annotations on REST resource methods and
+> parameter beans - has been deleted from the codebase. The section is kept for historical context
+> only.
+
 The first slice of the umbrella ticket: REST resource methods can now be marked as MCP tools with
 new annotations, are picked up automatically at startup, and can take real (JSON-schema-backed)
 arguments.
@@ -432,8 +437,8 @@ discovering a non-public method but then crashing on first real call with an
 * **Authentication and authorization.** Resolved for the manually implemented tools - see §10.
   `/mcp` now extracts an API token/session cookie from the request and resolves it into a real
   CMS session before a tool runs (`AbstractMcpTool`); a tool without a resolvable session is
-  rejected. `McpToolRegistry`'s classpath scan itself (§7.5) still doesn't do any of this, but is
-  also no longer invoked (§10.5), so this is moot unless that scan is re-enabled for some tools.
+  rejected. `McpToolRegistry`'s classpath scan (§7.5), which never did any of this, has been
+  removed (§13).
 * **Transport security.** Partially addressed - see §10.3. `CmsMcpSecurityValidator` covers
   credential *presence*, not `Origin` header validation, which is a distinct concern (CSRF-style
   cross-origin requests from a browser) and is **still open**. The transport's
@@ -442,21 +447,18 @@ discovering a non-public method but then crashing on first real call with an
   `CmsMcpSecurityValidator`) is a separate follow-up.
 * **Configuration reload.** The MCP server is built once at startup. If it should react to
   `onReloadConfiguration()` (see `ServletContextHandlerService`), that has to be added. Still open.
-* **Tool arguments beyond scalars/collections.** `McpToolRegistry` (§7.3) still does not support a
-  nested/complex bean type (a field whose own type has further `@McpToolParam` fields) as a single
-  argument — needed as soon as a tool requires it. Still open; not needed by any of the endpoints
-  wired up in §9.
-* **`@Context`-dependent endpoints.** No longer rejected outright at the class level — see §9.3.
-  Still not supported for a tool method that actually needs a real `HttpServletRequest`/
-  `HttpServletResponse` value (as opposed to one that merely lives on a `@Context`-using class but
-  never reads it); that remains blocked, by design, until the authentication/authorization point
-  above is resolved (a real request only becomes available once a real session is threaded
-  through).
+* **Tool arguments beyond scalars/collections** and **`@Context`-dependent endpoints.** Both were
+  limitations of `McpToolRegistry` (§7.3, §9.2). Obsolete since its removal (§13): manual tools
+  build their own input schema and do not get REST resource classes instantiated for them.
 * **Documentation** in `cms-oss-doc` once the endpoint has user-visible functionality. Still open.
 
 ---
 
 ## 9. GPU-2667 — wiring 10 more endpoints, hardening the registry
+
+> **Removed (§13).** The annotated endpoints, `McpToolRegistry`'s hardening, `ContextUsageAnalyzer`
+> and the ASM dependency described here have been deleted from the codebase. The section is kept
+> for historical context only.
 
 To manually test the `@McpTool`/`@McpToolParam` annotations against realistic argument shapes,
 10 endpoints were selected (from `Vorschlag=Ja` in the project's endpoint-selection spreadsheet)
@@ -567,8 +569,8 @@ one actually works end to end:
    so permission checks the delegated-to code performs run against the actual caller, not the CMS
    system user.
 2. Tools are now registered **manually**, one `McpToolProvider` implementation per tool, instead
-   of (only) via `McpToolRegistry`'s `@McpTool` classpath scan. That scan is kept in the codebase
-   - its tests still pass - but is no longer invoked at startup (§10.5).
+   of (only) via `McpToolRegistry`'s `@McpTool` classpath scan. That scan was at first kept in the
+   codebase but no longer invoked at startup (§10.5); it has since been removed (§13).
 
 ### 10.1 Changed and added files
 
@@ -642,12 +644,10 @@ offloads it onto a pooled `Schedulers.boundedElastic()` thread (`McpServerFeatur
 .AsyncToolSpecification#fromSync`, checked against the SDK source at the `v2.0.1` tag), and that
 thread is reused across unrelated calls. `McpSessionBinding` (an `AutoCloseable`, always used in a
 try-with-resources by `AbstractMcpTool#call`) binds the resolved session on `ContentNodeHelper` for
-the duration of the call and restores whatever was bound before - the same session leak concern
-`McpToolRegistry#invoke` already had to deal with for its fixed backend language ID (§7's
-`invoke` Javadoc), generalized here to the session itself. If no session is bound (only possible
-for a tool with `requiresAuthentication() == false`), the same fixed backend language ID (`2`) is
-set instead, for the same reason `McpToolRegistry#invoke` sets it: without *some* language,
-i18n-translated messages fall back to their raw, untranslated key.
+the duration of the call and restores whatever was bound before. If no session is bound (only
+possible for a tool with `requiresAuthentication() == false`), a fixed backend language ID (`2`)
+is set instead: without *some* language, i18n-translated messages fall back to their raw,
+untranslated key.
 
 ### 10.5 Manual tool registration replaces the classpath scan
 
@@ -659,14 +659,10 @@ explicit list of tool instances and registers each of them on the `McpSyncServer
 `OSSRunner.registerMcpTools()` now calls `ManualMcpTools.registerAll` instead of
 `McpToolRegistry.scanAndRegister`.
 
-`McpToolRegistry` itself (the scan, the `@McpTool`/`@McpToolParam` annotations, `ContextUsage
-Analyzer`, and all of §7/§9's hardening) is **not deleted** - it still compiles, its tests still
-pass, and the 12 REST methods already annotated with `@McpTool` are untouched - but none of it
-runs anymore, so none of those 12 tools are exposed until/unless `scanAndRegister` is called again
-from somewhere. This was a deliberate choice (see the project's planning discussion for this
-ticket): keep the annotation-based approach available/dormant rather than deleting it outright,
-in case some of those endpoints are migrated to manual tools individually later, but stop treating
-it as the live registration path.
+At this point `McpToolRegistry` itself (the scan, the `@McpTool`/`@McpToolParam` annotations,
+`ContextUsageAnalyzer`, and all of §7/§9's hardening) was deliberately kept, dormant, in case some
+of the 12 annotated endpoints were migrated to manual tools individually later. It has since been
+removed completely, since all tools are implemented explicitly (§13).
 
 ### 10.6 The `page_load` tool
 
@@ -797,8 +793,8 @@ Tests: `ObjectRefTest`, `ListNodesToolTest`, `AbstractMcpToolTest` (all new, no 
 * **No extra permission check.** `NodeResourceImpl#list` already filters to
   `ObjectPermission.view` (`PermissionFilter`), and `#languages` re-checks `view` per node
   (`MiscUtils.getNode`). Same principle as `page_load` (§10.6).
-* **`@Context` safety** was re-checked by hand at implementation time (the tool bypasses
-  `ContextUsageAnalyzer`, like every manual tool). `list`/`languages` and everything they call use
+* **`@Context` safety** was re-checked by hand at implementation time (manual tools are not
+  covered by any automatic analysis). `list`/`languages` and everything they call use
   only `ContentNodeHelper`/`TransactionManager`/static `MiscUtils` helpers. None read the
   `@Context` fields declared on `AbstractContentNodeResource`.
 * **No outer `Trx`.** Both resource methods open their own via `ContentNodeHelper.trx()`, like
@@ -1126,3 +1122,30 @@ Tests: `McpSchemasTest`, `McpArgsTest`, `util/ChangedFieldsTest`, `util/SliceTes
 `saveOrReleaseLock` success path). Releasing the lock after a failed save needs a DB and is
 covered by `UpdatePagePropertiesToolIntegrationTest` (duplicate name/filename leave the page
 unlocked).
+
+---
+
+## 13. GPU-2665 — removal of the annotation-based tool registration
+
+All MCP tools are implemented explicitly (`McpToolProvider`/`AbstractMcpTool`, registered via
+`ManualMcpTools`, §10.5). The annotation-based registration of §7/§9, which had been kept dormant
+since §10.5, has therefore been removed completely.
+
+### 13.1 Removed and changed files
+
+| File | Change |
+| --- | --- |
+| `cms-restapi/…/rest/mcp/McpTool.java`, `McpToolParam.java` | **deleted** |
+| `cms-core/…/mcp/McpToolRegistry.java`, `ContextUsageAnalyzer.java` | **deleted** |
+| `cms-core/src/test/…/mcp/McpToolRegistryTest.java` | **deleted** (its subject was removed) |
+| `cms-core/…/rest/resource/impl/{Admin,Construct,File,Info,Language,MarkupLanguage,ObjectProperty,Page,PartType,PublishProtocol,Template}ResourceImpl.java` | `@McpTool`/`@McpToolParam` removed, parameter lists back to their pre-GPU-2665 formatting |
+| `cms-restapi/…/resource/parameter/{ActionLog,Construct,Embed,Filter,ObjectProperty,Paging,PartTypeList,Perms,ReducedList,Sort}ParameterBean.java` | `@McpToolParam` removed |
+| `cms-restapi/…/resource/parameter/TemplateListParameterBean.java` | removed the `reduce` field added in §7/§9's work; it duplicated (hid) `ReducedListParameterBean#reduce` |
+| `pom.xml`, `cms-oss-bom/pom.xml`, `cms-core/pom.xml` | ClassGraph and ASM (`asm`, `asm-tree`) dependencies and their version properties removed; the MCP SDK dependencies stay |
+| `cms-core/…/mcp/{McpToolProvider,ManualMcpTools,AbstractMcpTool}.java`, `cms-core/…/mcp/auth/McpSessionBinding.java`, `cms-oss-server/…/server/OSSRunner.java` | comments referring to the removed classes updated; no code change |
+
+All REST resource and parameter bean files listed above are identical to their state before
+GPU-2665 (`e45f2779d`). No changelog entry was added for this removal.
+
+The manual test protocol for the annotation-based tools (`docs/mcp-tests.md` §0-§8) no longer
+applies.

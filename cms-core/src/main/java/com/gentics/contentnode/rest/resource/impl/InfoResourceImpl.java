@@ -10,7 +10,6 @@ import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.MaintenanceMode;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.model.response.AlohaFilesResponse;
 import com.gentics.contentnode.rest.model.response.MaintenanceResponse;
 import com.gentics.contentnode.rest.model.response.Message;
@@ -31,7 +30,6 @@ public class InfoResourceImpl implements InfoResource {
 	@Override
 	@GET
 	@Path("/maintenance")
-	@McpTool(description = "Get the current maintenance mode status and message.")
 	public MaintenanceResponse getMaintenance() {
 		try {
 			return Trx.supply(() -> {

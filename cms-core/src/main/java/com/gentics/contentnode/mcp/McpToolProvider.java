@@ -12,12 +12,8 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
  * A manually implemented MCP tool.
  *
  * <p>
- * This is the replacement for the previous approach of deriving tools automatically from
- * {@code @McpTool}-annotated REST resource methods via {@link McpToolRegistry}'s classpath scan.
- * That scan (and the {@code @McpTool}/{@code @McpToolParam} annotations it looks for) is kept in
- * the codebase for now, but is no longer invoked from {@code OSSRunner} - see
- * {@code docs/mcp-server-integration.md}. Tools are now registered explicitly, one
- * {@link McpToolProvider} implementation per tool, via {@link ManualMcpTools}.
+ * Tools are registered explicitly, one {@link McpToolProvider} implementation per tool, via
+ * {@link ManualMcpTools}.
  * </p>
  *
  * <p>

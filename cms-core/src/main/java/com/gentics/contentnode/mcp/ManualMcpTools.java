@@ -11,13 +11,6 @@ import io.modelcontextprotocol.server.McpSyncServer;
 
 /**
  * Registers every manually implemented {@link McpToolProvider} on the MCP server.
- *
- * <p>
- * This replaces the classpath-scan-based registration that {@code McpToolRegistry} used to
- * perform for {@code @McpTool}-annotated REST resource methods. That scan is kept in the
- * codebase (its tests still pass), but {@code OSSRunner} no longer calls it - see
- * {@code docs/mcp-server-integration.md}.
- * </p>
  */
 public final class ManualMcpTools {
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(ManualMcpTools.class);

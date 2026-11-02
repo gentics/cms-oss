@@ -98,7 +98,7 @@ public abstract class AbstractMcpTool implements McpToolProvider {
 		} catch (Exception e) {
 			// method.invoke()-style reflective delegation wraps the real cause in an
 			// InvocationTargetException, whose own getMessage() is null - unwrap it so the actual
-			// error is logged/reported instead of "null" (mirrors McpToolRegistry#invoke).
+			// error is logged/reported instead of "null".
 			Throwable cause = e instanceof InvocationTargetException && e.getCause() != null ? e.getCause() : e;
 			logger.error(String.format("Error while invoking MCP tool '%s'", tool().name()), cause);
 			return CallToolResult.builder().isError(true).addTextContent(String.valueOf(cause.getMessage())).build();

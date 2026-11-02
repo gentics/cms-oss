@@ -29,23 +29,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!-- Classpath scanning for MCP tool discovery -->
-			<dependency>
-				<groupId>io.github.classgraph</groupId>
-				<artifactId>classgraph</artifactId>
-				<version>${classgraph.version}</version>
-			</dependency>
-			<!-- Bytecode analysis, used to detect @Context field usage in @McpTool methods -->
-			<dependency>
-				<groupId>org.ow2.asm</groupId>
-				<artifactId>asm</artifactId>
-				<version>${asm.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.ow2.asm</groupId>
-				<artifactId>asm-tree</artifactId>
-				<version>${asm.version}</version>
-			</dependency>
 			<!-- Jersey dependencies-->
 			<dependency>
 				<groupId>org.glassfish.jersey</groupId>

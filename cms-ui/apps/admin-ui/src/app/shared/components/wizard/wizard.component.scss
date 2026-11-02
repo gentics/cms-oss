@@ -1,3 +1,4 @@
+@import 'variables';
 
 :host {
     display: flex;
@@ -6,4 +7,13 @@
     // ToDo: This value is currently a copy of what is defined for '.gtx-modal-dialog.visible > * '.
     // We should find a better solution than copying.
     max-height: 80vh;
+}
+
+gtx-tabs ::ng-deep .tab-links > .tab-link.disabled:not(.is-active) {
+    cursor: default;
+
+    &,
+    &:hover {
+        color: $gtx-color-mid-gray;
+    }
 }

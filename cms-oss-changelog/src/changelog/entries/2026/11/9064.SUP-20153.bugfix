@@ -1,0 +1,1 @@
+Administrator User Interface: Navigating between the steps of a wizard (e.g. when creating a node) via the step tabs has been fixed. Later steps can only be selected once all previous steps are valid. Additionally, the forms step is no longer skipped when creating a channel with the feature "Forms" enabled.

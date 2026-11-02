@@ -11,6 +11,7 @@ import {
     type CmsTokenInfo,
     createCmsToken,
     getCmsKeycloakConfig,
+    getCmsUiLanguage,
     getCmsUser,
     isCmsFeatureActive,
     listCmsFolders,
@@ -452,5 +453,28 @@ describe('CMS page tags', () => {
 
         expect(error).toBeInstanceOf(HttpError);
         expect(errorMessageKey(error)).toBe('errors.cms.LOCKED');
+    });
+});
+
+describe('CMS UI language', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('reads the language of the CMS session', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' }, code: 'de' }));
+
+        await expect(getCmsUiLanguage()).resolves.toBe('de');
+        expect(fetchMock).toHaveBeenCalledWith('/rest/i18n/get', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('throws an answer without a language or with another code than OK', async () => {
+        stubFetchSequence(
+            Response.json({ responseInfo: { responseCode: 'FAILURE' } }),
+            Response.json({ responseInfo: { responseCode: 'OK' } }),
+        );
+
+        await expect(getCmsUiLanguage()).rejects.toBeInstanceOf(HttpError);
+        await expect(getCmsUiLanguage()).rejects.toBeInstanceOf(HttpError);
     });
 });

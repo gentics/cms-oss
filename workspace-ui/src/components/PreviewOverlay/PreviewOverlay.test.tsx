@@ -22,7 +22,7 @@ describe('PreviewOverlay', () => {
             <PreviewOverlay
                 {...none}
                 selectedRef={createRef()}
-                changed={[{ tagName: 'content_2', box }]}
+                changed={[{ key: 'content_2#0', tagName: 'content_2', box }]}
                 target={{ top: 110, left: 50, width: 80, height: 20 }}
                 editing={box}
                 hovered={{ box, label: 'Paragraph · Text' }}

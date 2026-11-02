@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 import '@testing-library/jest-dom/vitest';
 
 // jsdom does no layout, but ProseMirror (the composer's Tiptap editor) measures ranges and hit-tests
@@ -26,3 +28,6 @@ if (typeof document !== 'undefined') {
     document.elementFromPoint ??= () => null;
     window.matchMedia ??= noMediaQuery;
 }
+
+// The app starts in German (`src/i18n`); the tests expect its English texts unless they switch themselves.
+await i18n.changeLanguage('en');

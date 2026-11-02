@@ -36,7 +36,7 @@ export interface PreviewOverlayProps {
     /** The box the page is dimmed around (focus mode, while the feedback card is open); `null` for none. */
     dimmed: ElementBox | null;
     /** The parts the last CMS write changed. */
-    changed: { tagName: string; box: ElementBox }[];
+    changed: { key: string; tagName: string; box: ElementBox }[];
     /** The selection and how it is shown; `null` for none. */
     selected: { box: ElementBox; mode: SelectedMode } | null;
     /** The selection's element, for what is anchored at it (menu, cards). */
@@ -58,7 +58,7 @@ export function PreviewOverlay({ dimmed, changed, selected, selectedRef, target,
     return (
         <div className={styles.overlay} aria-hidden="true">
             {dimmed && dimBands(dimmed).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
-            {changed.map(({ tagName, box }) => <div key={tagName} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
+            {changed.map(({ key, tagName, box }) => <div key={key} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
             {selected && (
                 <div
                     ref={selectedRef}

@@ -59,9 +59,9 @@ function readOnlyPreviewUrl(url: string): string {
         : parsed.toString();
 }
 
-// Whether `a` and `b` are the same part and the same text block or link of it (or both the whole part).
+// Whether `a` and `b` are the same part (the same element of its tag) and the same text block or link of it (or both the whole part).
 function isSameElement(a: PreviewElement | null, b: PreviewElement | null): boolean {
-    return a?.tagName === b?.tagName && a?.textBlock?.index === b?.textBlock?.index && a?.link?.index === b?.link?.index;
+    return a?.tagName === b?.tagName && a?.elementId === b?.elementId && a?.textBlock?.index === b?.textBlock?.index && a?.link?.index === b?.link?.index;
 }
 
 // The link card's target for an `href` read from the page (`linkTargetOf`): its CMS page, or its URL.

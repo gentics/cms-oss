@@ -13,6 +13,7 @@ import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.perm.TypePerms;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.Permission;
 import com.gentics.contentnode.rest.model.response.PermBitsResponse;
@@ -174,11 +175,17 @@ public class GetPermissionsTool extends AbstractMcpTool {
 	 * @param permResource resource
 	 * @param request request
 	 * @return permission name to granted flag
-	 * @throws Exception if the permissions cannot be loaded, e.g. for a type with per-instance
-	 *         permissions only
+	 * @throws IllegalArgumentException for a type with per-instance permissions only, which the CMS
+	 *         refuses on the type level (see {@code MiscUtils#expectNoInstances})
+	 * @throws Exception if the permissions cannot be loaded
 	 */
 	private static Map<String, Boolean> typePermissions(PermResource permResource, Request request)
 			throws Exception {
+		TypePerms permType = TypePerms.get(request.type());
+		if (permType != null && permType.hasInstances()) {
+			throw new IllegalArgumentException("Permissions on the type '%s' can only be checked on an object, pass 'id'"
+					.formatted(request.type()));
+		}
 		PermBitsResponse response = permResource.getPermissions(request.type(), true);
 		requireOk(response, "The permissions on type '%s' could not be loaded".formatted(request.type()));
 		Map<PermType, Boolean> map = response.getPermissionsMap() != null

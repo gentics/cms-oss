@@ -94,7 +94,7 @@ public class WhoamiToolIntegrationTest {
 
 	@Test
 	public void testWithoutGroups() {
-		assertThat(success(aliceContext, Map.of("includeGroups", false))).containsOnlyKeys("user");
+		assertThat(success(aliceContext, Map.of("includeGroups", false))).containsOnlyKeys("user", "cms");
 	}
 
 	@Test

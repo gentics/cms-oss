@@ -1,0 +1,66 @@
+/* Above the frame, the size of the page area: outlines of the parts (design.md §12 "Elemente in der
+   Vorschau"). It lets the mouse through to the page. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hovered,
+.selected,
+.target,
+.anchor,
+.changed {
+  position: absolute;
+  border-radius: var(--corner-xs);
+}
+
+/* The item or cell of the selected list or table that "Write it yourself" edits (design.md §12, like the hover). */
+.target {
+  outline: 1.5px solid rgba(var(--interactive-rgb), 0.2);
+  background: rgba(var(--interactive-rgb), 0.2);
+  background: color-mix(in oklab, var(--interactive) 15%, transparent);
+}
+
+/* Changed by the last CMS write (design.md §12 "Geändert"). */
+.changed {
+  background: rgba(var(--success-rgb), 0.07);
+}
+
+.hovered {
+  outline: 1.5px dashed rgba(var(--interactive-rgb), 0.55);
+  outline-offset: 2px;
+}
+
+.selected {
+  outline: 2px solid var(--interactive);
+  outline-offset: 2px;
+}
+
+/* The selected part while its new text is written (design.md §12 "Wird bearbeitet"). */
+.selected.editing {
+  outline-color: var(--interactive-fill);
+}
+
+.label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 5px;
+  border-radius: var(--corner-xs);
+  background: var(--fg-primary);
+  color: var(--bg-surface);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Focus mode while the feedback card is open: the page around the part fades and loses colour
+   (design.md §12: opacity .24, saturation .3), drawn over it, the page itself unchanged. */
+.dim {
+  position: absolute;
+  background: color-mix(in srgb, var(--bg-surface) 76%, transparent);
+  backdrop-filter: saturate(0.3);
+}

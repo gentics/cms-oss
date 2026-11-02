@@ -97,12 +97,19 @@ describe('isImagePart', () => {
 });
 
 describe('textBlocksOf', () => {
-    // A text part holding a headline and a paragraph, as GenAIx writes a new page into one Aloha text.
+    // A text part holding a headline and a paragraph, as GenAIx writes a new page into one Aloha text; an editable,
+    // as the CMS marks one with tagmarkers=true (only an editable is split).
     function textPart(html: string) {
-        document.body.innerHTML = `<div data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)">${html}</div>`;
+        document.body.innerHTML = `<div data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" id="GENTICS_EDITABLE_932">${html}</div>`;
 
         return document.querySelector('[data-gcn-tagid]')!;
     }
+
+    it('does not split a part that is no editable, however many blocks it holds', () => {
+        document.body.innerHTML = '<div data-gcn-tagid="7" data-gcn-tagname="facts_1" data-gcn-i18n-constructname="Key facts"><h3>Fakten</h3><ul><li>Drei Tage</li></ul><p>Mehr</p></div>';
+
+        expect(textBlocksOf(document.querySelector('[data-gcn-tagid]')!)).toEqual([]);
+    });
 
     it('splits a text part into its headings, paragraphs, quotes, code, lists and tables', () => {
         const part = textPart('<h1>headline 1</h1> loose text <p>Lorem</p><br><blockquote>Q</blockquote><pre>C</pre><ul><li>L</li></ul><table><tr><td>T</td></tr></table><div>other</div>');
@@ -131,6 +138,14 @@ describe('textBlocksOf', () => {
         ]);
         // The image block stays a part of its own: a click there selects it, not a block of the text.
         expect(markedElementOf(part.querySelector('img'))?.getAttribute('data-gcn-tagname')).toBe('manimage_1');
+    });
+
+    it('takes a paragraph that holds a link tag as a block, the link tag staying a part of its own', () => {
+        const part = textPart('<p>Intro</p><p>Register on the <a data-gcn-tagid="971" data-gcn-tagname="gtxalohapagelink_1" data-gcn-i18n-constructname="Aloha Link" href="/x">contact</a> page.</p><ul><li>L</li></ul>');
+
+        expect(textBlocksOf(part).map((textBlock) => textBlock.textContent)).toEqual(['Intro', 'Register on the contact page.', 'L']);
+        expect(markedElementOf(part.querySelector('a'))?.getAttribute('data-gcn-tagname')).toBe('gtxalohapagelink_1');
+        expect(previewElementOf(part, textBlocksOf(part)[1]).textBlock).toEqual({ index: 1, count: 3, kind: 'paragraph', excerpt: 'Register on the contact page.' });
     });
 
     it('finds the block a target is in, and none outside the blocks', () => {

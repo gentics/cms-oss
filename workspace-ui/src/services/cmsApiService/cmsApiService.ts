@@ -386,6 +386,66 @@ export async function loadCmsPage(id: number, nodeId?: number, signal?: AbortSig
 }
 
 /**
+ * A part's value of a tag, as `GET /rest/page/load` lists it, as far as a direct edit needs it. `id` is the
+ * id of the stored value, the one an editable in the preview carries (`GENTICS_EDITABLE_<id>`); `type` is
+ * e.g. `STRING`, `RICHTEXT`, `PAGE` or `IMAGE`.
+ */
+export interface CmsProperty {
+    id?: number;
+    type: string;
+    stringValue?: string;
+    pageId?: number;
+    imageId?: number;
+    nodeId?: number;
+}
+
+/** A tag of a page with its parts' values (`properties`, by part keyword). */
+export interface CmsTag {
+    id: number;
+    name: string;
+    constructId?: number;
+    active?: boolean;
+    properties?: Record<string, CmsProperty>;
+}
+
+// Throws a CMS answer whose `responseInfo.responseCode` is not `OK` as an `HttpError`, which `errorMessageKey`
+// names by that code (`errors.cms.LOCKED`, …).
+function checkCmsResponse(url: string, response: { responseInfo?: { responseCode?: string } }) {
+    if (response.responseInfo?.responseCode !== 'OK') {
+        throw new HttpError(url, 200, response);
+    }
+}
+
+/** The tags of the page `id`, by name, in `nodeId` if given: `GET /rest/page/load/{id}`, read only. */
+export async function loadCmsPageTags(id: number, nodeId?: number, signal?: AbortSignal): Promise<Record<string, CmsTag>> {
+    const params = nodeId === undefined ? '' : `?${new URLSearchParams({ nodeId: String(nodeId) })}`;
+    const url = `/rest/page/load/${id}${params}`;
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; page?: { tags?: Record<string, CmsTag> } }>(url, { ...CMS_GET, signal });
+
+    checkCmsResponse(url, response);
+
+    return response.page?.tags ?? {};
+}
+
+/**
+ * Saves one tag of the page `id`: `POST /rest/page/save/{id}` with only that tag and `unlock: true`. The CMS
+ * locks the page for the save itself and needs the `edit` permission; it changes only the tags sent, and in
+ * them only the parts sent. A tag without `active` would be switched on, so `tag` carries the one it was
+ * loaded with. The CMS keeps a new version of the page.
+ */
+export async function saveCmsPageTag(id: number, tag: CmsTag): Promise<void> {
+    const url = `/rest/page/save/${id}`;
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string } }>(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page: { tags: { [tag.name]: tag } }, unlock: true }),
+    });
+
+    checkCmsResponse(url, response);
+}
+
+/**
  * Whether the current CMS user may publish the page `id`: `GET /rest/perm/publish/page/{id}`, in
  * `nodeId` if given. The CMS checks `publishpages` on the page's folder and the role permission for its
  * language (`PermHandler.canPublish`), the permission that decides between publishing a page and

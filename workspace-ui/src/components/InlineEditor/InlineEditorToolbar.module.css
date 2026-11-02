@@ -1,0 +1,6 @@
+/* The formatting buttons of the inline editor, in one row (design.md §7 icon buttons). */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}

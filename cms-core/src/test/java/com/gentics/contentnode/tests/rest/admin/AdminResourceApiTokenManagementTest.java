@@ -23,6 +23,7 @@ import org.junit.rules.RuleChain;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
@@ -185,6 +186,59 @@ public class AdminResourceApiTokenManagementTest {
 			ApiTokenListResponse listResponse = assertSuccess(() -> getAdminResource().listAPITokens(null, null, null),
 					null);
 			assertThat(listResponse.getItems()).as("Api Tokens for user").isEmpty();
+		}
+	}
+
+	/**
+	 * Test create an Api token with pruneOnExpiry (and an expiry date)
+	 * @throws NodeException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testCreateWithPruneOnExpiry() throws NodeException, InterruptedException {
+		int expires = (int) Instant.now().plus(1, ChronoUnit.SECONDS).getEpochSecond();
+
+		ApiTokenCreationResponse prunableToken, nonPrunableToken;
+
+		try (DBSessionClosure ses = new DBSessionClosure(normalUser)) {
+			prunableToken = assertSuccess(
+					() -> getAdminResource().createAPIToken(new ApiTokenCreationRequest()
+							.setName("Test with prune on expiry").setExpires(expires).setPruneOnExpiry(true)),
+					null);
+			assertThat(prunableToken.getData())
+				.as("Created Api Token with prune on expiry")
+				.expiresAt(expires)
+				.willBePrunedOnExpiry()
+				.isValid();
+
+			nonPrunableToken = assertSuccess(
+					() -> getAdminResource().createAPIToken(new ApiTokenCreationRequest()
+							.setName("Test without prune on expiry").setExpires(expires).setPruneOnExpiry(false)),
+					null);
+			assertThat(nonPrunableToken.getData())
+				.as("Created Api Token without prune on expiry")
+				.expiresAt(expires)
+				.willNotBePrunedOnExpiry()
+				.isValid();
+
+			ApiTokenListResponse listResponse = assertSuccess(() -> getAdminResource().listAPITokens(null, null, null),
+					null);
+			assertThat(listResponse.getItems()).as("Api Tokens for user").containsOnly(prunableToken.getData(), nonPrunableToken.getData());
+		}
+
+		// wait two seconds, so the api token will expire
+		Thread.sleep(2000);
+		// clean old sessions. This will also prune expired tokens
+		DBSession.cleanOldSessions();
+
+		// the tokens will be expired now
+		prunableToken.getData().setValid(false);
+		nonPrunableToken.getData().setValid(false);
+
+		try (DBSessionClosure ses = new DBSessionClosure(normalUser)) {
+			ApiTokenListResponse listResponse = assertSuccess(() -> getAdminResource().listAPITokens(null, null, null),
+					null);
+			assertThat(listResponse.getItems()).as("Api Tokens for user").containsOnly(nonPrunableToken.getData());
 		}
 	}
 

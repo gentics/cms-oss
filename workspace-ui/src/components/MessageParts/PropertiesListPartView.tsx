@@ -13,7 +13,7 @@ import styles from './MessageParts.module.css';
  * `properties_list`: key/value pairs (draft `.propcard`). A value with a `ref` shows as its token.
  * `editable` is not offered here: the contract has no route that takes an edit of a transcript part.
  */
-export function PropertiesListPartView({ part }: PartViewProps<PropertiesListPart>) {
+export function PropertiesListPartView({ part, sessionId }: PartViewProps<PropertiesListPart>) {
     const { t } = useTranslation();
 
     return (
@@ -23,7 +23,7 @@ export function PropertiesListPartView({ part }: PartViewProps<PropertiesListPar
                     <div key={item.key} className={styles.property}>
                         <dt className={styles.propertyKey}>{item.label}</dt>
                         <dd className={styles.propertyValue}>
-                            {item.ref ? <RefToken value={{ ...item.ref, label: item.ref.label || item.value || undefined }} /> : (item.value ?? '–')}
+                            {item.ref ? <RefToken value={{ ...item.ref, label: item.ref.label || item.value || undefined }} sessionId={sessionId} /> : (item.value ?? '–')}
                         </dd>
                     </div>
                 ))}

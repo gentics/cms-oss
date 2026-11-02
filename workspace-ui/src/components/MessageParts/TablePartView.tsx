@@ -50,7 +50,7 @@ export function TablePartView({ part, sessionId }: PartViewProps<TablePart>) {
         }
 
         if (isContextReference(value)) {
-            return <RefToken value={value} />;
+            return <RefToken value={value} sessionId={sessionId} />;
         }
 
         if (typeof value === 'boolean') {

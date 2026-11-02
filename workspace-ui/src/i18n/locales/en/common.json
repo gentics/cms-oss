@@ -943,7 +943,10 @@
         "add": "Add guideline",
         "available": "Available guidelines",
         "remove": "Remove {{name}}",
-        "missing": "{{name}} was removed or renamed",
         "saveFailed": "The guidelines could not be saved"
+    },
+    "guidelines": {
+        "missing": "{{name}} was removed or renamed",
+        "removedOrRenamed": "Removed or renamed"
     }
 }

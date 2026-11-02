@@ -66,6 +66,11 @@ export function parseGuidelineSlug(slug: string): Pick<Guideline, 'package' | 'n
     return { package: slug.slice(0, separator), name: isDefault ? rest.slice(0, -DEFAULT_SUFFIX.length) : rest, isDefault };
 }
 
+/** The name of the guideline `slug` names (`corporate/seo-basics` → `seo-basics`), else the slug itself. */
+export function guidelineName(slug: string): string {
+    return parseGuidelineSlug(slug)?.name ?? slug;
+}
+
 /** The guidelines by `prio`, lowest first, then by slug. */
 export function sortGuidelines(guidelines: Guideline[]): Guideline[] {
     return [...guidelines].sort((a, b) => a.prio - b.prio || a.slug.localeCompare(b.slug));

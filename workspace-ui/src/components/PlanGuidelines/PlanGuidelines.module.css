@@ -33,16 +33,3 @@
   gap: 2px;
   min-width: 0;
 }
-
-/* A guideline that no longer exists: status chip of the warning family, icon and text (design.md §3.3). */
-.missing {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border: 1px solid rgba(var(--warning-rgb), 0.45);
-  border-radius: var(--corner-sm);
-  background: var(--warning-bg);
-  color: var(--warning);
-  font-size: var(--font-size-sm);
-}

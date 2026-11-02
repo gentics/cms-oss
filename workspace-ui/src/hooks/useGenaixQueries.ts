@@ -87,9 +87,9 @@ export function useSessions(filters: SessionFilters = {}) {
         ...retryOptions,
     });
 }
-/** GET /sessions/{session_id}: the session, its `status` included. */
-export function useSession(sessionId: string) {
-    return useQuery({ queryKey: genaixKeys.session(sessionId), queryFn: () => getSession(sessionId), ...retryOptions });
+/** GET /sessions/{session_id}: the session, its `status` included; with `isEnabled` false only what the cache holds. */
+export function useSession(sessionId: string, isEnabled = true) {
+    return useQuery({ queryKey: genaixKeys.session(sessionId), queryFn: isEnabled ? () => getSession(sessionId) : skipToken, ...retryOptions });
 }
 
 /** GET /sessions/{session_id}/plans/{plan_id}: the plan's state; off without a plan. */

@@ -35,7 +35,7 @@ export function SelectableListPartView({ part, sessionId }: PartViewProps<Select
 
     return (
         <PartCard icon={ListChecksIcon} title={title} footer={footer}>
-            <SelectableList items={items} multi={part.multi ?? false} value={value} onChange={setValue} label={title} />
+            <SelectableList items={items} multi={part.multi ?? false} value={value} onChange={setValue} label={title} sessionId={sessionId} />
         </PartCard>
     );
 }

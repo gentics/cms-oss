@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type Guideline, guidelineFromFile, guidelinePath, guidelineSlug, parseGuidelineSlug, sortGuidelines, unknownGuidelines } from './guidelines';
+import { type Guideline, guidelineFromFile, guidelineName, guidelinePath, guidelineSlug, parseGuidelineSlug, sortGuidelines, unknownGuidelines } from './guidelines';
 
 describe('guidelineFromFile', () => {
     it('reads a default guideline: the slug ends in .default, the priority is left out', () => {
@@ -65,6 +65,17 @@ describe('parseGuidelineSlug', () => {
 
     it.each(['tone-of-voice-de', '/tone', 'corporate/'])('is undefined for %s, which is no <package>/<name> slug', (slug) => {
         expect(parseGuidelineSlug(slug)).toBeUndefined();
+    });
+});
+
+describe('guidelineName', () => {
+    it('is the name of the guideline a slug names, default or not', () => {
+        expect(guidelineName('corporate/tone-of-voice.default')).toBe('tone-of-voice');
+        expect(guidelineName('corporate/seo-basics')).toBe('seo-basics');
+    });
+
+    it('is the slug itself when it is no <package>/<name> slug', () => {
+        expect(guidelineName('tone-of-voice-de')).toBe('tone-of-voice-de');
     });
 });
 

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ArrowUpIcon, ChevronDownIcon, ChevronUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon, XIcon } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +38,10 @@ import { partSampleGroups } from './partSamples';
 import styles from './Catalogue.module.css';
 
 type Theme = 'light' | 'dark' | 'system';
+
+// The catalogue has no server: the parts that ask one (a guideline reference) never send a query and
+// show as they do while it loads.
+const offlineQueryClient = new QueryClient({ defaultOptions: { queries: { enabled: false } } });
 
 const variants = ['primary', 'secondary', 'ghost', 'danger', 'solid'] as const;
 
@@ -543,18 +548,20 @@ export function Catalogue() {
 
                 {/* Every part type of the registry with mock data, through the chat's own dispatcher. */}
                 <Section id="catalogue-parts" title={t('catalogue.parts.title')}>
-                    {partSampleGroups.map(({ type, samples }) => (
-                        <div key={type} className={styles.parts}>
-                            <h3 className={styles.partType}>{type === 'fallback' ? t('catalogue.parts.fallback') : type}</h3>
-                            {samples.map(({ id, part }) => (
-                                <State key={id} label={t(`catalogue.parts.variants.${id}`)}>
-                                    <div className={styles.partDemo}>
-                                        <PartRenderer part={part} sessionId="catalogue" />
-                                    </div>
-                                </State>
-                            ))}
-                        </div>
-                    ))}
+                    <QueryClientProvider client={offlineQueryClient}>
+                        {partSampleGroups.map(({ type, samples }) => (
+                            <div key={type} className={styles.parts}>
+                                <h3 className={styles.partType}>{type === 'fallback' ? t('catalogue.parts.fallback') : type}</h3>
+                                {samples.map(({ id, part }) => (
+                                    <State key={id} label={t(`catalogue.parts.variants.${id}`)}>
+                                        <div className={styles.partDemo}>
+                                            <PartRenderer part={part} sessionId="catalogue" />
+                                        </div>
+                                    </State>
+                                ))}
+                            </div>
+                        ))}
+                    </QueryClientProvider>
                 </Section>
             </main>
         </div>

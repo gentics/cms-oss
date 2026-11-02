@@ -40,6 +40,8 @@ interface SelectableListProps {
     /** The accessible name of the list. */
     label: string;
     other?: SelectableOther;
+    /** The session the list is shown in, for its references (`RefToken`). */
+    sessionId?: string;
 }
 
 // The radio value of the `other` row in a single choice; item ids come from GenAIx and never start with NUL.
@@ -50,7 +52,7 @@ const OTHER_VALUE = '\u0000other';
  * interaction. Controlled: `value` holds the ids of the selected items. With `other`, a last row takes
  * the user's own text; typing into its field selects it, and in a single choice it is one of the radios.
  */
-export function SelectableList({ items, multi, value, onChange, label, other }: SelectableListProps) {
+export function SelectableList({ items, multi, value, onChange, label, other, sessionId }: SelectableListProps) {
     const rows = items.map((item) => (
         <label key={item.id} className={styles.row}>
             {multi
@@ -69,7 +71,7 @@ export function SelectableList({ items, multi, value, onChange, label, other }: 
                 {item.description && <span className={styles.rowDescription}>{item.description}</span>}
                 {item.reason && <span className={styles.rowDescription}>{item.reason}</span>}
             </span>
-            {item.ref && <RefToken value={item.ref} />}
+            {item.ref && <RefToken value={item.ref} sessionId={sessionId} />}
         </label>
     ));
 

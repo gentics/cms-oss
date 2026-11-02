@@ -204,6 +204,30 @@ function actionNames() {
     return within(screen.getByRole('contentinfo')).queryAllByRole('button').map((button) => button.getAttribute('aria-label') ?? button.textContent);
 }
 
+/**
+ * Stubs the session `SESSION` on node 3, whose package `corporate` has the one guideline `seo-basics`;
+ * every other route answers with an empty list.
+ */
+function stubGuidelineRoutes() {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
+        const url = new URL(String(input), 'http://localhost').pathname;
+
+        if (url === `/rest/proxy/genaix/sessions/${SESSION}`) {
+            return Response.json({ id: SESSION, context: { node_id: 3, references: [], guidelines: [], connection_ids: [] } });
+        }
+
+        if (url === '/rest/devtools/nodes/3/packages') {
+            return Response.json({ items: [{ name: 'corporate' }] });
+        }
+
+        if (url === '/rest/devtools/packages/corporate/files-internal') {
+            return Response.json({ items: [{ path: 'guidelines/20_seo-basics.md', name: '20_seo-basics.md', directory: false, size: 0, lastModified: 0 }] });
+        }
+
+        return Response.json({ items: [], next_cursor: null });
+    }));
+}
+
 describe('ReviewPanel', () => {
     beforeEach(() => {
         useWorkspaceEventStore.setState({ sessions: {} });
@@ -763,5 +787,18 @@ describe('ReviewPanel', () => {
         await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
             { messageKey: 'planBar.transitionFailed', detailKey: 'errors.genaix.plan_closed' },
         ]));
+    });
+
+    it('names a guideline\'s group by the guideline, and says so when the node no longer has it', async () => {
+        stubGuidelineRoutes();
+        // Gate checks of two guidelines without a label: `seo-basics` exists, `legal-notes` was removed or renamed.
+        const seo: Check = { ...tone, id: 'chk-seo', label: 'Meta description', severity: 'warn', source: { type: 'guideline', id: 'corporate/seo-basics' } };
+        const legal: Check = { ...tone, id: 'chk-legal', label: 'Imprint linked', severity: 'warn', source: { type: 'guideline', id: 'corporate/legal-notes.default' } };
+
+        await renderPanel(planState('done', { checks: [seo, legal] }));
+
+        expect(await within(screen.getByRole('group', { name: 'legal-notes' })).findByText('Removed or renamed')).toBeInTheDocument();
+        expect(within(screen.getByRole('group', { name: 'seo-basics' })).queryByText('Removed or renamed')).not.toBeInTheDocument();
+        expect(screen.queryByRole('group', { name: 'corporate/seo-basics' })).not.toBeInTheDocument();
     });
 });

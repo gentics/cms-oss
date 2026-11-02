@@ -1,10 +1,10 @@
-import { CircleAlertIcon, PlusIcon, XIcon } from 'lucide-react';
+import { PlusIcon, XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { RefToken } from '@/components/MessageParts/RefToken';
+import { MissingGuidelineToken, RefToken } from '@/components/MessageParts/RefToken';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { parseGuidelineSlug, unknownGuidelines } from '@/helper/guidelines/guidelines';
+import { guidelineName, unknownGuidelines } from '@/helper/guidelines/guidelines';
 import { useCmsGuidelines } from '@/hooks/useCmsQueries';
 import { useSession, useSetSessionGuidelines } from '@/hooks/useGenaixQueries';
 import type { Plan } from '@/services/apiService/genaix/types';
@@ -70,19 +70,12 @@ export function PlanGuidelines({ plan, sessionId }: PlanGuidelinesProps) {
                             {removeButton(slug, name)}
                         </li>
                     ))}
-                    {unknown.map((slug) => {
-                        const name = parseGuidelineSlug(slug)?.name ?? slug;
-
-                        return (
-                            <li key={slug} className={styles.item}>
-                                <span className={styles.missing}>
-                                    <CircleAlertIcon size={14} aria-hidden />
-                                    {t('planGuidelines.missing', { name })}
-                                </span>
-                                {removeButton(slug, name)}
-                            </li>
-                        );
-                    })}
+                    {unknown.map((slug) => (
+                        <li key={slug} className={styles.item}>
+                            <MissingGuidelineToken name={guidelineName(slug)} />
+                            {removeButton(slug, guidelineName(slug))}
+                        </li>
+                    ))}
                 </ul>
             )}
             {canAdd && (

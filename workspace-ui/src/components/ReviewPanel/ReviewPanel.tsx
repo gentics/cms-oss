@@ -6,10 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { PlanHead } from '@/components/PlanBar/PlanHead';
 import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
+import { guidelineName } from '@/helper/guidelines/guidelines';
 import { checkSummary, isCheckForPage, isFailingCheck, isGateCheck } from '@/helper/pageChecks/pageChecks';
 import { GATED_ACTIONS, planActions, writtenPagesOf } from '@/helper/planActions/planActions';
 import { useCanPublishCmsPage, useCanPublishCmsPages } from '@/hooks/useCmsQueries';
 import { canAcknowledgeRefusal, type GateRefusal, latestGateRefusal, usePlanTransition, useSendMessage } from '@/hooks/useGenaixQueries';
+import { useMissingGuidelines } from '@/hooks/useMissingGuidelines';
 import type { Check, Plan, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
 
 import styles from './ReviewPanel.module.css';
@@ -20,17 +22,33 @@ const SEVERITY_ICONS: Record<Check['severity'], LucideIcon> = { pass: CircleChec
 
 const PUBLICATION_ICONS: Record<Publication['status'], LucideIcon> = { pending: CircleDashedIcon, published: CircleCheckIcon, review_requested: SendIcon, failed: CircleAlertIcon };
 
-// The checks grouped by where they come from (a guideline, a requirement, a gate), in their order.
-function groupChecks(checks: Check[]): [string, Check[]][] {
-    const groups = new Map<string, Check[]>();
+interface CheckGroup {
+    name: string;
+    /** The slug of the guideline the checks come from, if they come from one. */
+    guideline?: string;
+    checks: Check[];
+}
+
+// The checks grouped by where they come from (a guideline, a requirement, a gate), in their order. A
+// guideline without a label is named by its slug (`guidelineName`), not the slug itself.
+function groupChecks(checks: Check[]): CheckGroup[] {
+    const groups = new Map<string, CheckGroup>();
 
     for (const check of checks) {
-        const name = check.source.label ?? check.source.id ?? check.source.type;
+        const { type, id, label } = check.source;
+        const guideline = type === 'guideline' && id ? id : undefined;
+        const name = label ?? (guideline ? guidelineName(guideline) : id) ?? type;
+        const group = groups.get(name);
 
-        groups.set(name, [...(groups.get(name) ?? []), check]);
+        groups.set(name, { name, guideline: group ? group.guideline : guideline, checks: [...(group?.checks ?? []), check] });
     }
 
-    return [...groups];
+    return [...groups.values()];
+}
+
+// The guidelines the checks come from, each once.
+function guidelinesOf(checks: Check[]): string[] {
+    return [...new Set(checks.flatMap(({ source }) => (source.type === 'guideline' && source.id ? [source.id] : [])))];
 }
 
 // The checks with those a refusal reported (`failing_checks`, full `Check` objects) in place of the plan's
@@ -169,6 +187,8 @@ export function ReviewPanel({ sessionId, state, page }: ReviewPanelProps) {
     // Asked while the plan can go on to publish: released, or done ("Publish anyway" after a refused release).
     const writtenPages = plan.status === 'released' || plan.status === 'done' ? writtenPagesOf(state.cms_objects) : [];
     const canPublish = useCanPublishCmsPages(writtenPages);
+    // Guidelines the node no longer has, because their files were removed or renamed since.
+    const missingGuidelines = useMissingGuidelines(sessionId, guidelinesOf(checks));
 
     // A suggested fix is a message to the agent; the chat shows how it goes. It revises this plan
     // (`options.mode: revise`, rc.5) rather than leaving it to the session agent, which may draft a
@@ -179,11 +199,20 @@ export function ReviewPanel({ sessionId, state, page }: ReviewPanelProps) {
     }
 
     // The checks of `list` grouped by where they come from, each with its state in words and, while it
-    // fails, what it found in one sentence (`checkSummary`) and its suggested fixes.
+    // fails, what it found in one sentence (`checkSummary`) and its suggested fixes. A group of a
+    // guideline that no longer exists says so in its head.
     function checkGroups(list: Check[]) {
-        return groupChecks(list).map(([name, group]) => (
+        return groupChecks(list).map(({ name, guideline, checks: group }) => (
             <div key={name} className={styles.checkGroup} role="group" aria-label={name}>
-                <div className={styles.checkGroupHead}>{name}</div>
+                <div className={styles.checkGroupHead}>
+                    {name}
+                    {guideline !== undefined && missingGuidelines.includes(guideline) && (
+                        <span className={styles.checkGroupMissing}>
+                            <CircleAlertIcon size={12} aria-hidden />
+                            {t('guidelines.removedOrRenamed')}
+                        </span>
+                    )}
+                </div>
                 <ul className={styles.list}>
                     {group.map((check) => {
                         const Icon = check.blocking && isFailingCheck(check) ? BanIcon : SEVERITY_ICONS[check.severity] ?? InfoIcon;

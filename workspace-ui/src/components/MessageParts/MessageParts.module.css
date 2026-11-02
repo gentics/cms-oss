@@ -180,6 +180,27 @@
   color: var(--interactive);
 }
 
+/* A guideline that no longer exists (`MissingGuidelineToken`): shaped like `.ref`, of the warning
+   family with icon and text (design.md §3.3). */
+.refMissing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 270px;
+  padding: 0 5px;
+  border: 1px solid rgba(var(--warning-rgb), 0.45);
+  border-radius: var(--corner-sm);
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  vertical-align: baseline;
+}
+
+.refMissing > svg {
+  flex: none;
+}
+
 .refText {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -699,6 +720,18 @@
 
 .sourceLabel {
   color: var(--fg-secondary);
+}
+
+/* A cited guideline that no longer exists: icon and text in the warning colour (design.md §3.3). */
+.sourceMissing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--warning);
+}
+
+.sourceMissing > svg {
+  flex: none;
 }
 
 .snippet {

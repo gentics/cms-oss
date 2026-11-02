@@ -288,7 +288,7 @@ const citationsBare: CitationPart = {
     type: 'citation',
     refs: [
         { ref: { type: 'url', id: 'https://www.gentics.com' } },
-        { ref: { type: 'guideline', id: 'tone-of-voice-de', label: 'Tone of Voice (DE)' } },
+        { ref: { type: 'guideline', id: 'corporate/tone-of-voice.default', label: 'Tone of Voice (DE)' } },
     ],
 };
 

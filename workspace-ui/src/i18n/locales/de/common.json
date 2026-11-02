@@ -943,7 +943,10 @@
         "add": "Richtlinie hinzufügen",
         "available": "Verfügbare Richtlinien",
         "remove": "{{name}} entfernen",
-        "missing": "{{name}} wurde entfernt oder umbenannt",
         "saveFailed": "Die Richtlinien konnten nicht gespeichert werden"
+    },
+    "guidelines": {
+        "missing": "{{name}} wurde entfernt oder umbenannt",
+        "removedOrRenamed": "Entfernt oder umbenannt"
     }
 }

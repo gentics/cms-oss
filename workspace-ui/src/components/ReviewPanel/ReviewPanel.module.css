@@ -184,12 +184,27 @@
 }
 
 .checkGroupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 8px 10px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-subtle);
   color: var(--fg-primary);
   font-size: var(--font-size-sm);
   font-weight: 500;
+}
+
+/* Status right in the group head (design.md §12 "Checkliste / Guidelines"): a guideline that no longer
+   exists, icon and text in the warning colour (§3.3). */
+.checkGroupMissing {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--warning);
+  font-weight: 400;
 }
 
 .check {

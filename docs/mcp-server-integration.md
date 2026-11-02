@@ -1,1151 +1,560 @@
 # MCP Server Integration (GPU-2665)
 
 Integration of the [MCP Java SDK](https://github.com/modelcontextprotocol/java-sdk) into the
-Gentics CMS OSS server, so that the CMS can act as an MCP (Model Context Protocol) server.
+Gentics CMS OSS server, so that the CMS acts as an MCP (Model Context Protocol) server.
+
+This document describes the MCP integration as of 2026-11-02: the merge (`49b974a94`) of the GenAIx
+work (`01d36e0a3`) with the removal of the annotation-based registration (`aa839ffe7`), the test
+fixes (`bf342250c`) and the clean-up of §9 step 9.
+§1-§8 describe the implementation; §9 is a condensed history; §10 lists related documents.
 
 | Ticket | Scope | Status |
 | --- | --- | --- |
-| **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **authentication + manual tool registration implemented (§10); `list_nodes` tool + shared `ObjectRef` (§11); annotation-based registration removed (§13)** |
-| GPU-2666 | Integrate the MCP server as a servlet under `/mcp` | implemented |
-| GPU-2667 | Wire up 10 more endpoints spanning varied argument shapes; harden `McpToolRegistry` | implemented (§9), later removed (§13) |
-| GPU-2672 | (follow-up) | open |
-| GPU-2674 | (follow-up) | open |
+| **GPU-2665** | **Umbrella story: MCP server for the CMS** | authentication, explicit tool framework, **47 tools** (the phase-one tools of the GenAIx tool contract), problem results, REST permission enforcement |
+| GPU-2666 | MCP server as a servlet under `/mcp` | implemented |
+| GPU-2667 | 10 more endpoints via the annotation-based registry | implemented, later **removed** with the whole annotation approach (§9) |
+| GPU-2672, GPU-2674 | follow-ups | open |
 
 ---
 
-## 1. GPU-2666 — what was implemented
+## 1. Architecture overview
 
-The MCP server of the MCP Java SDK is mounted into the existing Jetty/Jersey stack as a
-servlet under the path `/mcp`. At this point the server is fully functional on the
-protocol level (initialize / capability negotiation / session handling), but it does not
-yet expose any tools, resources or prompts — that is the scope of the follow-up subtasks.
+```
+HTTP POST/GET/DELETE /mcp
+  └─ Jetty ServletHolder (asyncSupported)            cms-oss-server: OSSRunner
+      └─ HttpServletStreamableServerTransportProvider  (MCP SDK; is an HttpServlet)
+          ├─ CmsMcpContextExtractor   per request: copies bearer token / session cookie
+          │                           into the McpTransportContext (no DB access)
+          ├─ CmsMcpSecurityValidator  optional (MCP_REQUIRE_AUTH): 401 if no credential at all
+          └─ McpSyncServer
+              └─ 47 tools registered by McpTools.registerAll
+                  └─ one AbstractMcpTool subclass per tool
+                      AbstractMcpTool#call:
+                        resolve credentials → CMS Session (McpAuthenticator)
+                        reject if no session (all tools require one)
+                        bind session to the thread (McpSessionBinding)
+                        invoke(arguments, session)
+                          → REST resource impls, wrapped by RestPermissions.guard
+                            (checks their @RequiredPerm like the REST API does)
+                          → or EnterpriseSearch (search tools, enterprise module by reflection)
+                        success: text + structuredContent (if outputSchema)
+                        failure: isError + text + structuredContent.problem (Problem)
+```
 
-### 1.1 Changed and added files
+All MCP code lives in **cms-core**, package `com.gentics.contentnode.mcp`. `cms-oss-server` only
+mounts the servlet, registers the tools and shuts the server down. Outside the MCP packages, the
+merged work changed only `ConfigurationValue` (§3) and added `NodeException#getMessageKey()` in
+`base-lib` (used to recognize "locked" failures, §5.3); the test fixes changed `rest.version.Main` in
+`cms-restapi` (§1.1). No REST resource or model (cms-restapi) was changed for MCP.
 
-| File | Change |
+### 1.1 File inventory
+
+Main sources (`cms-core/src/main/java/com/gentics/contentnode/mcp/`):
+
+| File | Role |
 | --- | --- |
-| `pom.xml` | new property `mcp.version` = `2.0.1` |
+| `MCPServer.java` | static holder: builds transport provider + `McpSyncServer` on first `getServlet()` |
+| `AbstractMcpTool.java` | base class of every tool: `tool()`, `requiresAuthentication()`, `call(...)`, `toSyncToolSpecification()`; authentication, session binding, result and problem serialization, shared helpers |
+| `McpTools.java` | explicit list of the 47 tool instances (`tools()`), `registerAll(McpSyncServer)` |
+| `McpArgs.java`, `util/Args.java` | strict argument parsing (`McpArgs`: `stringArg`, `intArg`, `booleanArg`, `nullIfBlank`; `Args`: arguments not covered by `McpArgs`) |
+| `McpSchemas.java` | `schema(type, description, keyValues...)` for hand-built JSON schemas |
+| `auth/*` | `McpRequestCredentials`, `CmsMcpContextExtractor`, `McpAuthenticator`, `McpSessionBinding`, `CmsMcpSecurityValidator` (§4) |
+| `tools/*Tool.java` | the 47 tools (§6) |
+| `model/*.java` | output records with `jsonSchema(...)`: `ObjectRef`, `UserRef`, `UserItem`, `WhoamiUser`, `VersionInfo`, `TranslationStatusInfo`, `PageInfo`, `FileInfo`, `FolderItem`, `TagInfo`, `ConstructInfo`, `LanguageInfo`, `NodeInfo`, `SearchHit`, `ListResult<T>`, `Timestamps`; and `Problem` (§5.3) |
+| `util/*.java` | shared helpers (§5.5) |
+
+Other touched places:
+
+| File | Role |
+| --- | --- |
+| `cms-core/…/runtime/ConfigurationValue.java` | `MCP_ENABLED`, `MCP_PATH`, `MCP_REQUIRE_AUTH`, `MCP_UPLOAD_URL_HOSTS`, `MCP_BASE_URL` (§3) |
+| `base-lib/…/api/lib/exception/NodeException.java` | new getter `getMessageKey()` |
+| `cms-restapi/…/rest/version/Main.java` | `getImplementationVersion()` falls back to the package version (or `DEBUG`) when `cms.build.properties` is missing, instead of throwing (`bf342250c`); used by `whoami` and `MCPServer` |
+| `cms-oss-server/…/server/OSSRunner.java` | `addMcpServlet(context)`, `registerMcpTools()`, `MCPServer.shutdown()` |
+| `pom.xml` | property `mcp.version` = `2.0.1` |
 | `cms-oss-bom/pom.xml` | import of `io.modelcontextprotocol.sdk:mcp-bom` |
-| `cms-core/pom.xml` | dependencies `mcp-core` and `mcp-json-jackson2` |
-| `cms-core/…/runtime/ConfigurationValue.java` | new values `MCP_ENABLED` and `MCP_PATH` |
-| `cms-core/…/mcp/MCPServer.java` | **new** — bootstrap/holder for the MCP server and its servlet |
-| `cms-oss-server/…/server/OSSRunner.java` | registers the MCP servlet, shuts the MCP server down |
-| `cms-oss-changelog/…/entries/2026/09/8883.GPU-2666.enhancement` | **new** — changelog entry |
+| `cms-core/pom.xml` | dependencies `mcp-core`, `mcp-json-jackson2` |
+| `cms-core/src/test/resources/com/gentics/contentnode/mcp/tools.json` | vendored GenAIx tool contract (§5.6) |
+| `cms-oss-changelog/…/entries/2026/09/8883.GPU-2666.enhancement` | changelog: the `/mcp` endpoint |
+| `cms-oss-changelog/…/entries/2026/10/8985.GPU-2665.enhancement` | changelog: the tools, configuration, problem results |
+
+Tests: §7.
 
 ---
 
-## 2. Dependencies
+## 2. Server bootstrap
 
-```xml
-<!-- pom.xml -->
-<mcp.version>2.0.1</mcp.version>
-```
+### 2.1 Dependencies
 
-```xml
-<!-- cms-oss-bom/pom.xml -->
-<dependency>
-    <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-bom</artifactId>
-    <version>${mcp.version}</version>
-    <type>pom</type>
-    <scope>import</scope>
-</dependency>
-```
+`mcp-core` + `mcp-json-jackson2`, version `2.0.1` via `mcp-bom`. Not the `io.modelcontextprotocol.sdk:mcp`
+bundle: in SDK 2.x that is `mcp-core + mcp-json-jackson3`, which pulls in **Jackson 3**
+(`tools.jackson.*`), while the CMS uses Jackson 2.21.x everywhere. Switching would be a one-line
+change in `cms-core/pom.xml` plus the `JacksonMcpJsonMapper`/`DefaultJsonSchemaValidator` imports
+in `MCPServer`.
 
-```xml
-<!-- cms-core/pom.xml -->
-<dependency>
-    <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-core</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-json-jackson2</artifactId>
-</dependency>
-```
+New transitive dependencies: `io.projectreactor:reactor-core` (by `mcp-core`) and
+`com.networknt:json-schema-validator` (by `mcp-json-jackson2`, used for tool input/output schema
+validation). Jackson 2, `slf4j-api` and the servlet API were already present. The SDK is compiled
+against Servlet 6.1 but its servlet transport only uses Servlet 6.0 API, so Jetty 12 **ee10** works.
 
-### 2.1 Why `mcp-core` + `mcp-json-jackson2` and not `mcp`
-
-The ticket names the artifact `io.modelcontextprotocol.sdk:mcp`. In SDK 2.x that artifact is
-only a convenience bundle:
-
-```
-mcp  ==  mcp-core + mcp-json-jackson3
-```
-
-`mcp-json-jackson3` pulls in **Jackson 3** (`tools.jackson.*`), while the CMS uses
-**Jackson 2.21.x** everywhere. Using the bundle would put two complete Jackson stacks into
-the shaded `cms-oss-server` jar. `mcp-core` plus the Jackson 2 binding gives exactly the same
-functionality with the Jackson version the CMS already ships.
-
-If the bundle is preferred anyway, it is a one-line change in `cms-core/pom.xml`
-(`mcp` instead of `mcp-core` + `mcp-json-jackson2`) plus adapting the two
-`JacksonMcpJsonMapper` / `DefaultJsonSchemaValidator` imports in `MCPServer`.
-
-### 2.2 New transitive dependencies
-
-| Dependency | Note |
-| --- | --- |
-| `io.projectreactor:reactor-core` | required by `mcp-core`; new in the CMS |
-| `com.networknt:json-schema-validator` | required by `mcp-json-jackson2` (tool input schema validation) |
-| `com.fasterxml.jackson.core:jackson-databind`, `jackson-annotations` | already present |
-| `org.slf4j:slf4j-api` | already present (bridged to log4j2 via `log4j-slf4j2-impl`) |
-| `jakarta.servlet:jakarta.servlet-api` | `provided` in the SDK, supplied by Jetty (ee10 / Servlet 6.0) |
-
-The SDK is compiled against Servlet 6.1, but the servlet transports only use Servlet 6.0 API
-(`getRequestURI`, `getHeader`, `getContentLengthLong`, `startAsync`, `sendError`, `setHeader`,
-`setStatus`, `getWriter`, `setContentType`, `setCharacterEncoding`), so Jetty 12 **ee10** is fine.
-
----
-
-## 3. Implementation
-
-### 3.1 `com.gentics.contentnode.mcp.MCPServer` (cms-core)
-
-A small static holder that lazily creates and owns the two SDK objects:
-
-* **`HttpServletStreamableServerTransportProvider`** — the streamable HTTP transport of the SDK.
-  This class *is* an `HttpServlet`, so it can be registered directly with Jetty.
-* **`McpSyncServer`** — the protocol server built on top of that transport. This is the object
-  the follow-up tickets will register tools/resources/prompts on.
+### 2.2 `MCPServer`
 
 ```java
 transportProvider = HttpServletStreamableServerTransportProvider.builder()
         .jsonMapper(new JacksonMcpJsonMapper(new ObjectMapper()))
         .mcpEndpoint(path)
+        .contextExtractor(new CmsMcpContextExtractor())
+        .securityValidator(new CmsMcpSecurityValidator())
         .build();
 
 server = McpServer.sync(transportProvider)
         .jsonMapper(new JacksonMcpJsonMapper(new ObjectMapper()))
         .jsonSchemaValidator(new DefaultJsonSchemaValidator())
-        .serverInfo(SERVER_NAME, Main.getImplementationVersion())
+        .serverInfo(SERVER_NAME, Main.getImplementationVersion())   // "Gentics CMS", CMS version
         .instructions(SERVER_INSTRUCTIONS)
         .capabilities(ServerCapabilities.builder().tools(true).build())
         .build();
 ```
 
-Public API:
-
 | Method | Purpose |
 | --- | --- |
-| `isEnabled()` | reads `MCP_ENABLED` |
-| `getPath()` | reads `MCP_PATH` |
-| `getServlet()` | initializes on first call, returns the transport provider (an `HttpServlet`) |
-| `getServer()` | `Optional<McpSyncServer>` — entry point for registering tools later |
-| `shutdown()` | `closeGracefully()` on the server, resets the holder |
+| `isEnabled()` / `getPath()` | read `MCP_ENABLED` / `MCP_PATH` |
+| `getServlet()` | builds both objects on the first call, returns the transport provider (an `HttpServlet`) |
+| `getServer()` | `Optional<McpSyncServer>`, empty until `getServlet()` ran |
+| `shutdown()` | `closeGracefully()`, resets the holder |
 
-Notes on the implementation:
+JSON mapper and schema validator are passed explicitly instead of relying on the SDK's
+`ServiceLoader` lookup, so the result does not depend on the classpath of the shaded jar.
+Input validation against each tool's `inputSchema` is **on** (SDK default `validateToolInputs(true)`,
+not changed here).
 
-* **JSON mapper and schema validator are passed explicitly.** The SDK would otherwise resolve
-  them through `McpJsonDefaults` / `ServiceLoader`. That works (the shade plugin is configured
-  with `ServicesResourceTransformer`, so `META-INF/services` survives the uber-jar build), but
-  passing them explicitly is deterministic and independent of what else ends up on the classpath.
-* **The server is placed in `cms-core`, not in `cms-oss-server`.** The REST resource
-  implementations that the follow-up tickets will annotate live in `cms-core`, so the MCP
-  registration code needs to be reachable from there. `cms-oss-server` only mounts the servlet.
-* `serverInfo` reports `Gentics CMS` plus the CMS version from
-  `com.gentics.contentnode.rest.version.Main#getImplementationVersion()`.
-* `capabilities(...tools(true)...)` already announces `listChanged` support for tools, so tools
-  can be added at runtime later without a protocol change.
+### 2.3 `OSSRunner`
 
-### 3.2 `OSSRunner`
+`start()` calls `addMcpServlet(context)` right after the `/rest/*` and `/jmx` servlets, then
+`registerMcpTools()` (`MCPServer.getServer().ifPresent(McpTools::registerAll)`), and
+`MCPServer.shutdown()` in its `finally` block. Two details matter in `addMcpServlet`:
 
-```java
-context.addServlet(servletHolder, "/rest/*");
-context.addServlet(JmxServlet.class, "/jmx");
-
-// add MCP Servlet
-addMcpServlet(context);
-```
-
-```java
-private static void addMcpServlet(ServletContextHandler context) {
-    if (!MCPServer.isEnabled()) {
-        NodeConfigRuntimeConfiguration.runtimeLog.info("MCP endpoint is disabled");
-        return;
-    }
-
-    String path = MCPServer.getPath();
-    ServletHolder mcpServletHolder = new ServletHolder(MCPServer.getServlet());
-    mcpServletHolder.setAsyncSupported(true);
-    context.addServlet(mcpServletHolder, path);
-
-    NodeConfigRuntimeConfiguration.runtimeLog.info(String.format("Serving MCP endpoint at %s", path));
-}
-```
-
-Two details that matter:
-
-1. **`setAsyncSupported(true)` is mandatory.** The transport calls `request.startAsync()` for the
-   SSE streams. The SDK class carries `@WebServlet(asyncSupported = true)`, but that annotation is
-   not evaluated in an embedded Jetty setup, so it has to be set on the `ServletHolder`.
-2. **Exact path mapping, not a prefix.** The transport itself checks
-   `requestURI.endsWith(mcpEndpoint)` and answers `404` otherwise, so mapping `/mcp/*` would gain
-   nothing. `MCP_PATH` is normalised to start with `/` and to have no trailing `/`.
-
-`MCPServer.shutdown()` is called in the `finally` block of `OSSRunner.start()`, right before
-`Initializer.get().shutdown()`.
+1. **`setAsyncSupported(true)` on the `ServletHolder` is mandatory.** The transport calls
+   `request.startAsync()` for SSE streams; the SDK's `@WebServlet(asyncSupported = true)` is not
+   evaluated in embedded Jetty.
+2. **Exact path mapping, not a prefix.** The transport checks `requestURI.endsWith(mcpEndpoint)`
+   and answers 404 otherwise, so `/mcp/*` would gain nothing.
 
 ---
 
-## 4. Configuration
+## 3. Configuration
 
-Added to `ConfigurationValue`, so all three CMS configuration mechanisms work:
+All are `ConfigurationValue`s, so environment variable, system property and configuration property
+all work:
 
 | Setting | Env variable | System property | Config property | Default |
 | --- | --- | --- | --- | --- |
-| enable/disable endpoint | `MCP_ENABLED` | `com.gentics.contentnode.mcp.enabled` | `mcp.enabled` | `true` |
-| endpoint path | `MCP_PATH` | `com.gentics.contentnode.mcp.path` | `mcp.path` | `/mcp` |
+| enable endpoint | `MCP_ENABLED` | `com.gentics.contentnode.mcp.enabled` | `mcp.enabled` | `true` |
+| endpoint path | `MCP_PATH` | `com.gentics.contentnode.mcp.path` | `mcp.path` | `/mcp` (normalized: leading `/`, no trailing `/`) |
+| reject requests without any credential (HTTP 401) | `MCP_REQUIRE_AUTH` | `com.gentics.contentnode.mcp.requireAuth` | `mcp.requireAuth` | `false` |
+| hosts `upload_file` may fetch a URL source from (comma-separated `host` or `host:port`) | `MCP_UPLOAD_URL_HOSTS` | `com.gentics.contentnode.mcp.uploadUrlHosts` | `mcp.upload_url_hosts` | empty: URL sources refused |
+| base URL of the CMS as users open it, returned by `whoami` as `cms.baseUrl` | `MCP_BASE_URL` | `com.gentics.contentnode.mcp.baseUrl` | `mcp.base_url` | empty: omitted |
 
-The default is *enabled*, because that is what the ticket asks for ("integrate … as servlet under
-the path /mcp"). Disabling is a single environment variable if the endpoint should be off by
-default in a release.
+Note the inconsistent config property style (`mcp.requireAuth` vs. `mcp.upload_url_hosts`,
+`mcp.base_url`). The MCP server is built once at startup; it does not react to
+`onReloadConfiguration()`.
 
 ---
 
-## 5. Testing
+## 4. Authentication and permissions
 
-No network access was available in this session, so the change could **not be compiled or run**
-here. The SDK API used above was verified against the tagged sources of
-[`v2.0.1`](https://github.com/modelcontextprotocol/java-sdk/tree/v2.0.1).
+A tool call runs as the real, authenticated CMS user, so permission checks apply to the caller,
+not to the CMS system user.
 
-Suggested manual verification:
+### 4.1 Credential extraction (per request, no DB)
+
+`CmsMcpContextExtractor` (the transport's `contextExtractor`) reads the same two credential shapes
+`AuthenticationRequestFilter` accepts for `/rest/*`: an `Authorization: Bearer <api token>`
+header and the `GCN_SESSION_SECRET` cookie. It stores them as `McpRequestCredentials` on the
+`McpTransportContext` (`McpRequestCredentials#CONTEXT_KEY`). It does **no DB access and never
+throws**: it runs outside the transport's own try/catch (checked against the SDK `v2.0.1`
+sources), so an exception would reach the client as a raw HTTP 500.
+
+### 4.2 Credential resolution (per tool call)
+
+`McpAuthenticator.resolve(McpRequestCredentials)` mirrors `AuthenticationRequestFilter
+#tryApiToken()`/`#trySessionSecretSession()`: API token first, then session cookie
+(`ApiTokenFactory#hash`/`#load` + `ApiTokenSession`, respectively `SessionToken` + `DBSession#load`
++ `#touch()`), inside its own short-lived system-user `Trx` (`Trx.supply(...)`). Empty credentials
+short-circuit before any DB access.
+
+### 4.3 Two independent guards
+
+* **Per tool call, always on.** `AbstractMcpTool#call` resolves the session; if
+  `requiresAuthentication()` (default `true`; no tool overrides it, only the test tools of
+  `AbstractMcpToolTest` do) and no session was resolved,
+  it returns `isError(true)` with a text block, **without** a `problem` (§5.3), and without
+  running the tool.
+* **Transport level, opt-in.** With `MCP_REQUIRE_AUTH=true`, `CmsMcpSecurityValidator` rejects a
+  request with **HTTP 401** if it carries neither a bearer header nor the session cookie. This
+  checks **presence only, not validity**; an invalid credential is still only caught by the
+  per-call guard. Default `false`, so clients like the MCP Inspector can connect without credentials.
+
+### 4.4 Session binding and thread-locals
+
+The SDK runs sync tool handlers on pooled `Schedulers.boundedElastic()` threads, reused across
+unrelated calls (`McpServerFeatures.AsyncToolSpecification#fromSync`, SDK `v2.0.1`).
+`McpSessionBinding` (try-with-resources in `AbstractMcpTool#call`) binds the resolved session on
+`ContentNodeHelper` for the duration of the call and restores the previous state afterwards, also
+when the tool throws. Without a session it sets the fixed backend language ID `2`, so i18n messages
+are translated rather than shown as raw keys.
+
+### 4.5 Permissions
+
+* **`@RequiredPerm` is enforced.** The REST API checks these annotations in
+  `AuthorizationRequestFilter`, which a tool calling a resource implementation directly bypasses.
+  `util/RestPermissions.guard(ResourceInterface.class, impl)` wraps a resource implementation in a
+  proxy that first checks the `@RequiredPerm` annotations of the implementing method and class.
+  45 of the 47 tools call it.
+* **The two exceptions are the search tools** `search_content` and `find_similar`, which do not
+  call guarded REST resources, only `util/EnterpriseSearch`: it adds the CMS permission, node,
+  folder and wastebin filters of `SearchResourceImpl#addFilters` to the Elasticsearch body (§6.3).
+  (`count_content` uses `EnterpriseSearch` too, but also calls `RestPermissions`.)
+* **Object permissions** (view/edit/… on a specific object) are checked by the delegated-to REST
+  resource code itself, as for REST calls. A new tool's author still has to verify that the
+  delegated-to call performs the object-level check they expect.
+
+---
+
+## 5. Tool framework
+
+### 5.1 Writing a tool
+
+1. Extend `AbstractMcpTool`; implement `tool()` (name in lower snake_case, title, description,
+   hand-built `inputSchema`, an `outputSchema`) and
+   `invoke(Map<String, Object> arguments, Optional<Session> session)`.
+2. Add an instance to `McpTools.TOOLS`.
+3. Delegate to the existing REST resource implementation, wrapped by `RestPermissions.guard`
+   (e.g. `RestPermissions.guard(PageResource.class, new PageResourceImpl())`), rather than
+   reimplementing logic.
+4. Check that the delegated-to method does not read JAX-RS `@Context` fields (e.g. those of
+   `AbstractContentNodeResource`): the resource class is instantiated directly, so they are `null`.
+5. If the tool is part of the GenAIx contract, its name, required inputs and input property names
+   must match `tools.json` (§5.6); otherwise add it to `McpContractTest.EXEMPT`.
+6. Write a unit test (no DB) and, for anything touching permissions or persistence, a
+   `DBTestContext` integration test under `tests/mcp/`. Test helpers: `tools/ToolAssertions`,
+   `tools/PageFixtures`.
+
+**Duplicate names are not detected.** `McpAsyncServer#addTool` silently *replaces* an existing tool
+with the same name and only logs a warning (checked against the SDK `v2.0.1` sources), and
+`McpTools.registerAll` has no own check.
+
+### 5.2 Results and structured output
+
+`AbstractMcpTool#call` serializes the result of `invoke` with Jackson into a text content block.
+If the tool declares an `outputSchema` (all tools do), it also sets
+`structuredContent` (the same result as a `Map`). This is required: in SDK `2.0.1`, every tool
+handler is wrapped in `McpAsyncServer.StructuredOutputCallToolHandler`, which turns a successful
+result **without** `structuredContent` into an error when the tool has an output schema, and
+validates present structured content against the schema. Hence the model records are
+`@JsonInclude(NON_NULL)` (`"type": "integer"` does not accept `null`).
+
+### 5.3 Problem results
+
+When `invoke` throws, `AbstractMcpTool#call` returns `isError(true)` with the exception message as
+text **and** `structuredContent.problem`: a `model/Problem` record shaped like the contract's
+`Problem` (RFC 9457) with `type`, `title`, `status`, `detail`, `tool`, `retryable` and `cms`
+(`responseCode`, `messages`). `Problem.of(tool, cause)` searches the cause chain (after unwrapping
+an `InvocationTargetException`) in this order:
+
+| Kind (`type` = `https://cms.gentics.com/problems/` + slug) | Status | Retryable |
+| --- | --- | --- |
+| `search-unavailable` (`SearchUnavailableException`) | 503 | no |
+| `object-locked` (read-only exception whose message key ends in `.readonly.locked`) | 423 | yes |
+| `permission-denied` (other read-only exception, missing privileges) | 403 | no |
+| `not-found` | 404 | no |
+| from a CMS response code: `permission-denied`, `not-found`, `invalid-data`, `object-locked`, `maintenance-mode` (503, yes), `feature-not-licensed` (403, no) | | |
+| `invalid-data` (rejected tool argument) | 422 | no |
+| `cms-failure` (anything else) | 500 | yes |
+
+`detail` is not localized: the session binding, and with it the language, is gone when a failure
+is mapped. `status` is the status of the problem type, not necessarily the HTTP status the REST API
+would use.
+
+### 5.4 Input validation
+
+The SDK validates arguments against `inputSchema` before calling the tool. Tools still re-check
+arguments via `McpArgs`/`Args`/`ListArgs`, because `call()` can be invoked without the SDK (as the
+tests do). The helpers are strict: out-of-range values are **rejected**, not clamped, and only real
+JSON integers/booleans/strings are accepted (no numeric strings).
+
+### 5.5 Shared building blocks
+
+| Where | What |
+|---|---|
+| `AbstractMcpTool` | `protected static` helpers: `errorMessage`, `requireOk`, `saveOrReleaseLock`, `releaseLock`. Tools import the argument and schema helpers of `McpArgs`/`McpSchemas` statically |
+| `util/RestPermissions` | `guard(...)`: `@RequiredPerm` enforcement (§4.5) |
+| `util/Writes` | write tool helpers: `pageInNode` (resolve `pageId` + `nodeId` to the page as that node sees it, its localized copy if any; **refuses a page the node only inherits**), `folderInNode` (folder must be visible in the node), `logIdempotencyKey`, `readBack` |
+| `util/ChangedFields` | named getters; `snapshot(before).diff(after)` |
+| `util/Slice`, `util/ListArgs`, `util/ListResponses`, `model/ListResult` | offset paging (`q`/`size`/`from`, per-tool `Limits`) over fully fetched lists; envelope `{total, totalIsExact, items, nextFrom, truncated}` |
+| `util/EnterpriseSearch`, `util/SearchBodies`, `util/SearchArgs`, `util/SearchUnavailableException` | search via the enterprise module (§6.3) |
+| `util/PartSpecs` | parts of constructs created/updated by tools: parsing and rules the CMS does not check (part type allowlist, one Handlebars part, unique keywords, select-part datasources), mapping to REST parts |
+| `util/PartValues` | write plain part values into REST properties by part type; every value `TagInfo#value(Property)` returns can be written back unchanged; object references also as plain IDs |
+| `util/Constructs` | look up constructs by keyword, and the nodes of a construct (no suitable REST route) |
+| `util/UrlSources` | fetch a URL file source `{kind: url, url, expiresAt}` for `upload_file`: allowlisted hosts only (`MCP_UPLOAD_URL_HOSTS`), https (http only from localhost), no redirects, timeouts and size limit; refusals start with a fixed prefix so clients can fall back to base64 |
+| `util/UserGroups` | users, groups and a user's groups for the admin tools |
+| `model/ObjectRef` | shared object reference (`type`/`id`/`globalId`/`nodeId`/`name`/`path`/`language`/`niceUrl`/`url`); lowercase `type` strings; unknown input fields ignored, so a ref returned by one tool can be passed back |
+
+`releaseLock` calls `NodeObject#unlock()`: for pages and templates this only clears the caller's
+own lock (`… WHERE id = ? AND locked_by = ?`); forms throw `ReadOnlyException` if another user holds
+the lock (logged); for most other types `unlock()` does nothing. Output schemas are hand-built;
+`ModelJsonSchemaTest` checks that each record's schema describes exactly its record components.
+
+### 5.6 The GenAIx tool contract (`tools.json`)
+
+`cms-core/src/test/resources/com/gentics/contentnode/mcp/tools.json` is a **vendored, unmodified**
+copy of the external tool specification: version `1.0.0-rc.2`, status "agreed and frozen for
+development (release candidate 2)", owner of the specification `ioflair`, of the implementation
+"Gentics (cms-mcp Java module)". It defines 54 tools in 7 groups, each with `access` (read/write),
+`phase` (`one` or `future`), input/output schemas, and permission metadata, plus transport, auth and
+error-mapping conventions.
+
+`McpContractTest` compares every registered tool (`EXEMPT` is empty) with its contract
+entry: tool name, phase (must be `one`), required input members and input property names.
+Descriptions, output schemas and the group/access/permission metadata are **not** compared, and not
+every contract tool has to be registered.
+
+**Note:** the contract's `implementation_model` describes an annotation-based mechanism
+(`@McpTool(name, group, access, permissions)` on resource methods, "scanned at start-up") and a
+conformance test that scans annotations. The implementation does not work that way: all tools are
+explicit classes (§9 step 5), and the conformance test reads `McpTools.tools()`.
+
+---
+
+## 6. Tools
+
+All 47 tools require authentication and declare an output schema. Group,
+access and phase are taken from `tools.json`.
+
+| Group (contract) | Tools | Access |
+| --- | --- | --- |
+| `identity` | `whoami`, `get_permissions`, `list_nodes` | read |
+| `search` | `search_content`, `find_similar`, `get_related`, `count_content` | read |
+| `content_read` | `get_folder_tree`, `list_folder_items`, `get_page`, `get_page_tags`, `list_templates`, `get_template`, `get_file`, `get_image`, `get_page_versions`, `render_preview` | read |
+| `content_write` | `create_page`, `update_page_tags`, `add_page_tag`, `update_page_properties`, `publish_page`, `take_offline`, `delete_page`, `translate_page`, `restore_page_version`, `upload_file`, `create_folder` | write |
+| `constructs` | `list_constructs`, `get_construct`, `list_construct_categories`, `list_packages`, `list_part_types`, `list_datasources`, `get_datasource` | read |
+| `constructs` | `create_construct`, `update_construct`, `ensure_construct_category`, `assign_construct_to_nodes`, `add_construct_to_package` | write |
+| `admin` | `list_users`, `list_groups`, `get_group_permissions`, `preview_permission_impact` | read |
+| `admin` | `create_user`, `assign_user_to_group`, `remove_user_from_group` | write |
+
+**Not implemented** (contract phase `future`): `get_publish_state`, `request_tier2_field_mapping`,
+and the `design` group (`create_template`, `update_template`, `link_template_to_folders`,
+`render_diff`, `decompose_design`).
+
+The sections below describe the tools documented in detail so far. For the others, the tool class,
+its unit test and its `tools.json` entry are the reference; they have not been analysed for this
+document beyond the facts in §4-§6.
+
+### 6.1 Multichannelling in write tools
+
+The page write tools (`update_page_properties`, `update_page_tags`, `add_page_tag`, `publish_page`,
+`take_offline`, `delete_page`, `translate_page`, `restore_page_version`) accept `nodeId` and resolve
+the page with `Writes.pageInNode`: the page as that node sees it, i.e. its localized copy if the node
+has one. **A page the node only inherits is refused**, because a write would change it in its
+master node and every inheriting channel. `create_page` and `upload_file` check with
+`Writes.folderInNode` that the target folder is visible in the node.
+
+### 6.2 `list_nodes`
+
+Input: `q` (optional string, max 200; blank = no filter; matched case-insensitively against node
+ID and name by the resource's `ResolvableFilter`), `size` (1-200, default 25), `from` (0-10000,
+default 0). Output: `ListResult<NodeInfo>` with `total`, `totalIsExact` (always `true`),
+`nextFrom`, `truncated`, `items`; each item has a `ref`, `host` (as the REST model reports it,
+including protocol), `publishDir`, `languages` (`{id, code, name}`), default file/image folder IDs
+and `contentRepositoryId`.
+
+* Delegates to `NodeResourceImpl#list` (unpaged) and `#languages` per node. Paging is "fetch all,
+  then slice in memory", because the offset-based input does not map onto
+  `PagingParameterBean`'s page numbers.
+* Permissions: `list` filters to `ObjectPermission.view`, `languages` re-checks `view` per node.
+* Sort: the resource's default (`name`). `sort`, `perms` and staging `package` are not exposed.
+
+### 6.3 Search tools
+
+`search_content`, `find_similar` and `count_content` use `util/EnterpriseSearch`, the Elasticsearch
+passthrough of the **enterprise module cms-search**, which cms-oss cannot compile against: every
+enterprise class and method is looked up by reflection. If the module or the `elasticsearch`
+feature is missing, `SearchUnavailableException` is thrown and the call fails with the problem type
+`search-unavailable`. Every search body has `query.bool` (`SearchBodies`), because the CMS adds its
+permission, node, folder and wastebin filters (`SearchResourceImpl#addFilters`) only to
+`query.bool.filter` and forwards other bodies unfiltered. The passthrough's own response handling
+is not used (it needs JAX-RS injection and reads the hit type from `_type`, which Elasticsearch 8 no
+longer returns). These tools cannot be exercised fully in cms-oss without the enterprise module.
+
+### 6.4 `update_page_properties`
+
+Changes page metadata without touching content/tags.
+
+Input: `pageId` (required, ≥ 1), `nodeId` (§6.1), `name` (1-255), `fileName` (≤ 255),
+`description` (≤ 4000, `""` clears), `niceUrl` (≤ 500, `""` clears, ignored without the `NICE_URLS`
+feature), `priority` (1-100), `templateId` (≥ 1), `deriveFileName` (boolean, default `false`, only if
+`fileName` is absent), `failOnDuplicate` (boolean, default `true`), `idempotencyKey` (≤ 128, logged
+only, no de-duplication). Output: `{ page: PageInfo, changedFields: [...] }`, both required.
+
+Flow: `Writes.pageInNode` → argument validation → `PageResourceImpl#load(update = true)` (checks
+`edit`, locks) → `#save(unlock = true)` → `#load(update = false)` in the given node with `folder`,
+`langvars`, `translationstatus`, `versioninfo` for the output. Invalid input never locks a page.
+
+* **Only supplied fields are submitted.** The tool builds a fresh REST `Page` with only the given
+  fields (`UpdateRequest#toRestPage`) instead of resubmitting the loaded page. `ModelBuilder
+  #getPage` applies every non-null field, and a loaded page carries tags and translation status:
+  resubmitting it would re-save all tags (requiring edit permission on every visible object tag),
+  change the translation sync state, and prevent filename derivation.
+* **`changedFields`** is a before/after diff (`ChangedFields`) of `name`, `fileName`,
+  `description`, `niceUrl`, `priority`, `templateId`, so it also reports changes `save()` makes on
+  its own (derived filename, appended extension) and omits resubmitted unchanged values.
+* **Lock release on failure.** `save()` unlocks only at its end, so early returns (duplicates) and
+  exceptions would leave the page locked for `lock_time` (default 600 s). `saveOrReleaseLock`
+  turns a non-`OK` response into a tool error and calls `releaseLock` (not
+  `PageResourceImpl#cancel`, which would restore the last version). If the caller already held
+  the lock before the call, it is released too (same as REST `save(unlock = true)`); another
+  user's lock is left alone.
+* `save()` was deliberately **not** changed to return the saved page (tried and reverted: stale
+  lock state, broke Java `RestClient`s expecting `GenericResponse`, and made every save, including
+  the Aloha keepalive, more expensive).
+* Output details: `ref` from `ObjectRef.forPage(page)` (`nodeId` from the folder, `url` = preview
+  URL with `liveUrl` fallback); `languageVariants` keyed by language **code**; users as
+  `{id, login}`; `versions` newest first; unset timestamps (`-1`/`0`) omitted.
+
+### 6.5 `whoami` and `upload_file`
+
+* `whoami` returns the caller and a `cms` object with `baseUrl` (`MCP_BASE_URL`, omitted if empty)
+  and the CMS version (`Main#getImplementationVersion()`).
+* `upload_file` accepts a URL source only for hosts in `MCP_UPLOAD_URL_HOSTS` (`util/UrlSources`,
+  §5.5); with the default (empty) every URL source is refused.
+
+---
+
+## 7. Tests
+
+### 7.1 Test classes
+
+* **Unit tests, no DB** (73 classes under `cms-core/src/test/java/com/gentics/contentnode/mcp/`):
+  one test class per tool under `tools/`, plus `AbstractMcpToolTest`, `McpToolsTest`,
+  `McpContractTest` (§5.6), `McpArgsTest`, `McpSchemasTest`, `auth/*`, `model/{ModelJsonSchemaTest,
+  ObjectRefTest, ProblemTest, TagInfoTest}`, `util/*`. Helpers: `tools/ToolAssertions`,
+  `tools/PageFixtures`.
+* **Integration tests** (`DBTestContext`, 5 classes under
+  `cms-core/src/test/java/com/gentics/contentnode/tests/mcp/`): `ListNodesToolIntegrationTest`,
+  `UpdatePagePropertiesToolIntegrationTest`, `GetPermissionsToolIntegrationTest`,
+  `WhoamiToolIntegrationTest`, `McpProblemIntegrationTest`.
+
+### 7.2 Running the tests
+
+All MCP unit and integration tests of `cms-core`:
 
 ```bash
-mvn -pl cms-oss-bom,base-api,base-lib,cms-restapi,cms-api,cms-core,cms-oss-server -am -DskipTests install
-# start the server, then:
+mvn -pl cms-core test \
+  -Dtest='com/gentics/contentnode/mcp/**/*Test,com/gentics/contentnode/tests/mcp/*Test'
+```
 
+* The integration tests need the test DB containers (`testdb-containers` profile, see the
+  repository's `CLAUDE.md`).
+* Mockito has to mock `McpSyncServer` (`McpToolsTest`); on a JDK newer than the one the
+  project's Byte Buddy supports (JDK 21), this needs `-Dnet.bytebuddy.experimental=true` in the
+  test JVM's `argLine`. CI uses JDK 17 and does not need it.
+* The search tools need the enterprise module cms-search to run for real (§6.3).
+
+### 7.3 Manual testing
+
+`docs/mcp-tests.md` holds a resumable manual test protocol for `page_load`, `list_nodes` and
+`update_page_properties` (its §9-§11; §0-§8 are historical). It does not cover the GenAIx tools, and
+its `page_load` part is obsolete since the tool was removed (§9 step 9).
+
+Against a running server, without credentials:
+
+```bash
 curl -i -X POST http://localhost:8080/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{
-        "protocolVersion":"2025-06-18",
-        "capabilities":{},
+        "protocolVersion":"2025-06-18","capabilities":{},
         "clientInfo":{"name":"curl","version":"1.0"}}}'
 ```
 
-Expected: `200`, an `Mcp-Session-Id` response header, and a result containing
-`serverInfo: {name: "Gentics CMS", version: …}` and `capabilities.tools`.
+Expected: `200`, an `Mcp-Session-Id` header, `serverInfo.name == "Gentics CMS"`. A tool call then
+needs that session ID plus a credential: `Authorization: Bearer <api token>` or
+`Cookie: GCN_SESSION_SECRET=<value>` (from `/rest/auth/login`).
 
-Alternatively use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
-
-```bash
-npx @modelcontextprotocol/inspector
-# transport: Streamable HTTP, URL: http://localhost:8080/mcp
-```
-
----
-
-## 7. GPU-2665 — exposing REST endpoints as MCP tools
-
-> **Removed (§13).** Everything this section describes - `@McpTool`/`@McpToolParam`,
-> `McpToolRegistry`, the ClassGraph dependency and the annotations on REST resource methods and
-> parameter beans - has been deleted from the codebase. The section is kept for historical context
-> only.
-
-The first slice of the umbrella ticket: REST resource methods can now be marked as MCP tools with
-new annotations, are picked up automatically at startup, and can take real (JSON-schema-backed)
-arguments.
-
-### 7.1 Changed and added files
-
-| File | Change |
-| --- | --- |
-| `pom.xml` | new property `classgraph.version` = `4.8.194` |
-| `cms-oss-bom/pom.xml` | dependency management entry for `io.github.classgraph:classgraph` |
-| `cms-core/pom.xml` | dependency `classgraph` |
-| `cms-restapi/…/rest/mcp/McpTool.java` | **new** — method-level annotation marking a tool |
-| `cms-restapi/…/rest/mcp/McpToolParam.java` | **new** — parameter/field-level annotation describing a tool argument |
-| `cms-core/…/mcp/McpToolRegistry.java` | **new** — classpath scan, input schema generation, argument binding, dispatch |
-| `cms-core/…/rest/resource/impl/AdminResourceImpl.java` | `getActionLog` annotated with `@McpTool` |
-| `cms-restapi/…/resource/parameter/PagingParameterBean.java` | `page`/`pageSize` fields annotated with `@McpToolParam` |
-| `cms-restapi/…/resource/parameter/ActionLogParameterBean.java` | `user`/`action`/`type`/`objId`/`start`/`end` fields annotated with `@McpToolParam` |
-| `cms-oss-server/…/server/OSSRunner.java` | calls `McpToolRegistry.scanAndRegister(...)` after mounting the MCP servlet |
-| `cms-oss-changelog/…/entries/2026/09/8884.GPU-2665.enhancement` | **new** — changelog entry |
-
-### 7.2 `@McpTool` / `@McpToolParam` — and why they live in cms-restapi, not cms-core
-
-`@McpTool` (method-level) carries `name`, `title` and `description`. Every tool name must be lower
-snake_case. If `name` is left empty (as on `getActionLog`), `McpToolRegistry` derives one as
-`<resource>_<method>`, e.g. `AdminResourceImpl#getActionLog` becomes `admin_get_action_log` (the
-class name has any trailing `ResourceImpl`/`Impl` stripped first, then both parts are converted
-from camelCase to snake_case and joined). This - rather than the bare method name - is what keeps
-tools from different resource classes from colliding, since many `*ResourceImpl` classes in this
-codebase share method names like `list`/`get`/`create`. It matters because
-`McpAsyncServer#addTool` (the underlying SDK call) does **not** reject a duplicate tool name — it
-silently *replaces* the previously registered tool with the same name, only logging a warning
-(`"Replace existing Tool with name '{}'"`, checked directly against the SDK source at the `v2.0.1`
-tag). To avoid that turning into a tool silently disappearing without any error,
-`McpToolRegistry.scanAndRegister` tracks every name it registers in that scan and rejects (logs and
-skips, without aborting the rest of the scan) any tool whose final name - explicit or derived - is
-not valid snake_case, or collides with one already registered.
-
-`@McpToolParam` can target either a method parameter directly, or — the common case in this
-codebase — a **field** of a parameter's type, since most REST resource methods take JAX-RS
-`@BeanParam` parameter beans instead of plain scalar parameters (see 7.3). `name` is optional: on a
-field it defaults to the field's own name (always reliable via reflection); on a parameter it
-defaults to the parameter's name, which is only reliable if compiled with `-parameters` (this
-project is not, see the plain `maven-compiler-plugin` config in the root `pom.xml` — no
-`<parameters>true</parameters>`), so `name` should be set explicitly there.
-
-Both annotations live in **cms-restapi**, not cms-core (where `MCPServer`/`McpToolRegistry` live).
-Reason: `PagingParameterBean` and `ActionLogParameterBean` (the classes that need `@McpToolParam`
-on their fields) are themselves in cms-restapi, and cms-restapi has **no dependency on cms-core** —
-by design, so it stays usable standalone by REST clients (see the module graph in this repo's
-`CLAUDE.md`). Defining the annotations in cms-core and then annotating cms-restapi classes with
-them would have created a cyclic module dependency. cms-core already depends on cms-restapi (via
-cms-api), so `AdminResourceImpl` and `McpToolRegistry` can use them without issue.
-
-### 7.3 Input schema and argument binding — `McpToolRegistry`
-
-`McpToolRegistry.scanAndRegister(McpSyncServer)` uses ClassGraph to scan
-`com.gentics.contentnode.rest.resource.impl` (recursively) — deliberately the same package Jersey
-itself scans via `jersey.config.server.provider.packages` in `RESTApplication` — for methods
-annotated with `@McpTool`. For each parameter of such a method:
-
-* if the parameter itself carries `@McpToolParam`, it becomes one scalar/enum/collection argument;
-* otherwise, if the parameter's type declares `@McpToolParam` fields (e.g. `ActionLogParameterBean`),
-  those fields become arguments, **flattened into the same top-level input schema** as the other
-  parameter(s) of the method, and the bean is instantiated and populated from the call arguments
-  before the method is invoked;
-* otherwise the parameter is left out of the schema and simply instantiated with its no-arg
-  constructor (JAX-RS defaults apply) — this is why `getActionLog`'s tool call still works even
-  though only some of `PagingParameterBean`'s/`ActionLogParameterBean`'s fields are annotated.
-
-Schema generation (`buildInputSchema`) maps Java types to a JSON schema `type` for strings, booleans,
-numbers, enums (as a string `enum`) and collections thereof (as an `array`); anything else is left
-without a `type` constraint. This is deliberately much smaller than e.g. the
-`org.springaicommunity:mcp-annotations` project's victools-based generator (see the design
-discussion in this ticket's history) — it covers everything currently used in this codebase's
-parameter beans, without adding the victools/swagger-annotations dependency chain. Argument values
-are converted from the call's raw JSON-derived values into the target type with a plain Jackson
-`ObjectMapper.convertValue(...)`, which already handles numbers/strings/collections generically; no
-new dependency needed (`jackson-databind` is already a cms-core dependency). Nested/complex bean
-types are not specifically supported yet.
-
-The call handler:
-
-1. instantiates the declaring class with its no-arg constructor,
-2. builds the method arguments as described above,
-3. invokes the method via reflection,
-4. serializes the return value to JSON (Jackson `ObjectMapper`) and wraps it in a
-   `CallToolResult` text content block, or returns `isError(true)` with the exception message.
-
-`OSSRunner.start()` calls `scanAndRegister` right after `addMcpServlet(context)`, via a new private
-`registerMcpTools()` helper, so tools are only registered when the MCP endpoint itself is enabled
-(`MCPServer.getServer()` is empty otherwise).
-
-> **Update (§10):** `registerMcpTools()` no longer calls `scanAndRegister` - it now calls
-> `ManualMcpTools.registerAll` instead. `McpToolRegistry`'s classpath scan (and the annotations it
-> looks for) are kept in the codebase and still covered by their own tests, but are no longer
-> invoked at startup. See §10 for why, and for how tools are registered now.
-
-### 7.4 Scope of the first tool
-
-`getActionLog` now takes optional paging (`page`, `pageSize`) and filter (`user`, `action`, `type`,
-`objId`, `start`, `end`) arguments — all `required = false`, matching their JAX-RS defaults/optional
-filtering semantics. What's still **not** supported by `McpToolRegistry` (see 7.3): nested/complex
-bean types as a single argument, context/session injection into a tool method, structured/typed
-output (`outputSchema`/`structuredContent` — results are always a single JSON text block), and
-`ToolAnnotations`/`_meta`. These can be added incrementally to `McpToolRegistry` as soon as a tool
-actually needs them.
-
-### 7.5 Known limitation: no authentication/authorization (resolved, see §10)
-
-> **This section describes the state as of GPU-2665/2667, before authentication was added. It is
-> kept for historical context. See §10 for the current state**, including a still-open
-> caveat: tools registered through the classpath scan described in this section (§7) are no
-> longer invoked at all (§10.5) - the limitation below is only still relevant if that scan is ever
-> re-enabled.
-
-A tool call arrives on the `/mcp` servlet, entirely outside the Jersey request pipeline that
-normally binds an authenticated CMS session to the thread and enforces `@RequiredPerm` via
-`AuthorizationRequestFilter`. `McpToolRegistry` does neither. Concretely, for `getActionLog`
-(annotated with `@RequiredPerm(TYPE_ADMIN, PERM_VIEW)` and `@RequiredPerm(TYPE_ACTIONLOG,
-PERM_VIEW)`): the method opens its own transaction via `ContentNodeHelper.trx()`, which — with no
-session bound to the calling thread — falls back to `new Trx()`, i.e. **no session, CMS "system
-user" (id `1`)**. `PermHandler` grants the system user full permissions, so both `@RequiredPerm`
-checks trivially pass; they are not actually being enforced against a real caller identity. Any
-tool whose target method instead expects an already-open transaction (e.g. via
-`TransactionManager.getCurrentTransaction()`) would fail when invoked this way.
-This is only acceptable for a first, read-only, internal/dev-only tool. Before exposing tools that
-should run with a specific, less-privileged CMS user's permissions, `McpToolRegistry` needs to open
-a transaction for a real session (SID/API token) and re-run the `@RequiredPerm` checks itself —
-see the "Authentication and authorization" point below, which this section does not yet resolve.
-
-### 7.6 Tool naming and safety checks
-
-Two checks were added after the first version of this section, once adding a *second* endpoint was
-being planned:
-
-* **Naming.** Every tool name must be lower snake_case. If `McpTool#name()` is left empty, one is
-  derived as `<resource>_<method>` (`ResourceImpl`/`Impl` stripped from the class name first, e.g.
-  `AdminResourceImpl#getActionLog` → `admin_get_action_log`) rather than the bare method name,
-  because many `*ResourceImpl` classes in this codebase share method names like `list`/`get`. This
-  matters because `McpAsyncServer#addTool` (checked against the SDK source at the `v2.0.1` tag)
-  does **not** reject a duplicate tool name — it silently *replaces* the previously registered tool
-  with the same name, only logging a warning. `McpToolRegistry.scanAndRegister` now tracks every
-  name it registers in a scan and rejects (logs, skips just that one tool) anything invalid or
-  colliding, so a naming mistake becomes a startup-time log message instead of a tool silently
-  disappearing.
-* **No JAX-RS `@Context` injection.** `McpToolRegistry` instantiates the resource class with a bare
-  no-arg constructor, never through Jersey/HK2, so nothing populates a field/method/parameter
-  annotated with `@Context` (e.g. `AbstractContentNodeResource`'s injected
-  `HttpServletRequest`/`HttpServletResponse`/`ContainerRequestContext`, or a parameter like
-  `FileResourceImpl#createSimple`'s `@Context HttpServletRequest`). `checkNoContextInjection` walks
-  the declaring class's hierarchy and the tool method's own parameters for any `@Context` use and
-  rejects (logs, skips) the tool if found, instead of registering something that would
-  `NullPointerException` on first real call. This is a coarse, class-wide check (it does not
-  analyze whether the specific tool method actually touches the injected member) — deliberately, to
-  keep it simple and avoid false negatives. Of the 58 REST resource impl classes, only 6 use
-  `@Context` at all, and only 3 extend `AbstractContentNodeResource`; `AdminResourceImpl` is not
-  among them, so `getActionLog` is unaffected. This check only prevents a crash — it does **not**
-  make `@Context`-dependent endpoints (mostly auth/upload/proxy-centric ones) work as MCP tools;
-  that would additionally need real values to inject, which loops back into the still-unresolved
-  authentication story below.
-
-### 7.7 Unit tests, and a visibility gap they caught
-
-`cms-core/src/test/java/com/gentics/contentnode/mcp/McpToolRegistryTest.java` unit-tests
-`McpToolRegistry` directly, using small nested fixture "resource" classes (per this codebase's test
-convention) rather than the real `com.gentics.contentnode.rest.resource.impl` package, plus one
-characterization test against the real `AdminResourceImpl#getActionLog`. To make this practical,
-`McpToolRegistry`'s internals were loosened from `private` to package-private, the inline
-duplicate-name check was extracted into `checkNotDuplicate`, and `register(...)` was split into a
-pure `buildToolSpecification(...)` (no `McpSyncServer` needed — its `callHandler()` can be invoked
-directly with a hand-built `CallToolRequest` and a `null` exchange, since the handler never uses
-it) plus the one-line `server.addTool(...)` call. `scanAndRegister` also gained a package-private
-`(McpSyncServer, String packageName)` overload so tests can scan their own package instead of the
-real one.
-
-Writing these tests caught a real gap: **ClassGraph's `getAllClasses()`/method scan silently
-excludes non-`public` classes and methods by default.** All of this codebase's REST resource impl
-classes and their JAX-RS methods happen to be `public` today, so this had no effect on
-`AdminResourceImpl#getActionLog` — but a future non-`public` `@McpTool` method (or its declaring
-class) would otherwise have been silently invisible to the scan, with no error at all (worse than
-the naming/`@Context` cases, which at least log something). Fixed by adding
-`.ignoreClassVisibility()`/`.ignoreMethodVisibility()` to the `ClassGraph` configuration, plus
-`setAccessible(true)` on every reflective constructor/method use in `invoke`/`buildMethodArguments`
-(matching the field-level `setAccessible(true)` already used for `@McpToolParam` fields) — since
-discovering a non-public method but then crashing on first real call with an
-`IllegalAccessException` would have been worse than not finding it at all.
+* **MCP Inspector** (`npx @modelcontextprotocol/inspector`, transport Streamable HTTP, URL
+  `http://localhost:8080/mcp`): set credentials under "Custom Headers". A `Cookie` header works
+  there, because Inspector's Node backend (not the browser) sends the request.
+* **Insomnia**: its cookie jar captures the session cookie from `/rest/auth/login`, and a Response
+  template tag (attribute Header) can copy `Mcp-Session-Id` from the `initialize` response.
 
 ---
 
-## 8. Open points / follow-ups
+## 8. Open points
 
-* **Authentication and authorization.** Resolved for the manually implemented tools - see §10.
-  `/mcp` now extracts an API token/session cookie from the request and resolves it into a real
-  CMS session before a tool runs (`AbstractMcpTool`); a tool without a resolvable session is
-  rejected. `McpToolRegistry`'s classpath scan (§7.5), which never did any of this, has been
-  removed (§13).
-* **Transport security.** Partially addressed - see §10.3. `CmsMcpSecurityValidator` covers
-  credential *presence*, not `Origin` header validation, which is a distinct concern (CSRF-style
-  cross-origin requests from a browser) and is **still open**. The transport's
-  `ServerTransportSecurityValidator` also supports `Origin`/`Host` validation
-  (`DefaultServerTransportSecurityValidator`); wiring that in (in addition to, or combined with,
-  `CmsMcpSecurityValidator`) is a separate follow-up.
-* **Configuration reload.** The MCP server is built once at startup. If it should react to
-  `onReloadConfiguration()` (see `ServletContextHandlerService`), that has to be added. Still open.
-* **Tool arguments beyond scalars/collections** and **`@Context`-dependent endpoints.** Both were
-  limitations of `McpToolRegistry` (§7.3, §9.2). Obsolete since its removal (§13): manual tools
-  build their own input schema and do not get REST resource classes instantiated for them.
-* **Documentation** in `cms-oss-doc` once the endpoint has user-visible functionality. Still open.
+* **`Origin`/`Host` validation** of the transport (protection against cross-origin browser requests
+  that carry the user's session cookie). `CmsMcpSecurityValidator` only checks credential presence;
+  the SDK's `DefaultServerTransportSecurityValidator` supports `Origin`/`Host` checks.
+* **Unauthenticated calls return no `problem`** (§4.3), unlike every other failure.
+* **Duplicate tool names** are not detected (§5.1).
+* **Configuration reload**: the server is built once at startup.
+* **Contract tools in phase `future`** are not implemented (§6).
+* **Contract vs. implementation model**: `tools.json` describes annotation-based registration (§5.6).
+* **Config property naming** is inconsistent (§3).
+* **Documentation** in `cms-oss-doc` (Textile) for the endpoint, configuration and tools.
+* **`docs/mcp-tests.md`** does not cover the GenAIx tools.
 
 ---
 
-## 9. GPU-2667 — wiring 10 more endpoints, hardening the registry
+## 9. History (condensed)
 
-> **Removed (§13).** The annotated endpoints, `McpToolRegistry`'s hardening, `ContextUsageAnalyzer`
-> and the ASM dependency described here have been deleted from the codebase. The section is kept
-> for historical context only.
+1. **GPU-2666** (`3efe6724f`): MCP SDK integrated, servlet under `/mcp`, `MCP_ENABLED`/`MCP_PATH`.
+2. **Annotation-based registration** (GPU-2665/GPU-2667, `5a98a82b7`-`8e7b1e544`):
+   `@McpTool`/`@McpToolParam` (in cms-restapi, so parameter beans could be annotated) on 12 REST
+   resource methods and 10 parameter beans; `McpToolRegistry` discovered them by ClassGraph
+   classpath scan, generated input schemas, bound arguments by reflection, and used
+   `ContextUsageAnalyzer` (ASM bytecode analysis) to reject tools whose code read JAX-RS `@Context`
+   fields. It had no authentication: tools ran as the CMS system user.
+3. **Authentication and explicit tools** (`215c49044`): §4.1-§4.4, `AbstractMcpTool`,
+   `ManualMcpTools`, `page_load`. `OSSRunner` stopped calling the classpath scan; the annotation
+   code was kept dormant.
+4. **`list_nodes`** and **`update_page_properties`** (`3a5c231c8`), `ObjectRef`, structured output
+   (§5.2), shared building blocks (`f1d2be8c8`).
+5. **GenAIx** (branch `f-gpu-2665-genaix`, 32 commits from `f1d2be8c8`, 2026-10-05 to 2026-10-15):
+   problem results, the contract conformance test, `@RequiredPerm` enforcement, then all phase-one
+   tools of the GenAIx contract in groups (identity, read, search, write, constructs, devtools
+   packages, admin), changelog `8985`, URL uploads and `create_folder` (2026-10-12), CMS version in
+   `whoami` (2026-10-14), `nodeId` in write tools (2026-10-14), writing every part type (2026-10-15).
+6. **Removal of the annotation-based registration** (`aa839ffe7`, on `f-gpu-2665`, 2026-11-02),
+   because all tools are implemented explicitly: deleted `McpTool`, `McpToolParam`,
+   `McpToolRegistry`, `ContextUsageAnalyzer`, `McpToolRegistryTest`; removed the ClassGraph and ASM
+   dependencies; restored the 11 REST resource implementations and 11 parameter beans to their
+   pre-GPU-2665 state (`e45f2779d`), including dropping a `reduce` field in
+   `TemplateListParameterBean` that hid `ReducedListParameterBean#reduce`.
+7. **Merge** of `origin/f-gpu-2665-genaix` into `f-gpu-2665-merge-prep` (`49b974a94`,
+   2026-11-02): no conflicts; the only files changed on both sides were `AbstractMcpTool` and
+   `ManualMcpTools` (comment-only changes from step 6).
+8. **Test fixes** (`bf342250c`, 2026-11-02): 5 of the 535 MCP tests (all integration tests) were red
+   on the merged state, hidden by `testFailureIgnore`: `whoami` failed outside the server jar because
+   `rest.version.Main` threw on a missing `cms.build.properties`; `get_permissions` without `id` on
+   a type with instances now answers with its own hint to pass `id` instead of the CMS message;
+   `WhoamiToolIntegrationTest#testWithoutGroups` was updated for the `cms` object added in `6f853b48d`.
+9. **Clean-up** (2026-11-02): `McpToolProvider` folded into `AbstractMcpTool` (its only
+   implementation); `ManualMcpTools` renamed to `McpTools`; the argument and schema pass-throughs of
+   `AbstractMcpTool` removed (tools import `McpArgs`/`McpSchemas` statically, `objectRefSchema` →
+   `ObjectRef.jsonSchema`); the unused `ChangedFields#names()` removed; outdated comments fixed;
+   **`page_load` removed** (not in the contract, no output schema, covered by `get_page`), so
+   `McpContractTest.EXEMPT` is empty.
 
-To manually test the `@McpTool`/`@McpToolParam` annotations against realistic argument shapes,
-10 endpoints were selected (from `Vorschlag=Ja` in the project's endpoint-selection spreadsheet)
-spanning bare scalars, multiple `@PathParam`s, method-level `@QueryParam`s (not bean-flattened),
-1–5 parameter beans combined in one call, `List`/`Set` collections, enums, and endpoints whose
-declaring class relies on JAX-RS `@Context` injection: `ConstructResource#list` (both overloads),
-`ConstructResource#list` (`/construct/list`), `ObjectPropertyResource#list`,
-`TemplateResource#list`, `MarkupLanguageResource#list`, `PartTypeResource#list`,
-`LanguageResource#get`, `PublishProtocolResource#get`, `InfoResource#getMaintenance`,
-`FileResource#getFileUsageInfo` and `PageResource#render`.
-
-Wiring these up against the real source (not just the endpoint spreadsheet) surfaced two gaps in
-`McpToolRegistry` beyond "just add more annotations", both fixed here.
-
-### 9.1 Argument name collisions within one tool
-
-`buildInputSchema` used to flatten every annotated parameter/field into one shared `properties`
-map keyed only by resolved name, with no check that a name wasn't already used earlier in the
-same method — a later duplicate would silently overwrite the earlier property (and, in
-`buildMethodArguments`, silently bind the wrong field on invocation). This was not theoretical at
-the time: `TemplateResourceImpl#list` (`GET /template`) took a direct
-`@QueryParam("nodeId") List<String> nodeIds` **and** `TemplateListParameterBean`, whose own field
-was `@QueryParam("nodeId") Integer nodeId` — the same JAX-RS query key bound to two differently
-typed targets, which JAX-RS itself allows. `buildInputSchema` now tracks resolved names as it
-builds a method's schema (`checkNotDuplicateArgument`) and rejects (logs, skips) the whole tool if
-two parameters/fields collide — mirroring how `checkNotDuplicate` already handles a duplicate
-*tool* name. For the `TemplateResource#list` case, the bean field kept the name `nodeId`, and the
-direct parameter was explicitly named `nodeIds`.
-
-*(A later rebase changed `TemplateResourceImpl#list` to use `ReducedListParameterBean` instead of
-`TemplateListParameterBean` — which has no `nodeId` field — so this specific collision no longer
-occurs there today. The guard itself is still necessary for any future case shaped like it; it's
-covered directly by the `DuplicateArgResource` fixture in `McpToolRegistryTest`, independent of
-whether any real endpoint currently triggers it.)*
-
-A related, simpler pitfall hit while wiring these endpoints: `ConstructResourceImpl` has two
-overloaded `list` methods (`GET /construct` and `GET /construct/list`). `resolveToolName` derives
-a name from `method.getName()` alone, with no parameter-signature disambiguation, so both would
-derive to `construct_list` — `checkNotDuplicate` would then silently drop whichever is scanned
-second. Both now have explicit, distinct `@McpTool#name()`s (`construct_list` and
-`construct_list_for_page`). This isn't a registry bug to fix, just a naming pitfall to know about
-whenever a resource class has overloaded methods.
-
-### 9.2 `@Context`: per-method reachability analysis instead of a class-wide check
-
-The original `checkNoContextInjection` (§7.6) rejected a tool if its declaring class's hierarchy
-had **any** `@Context` field/method, regardless of whether the specific tool method touched it.
-This blocked every `@McpTool` candidate on `FileResource`, `FolderResource`, `ImageResource`,
-`PageResource` (via `AuthenticatedContentNodeResource` → `AbstractContentNodeResource`, which has
-3 `@Context` fields plus a `@Context`-annotated setter) and `NodeResource` (extends
-`AbstractContentNodeResource` directly) — the majority of the `Vorschlag=Ja` endpoints, including
-`FileResource#getFileUsageInfo` and `PageResource#render` from this batch. Neither method's body
-(nor its callees) actually touches those fields.
-
-`checkNoContextInjection` now does two different things depending on what it finds:
-
-* A `@Context` **parameter** on the tool method itself is still an unconditional, certain
-  rejection — that always stays `null`, since the resource class is instantiated with a bare
-  no-arg constructor, not through Jersey/HK2.
-* A `@Context` **field** somewhere in the class hierarchy is only a rejection if a new
-  `ContextUsageAnalyzer` (`com.gentics.contentnode.mcp`) finds that the tool method — or a method
-  it (transitively) calls within the resource class's own hierarchy — actually reads it. It does
-  this via static bytecode analysis (ASM's tree API, added as a new dependency alongside
-  ClassGraph): starting from the tool method, it follows direct `invokevirtual`/`invokespecial`/
-  `invokestatic`/`invokeinterface` call edges, scoped to the resource class and its superclass
-  chain (that's where inherited helpers like `AbstractContentNodeResource#getRequest()` live), and
-  scans each reachable method's bytecode for a `GETFIELD`/`PUTFIELD` against one of the class's
-  `@Context` fields. `@Context`-annotated *methods* (JAX-RS setter-style injection, e.g.
-  `AbstractContentNodeResource#setSessionSecretFromCookie`) are not part of this analysis at all —
-  they're only ever invoked by the JAX-RS injection machinery itself, never reachable from a tool
-  method's own code.
-
-This is a heuristic, not a guarantee: the analysis only follows direct call instructions, not
-method references, lambdas, or reflective calls. A tool that's allowed through despite its class
-having `@Context` fields is logged at `WARN`, so a `NullPointerException` at runtime on such a
-tool has a paper trail pointing back at "this was allowed by a heuristic analysis, re-check it."
-On a bytecode-reading failure, the analysis conservatively treats the field as used (rejects the
-tool) rather than silently letting it through unanalyzed.
-
-Note what this does *not* solve: a tool method that actually **needs** a real
-`HttpServletRequest`/`HttpServletResponse` (as opposed to merely living on a class that happens to
-declare one) is still rejected — there's still no real value to give it. That's tied to the
-still-open authentication/authorization point in §8.
-
-### 9.3 Tests
-
-`McpToolRegistryTest` gained fixtures/tests for: a `@Context` field the tool method never reads
-(now allowed) vs. one it reads directly, or via a called helper method (both still rejected); a
-`@Context`-annotated method alone, with no field (now allowed, whereas the old class-wide check
-would have rejected it); two beans combined in one method whose fields collide on the same
-argument name (rejected); overloaded methods deriving the same tool name by default; and a
-`Set<Enum>` field (schema generation and argument conversion both already handled this generically
-via the existing `Collection`/enum branches — no registry change needed, just test coverage, since
-`ObjectPropertyParameterBean#types` is the first field of that shape). Two characterization tests
-were added against the real, production-annotated `FileResourceImpl#getFileUsageInfo` and
-`PageResourceImpl#render`, asserting they now register despite their class's `@Context` members.
+The earlier, detailed sections of this document about the annotation approach are in the history
+of this file (e.g. `git show f1d2be8c8:docs/mcp-server-integration.md`). The changelog entries
+`8884`/`8885` for steps 2 were deleted in `215c49044`; no changelog entry exists for step 6.
 
 ---
 
-## 10. GPU-2665 — authentication, and manual tool registration
+## 10. Related documents
 
-Two things changed in this slice, both scoped to a new `page_load` tool used to prove the first
-one actually works end to end:
-
-1. `/mcp` tool calls are no longer unauthenticated (§7.5/§8's "Authentication and authorization"
-   point). A tool call now resolves the same credentials the regular REST API accepts - an API
-   token, or the CMS session cookie - into a real CMS session, and runs with that session bound,
-   so permission checks the delegated-to code performs run against the actual caller, not the CMS
-   system user.
-2. Tools are now registered **manually**, one `McpToolProvider` implementation per tool, instead
-   of (only) via `McpToolRegistry`'s `@McpTool` classpath scan. That scan was at first kept in the
-   codebase but no longer invoked at startup (§10.5); it has since been removed (§13).
-
-### 10.1 Changed and added files
-
-| File | Change |
+| Document | Content |
 | --- | --- |
-| `cms-core/…/mcp/auth/McpRequestCredentials.java` | **new** — record carrying the credentials extracted from a request |
-| `cms-core/…/mcp/auth/CmsMcpContextExtractor.java` | **new** — `McpTransportContextExtractor<HttpServletRequest>`, extracts the bearer token/session cookie |
-| `cms-core/…/mcp/auth/McpAuthenticator.java` | **new** — resolves `McpRequestCredentials` into a real CMS `Session` |
-| `cms-core/…/mcp/auth/McpSessionBinding.java` | **new** — binds/restores a `Session` on `ContentNodeHelper` for the duration of a tool call |
-| `cms-core/…/mcp/auth/CmsMcpSecurityValidator.java` | **new** — optional, disabled-by-default `ServerTransportSecurityValidator` (HTTP 401 on a missing credential) |
-| `cms-core/…/mcp/McpToolProvider.java` | **new** — interface for a manually implemented tool |
-| `cms-core/…/mcp/AbstractMcpTool.java` | **new** — base class handling authentication/session-binding/result-serialization for a manual tool |
-| `cms-core/…/mcp/ManualMcpTools.java` | **new** — explicit list of manual tools + registration on the `McpSyncServer` |
-| `cms-core/…/mcp/tools/PageLoadTool.java` | **new** — first manual tool, delegates to `PageResourceImpl#load` |
-| `cms-core/…/mcp/MCPServer.java` | wires `CmsMcpContextExtractor`/`CmsMcpSecurityValidator` into the transport provider builder |
-| `cms-core/…/runtime/ConfigurationValue.java` | new value `MCP_REQUIRE_AUTH` |
-| `cms-oss-server/…/server/OSSRunner.java` | `registerMcpTools()` now calls `ManualMcpTools.registerAll` instead of `McpToolRegistry.scanAndRegister` |
-| `cms-oss-changelog/…/entries/2026/09/8943.GPU-2665.enhancement` | **new** — changelog entry |
-
-Plus unit tests for every new class under `cms-core/src/test/java/com/gentics/contentnode/mcp/`
-(`auth/` and `tools/` subpackages).
-
-### 10.2 Credential extraction and resolution
-
-`CmsMcpContextExtractor` runs on every incoming request (it is the transport's
-`contextExtractor`, set once in `MCPServer.getServlet()`). It reads the same two credential
-shapes `AuthenticationRequestFilter` accepts for `/rest/*` - an `Authorization: Bearer <token>`
-header, and the `GCN_SESSION_SECRET` cookie - into a `McpRequestCredentials` record, and stores it
-on the `McpTransportContext` under `McpRequestCredentials#CONTEXT_KEY`. It deliberately does
-**no DB access and never throws**: it runs outside the transport's own try/catch (verified against
-the `HttpServletStreamableServerTransportProvider` source at the `v2.0.1` tag), so an exception
-here would surface to the client as a raw HTTP 500 instead of a clean MCP-level error.
-
-`McpAuthenticator.resolve(McpRequestCredentials)` is the counterpart that *does* touch the DB - it
-mirrors `AuthenticationRequestFilter#tryApiToken()`/`#trySessionSecretSession()` exactly (same
-precedence: API token first, then session cookie; same lookups: `ApiTokenFactory#hash`/`#load` +
-`ApiTokenSession`, respectively `SessionToken` + `DBSession#load` + `#touch()`), wrapped in its own
-short-lived system-user `Trx` (`Trx.supply(...)`, the same pattern `ApiTokenSessionClosure` uses)
-since that filter is bound to the Jersey pipeline and never runs for `/mcp`. Empty credentials
-short-circuit before any DB access.
-
-### 10.3 Where credentials are checked, and the two independent guards
-
-There are two independent places an unauthenticated/invalid request can be rejected, and they
-default to different behavior on purpose:
-
-* **Per tool call, always on.** `AbstractMcpTool#call` resolves the session and, if
-  `McpToolProvider#requiresAuthentication()` (default `true`) and no session was resolved, returns
-  a `CallToolResult.isError(true)` without ever running the tool's own logic. This is the
-  baseline: "most tool calls without authentication should fail." A tool that legitimately does
-  *not* need an existing session (e.g. a future login tool that establishes one) overrides
-  `requiresAuthentication()` to `false`.
-* **At the transport level, opt-in, disabled by default.** `CmsMcpSecurityValidator` (the
-  transport's `securityValidator`) rejects a request with **HTTP 401** if it carries *neither* an
-  `Authorization: Bearer` header *nor* the session cookie - but only when
-  `ConfigurationValue#MCP_REQUIRE_AUTH` is `true` (env `MCP_REQUIRE_AUTH`, system property
-  `com.gentics.contentnode.mcp.requireAuth`, config `mcp.requireAuth`; default `false`, so
-  existing setups - e.g. the MCP Inspector connecting without configuring any credentials at all -
-  keep working unless this is explicitly opted into). **This only checks presence, not validity** -
-  it runs before any transaction/DB access is available to the transport
-  (`HttpServletStreamableServerTransportProvider#doPost`/`#doGet`/`#doDelete` call the security
-  validator synchronously, ahead of session/DB handling), so an invalid or expired token/cookie
-  still passes this check and is only caught by the per-tool-call guard above. Enabling the flag
-  only makes a missing credential fail earlier and more explicitly (401 instead of a 200 response
-  whose body is an MCP-level error) - it does not change what ultimately succeeds.
-
-### 10.4 Session binding and thread-locals
-
-A sync tool handler does not run on the servlet thread that received the HTTP request - the SDK
-offloads it onto a pooled `Schedulers.boundedElastic()` thread (`McpServerFeatures
-.AsyncToolSpecification#fromSync`, checked against the SDK source at the `v2.0.1` tag), and that
-thread is reused across unrelated calls. `McpSessionBinding` (an `AutoCloseable`, always used in a
-try-with-resources by `AbstractMcpTool#call`) binds the resolved session on `ContentNodeHelper` for
-the duration of the call and restores whatever was bound before. If no session is bound (only
-possible for a tool with `requiresAuthentication() == false`), a fixed backend language ID (`2`)
-is set instead: without *some* language, i18n-translated messages fall back to their raw,
-untranslated key.
-
-### 10.5 Manual tool registration replaces the classpath scan
-
-`McpToolProvider` (a tool's definition + call handler) and `AbstractMcpTool` (the base class that
-does the authentication/session-binding/result-serialization described above, so a concrete tool
-only implements `tool()` and `invoke(Map<String, Object>, Optional<Session>)`) replace
-`McpToolRegistry`'s classpath scan as the way new tools get added. `ManualMcpTools` holds the
-explicit list of tool instances and registers each of them on the `McpSyncServer`;
-`OSSRunner.registerMcpTools()` now calls `ManualMcpTools.registerAll` instead of
-`McpToolRegistry.scanAndRegister`.
-
-At this point `McpToolRegistry` itself (the scan, the `@McpTool`/`@McpToolParam` annotations,
-`ContextUsageAnalyzer`, and all of §7/§9's hardening) was deliberately kept, dormant, in case some
-of the 12 annotated endpoints were migrated to manual tools individually later. It has since been
-removed completely, since all tools are implemented explicitly (§13).
-
-### 10.6 The `page_load` tool
-
-`PageLoadTool` is deliberately minimal: it exists to prove that a tool call now runs as the real,
-authenticated caller. It takes a required `id` and an optional `nodeId`, and delegates to
-`PageResourceImpl#load` (with every other flag `false`/`null`) - the same method the real
-`GET /rest/page/load/{id}` REST endpoint calls. That method's own object-permission check
-(`ObjectPermission.view`, inside `PageResourceImpl#getPage`) is what actually proves the point:
-with a real session bound (§10.4), it runs against that user's actual permissions - a user without
-view permission on a page gets a permission error, not the page. No separate permission check was
-added to the tool itself, since the delegated-to method already performs the relevant one; per
-this ticket's direction, a tool is responsible only for whatever permission checks the code it
-calls does *not* already perform on its own (there was none missing here).
-
-### 10.7 Tests
-
-Unit tests were added for every new class (`CmsMcpContextExtractorTest`,
-`CmsMcpSecurityValidatorTest`, `McpSessionBindingTest`, `McpAuthenticatorTest`, `PageLoadToolTest`,
-`ManualMcpToolsTest`), all runnable without a DB: credential extraction/parsing, the security
-validator's enabled/disabled and presence-only behavior, session-binding restore-on-close
-(including when the tool body throws), the empty-credentials short circuit, the tool's input
-schema and its unauthenticated-call rejection, and that `ManualMcpTools.registerAll` registers
-`page_load`. Resolving an actual, valid API token/session cookie against the database, and the
-resulting permission check inside `PageResourceImpl#load`, needs a real CMS instance and is
-covered by a manual test protocol instead - see `docs/mcp-tests.md`.
-
-**How this was verified in-session, and what that does/doesn't prove.** The sandbox this code was
-written in has no credentials for Gentics' internal Maven repository (`repo.gentics.com`), so a
-real `mvn compile`/`test`/`install` of this reactor could not be run there - several dependencies
-(e.g. `ojdbc7`, `generic-testutils`) only resolve with those credentials. Instead: a classpath was
-rebuilt from this checkout's pre-existing `target/classes` directories (a prior successful build)
-plus public dependency jars fetched from Maven Central, every new/changed file was compiled
-directly with `javac` against that classpath, and the six unit test classes above were run
-directly with `org.junit.runner.JUnitCore` - all passed. This is real signal (the code compiles
-against the actual SDK/CMS types and the tests' assertions hold), but it is not the same guarantee
-a real `mvn -pl cms-core -am test` run gives (Checkstyle/SpotBugs/PMD were not run; the reactor's
-own dependency resolution was never exercised end-to-end). Per this repo's `CLAUDE.md`, builds and
-tests are now run manually by the user rather than attempted in the sandbox going forward - treat
-a user-reported `mvn` run as the actual ground truth for "this builds/passes", not the `javac`
-check described here.
-
-### 10.8 Manual testing tooling (MCP Inspector / Insomnia)
-
-Two ways to drive `docs/mcp-tests.md` §9's manual protocol against a real, running server, beyond
-plain `curl`:
-
-* **MCP Inspector.** The current web UI (`clients/web` in the
-  [Inspector repo](https://github.com/modelcontextprotocol/inspector)) configures a server's
-  outgoing headers under its **"Custom Headers"** settings section (`+ Add Header`, then a
-  `Key`/`Value` pair per row) - this covers both credential shapes: `Key: Authorization`,
-  `Value: Bearer <api token>`, or `Key: Cookie`, `Value: GCN_SESSION_SECRET=<value>`. The `Cookie`
-  case is worth calling out: a browser normally refuses to let JavaScript set a raw `Cookie`
-  header at all (it's on the Fetch spec's forbidden-header-name list), which would otherwise make
-  this untestable from a browser-based tool. Checked against Inspector's own source
-  (`core/mcp/node/proxyFetch.ts`): the web client's outgoing request to the target MCP server is
-  made by Inspector's own local Node backend (via `undici`), not the browser's `fetch`, so that
-  restriction doesn't apply here.
-* **Insomnia** (or any REST client with the same two features). Its per-workspace cookie jar
-  auto-captures `Set-Cookie` from a `/rest/auth/login` response and auto-attaches matching cookies
-  to later requests by default, so the session-cookie path needs no manual extraction once a login
-  request has run. Its native **Response** template tag (attribute **Header**) can pull the
-  `Mcp-Session-Id` value out of the `initialize` response directly into the `tools/call` request's
-  header field, instead of copy-pasting it by hand.
-
-Either way, the underlying protocol exchange is the same three calls `docs/mcp-tests.md` §9 and
-§5's example walk through: log in (sets the session cookie) → `initialize` (returns
-`Mcp-Session-Id`) → `tools/call` for `page_load` (needs that session ID plus the credential).
-
-### 10.9 Still open
-
-* **`Origin`/`Host` header validation** for the transport, as a defense against a browser making
-  cross-origin requests to `/mcp` with the user's own session cookie attached - a different
-  concern than `CmsMcpSecurityValidator`'s presence check (§10.3). See the updated §8 bullet.
-* **Re-running `@RequiredPerm`** is intentionally **not** done automatically for a manual tool -
-  each tool is responsible for whatever permission checks the code it delegates to does not
-  already perform (§10.6). This is a deliberate scope decision for this ticket, not an oversight,
-  but it does mean a future tool author has to actually verify that the call they delegate to
-  performs the check they expect.
-* **A tool with `requiresAuthentication() == false`** (e.g. a login tool) is supported by the
-  `McpToolProvider` contract, but none exists yet.
-* **Configuration reload / transport security (`Origin` validation) / documentation** - see §8,
-  unchanged by this section.
-
-## 11. GPU-2665 — `list_nodes` tool and shared `ObjectRef`
-
-A second manual tool, `list_nodes`, plus `ObjectRef`, the first shared, cross-tool MCP output
-type. The full design brief is `docs/plan-tool-list-nodes.md`. This section records what was
-actually built, including where the implementation had to deviate from that brief (§11.3).
-
-### 11.1 Changed and added files
-
-| File | Change |
-| --- | --- |
-| `cms-core/…/mcp/model/ObjectRef.java` | **new** — shared object reference record (`type`/`id`/`globalId`/`nodeId`/`name`/`path`/`language`/`niceUrl`/`url`) |
-| `cms-core/…/mcp/tools/ListNodesTool.java` | **new** — the `list_nodes` tool, delegates to `NodeResourceImpl#list` and `#languages` |
-| `cms-core/…/mcp/ManualMcpTools.java` | registers `ListNodesTool` after `PageLoadTool` |
-| `cms-core/…/mcp/AbstractMcpTool.java` | also sets `structuredContent` on the result when the tool declares an output schema (§11.3) |
-| `cms-oss-changelog/…/entries/2026/09/8943.GPU-2665.enhancement` | **new** — changelog entry (§10.1 refers to an `8943` entry for the auth work, but no such file exists in the tree - `a898bc84f` deleted the earlier GPU-2665/2667 entries - so `8943` was the next free number after `8942`) |
-
-Tests: `ObjectRefTest`, `ListNodesToolTest`, `AbstractMcpToolTest` (all new, no DB),
-`ManualMcpToolsTest` (extended), and `tests/mcp/ListNodesToolIntegrationTest` (new,
-`DBTestContext`).
-
-### 11.2 Design decisions
-
-* **`ObjectRef` lives in `com.gentics.contentnode.mcp.model` (cms-core)**, not in cms-restapi: it
-  is not a JAX-RS DTO, only glue for the MCP tool layer, which lives entirely in cms-core. Its
-  `Type` enum serializes to the spec's lowercase strings (`node`, `folder`, …) via
-  `@JsonValue`/`@JsonCreator`. An unknown string fails with an `IllegalArgumentException` that
-  lists the valid values, rather than silently becoming `null`. On input only `type`/`id` are
-  meaningful. Unknown JSON fields are ignored (`@JsonIgnoreProperties(ignoreUnknown = true)`), so
-  a ref emitted by one tool can be passed back unchanged. Unset fields are omitted on output
-  (`@JsonInclude(NON_NULL)`, see §11.3). Only one factory exists so far, `forNode(...)`; factories
-  for other object types are to be added by the tools that need them.
-* **Languages are folded into every item** (`items[].languages`, `{id, code, name}`), fetched
-  per node via `NodeResourceImpl#languages` in the same call. Node counts are small, so this is
-  cheap even at `size = 200`, and the tool's stated purpose ("learn which languages a node
-  supports") depends on the field. `LanguageInfo` was first a nested record of `ListNodesTool`;
-  that decision was reversed on 2026-09-28, and it is now the shared `mcp.model.LanguageInfo`
-  (§12.11).
-* **Paging is "fetch all, then slice in memory".** The tool's input is offset-based (`from`,
-  arbitrary in `[0, 10000]`), while `PagingParameterBean` is page-number based (`page`/`pageSize`).
-  The two only line up when `from` is a multiple of `size`. So `NodeResourceImpl#list` is called
-  unpaged (`pageSize = -1`, the bean's own default) and `[from, from + size)` is sliced out
-  afterwards (`mcp.util.Slice`, §12.11, which also computes `truncated`/`nextFrom` and uses `long`
-  arithmetic so `from + size` cannot overflow). `total` is always the exact count of visible,
-  matching nodes, so `totalIsExact` is always `true`.
-* **No extra permission check.** `NodeResourceImpl#list` already filters to
-  `ObjectPermission.view` (`PermissionFilter`), and `#languages` re-checks `view` per node
-  (`MiscUtils.getNode`). Same principle as `page_load` (§10.6).
-* **`@Context` safety** was re-checked by hand at implementation time (manual tools are not
-  covered by any automatic analysis). `list`/`languages` and everything they call use
-  only `ContentNodeHelper`/`TransactionManager`/static `MiscUtils` helpers. None read the
-  `@Context` fields declared on `AbstractContentNodeResource`.
-* **No outer `Trx`.** Both resource methods open their own via `ContentNodeHelper.trx()`, like
-  `PageResourceImpl#load` for `page_load`.
-* Arguments: `q` (optional, max 200 chars, blank = no filter; matched case-insensitively against
-  the node's ID and name by the resource's own `ResolvableFilter`), `size` (1–200, default 25),
-  `from` (0–10000, default 0). All three are checked again in the tool (`mcp.util.ListArgs`,
-  §12.11), which rejects out-of-range values, a `q` that is not a JSON string (or `null`), and a
-  `size`/`from` that is not an integral JSON number (no numeric strings). Results keep the
-  resource's own default sort (`name`).
-* `host` is passed through exactly as the REST model reports it. That value includes the
-  protocol, e.g. `http://www.example.com` (`ModelBuilder#getNode`), not the bare hostname.
-
-### 11.3 Deviation from the plan: output schema requires structured content
-
-The plan said no MCP infrastructure had to change for this tool. That turned out to be wrong for
-the output schema it also asked for. In MCP Java SDK `2.0.1`, every registered tool's handler is
-wrapped in `McpAsyncServer.StructuredOutputCallToolHandler` (checked against the `mcp-core-2.0.1`
-sources jar). If the tool declares an `outputSchema` and a successful result has no
-`structuredContent`, the result is replaced with an `isError(true)` "Response missing structured
-content which is expected when calling tool with non-empty outputSchema". If structured content is
-present, it is validated against the schema (networknt `json-schema-validator` via
-`mcp-json-jackson2`'s `DefaultJsonSchemaValidator`).
-
-`AbstractMcpTool#call` only produced a JSON text block, so as planned every successful
-`list_nodes` call would have come back as an error. Two changes fix this:
-
-1. `AbstractMcpTool#call` now also sets `structuredContent` (the same result, converted to a
-   `Map` with the same `ObjectMapper`), **but only if `tool().outputSchema() != null`**. Tools
-   without an output schema, i.e. `page_load`, are unaffected (the SDK would log a warning for
-   structured content without a schema). The text block is still always sent, for clients that
-   don't read structured content.
-2. The result records (now `ListResult`, `NodeInfo`, `LanguageInfo`, §12.11) and `ObjectRef` are
-   `@JsonInclude(NON_NULL)`. JSON Schema's `"type": "integer"` does not accept `null`, so an
-   unset optional field (e.g. `nextFrom` on the last page, or a node without a default image
-   folder) would otherwise fail validation.
-
-`ListNodesToolTest` runs the declared output schema and a sample result through the SDK's own
-`DefaultJsonSchemaValidator`, so a later schema/record mismatch shows up in a unit test instead of
-at runtime.
-
-### 11.4 Tests
-
-* `ObjectRefTest`: `Type` wire values for all constants in both directions (incl.
-  case-insensitive input), a clear failure for an unknown value, `forNode`/`of` populate exactly
-  the expected fields, a full Jackson round trip with every field set and exactly the spec's JSON
-  keys, unset fields omitted, unknown input fields ignored.
-* `ListNodesToolTest`: tool name/description, input schema (`q`/`size`/`from` with their
-  constraints, nothing required, no additional properties), output schema field names, output
-  schema is a valid schema, a sample result validates against it, null fields are omitted,
-  `requiresAuthentication()`, and unauthenticated-call rejection. The `Slice` math
-  (first/middle/last/exact-end/beyond-total/empty/overflow, plus a loop that pages through a list
-  via `nextFrom` and checks every item is covered exactly once) moved to `util/SliceTest`
-  (§12.11).
-* `AbstractMcpToolTest`: `structuredContent` set iff an output schema is declared, and the shared
-  helpers (`errorMessage`, `requireOk`, the successful path of `saveOrReleaseLock`, the argument
-  and schema delegates). The argument parsing and rejection tests are in `McpArgsTest`.
-* `ManualMcpToolsTest`: `registerAll` also registers `list_nodes`.
-* `tests/mcp/ListNodesToolIntegrationTest` (`DBTestContext`): a user whose group has *only* view
-  permission on three of four freshly created nodes, authenticated via a real API token passed as
-  `McpRequestCredentials`, calls `new ListNodesTool().call(...)` directly. Asserts that only the
-  three visible nodes are listed, sorted by name, with their assigned languages in order; that
-  `q` matching one node returns exactly that node, and `q` matching only the hidden node returns
-  nothing; that paging with `size=2` across two calls is consistent and neither duplicates nor
-  skips a node; and that `from` beyond `total` returns an empty page.
-
-**Verification status.** Same approach and limits as §10.7. The four main-source files were
-compiled with `javac --release 17` against the classpath rebuilt from the pre-existing
-`target/classes` directories plus the local Maven repository jars. The four unit test classes
-above plus `PageLoadToolTest` (34 tests) were run with `org.junit.runner.JUnitCore`, and all
-passed. The existing `auth/` unit tests also still pass against the changed `AbstractMcpTool`.
-The integration test was **compiled only, not run** (it needs the MariaDB/test-DB-manager
-containers). Checkstyle/SpotBugs/PMD were not run. A user-run `mvn -pl cms-core -am test` remains
-the ground truth.
-
-### 11.5 Still open
-
-* `ObjectRef` has only a `forNode` factory. Folder/page/file/etc. factories (and populating
-  `nodeId`/`path`/`language`/`niceUrl`/`url`) come with the tools that need them.
-* `get_folder_tree`, referenced by `list_nodes`' description, does not exist yet.
-* `list_nodes` does not expose the resource's `sort`, `perms` or staging `package` parameters.
-* The `ref` object in the output schema describes its fields but, like the rest of the MCP
-  schemas here, does not use `$ref` or require any of them.
-
-## 12. GPU-2665 — `update_page_properties` tool
-
-The first **write** tool. It changes page metadata (name, filename, description, nice URL,
-priority, template) without touching content/tags. The design brief is
-`docs/plan-tool-update-page-properties.md` (revised 2026-09-25). This section records what was
-built, including one deviation from that brief (§12.3).
-
-### 12.1 Changed and added files
-
-| File | Change |
-| --- | --- |
-| `cms-core/…/mcp/tools/UpdatePagePropertiesTool.java` | **new**: the tool, delegates to `PageResourceImpl#load` and `#save` |
-| `cms-core/…/mcp/model/ObjectRef.java` | new factory `forPage(Page, Integer nodeId)` |
-| `cms-core/…/mcp/ManualMcpTools.java` | registers `UpdatePagePropertiesTool` after `ListNodesTool` |
-| `cms-oss-changelog/…/entries/2026/09/8944.GPU-2665.enhancement` | **new**: changelog entry (see §12.10 on the numbering) |
-
-Tests: `UpdatePagePropertiesToolTest` (new, no DB), `ObjectRefTest` and `ManualMcpToolsTest`
-(extended), `tests/mcp/UpdatePagePropertiesToolIntegrationTest` (new, `DBTestContext`).
-
-No REST API was changed.
-
-### 12.2 Load → save → reload, and why `save()` was not changed
-
-The tool calls `PageResourceImpl#load(update = true)` (checks `ObjectPermission.edit`, locks the
-page), then `#save` (with `unlock = true`), then `#load(update = false)` again for its output.
-`save()` keeps returning `GenericResponse`. Changing it to return the saved page was implemented
-and reverted (plan §2): the page instance inside `save()` has a stale lock state after
-`unlock()`, so it needed a fresh fetch anyway; the new `page` field broke Java `RestClient`s
-reading the response as `GenericResponse` (`UnrecognizedPropertyException`); and it made every
-save more expensive, including the Aloha keepalive save
-(`PageHandlingQueryCountTest#testUpdateTags` exceeded its statement budget). The reload in the
-tool keeps that cost on MCP calls only.
-
-Step 1 loads without any references (only the six mutable fields are needed for the snapshot).
-Step 3 loads with `folder`, `langvars`, `translationstatus` and `versioninfo`, for the output.
-
-### 12.3 Deviation from the plan: the save request contains only the supplied fields
-
-The plan's sketch mutated the page returned by step 1 and submitted it to `save()`. That page
-would carry more than the six fields: `ModelBuilder#getPage(restPage, false)` applies **every
-non-null field** of the submitted REST page, and `load()` always fills content tags and visible
-object tags, plus the translation status if requested. Submitting it would:
-
-* re-save every tag, and require edit permission on every visible object tag
-  (`MiscUtils.checkObjectTagEditPermissions`), although this tool must not touch tags;
-* call `page.synchronizeWithPage(...)` whenever a translation status is present, i.e. silently
-  change the page's translation sync state;
-* make `deriveFileName` a no-op: `save()` only derives the filename if the submitted page's
-  `fileName` is empty, and a loaded page always has one.
-
-So the tool submits a fresh REST `Page` with only the supplied fields set (`UpdateRequest
-#toRestPage`). Everything else stays `null` and is left unchanged by `ModelBuilder#getPage`. This
-is the same shape existing REST tests use for page saves (e.g. `FilenameUniquenessTest`).
-Consequences of `ModelBuilder#getPage`'s null/empty handling, documented in the input schema:
-
-* `description: ""` and `niceUrl: ""` clear the value.
-* `fileName: ""` does nothing by itself (empty filenames are ignored), but it lets
-  `deriveFileName` apply, same as omitting `fileName`.
-* `niceUrl` is ignored if the `NICE_URLS` feature is off. It then never shows up in
-  `changedFields`.
-
-### 12.4 `changedFields`: before/after snapshot diff
-
-`changedFields` lists the fields whose value **actually differs** after the save, not the fields
-present in the request (plan decision 3). The tool's `CHANGED_FIELDS` (a `ChangedFields`, §12.11)
-takes a snapshot of `name`/`fileName`/`description`/`niceUrl`/`priority`/`templateId` of the page
-loaded in step 1, and `diff(...)` compares them (`Objects.equals`) with the page reloaded in
-step 3, in that fixed order. Diffing
-around the whole cycle instead of bookkeeping while applying the arguments also catches changes
-`save()` makes on its own: a filename derived via `deriveFileName`, or the template's file
-extension appended to a given `fileName`. A resubmitted unchanged value is not reported.
-
-### 12.5 Releasing the lock on failure
-
-`load(update = true)` commits the lock. `save()` only unlocks at its very end, so every early
-return (`INVALIDDATA` for a duplicate name, filename or nice URL) and every exception would leave
-the page locked for the lock timeout (`lock_time`, default 600 s). The tool therefore:
-
-* runs the save through `AbstractMcpTool#saveOrReleaseLock` (§12.11), which checks `save()`'s
-  response code (`requireOk`) and turns anything but `OK` into a tool error, with the response's
-  messages (`save()` reports duplicates in the response, it does not throw);
-* if the save throws or is not `OK`, `saveOrReleaseLock` calls `releaseLock(Page.class, id)`.
-  `releaseLock` opens a `Trx` for the bound session and calls `Page#unlock()`, whose
-  `UPDATE content … WHERE id = ? AND locked_by = ?` only ever releases the caller's own lock. It
-  deliberately does **not** use `PageResourceImpl#cancel`, which restores the latest page version
-  before unlocking. A failure in `releaseLock` is logged and does not replace the original error.
-
-Argument validation runs **before** step 1 (`UpdateRequest.of`), so an invalid argument never
-locks the page in the first place.
-
-Known edge case, same as the REST `save(unlock = true)`: if the calling user already had the page
-locked before the call (e.g. open in the editor under the same account), the tool releases that
-lock too, on success and on failure. If the page is locked by **another** user, step 1 does not
-lock it (`load()` returns it read-only with a warning), `save()` then fails with the "locked by"
-error, and `releaseLock` leaves the other user's lock alone.
-
-### 12.6 `nodeId` is rejected
-
-The input schema declares `nodeId` (to match the external tool catalog), but a call that supplies
-it is rejected with "update_page_properties does not yet support nodeId (multichannelling); …",
-before any argument validation or CMS access. Ignoring an explicit channel on a write could edit
-the wrong page variant without the caller noticing. This refinement of plan decision 4 was
-confirmed on 2026-09-25, before implementing it.
-
-### 12.7 Input validation
-
-The plan asked to verify whether the SDK enforces the input schema. It does. In MCP Java SDK
-`2.0.1` (checked against the `mcp-core-2.0.1` sources jar), `McpAsyncServer`'s tool-call handler
-runs `ToolInputValidator.validate(...)` before the tool's handler, unless the server was built
-with `validateToolInputs(false)`. The builder default is `true`, and `MCPServer` does not change
-it. `DefaultJsonSchemaValidator` was then run on this tool's constraint types in isolation
-(scratch program against the cached jars): `minimum`/`maximum`, `minLength`/`maxLength`,
-`required`, `additionalProperties: false`, wrong JSON types and `null` values were all rejected
-with "Tool (…) input validation failed: …". `UpdatePagePropertiesToolTest
-#testSdkInputValidationEnforcesConstraints` pins this down for the real schema.
-
-The tool still repeats every check itself (`UpdateRequest.of`), because `AbstractMcpTool#call`
-can be invoked without the SDK (as the tests do). Like all tools using the argument helpers of
-`AbstractMcpTool`, it **rejects** out-of-range values instead of silently adjusting them, and
-requires real JSON integers/booleans/strings (no numeric strings).
-
-### 12.8 Output
-
-`{ page, changedFields }`, both required. `page` is a `PageInfo` record (`mcp.model`, §12.11),
-mapped from the reloaded REST `Page`. It has **no `tags` field** (plan decision 2). Details
-resolved at implementation time:
-
-* **`ref`** comes from `ObjectRef.forPage(page)`, which takes `nodeId` from the page's folder. `path` is `Page#getPath()`, which
-  `ModelBuilder` always fills with `ModelBuilder#getFolderPath(folder)` (e.g. `/Node/News/2026/`),
-  so no new path logic was needed. `nodeId` is the page's folder's `nodeId` (`Reference.FOLDER`
-  is requested in step 3). `url` is the preview URL, falling back to `liveUrl` if blank.
-* **`translationStatus`** is `Page#getTranslationStatus()`, a
-  `com.gentics.contentnode.rest.model.TranslationStatus`, mapped 1:1: `pageId`, `name`,
-  `language`, `inSync`, `version`, `versionTimestamp`, `latestVersion {version,
-  versionTimestamp}`. For a page not synchronized with another variant, `ModelBuilder
-  #getTranslationStatus` sets only `inSync: true`.
-* **`languageVariants`** is keyed by **language code**, not by the REST model's map key (the
-  numeric language ID), with an `ObjectRef` per variant. The page itself is included, as in the
-  REST model.
-* Users (`lockedBy`, `creator`, `editor`, `publisher`, version `editor`) are `{id, login}`.
-  `versions` is newest first, as in the REST model.
-* Timestamps that are unset in the REST model (`lockedSince = -1`, `pdate = 0` for a page never
-  published) are omitted rather than reported as `-1`/`0`.
-
-Like `list_nodes` (§11.3), all records are `@JsonInclude(NON_NULL)` so that the structured result
-validates against the output schema.
-
-### 12.9 Tests
-
-* `UpdatePagePropertiesToolTest` (no DB): tool name/description and every input property's type
-  and constraints; the SDK's own input validation against the real schema (valid call accepted, 13
-  invalid shapes rejected); unauthenticated-call rejection; `nodeId` rejected before any CMS access
-  (no transaction exists in the test, so reaching `load()` would fail differently; the same message
-  comes back even with an otherwise invalid `pageId`); `UpdateRequest` defaults, every field, every
-  rejection, boundary values, and that `toRestPage()` leaves tags/translation status/language
-  unset; `CHANGED_FIELDS` snapshot diff for no change, each field individually, all fields in order,
-  a resubmitted unchanged value, a filename changed by `save()`, `null` ↔ value in both directions,
-  and `""` vs. `null`; the full output mapping; a full
-  and a minimal result validated against the output schema with `DefaultJsonSchemaValidator`.
-* `ObjectRefTest`: `forPage` with all fields, and the `liveUrl` fallback.
-* `ManualMcpToolsTest`: `registerAll` also registers `update_page_properties`.
-* `tests/mcp/UpdatePagePropertiesToolIntegrationTest` (`DBTestContext`): an editor (page view +
-  update on the test folder) and a viewer (page view only), each with a real API token, call
-  `new UpdatePagePropertiesTool().call(...)` directly. Every test uses its own pages and checks the
-  page state independently of the tool (object layer, and the `content.locked` column for the
-  lock). Cases: name only (`changedFields == ["name"]`, only the name changed, unlocked); the same
-  name again (`changedFields == []`, nothing changed); description + priority; template change to
-  a second template; `deriveFileName` (`["name", "fileName"]`); duplicate name and duplicate
-  filename (error, page **unlocked** and unchanged); viewer rejected (unchanged, unlocked);
-  `nodeId` rejected (unchanged, unlocked); a page locked by another user (error "Could not
-  lock…", and that user's lock is **kept**, §12.5); unknown page ID. Every successful result is
-  also validated against the output schema, since the direct call bypasses the SDK's check.
-  Note for fixtures: a newly created page is locked by its creator (`PageFactory
-  #saveContentObject` inserts `content` with `locked`/`locked_by` set), so the test unlocks each
-  page after `createPage` (as the system user). The first run of this test lacked that, and
-  every editor call failed with "Could not lock … locked for user {1}".
-
-**Verification status.** The changed main sources and all new/changed test classes were compiled
-with `javac --release 17` against the pre-existing `target/classes` directories plus the local
-Maven repository jars. `UpdatePagePropertiesToolTest`, `ObjectRefTest`, `ManualMcpToolsTest`,
-`ListNodesToolTest`, `PageLoadToolTest` and `AbstractMcpToolTest` (60 tests) were run with
-`org.junit.runner.JUnitCore`, and all passed. The integration test was **compiled only, not run**
-(it needs the MariaDB/test-DB-manager containers), so the DB-backed expectations, in particular
-the exact `changedFields` after a real save and the lock release after a rejected save, are
-unconfirmed until it runs. Checkstyle/SpotBugs/PMD were not run. A user-run
-`mvn -pl cms-core -am test` remains the ground truth.
-
-### 12.10 Still open
-
-* Multichannelling: `nodeId` is rejected (§12.6).
-* Tag content is out of scope, for a future `update_page_tags`. `get_template` and
-  `update_page_tags`, referenced by the tool description, do not exist yet.
-* The tool description is **not** verbatim from the external tool-catalog spec (which is not in
-  this repository). Only the "Do NOT use this tool to change content, that is `update_page_tags`"
-  sentence quoted in the plan is. Replace it with the spec's text if they differ.
-* `alternateUrls`, `customCdate`/`customEdate`, language, and publish/offline times are not
-  exposed.
-* Changelog numbering: `8943` is already used by `8943.SUP-20182.bugfix` (commit `6c4f88666`
-  on `origin/hotfix-6.4.x-sup-20182`, not on this branch). The `8943.GPU-2665.enhancement` that
-  §11.1 mentions for `list_nodes` does not exist in the working tree. This tool's entry is
-  `8944`. The `list_nodes` entry still needs to be created, under a free number.
-* `idempotencyKey` is only logged. Calls are not de-duplicated.
-
-### 12.11 Shared building blocks
-
-Pieces of `update_page_properties` and `list_nodes` that other tools will need were moved out of
-the tools, so that future tools reuse them instead of copying them:
-
-| Where | What |
-|---|---|
-| `mcp/AbstractMcpTool` | `protected static` helpers: `errorMessage(failure, response)`, `requireOk(response, failure)`; `saveOrReleaseLock(clazz, id, failure, save)` and `releaseLock(clazz, id)`; delegates `stringArg`/`intArg`/`booleanArg`/`nullIfBlank` (to `McpArgs`) and `schema`/`objectRefSchema` (to `McpSchemas`/`ObjectRef`) |
-| `mcp/McpArgs` | public argument parsing, usable outside tool classes (e.g. `ListArgs`): `stringArg`, `intArg` (strict, with and without default), `booleanArg`, `nullIfBlank` |
-| `mcp/McpSchemas` | public `schema(type, description, keyValues...)`, usable outside tool classes (the model records) |
-| `mcp/model` | public output records, each with a static `jsonSchema(...)` next to it: `ObjectRef` (plus `forPage(Page)`, node ID from the folder), `UserRef`, `VersionInfo` (maps any `ItemVersion`, not only `PageVersion`), `TranslationStatusInfo` with nested `LatestVersionInfo`, `PageInfo` (was `UpdatePagePropertiesTool.PageProperties`), `LanguageInfo` (maps a REST `ContentLanguage`), `NodeInfo` (was `ListNodesTool.NodeListItem`), generic `ListResult<T>` with `of(Slice, items)` and `jsonSchema(itemSchema, plural)` (was `ListNodesTool.ListNodesResult`); `Timestamps.orNull` |
-| `mcp/util/ChangedFields` | generic `changedFields` support: a named list of getters, `snapshot(before).diff(after)` (was `UpdatePagePropertiesTool.MutableFieldsSnapshot`) |
-| `mcp/util/Slice` | offset-based page `[from, from + size)` of a fully fetched list, with `apply(list)`, `truncated()`, `nextFrom()` (was `ListNodesTool.Slice`) |
-| `mcp/util/ListArgs` | the list arguments `q`/`size`/`from`: `of(arguments, limits)`, `schemaProperties(queryDescription, singular, plural, limits)`, `slice(total)`; the limits (`ListArgs.Limits`) are per tool |
-| `mcp/util/ListResponses` | `items(response)`: the items of any REST `AbstractListResponse`, never null |
-
-`releaseLock` delegates to `NodeObject#unlock()`. That was checked for the types that implement
-it: pages (`PageFactory`, `UPDATE content … WHERE id = ? AND locked_by = ?`) and templates
-(`TemplateFactory#unlock(int, int)`, `… WHERE id = ? AND locked_by = ?`) only clear the caller's
-own lock; forms (`FormFactory`) throw `ReadOnlyException` if another user holds the lock, which
-`releaseLock` logs. For most other object types, `unlock()` is the empty implementation in
-`AbstractContentObject`, so `releaseLock` does nothing for them.
-
-`list_nodes` now parses `q` with the strict `stringArg` (via `ListArgs`) instead of its former
-lenient `queryArg`, which converted any value with `String.valueOf`. A non-string or `null` `q` is
-therefore rejected when `call()` is invoked directly; through the MCP server the SDK already
-rejected it against `"type": "string"`. A blank `q` still means "no filter". `list()` and
-`languages()` of `NodeResourceImpl` throw on failure instead of returning a non-`OK` response, so
-`list_nodes` does not need `requireOk`.
-
-The output schemas of the model records are still hand-built. `ModelJsonSchemaTest` checks for
-each record that its schema describes exactly its record components and is a valid schema, so a
-component added without updating the schema fails the build.
-
-Tests: `McpSchemasTest`, `McpArgsTest`, `util/ChangedFieldsTest`, `util/SliceTest`,
-`util/ListArgsTest`, `util/ListResponsesTest`, `model/ModelJsonSchemaTest` (new);
-`ObjectRefTest` (`forPage(Page)`, `jsonSchema` description), `AbstractMcpToolTest` (`requireOk`,
-`saveOrReleaseLock` success path). Releasing the lock after a failed save needs a DB and is
-covered by `UpdatePagePropertiesToolIntegrationTest` (duplicate name/filename leave the page
-unlocked).
-
----
-
-## 13. GPU-2665 — removal of the annotation-based tool registration
-
-All MCP tools are implemented explicitly (`McpToolProvider`/`AbstractMcpTool`, registered via
-`ManualMcpTools`, §10.5). The annotation-based registration of §7/§9, which had been kept dormant
-since §10.5, has therefore been removed completely.
-
-### 13.1 Removed and changed files
-
-| File | Change |
-| --- | --- |
-| `cms-restapi/…/rest/mcp/McpTool.java`, `McpToolParam.java` | **deleted** |
-| `cms-core/…/mcp/McpToolRegistry.java`, `ContextUsageAnalyzer.java` | **deleted** |
-| `cms-core/src/test/…/mcp/McpToolRegistryTest.java` | **deleted** (its subject was removed) |
-| `cms-core/…/rest/resource/impl/{Admin,Construct,File,Info,Language,MarkupLanguage,ObjectProperty,Page,PartType,PublishProtocol,Template}ResourceImpl.java` | `@McpTool`/`@McpToolParam` removed, parameter lists back to their pre-GPU-2665 formatting |
-| `cms-restapi/…/resource/parameter/{ActionLog,Construct,Embed,Filter,ObjectProperty,Paging,PartTypeList,Perms,ReducedList,Sort}ParameterBean.java` | `@McpToolParam` removed |
-| `cms-restapi/…/resource/parameter/TemplateListParameterBean.java` | removed the `reduce` field added in §7/§9's work; it duplicated (hid) `ReducedListParameterBean#reduce` |
-| `pom.xml`, `cms-oss-bom/pom.xml`, `cms-core/pom.xml` | ClassGraph and ASM (`asm`, `asm-tree`) dependencies and their version properties removed; the MCP SDK dependencies stay |
-| `cms-core/…/mcp/{McpToolProvider,ManualMcpTools,AbstractMcpTool}.java`, `cms-core/…/mcp/auth/McpSessionBinding.java`, `cms-oss-server/…/server/OSSRunner.java` | comments referring to the removed classes updated; no code change |
-
-All REST resource and parameter bean files listed above are identical to their state before
-GPU-2665 (`e45f2779d`). No changelog entry was added for this removal.
-
-The manual test protocol for the annotation-based tools (`docs/mcp-tests.md` §0-§8) no longer
-applies.
+| `cms-core/src/test/resources/com/gentics/contentnode/mcp/tools.json` | GenAIx tool contract `1.0.0-rc.2` (§5.6) |
+| `docs/mcp-tests.md` | manual test protocol for `list_nodes`, `update_page_properties` and the removed `page_load` |
+| `docs/plan-tool-list-nodes.md`, `docs/plan-tool-update-page-properties.md` | design briefs of those two tools (historical) |

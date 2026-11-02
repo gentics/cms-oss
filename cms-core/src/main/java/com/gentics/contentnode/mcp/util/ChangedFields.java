@@ -46,14 +46,6 @@ public final class ChangedFields<T> {
 	}
 
 	/**
-	 * Get the names of the fields, in declaration order
-	 * @return field names
-	 */
-	public List<String> names() {
-		return fields.stream().map(Field::name).toList();
-	}
-
-	/**
 	 * Take the snapshot of the given object
 	 * @param object object
 	 * @return snapshot

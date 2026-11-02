@@ -1,5 +1,9 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.nullIfBlank;
+import static com.gentics.contentnode.mcp.McpArgs.stringArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +64,7 @@ public class AddConstructToPackageTool extends AbstractMcpTool {
 
 		Map<String, Object> outputProperties = new LinkedHashMap<>();
 		outputProperties.put("packageName", schema("string", null));
-		outputProperties.put("constructRef", objectRefSchema(null));
+		outputProperties.put("constructRef", ObjectRef.jsonSchema(null));
 		outputProperties.put("added", schema("boolean", "false if the construct was already in the package."));
 
 		return Tool.builder().name(NAME).title("Add construct to package")

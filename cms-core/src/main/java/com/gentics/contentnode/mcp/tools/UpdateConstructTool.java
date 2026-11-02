@@ -1,5 +1,10 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.booleanArg;
+import static com.gentics.contentnode.mcp.McpArgs.intArg;
+import static com.gentics.contentnode.mcp.McpArgs.stringArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -318,7 +323,7 @@ public class UpdateConstructTool extends AbstractMcpTool {
 		properties.put("removedPartKeywords", schema("array", "Keywords of the removed parts.", "items",
 				schema("string", null)));
 		properties.put("nodeRefs", schema("array", "Nodes the construct is assigned to.", "items",
-				objectRefSchema(null)));
+				ObjectRef.jsonSchema(null)));
 		return schema("object", null, "properties", properties, "required", List.of("construct", "changedFields"));
 	}
 }

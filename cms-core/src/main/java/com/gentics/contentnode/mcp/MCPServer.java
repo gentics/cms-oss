@@ -35,7 +35,7 @@ import io.modelcontextprotocol.spec.McpSchema.ServerCapabilities;
  * <p>
  * Tools, resources and prompts are not registered here. They are added to the
  * {@link McpSyncServer} instance returned by {@link #getServer()} (see
- * {@code com.gentics.contentnode.mcp.ManualMcpTools}).
+ * {@code com.gentics.contentnode.mcp.McpTools}).
  * </p>
  *
  * <p>

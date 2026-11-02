@@ -1,5 +1,8 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.stringArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -165,7 +168,7 @@ public class CreateFolderTool extends AbstractMcpTool {
 	 */
 	private static Map<String, Object> outputSchema() {
 		Map<String, Object> folder = new LinkedHashMap<>();
-		folder.put("ref", objectRefSchema("Reference to the new folder."));
+		folder.put("ref", ObjectRef.jsonSchema("Reference to the new folder."));
 		folder.put("parentFolderId", schema("integer", "ID of the parent folder."));
 		folder.put("publishDir", schema("string", "Publish directory."));
 		folder.put("description", schema("string", "Description."));

@@ -15,7 +15,6 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.mcp.auth.McpAuthenticator;
 import com.gentics.contentnode.mcp.auth.McpRequestCredentials;
 import com.gentics.contentnode.mcp.auth.McpSessionBinding;
-import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.Problem;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -24,12 +23,14 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.lib.log.NodeLogger;
 
 import io.modelcontextprotocol.common.McpTransportContext;
+import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
+import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 /**
- * Base class for manually implemented MCP tools ({@link McpToolProvider}), handling everything
- * that is common to all of them:
+ * Base class for MCP tools, one subclass per tool, registered explicitly via
+ * {@link McpTools}. Handles everything that is common to all of them:
  * <ul>
  * <li>resolving the {@link McpRequestCredentials} carried on the {@link McpTransportContext} into
  * a real CMS {@link Session} (see {@link McpAuthenticator});</li>
@@ -47,34 +48,53 @@ import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
  * </ul>
  *
  * <p>
- * It also provides static helpers shared by the tools, for parsing arguments
- * ({@link #stringArg}, {@link #intArg}, {@link #booleanArg}, {@link #nullIfBlank}, delegating to
- * {@link McpArgs}), building schemas ({@link #schema},
- * {@link #objectRefSchema}, delegating to {@link McpSchemas} and {@link ObjectRef}), handling
- * failed REST responses ({@link #errorMessage}, {@link #requireOk}) and releasing the lock on an
- * object after a failed save ({@link #saveOrReleaseLock}, {@link #releaseLock}).
+ * It also provides static helpers shared by the tools, for handling failed REST responses
+ * ({@link #errorMessage}, {@link #requireOk}) and releasing the lock on an object after a failed
+ * save ({@link #saveOrReleaseLock}, {@link #releaseLock}). Arguments are parsed with
+ * {@link McpArgs}, schemas built with {@link McpSchemas}.
  * </p>
  *
  * <p>
- * Deliberately does <b>not</b> re-run a {@code @RequiredPerm} annotation of whatever method a
- * tool delegates to. Each tool implementation is responsible for whatever additional permission
- * checks that call does not already perform on its own - typically by passing the required
- * {@link com.gentics.contentnode.perm.PermHandler.ObjectPermission} into the delegated-to
- * {@code *ResourceImpl} helper method, the way {@code PageResourceImpl#getPage} already does for
- * {@link com.gentics.contentnode.mcp.tools.PageLoadTool}.
+ * Does no permission checks of its own. The {@code @RequiredPerm} annotations of a REST resource
+ * implementation a tool delegates to are enforced by wrapping it with
+ * {@link com.gentics.contentnode.mcp.util.RestPermissions#guard}; object permissions are checked
+ * by the delegated-to code itself, as for REST calls. Each tool implementation is responsible for
+ * whatever additional permission checks those do not perform.
  * </p>
  */
-public abstract class AbstractMcpTool implements McpToolProvider {
+public abstract class AbstractMcpTool {
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(AbstractMcpTool.class);
 
-	@Override
+	/**
+	 * The tool's definition (name, title, description, input schema), as reported to MCP clients.
+	 * @return tool definition
+	 */
+	public abstract Tool tool();
+
+	/**
+	 * Whether this tool requires an authenticated CMS session (resolved from an API token or
+	 * session cookie, see {@link McpRequestCredentials}) before it runs.
+	 *
+	 * <p>
+	 * {@code true} (the default) for almost every tool. {@code false} is reserved for a tool that
+	 * does not itself need to act as an already-authenticated CMS user - e.g. a future login tool
+	 * that establishes a session in the first place.
+	 * </p>
+	 * @return true iff an authenticated session is required to run this tool
+	 */
 	public boolean requiresAuthentication() {
 		return true;
 	}
 
-	@Override
+	/**
+	 * Handle an incoming tool call.
+	 * @param context transport context of the request, carrying the extracted
+	 * {@link McpRequestCredentials} under {@link McpRequestCredentials#CONTEXT_KEY}
+	 * @param request incoming tool call request
+	 * @return result of the tool call
+	 */
 	public final CallToolResult call(McpTransportContext context, CallToolRequest request) {
 		McpRequestCredentials credentials = extractCredentials(context);
 		Optional<Session> session = McpAuthenticator.resolve(credentials);
@@ -98,9 +118,9 @@ public abstract class AbstractMcpTool implements McpToolProvider {
 			}
 			return builder.build();
 		} catch (Exception e) {
-			// method.invoke()-style reflective delegation wraps the real cause in an
-			// InvocationTargetException, whose own getMessage() is null - unwrap it so the actual
-			// error is logged/reported instead of "null".
+			// reflective calls (e.g. into the enterprise search module, see EnterpriseSearch) wrap the
+			// real cause in an InvocationTargetException, whose own getMessage() is null - unwrap it so
+			// the actual error is logged/reported instead of "null".
 			Throwable cause = e instanceof InvocationTargetException && e.getCause() != null ? e.getCause() : e;
 			logger.error(String.format("Error while invoking MCP tool '%s'", tool().name()), cause);
 			Problem problem = Problem.of(tool().name(), cause);
@@ -121,61 +141,13 @@ public abstract class AbstractMcpTool implements McpToolProvider {
 	protected abstract Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception;
 
 	/**
-	 * Get an optional string argument, see {@link McpArgs#stringArg}
-	 * @param arguments arguments
-	 * @param name argument name
-	 * @param minLength minimum length
-	 * @param maxLength maximum length
-	 * @return value, or null if not supplied
+	 * Build the {@link SyncToolSpecification} used to register this tool on a
+	 * {@code McpSyncServer} (see {@link McpTools#registerAll}).
+	 * @return tool specification
 	 */
-	protected static String stringArg(Map<String, Object> arguments, String name, int minLength, int maxLength) {
-		return McpArgs.stringArg(arguments, name, minLength, maxLength);
-	}
-
-	/**
-	 * Get an optional integer argument, see {@link McpArgs#intArg(Map, String, int, int)}
-	 * @param arguments arguments
-	 * @param name argument name
-	 * @param min minimum value
-	 * @param max maximum value
-	 * @return value, or null if not supplied
-	 */
-	protected static Integer intArg(Map<String, Object> arguments, String name, int min, int max) {
-		return McpArgs.intArg(arguments, name, min, max);
-	}
-
-	/**
-	 * Get an optional integer argument with a default, see
-	 * {@link McpArgs#intArg(Map, String, int, int, int)}
-	 * @param arguments arguments
-	 * @param name argument name
-	 * @param min minimum value
-	 * @param max maximum value
-	 * @param defaultValue value if not supplied
-	 * @return value
-	 */
-	protected static int intArg(Map<String, Object> arguments, String name, int min, int max, int defaultValue) {
-		return McpArgs.intArg(arguments, name, min, max, defaultValue);
-	}
-
-	/**
-	 * Get an optional boolean argument, see {@link McpArgs#booleanArg}
-	 * @param arguments arguments
-	 * @param name argument name
-	 * @param defaultValue value if not supplied
-	 * @return value
-	 */
-	protected static boolean booleanArg(Map<String, Object> arguments, String name, boolean defaultValue) {
-		return McpArgs.booleanArg(arguments, name, defaultValue);
-	}
-
-	/**
-	 * Normalize an optional string, see {@link McpArgs#nullIfBlank}
-	 * @param value value, may be null
-	 * @return value, or null if null or blank
-	 */
-	protected static String nullIfBlank(String value) {
-		return McpArgs.nullIfBlank(value);
+	public SyncToolSpecification toSyncToolSpecification() {
+		return SyncToolSpecification.builder().tool(tool())
+				.callHandler((exchange, request) -> call(exchange.transportContext(), request)).build();
 	}
 
 	/**
@@ -267,26 +239,6 @@ public abstract class AbstractMcpTool implements McpToolProvider {
 		} catch (Exception e) {
 			logger.error(String.format("Error while releasing the lock on %s %s", clazz.getSimpleName(), id), e);
 		}
-	}
-
-	/**
-	 * Build a property schema, see {@link McpSchemas#schema}
-	 * @param type JSON type
-	 * @param description description, may be null
-	 * @param keyValues additional constraint keywords and their values, alternating
-	 * @return schema
-	 */
-	protected static Map<String, Object> schema(String type, String description, Object... keyValues) {
-		return McpSchemas.schema(type, description, keyValues);
-	}
-
-	/**
-	 * Build the output schema of an {@link ObjectRef}, see {@link ObjectRef#jsonSchema}
-	 * @param description description, may be null
-	 * @return schema
-	 */
-	protected static Map<String, Object> objectRefSchema(String description) {
-		return ObjectRef.jsonSchema(description);
 	}
 
 	private McpRequestCredentials extractCredentials(McpTransportContext context) {

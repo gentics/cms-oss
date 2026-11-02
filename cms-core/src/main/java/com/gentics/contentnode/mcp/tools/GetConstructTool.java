@@ -1,5 +1,10 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.booleanArg;
+import static com.gentics.contentnode.mcp.McpArgs.nullIfBlank;
+import static com.gentics.contentnode.mcp.McpArgs.stringArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +109,7 @@ public class GetConstructTool extends AbstractMcpTool {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put("construct", ConstructInfo.jsonSchema(null));
 		properties.put("nodeRefs", schema("array", "Nodes the construct is assigned to, that the caller can view.",
-				"items", objectRefSchema(null)));
+				"items", ObjectRef.jsonSchema(null)));
 		return schema("object", null, "properties", properties, "required", List.of("construct"));
 	}
 }

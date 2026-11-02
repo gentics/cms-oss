@@ -36,7 +36,6 @@ import com.gentics.contentnode.mcp.tools.ListPackagesTool;
 import com.gentics.contentnode.mcp.tools.ListPartTypesTool;
 import com.gentics.contentnode.mcp.tools.ListTemplatesTool;
 import com.gentics.contentnode.mcp.tools.ListUsersTool;
-import com.gentics.contentnode.mcp.tools.PageLoadTool;
 import com.gentics.contentnode.mcp.tools.PreviewPermissionImpactTool;
 import com.gentics.contentnode.mcp.tools.PublishPageTool;
 import com.gentics.contentnode.mcp.tools.RemoveUserFromGroupTool;
@@ -55,15 +54,15 @@ import com.gentics.lib.log.NodeLogger;
 import io.modelcontextprotocol.server.McpSyncServer;
 
 /**
- * Registers every manually implemented {@link McpToolProvider} on the MCP server.
+ * Registers every tool ({@link AbstractMcpTool}) on the MCP server.
  */
-public final class ManualMcpTools {
-	private static final NodeLogger logger = NodeLogger.getNodeLogger(ManualMcpTools.class);
+public final class McpTools {
+	private static final NodeLogger logger = NodeLogger.getNodeLogger(McpTools.class);
 
 	/**
-	 * Every manually implemented tool, in registration order.
+	 * Every tool, in registration order.
 	 */
-	private static final List<McpToolProvider> TOOLS = List.of(new PageLoadTool(), new ListNodesTool(),
+	private static final List<AbstractMcpTool> TOOLS = List.of(new ListNodesTool(),
 			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(),
 			new GetImageTool(), new GetPageVersionsTool(), new GetPageTool(), new GetPageTagsTool(),
 			new ListFolderItemsTool(), new GetFolderTreeTool(), new ListTemplatesTool(), new GetTemplateTool(),
@@ -81,14 +80,14 @@ public final class ManualMcpTools {
 	/**
 	 * Static class, no instances
 	 */
-	private ManualMcpTools() {
+	private McpTools() {
 	}
 
 	/**
-	 * Get every manually implemented tool, in registration order
+	 * Get every tool, in registration order
 	 * @return tools
 	 */
-	static List<McpToolProvider> tools() {
+	static List<AbstractMcpTool> tools() {
 		return TOOLS;
 	}
 
@@ -97,7 +96,7 @@ public final class ManualMcpTools {
 	 * @param server MCP server to register the tools on
 	 */
 	public static void registerAll(McpSyncServer server) {
-		for (McpToolProvider provider : TOOLS) {
+		for (AbstractMcpTool provider : TOOLS) {
 			server.addTool(provider.toSyncToolSpecification());
 			logger.info(String.format("Registered MCP tool '%s' (%s)", provider.tool().name(),
 					provider.getClass().getName()));

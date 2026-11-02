@@ -32,7 +32,7 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
  * Delegates to {@link NodeResourceImpl#list} (which already filters to nodes the caller has
  * {@code ObjectPermission.view} on) and, per returned node, to {@link NodeResourceImpl#languages}
  * (which re-checks {@code ObjectPermission.view} on that node). No additional permission check is
- * needed in this tool itself, same as {@link PageLoadTool}.
+ * needed in this tool itself.
  * </p>
  *
  * <p>

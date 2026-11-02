@@ -1,5 +1,8 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.stringArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -78,9 +81,9 @@ public class AssignConstructToNodesTool extends AbstractMcpTool {
 				"maxLength", Writes.MAX_IDEMPOTENCY_KEY_LENGTH));
 
 		Map<String, Object> assignmentProperties = new LinkedHashMap<>();
-		assignmentProperties.put("constructRef", objectRefSchema(null));
+		assignmentProperties.put("constructRef", ObjectRef.jsonSchema(null));
 		assignmentProperties.put("nodeRefs", schema("array", "Nodes the construct is assigned to.", "items",
-				objectRefSchema(null)));
+				ObjectRef.jsonSchema(null)));
 
 		return Tool.builder().name(NAME).title("Assign construct to nodes")
 				.description("Sets, adds or removes the nodes in which constructs are available. Use mode set to make "

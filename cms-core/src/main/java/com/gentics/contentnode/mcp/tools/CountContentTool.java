@@ -1,5 +1,10 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.intArg;
+import static com.gentics.contentnode.mcp.McpArgs.nullIfBlank;
+import static com.gentics.contentnode.mcp.McpArgs.stringArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

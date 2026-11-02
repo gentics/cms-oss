@@ -49,7 +49,7 @@ import com.gentics.contentnode.config.PackageRewriteRule;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.init.Initializer;
 import com.gentics.contentnode.mcp.MCPServer;
-import com.gentics.contentnode.mcp.ManualMcpTools;
+import com.gentics.contentnode.mcp.McpTools;
 import com.gentics.contentnode.rest.AcceptResponseServletFilter;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -290,12 +290,12 @@ public class OSSRunner {
 	}
 
 	/**
-	 * Register the manually implemented MCP tools (see
-	 * {@link com.gentics.contentnode.mcp.ManualMcpTools}) on the MCP server, if the MCP endpoint
+	 * Register the MCP tools (see
+	 * {@link com.gentics.contentnode.mcp.McpTools}) on the MCP server, if the MCP endpoint
 	 * is enabled.
 	 */
 	private static void registerMcpTools() {
-		MCPServer.getServer().ifPresent(ManualMcpTools::registerAll);
+		MCPServer.getServer().ifPresent(McpTools::registerAll);
 	}
 
 	private static void addStaticFilesToContext(ServletContextHandler context) {

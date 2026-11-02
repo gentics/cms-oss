@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Session;
-import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.Problem;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -203,25 +202,5 @@ public class AbstractMcpToolTest {
 
 		assertThat(AbstractMcpTool.saveOrReleaseLock(com.gentics.contentnode.object.Page.class, "7", "Not saved",
 				() -> ok)).isSameAs(ok);
-	}
-
-	@Test
-	public void testArgDelegates() {
-		Map<String, Object> arguments = Map.of("name", "abc", "size", 10, "flag", true);
-
-		assertThat(AbstractMcpTool.stringArg(arguments, "name", 1, 5)).isEqualTo("abc");
-		assertThat(AbstractMcpTool.intArg(arguments, "size", 1, 200)).isEqualTo(10);
-		assertThat(AbstractMcpTool.intArg(arguments, "from", 0, 100, 7)).isEqualTo(7);
-		assertThat(AbstractMcpTool.booleanArg(arguments, "flag", false)).isTrue();
-		assertThat(AbstractMcpTool.nullIfBlank(" ")).isNull();
-		assertThatThrownBy(() -> AbstractMcpTool.intArg(Map.of("size", 0), "size", 1, 200))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("'size'");
-	}
-
-	@Test
-	public void testSchemaDelegates() {
-		assertThat(AbstractMcpTool.schema("integer", "Some number.", "minimum", 1))
-				.isEqualTo(McpSchemas.schema("integer", "Some number.", "minimum", 1));
-		assertThat(AbstractMcpTool.objectRefSchema("Reference.")).isEqualTo(ObjectRef.jsonSchema("Reference."));
 	}
 }

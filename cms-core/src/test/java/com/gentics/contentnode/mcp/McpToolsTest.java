@@ -10,23 +10,14 @@ import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
 import io.modelcontextprotocol.server.McpSyncServer;
 
 /**
- * Unit test for {@link ManualMcpTools}.
+ * Unit test for {@link McpTools}.
  */
-public class ManualMcpToolsTest {
-	@Test
-	public void testRegisterAllRegistersPageLoadTool() {
-		McpSyncServer server = mock(McpSyncServer.class);
-
-		ManualMcpTools.registerAll(server);
-
-		verify(server).addTool(argThat((SyncToolSpecification spec) -> "page_load".equals(spec.tool().name())));
-	}
-
+public class McpToolsTest {
 	@Test
 	public void testRegisterAllRegistersListNodesTool() {
 		McpSyncServer server = mock(McpSyncServer.class);
 
-		ManualMcpTools.registerAll(server);
+		McpTools.registerAll(server);
 
 		verify(server).addTool(argThat((SyncToolSpecification spec) -> "list_nodes".equals(spec.tool().name())));
 	}
@@ -35,7 +26,7 @@ public class ManualMcpToolsTest {
 	public void testRegisterAllRegistersUpdatePagePropertiesTool() {
 		McpSyncServer server = mock(McpSyncServer.class);
 
-		ManualMcpTools.registerAll(server);
+		McpTools.registerAll(server);
 
 		verify(server).addTool(
 				argThat((SyncToolSpecification spec) -> "update_page_properties".equals(spec.tool().name())));

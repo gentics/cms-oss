@@ -22,7 +22,7 @@ import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 /**
- * Conformance test of the registered tools ({@link ManualMcpTools}) against the GenAIx tool
+ * Conformance test of the registered tools ({@link McpTools}) against the GenAIx tool
  * contract, a vendored, unmodified copy of {@code tools.json} in the test resources. Compares the
  * tool name, the phase, the required input members and the input property names. Descriptions,
  * output schemas and the contract's group/access/permission metadata are not compared, and not
@@ -32,7 +32,7 @@ public class McpContractTest {
 	/**
 	 * Registered tools that are not part of the contract
 	 */
-	private static final Set<String> EXEMPT = Set.of("page_load");
+	private static final Set<String> EXEMPT = Set.of();
 
 	private static String version;
 
@@ -55,7 +55,7 @@ public class McpContractTest {
 	@Test
 	public void testRegisteredToolsConform() {
 		List<String> mismatches = new ArrayList<>();
-		for (McpToolProvider provider : ManualMcpTools.tools()) {
+		for (AbstractMcpTool provider : McpTools.tools()) {
 			if (!EXEMPT.contains(provider.tool().name())) {
 				mismatches.addAll(mismatches(provider.tool()));
 			}

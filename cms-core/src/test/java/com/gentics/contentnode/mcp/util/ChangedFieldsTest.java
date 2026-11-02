@@ -33,11 +33,6 @@ public class ChangedFieldsTest {
 			.field("size", i -> i.size).field("tags", i -> i.tags).build();
 
 	@Test
-	public void testNames() {
-		assertThat(FIELDS.names()).containsExactly("name", "size", "tags");
-	}
-
-	@Test
 	public void testNothingChanged() {
 		assertThat(FIELDS.snapshot(new Item("a", 1, List.of("x"))).diff(new Item("a", 1, List.of("x")))).isEmpty();
 	}

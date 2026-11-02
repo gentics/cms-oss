@@ -1,5 +1,9 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.booleanArg;
+import static com.gentics.contentnode.mcp.McpArgs.intArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +91,7 @@ public class GetDatasourceTool extends AbstractMcpTool {
 		outputProperties.put("entries", schema("array", null, "items", schema("object", null, "properties",
 				entryProperties)));
 		outputProperties.put("constructRefs", schema("array", "Constructs using the datasource.", "items",
-				objectRefSchema(null)));
+				ObjectRef.jsonSchema(null)));
 
 		return Tool.builder().name("get_datasource").title("Get datasource")
 				.description("Loads one datasource with its entries, so you can see the option keys and values a "

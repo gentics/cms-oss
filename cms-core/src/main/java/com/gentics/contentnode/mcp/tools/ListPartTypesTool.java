@@ -1,5 +1,8 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.McpArgs.booleanArg;
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

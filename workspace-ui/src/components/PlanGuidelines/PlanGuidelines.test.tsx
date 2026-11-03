@@ -85,7 +85,8 @@ describe('PlanGuidelines', () => {
         render(<PlanGuidelines plan={plan('proposed')} sessionId="s-1" />, { wrapper: createWrapper() });
         await user.click(await screen.findByRole('button', { name: 'Add guideline' }));
 
-        expect(screen.getByRole('menuitemcheckbox', { name: 'seo-basics' })).toHaveAttribute('aria-checked', 'true');
+        // The menu opens asynchronously (Base UI), as in `dropdown-menu.test.tsx`.
+        expect(await screen.findByRole('menuitemcheckbox', { name: 'seo-basics' })).toHaveAttribute('aria-checked', 'true');
         expect(screen.queryByRole('menuitemcheckbox', { name: 'tone-of-voice' })).not.toBeInTheDocument();
 
         await user.click(screen.getByRole('menuitemcheckbox', { name: 'legal-notes' }));
@@ -151,7 +152,7 @@ describe('PlanGuidelines', () => {
         render(<PlanGuidelines plan={plan('proposed')} sessionId="s-1" />, { wrapper: createWrapper() });
         await user.click(await screen.findByRole('button', { name: 'Add guideline' }));
 
-        expect(screen.getByRole('menuitemcheckbox', { name: 'seo-basics' })).toBeInTheDocument();
+        expect(await screen.findByRole('menuitemcheckbox', { name: 'seo-basics' })).toBeInTheDocument();
     });
 
     it('asks the CMS nothing and shows nothing while the session has no node', async () => {

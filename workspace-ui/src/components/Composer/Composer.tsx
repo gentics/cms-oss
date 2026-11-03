@@ -1,6 +1,6 @@
 import { TextSelection } from '@tiptap/pm/state';
 import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
-import { type DragEvent, type Ref, useImperativeHandle, useRef, useState } from 'react';
+import { type DragEvent, type ReactNode, type Ref, useImperativeHandle, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -62,6 +62,8 @@ interface ComposerProps {
     sessionId?: string;
     /** The field's placeholder instead of the variant's, e.g. "What's next?" after publishing. */
     placeholder?: string;
+    /** A further action after the composer's own, e.g. the chat's side question toggle. */
+    extraAction?: ReactNode;
     ref?: Ref<ComposerHandle>;
 }
 
@@ -78,7 +80,7 @@ const TEXT_KEYS = {
  * field. On phones it puts voice first. Sending is the caller's. While a run is working
  * (`isRunning`), Stop replaces send and calls `onStop`.
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, placeholder, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, placeholder, extraAction, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -286,6 +288,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                 <QuoteIcon size={16} />
                 {t('composer.verbatim')}
             </Button>
+            {extraAction}
             {isChat && <span className={styles.submit}>{submitButtons}</span>}
         </div>
     );

@@ -438,7 +438,14 @@ describe('SessionPage', () => {
     });
 
     describe('changing a plan (rc.5)', () => {
-        function showPlan(status: Plan['status']) {
+        // Applies the next event of the session's stream.
+        function apply(event: Record<string, unknown>) {
+            const seq = selectSession('s-1')(useWorkspaceEventStore.getState()).lastSeq + 1;
+
+            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq, ts: '2026-10-14T14:00:00Z', session_id: 's-1', ...event } as GenaixEvent));
+        }
+
+        function showPlan(status: Plan['status'], overrides: Partial<Plan> = {}) {
             const plan: Plan = {
                 id: 'p-1',
                 workflows: [{ id: 'content_create', version: '1.0.0' }],
@@ -446,16 +453,21 @@ describe('SessionPage', () => {
                 version: 1,
                 summary: 'Invitation page PNDemo',
                 items: [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'done' }],
+                ...overrides,
             };
 
-            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-14T14:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
+            apply({ plan_id: plan.id, type: 'plan.updated', plan });
         }
 
-        // Sends the messages to `posts`; every read goes to `reads`: a plan's state (`GET …/plans/p-1`) without
+        function startPlanRun() {
+            apply({ run_id: 'r-1', plan_id: 'p-1', type: 'run.started', run: { id: 'r-1', status: 'running', plan_id: 'p-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 } });
+        }
+
+        // Sends the messages to `posts`; every read goes to `reads`: a plan's state (`GET …/plans/p-<n>`) without
         // objects, every list (the modules, the plans) empty.
         function stubPosts(response: () => Response = accepted) {
             const posts = vi.fn<typeof fetch>(async () => response());
-            const reads = vi.fn<typeof fetch>(async (input) => (String(input).endsWith('/sessions/s-1/plans/p-1')
+            const reads = vi.fn<typeof fetch>(async (input) => (/\/sessions\/s-1\/plans\/p-\d+$/.test(String(input))
                 ? Response.json({ cms_objects: [] })
                 : Response.json({ items: [], next_cursor: null })));
 
@@ -464,22 +476,142 @@ describe('SessionPage', () => {
             return Object.assign(posts, { reads });
         }
 
-        it('offers no "Ask for a change" on a finished plan: a follow-up is a plain message, which GenAIx tells apart', async () => {
+        const sentBody = (posts: ReturnType<typeof stubPosts>, call = 0) => JSON.parse(posts.mock.calls[call]![1]!.body as string);
+
+        async function send(field: HTMLElement, text: string) {
+            const user = userEvent.setup();
+
+            await user.click(field);
+            await user.keyboard(`${text}{Enter}`);
+        }
+
+        it.each(['done', 'published', 'proposed'] as const)('revises a %s plan with a follow-up', async (status) => {
+            const posts = stubPosts();
+
+            showPlan(status);
+
+            const { field } = await renderPage();
+
+            await send(field, 'Make it more colourful');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(sentBody(posts)).toEqual({ parts: [{ type: 'text', text: 'Make it more colourful' }], options: { mode: 'revise', plan_id: 'p-1' } });
+        });
+
+        it('revises the plan picked from several open ones', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts();
+
+            showPlan('done', { id: 'p-0', summary: 'Older terms page' });
+            showPlan('proposed');
+            apply({ type: 'session.updated', session: sessionFixture({ id: 's-1', open_plan_id: 'p-1', open_plan_ids: ['p-0', 'p-1'] }) });
+
+            const { field } = await renderPage();
+
+            await user.click(await screen.findByRole('button', { name: '2 open plans' }));
+            await user.click(await screen.findByRole('menuitemradio', { name: /Older terms page/ }));
+            await send(field, 'Add a footer');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(sentBody(posts).options).toEqual({ mode: 'revise', plan_id: 'p-0' });
+        });
+
+        it('sends without revise and offers no side question while a run of the plan is active', async () => {
+            const posts = stubPosts();
+
+            showPlan('proposed');
+            startPlanRun();
+
+            const { field } = await renderPage();
+
+            expect(screen.queryByRole('button', { name: 'Side question' })).not.toBeInTheDocument();
+
+            await send(field, 'Use red instead');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(sentBody(posts)).not.toHaveProperty('options');
+        });
+
+        it('revises again once the plan\'s run has ended', async () => {
+            stubPosts();
+            showPlan('proposed');
+            startPlanRun();
+            await renderPage();
+
+            apply({ run_id: 'r-1', type: 'run.completed', run: { id: 'r-1', status: 'completed', plan_id: 'p-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 } });
+
+            expect(await screen.findByRole('button', { name: 'Side question' })).toBeInTheDocument();
+        });
+
+        // A failed run leaves the plan accepted, a cancelled one drafting: a plain message retries the run (03-genaix-api.md §4).
+        it.each(['accepted', 'drafting'] as const)('sends without revise and offers no side question for a %s plan without a run', async (status) => {
+            const posts = stubPosts();
+
+            showPlan(status);
+
+            const { field } = await renderPage();
+
+            expect(screen.queryByRole('button', { name: 'Side question' })).not.toBeInTheDocument();
+
+            await send(field, 'Try again');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(sentBody(posts)).not.toHaveProperty('options');
+        });
+
+        it('sends exactly one message without revise as a side question', async () => {
             const user = userEvent.setup();
             const posts = stubPosts();
 
             showPlan('done');
 
             const { field } = await renderPage();
+            const toggle = screen.getByRole('button', { name: 'Side question' });
 
-            // Whether a message revises the plan, GenAIx's session agent decides (contract §4.4).
-            expect(screen.queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
+            expect(toggle).toHaveAttribute('aria-pressed', 'false');
+            // By keyboard: the toggle is a button.
+            act(() => toggle.focus());
+            await user.keyboard(' ');
+            expect(toggle).toHaveAttribute('aria-pressed', 'true');
 
-            await user.click(field);
-            await user.keyboard('Make it more colourful{Enter}');
+            await send(field, 'Which pages link here?');
+            await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'false'));
+            await send(field, 'Add a footer');
 
-            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
-            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Make it more colourful' }] });
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(2));
+            expect(sentBody(posts, 0)).not.toHaveProperty('options');
+            expect(sentBody(posts, 1).options).toEqual({ mode: 'revise', plan_id: 'p-1' });
+        });
+
+        it('says when the plan to revise is gone, and keeps the text to send again', async () => {
+            stubPosts(() => Response.json({ type: 't', title: 't', status: 404, genaix_code: 'plan_not_found' }, { status: 404 }));
+            showPlan('done');
+
+            const { field } = await renderPage();
+
+            await send(field, 'Add a footer');
+
+            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
+                { messageKey: 'chat.sendFailed', detailKey: 'errors.genaix.plan_not_found' },
+            ]));
+            expect(field).toHaveTextContent('Add a footer');
+        });
+
+        it('keeps the side question on and the text when sending fails', async () => {
+            const user = userEvent.setup();
+
+            stubPosts(() => Response.json({ type: 't', title: 't', status: 409, genaix_code: 'run_already_active' }, { status: 409 }));
+            showPlan('done');
+
+            const { field } = await renderPage();
+            const toggle = screen.getByRole('button', { name: 'Side question' });
+
+            await user.click(toggle);
+            await send(field, 'Which pages link here?');
+
+            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toHaveLength(1));
+            expect(toggle).toHaveAttribute('aria-pressed', 'true');
+            expect(field).toHaveTextContent('Which pages link here?');
         });
 
         it('sends a plain message while a plan executes, for GenAIx to tell a question from a redirect', async () => {
@@ -507,15 +639,7 @@ describe('SessionPage', () => {
             const posts = stubPosts(() => Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
 
             showPlan('running');
-            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
-                seq: 2,
-                ts: '2026-10-14T14:00:01Z',
-                session_id: 's-1',
-                run_id: 'r-1',
-                plan_id: 'p-1',
-                type: 'run.started',
-                run: { id: 'r-1', status: 'running', plan_id: 'p-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 },
-            } as GenaixEvent));
+            startPlanRun();
 
             await renderPage();
 

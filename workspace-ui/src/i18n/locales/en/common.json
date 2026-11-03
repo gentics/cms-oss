@@ -137,6 +137,7 @@
         "startFailed": "The session could not be started"
     },
     "composer": {
+        "sideQuestion": "Side question",
         "file": "File",
         "verbatim": "Verbatim",
         "typeInstead": "Type instead",
@@ -849,7 +850,8 @@
             "rate_limited": "Too many requests. Please try again shortly.",
             "service_unavailable": "The AI service is currently unavailable.",
             "plan_not_revisable": "This plan is closed for good and can no longer be changed.",
-            "dependency_order": "A step comes before a step it depends on."
+            "dependency_order": "A step comes before a step it depends on.",
+            "revise_plan_missing": "There is no plan to revise."
         },
         "cms": {
             "AUTHREQUIRED": "Please log in to the CMS.",

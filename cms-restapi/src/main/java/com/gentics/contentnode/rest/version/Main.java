@@ -1,6 +1,8 @@
 package com.gentics.contentnode.rest.version;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,7 +43,12 @@ public class Main {
 			Properties props = new Properties();
 
 			try {
-				props.load(Main.class.getResourceAsStream("/cms.build.properties"));
+				InputStream in = Main.class.getResourceAsStream("/cms.build.properties");
+				if (in == null) {
+					// e.g. when not running from the server jar
+					throw new FileNotFoundException("/cms.build.properties");
+				}
+				props.load(in);
 			} catch (IOException e) {
 				// We have no NodeLogger here, so just fall back to the old version.
 				String implementationVersion = Main.class.getPackage().getImplementationVersion();

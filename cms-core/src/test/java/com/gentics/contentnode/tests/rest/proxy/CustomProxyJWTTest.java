@@ -14,12 +14,16 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.auth.ApiTokenFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.rest.client.RestClient;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.configuration.KeyProvider;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationRequest;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -79,6 +83,11 @@ public class CustomProxyJWTTest {
 	 */
 	private final static String PASSWORD = "test";
 
+	/**
+	 * API Token of the test user with permission
+	 */
+	private static String apiToken;
+
 	@BeforeClass
 	public static void setUpOnce() throws NodeException {
 		KeyProvider.init(testContext.getGcnBasePath().getAbsolutePath());
@@ -91,9 +100,13 @@ public class CustomProxyJWTTest {
 		});
 
 		// create test user with permission
-		Trx.supply(() -> {
+		SystemUser user = Trx.supply(() -> {
 			return Creator.createUser(LOGIN_WITH, PASSWORD, "First Tester", "Last Tester", "tester@nowhere", Arrays.asList(nodeGroup));
 		});
+
+		// create API token for the test user
+		apiToken = ApiTokenFactory.createToken();
+		Trx.operate(() -> ApiTokenFactory.create(new ApiTokenCreationRequest().setName("Proxy Test Token"), user.getId(), apiToken));
 	}
 
 	/**
@@ -107,6 +120,60 @@ public class CustomProxyJWTTest {
 					.queryParam("return", "Authorization").request().get(String.class);
 			assertThat(authHeader).as("Auth header").isEqualTo("null");
 		}
+	}
+
+	/**
+	 * Test that the API token used to authenticate at the CMS is not forwarded
+	 * @throws RestException
+	 */
+	@Test
+	public void testApiTokenNotForwarded() throws RestException {
+		String authHeader = new RestClient(restContext.getBaseUri()).base().path("proxy").path(RESOURCE_KEY).path("headers")
+				.queryParam("return", "Authorization").request().header("Authorization", "Bearer " + apiToken).get(String.class);
+		assertThat(authHeader).as("Auth header").isEqualTo("null");
+	}
+
+	/**
+	 * Test that an Authorization header, which is not used to authenticate at the CMS, is forwarded
+	 * @throws RestException
+	 */
+	@Test
+	public void testForeignAuthorizationForwarded() throws RestException, NodeException {
+		try (LoggedInClient client = restContext.client(LOGIN_WITH, PASSWORD)) {
+			String authHeader = client.get().base().path("proxy").path(RESOURCE_KEY).path("headers")
+					.queryParam("return", "Authorization").request().header("Authorization", "Basic dXBzdHJlYW06c2VjcmV0").get(String.class);
+			assertThat(authHeader).as("Auth header").isEqualTo("Basic dXBzdHJlYW06c2VjcmV0");
+		}
+	}
+
+	/**
+	 * Test that the JWT replaces an Authorization header, which is not used to authenticate at the CMS
+	 * @throws RestException
+	 */
+	@Test
+	public void testJwtReplacesForeignAuthorization() throws RestException, NodeException {
+		try (LoggedInClient client = restContext.client(LOGIN_WITH, PASSWORD)) {
+			String authHeader = client.get().base().path("proxy").path(RESOURCE_JWT_KEY).path("headers")
+					.queryParam("return", "Authorization").request().header("Authorization", "Basic dXBzdHJlYW06c2VjcmV0").get(String.class);
+			assertThat(authHeader).as("Auth header").startsWith("Bearer ").doesNotContain("Basic");
+		}
+	}
+
+	/**
+	 * Test that, when authenticating with an API token, only the JWT (and not the API token) is forwarded
+	 * @throws RestException
+	 */
+	@Test
+	public void testForwardWithApiToken() throws NodeException {
+		String authHeader = new RestClient(restContext.getBaseUri()).base().path("proxy").path(RESOURCE_JWT_KEY).path("headers")
+				.queryParam("return", "Authorization").request().header("Authorization", "Bearer " + apiToken).get(String.class);
+		Matcher matcher = authHeaderPattern.matcher(authHeader);
+		assertThat(matcher.matches()).as("Header Value matches pattern").isTrue();
+		String token = matcher.group("token");
+		assertThat(token).as("Forwarded token").isNotEqualTo(apiToken).doesNotContain(",");
+		JwtParser parser = KeyProvider.signedWith(Jwts.parserBuilder()).build();
+		assertThat(parser.isSigned(token)).as("Token signed").isTrue();
+		assertThat(parser.parseClaimsJws(token).getBody().getSubject()).as("subject").isEqualTo(LOGIN_WITH);
 	}
 
 	/**

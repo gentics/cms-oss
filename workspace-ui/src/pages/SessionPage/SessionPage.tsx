@@ -54,7 +54,7 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
  * While a plan executes, a turn is a plain message: GenAIx's router decides whether it is a question,
  * answered by a side run while the plan goes on, or a redirection of the plan (09-integration-guide.md,
  * "Stop and change"); the conversation shows which it was. Otherwise a turn revises the bar's `plan`
- * (`reviseOptions`), unless it answers an interaction or is sent as a side question (the toggle, offered
+ * (`reviseOptions`), unless it answers an interaction or is sent as a side question (the toggle, enabled
  * only while a turn would revise); then GenAIx's session agent decides.
  */
 function SessionComposer({ sessionId, plan, composerRef }: { sessionId: string; plan: Plan | undefined; composerRef: RefObject<ComposerHandle | null> }) {
@@ -166,12 +166,12 @@ function SessionComposer({ sessionId, plan, composerRef }: { sessionId: string; 
             isRunning={Boolean(run) && !isWaiting}
             isStopping={run?.status === 'cancelling' || cancelRun.isPending}
             onStop={handleStop}
-            extraAction={revise && (
-                <Button variant="ghost" size="sm" aria-pressed={isSideQuestion} onClick={() => setIsSideQuestion(!isSideQuestion)}>
+            extraAction={
+                <Button disabled={!revise} variant="ghost" size="sm" aria-pressed={isSideQuestion} onClick={() => setIsSideQuestion(!isSideQuestion)}>
                     <CircleQuestionMarkIcon size={16} />
                     {t('composer.sideQuestion')}
                 </Button>
-            )}
+            }
         />
     );
 }

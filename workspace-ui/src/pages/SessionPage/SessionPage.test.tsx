@@ -516,7 +516,7 @@ describe('SessionPage', () => {
             expect(sentBody(posts).options).toEqual({ mode: 'revise', plan_id: 'p-0' });
         });
 
-        it('sends without revise and offers no side question while a run of the plan is active', async () => {
+        it('sends without revise and disables the side question while a run of the plan is active', async () => {
             const posts = stubPosts();
 
             showPlan('proposed');
@@ -524,7 +524,7 @@ describe('SessionPage', () => {
 
             const { field } = await renderPage();
 
-            expect(screen.queryByRole('button', { name: 'Side question' })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Side question' })).toBeDisabled();
 
             await send(field, 'Use red instead');
 
@@ -538,20 +538,22 @@ describe('SessionPage', () => {
             startPlanRun();
             await renderPage();
 
+            expect(screen.getByRole('button', { name: 'Side question' })).toBeDisabled();
+
             apply({ run_id: 'r-1', type: 'run.completed', run: { id: 'r-1', status: 'completed', plan_id: 'p-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 } });
 
-            expect(await screen.findByRole('button', { name: 'Side question' })).toBeInTheDocument();
+            await waitFor(() => expect(screen.getByRole('button', { name: 'Side question' })).toBeEnabled());
         });
 
         // A failed run leaves the plan accepted, a cancelled one drafting: a plain message retries the run (03-genaix-api.md §4).
-        it.each(['accepted', 'drafting'] as const)('sends without revise and offers no side question for a %s plan without a run', async (status) => {
+        it.each(['accepted', 'drafting'] as const)('sends without revise and disables the side question for a %s plan without a run', async (status) => {
             const posts = stubPosts();
 
             showPlan(status);
 
             const { field } = await renderPage();
 
-            expect(screen.queryByRole('button', { name: 'Side question' })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Side question' })).toBeDisabled();
 
             await send(field, 'Try again');
 

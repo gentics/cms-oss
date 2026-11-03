@@ -13,10 +13,12 @@ the same menu that also contains the entry for changing the password.
 
 h3. Creating a token
 
-The token creation dialog requires the user to provide a name. An expiry date can optionally be specified.
+The token creation dialog requires the user to provide a name. An expiry date can optionally be specified
+and tokens can be scheduled for automatic removal when they exire.
 
 * *Name* – Required. The name used to identify the token.
 * *Expiry date* – Optional. The date on which the token expires.
+* *Prune on Expiry* - Optional. Expired tokens with this flag will automatically be removed.
 
 WARNING: The token value is shown only once directly after creation and cannot be retrieved again afterwards.
 

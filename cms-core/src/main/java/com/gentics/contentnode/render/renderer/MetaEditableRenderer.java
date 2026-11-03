@@ -59,7 +59,7 @@ public class MetaEditableRenderer implements TemplateRenderer {
 		 */
 		int editMode = t.getRenderType().getEditMode();
 
-		if (editMode != RenderType.EM_ALOHA && editMode != RenderType.EM_ALOHA_READONLY) {
+		if (editMode != RenderType.EM_ALOHA && editMode != RenderType.EM_ALOHA_READONLY && editMode != RenderType.EM_ALOHA_PREVIEW) {
 			return template;
 		}
 		// meta editables

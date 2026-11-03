@@ -1,0 +1,25 @@
+/* Left column content: head with the title, then search and rows (design.md §11). */
+.column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 9px 0 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.title {
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}

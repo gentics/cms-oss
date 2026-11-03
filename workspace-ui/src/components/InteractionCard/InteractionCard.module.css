@@ -1,0 +1,239 @@
+/* The fields of a pending interaction inside its chat card (design.md §12 "Eingabefelder": surface,
+   `--border-field`, `--corner-md`, 32 px; §8 focus of a text field: `--interactive` border + halo). */
+.card {
+  max-width: 740px;
+  margin-left: var(--chat-indent);
+  border-radius: var(--corner-xl);
+}
+
+/* Focused by "Answer" on the plan (design.md §8 keyboard focus). */
+.card:focus {
+  outline: none;
+}
+
+.card:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--interactive);
+}
+
+.prompt {
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.required {
+  margin-left: 3px;
+  color: var(--error);
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-field);
+  border-radius: var(--corner-md);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  font: inherit;
+  transition: border-color var(--duration-state) var(--easing), box-shadow var(--duration-state) var(--easing);
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: var(--interactive);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--interactive-rgb), 0.16);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+textarea.input {
+  min-height: 54px;
+  resize: vertical;
+}
+
+.hint {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* A settings review: always the same list, per setting its name and state above (design.md §5.1 field
+   label: 12 px, 500, `--fg-primary`), its field, and under it where a proposed value came from. */
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* The name, then "Selection required" right beside it. */
+.settingHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.settingName {
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* The chosen value in a select, "Recommended" right after it while it is the recommended one (`OptionSelect`). */
+.selectedValue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.selectedLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* "Recommended" in a select (design.md §12 "Badge": 10 px, uppercase, `--corner-sm`, `rgba(interactive,.12)`),
+   its sparkles an icon with meaning (§9 "KI"). */
+.recommended,
+.requiredBadge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: var(--corner-sm);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.recommended {
+  background: rgba(var(--interactive-rgb), 0.12);
+  color: var(--fg-primary);
+
+  & svg {
+    color: var(--interactive);
+  }
+}
+
+/* A value still to choose (§3.3 warning family, status by word too). */
+.requiredBadge {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+/* Where a proposed value came from, under its field (meta text, §5.1). */
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+
+  & svg {
+    flex: none;
+    color: var(--interactive);
+  }
+}
+
+/* The review's actions: what is still to choose, then Confirm on the right. */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.footCaption {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  text-align: right;
+}
+
+/* Why GenAIx offers a `settings_review` option, under its name in the list. */
+.optionReason {
+  display: block;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+/* A confirmed settings review: the chosen value under its label, read-only; the status in the foot
+   as icon and word in `--success` (design.md §3.3). */
+dl.fields {
+  margin: 0;
+}
+
+.settingValue {
+  margin: 0;
+  color: var(--fg-secondary);
+}
+
+.confirmed,
+.expired {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+}
+
+/* A question that can no longer be answered: neither success nor error, so in secondary text. */
+.expired {
+  color: var(--fg-secondary);
+}
+
+/* A `confirm`, all on the right: "Add a comment" as quiet text, then no and yes in their full size. */
+.decision {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -167,7 +167,7 @@ public class RenderUtils {
 								}
 							}
 
-							if (renderMode == RenderType.EM_ALOHA || renderMode == RenderType.EM_ALOHA_READONLY) {
+							if (renderMode == RenderType.EM_ALOHA || renderMode == RenderType.EM_ALOHA_READONLY || renderMode == RenderType.EM_ALOHA_PREVIEW) {
 								template = AlohaRenderer.replaceEditables(template, TransactionManager.getCurrentTransaction().getRenderResult());
 							}
 						} else {
@@ -400,7 +400,7 @@ public class RenderUtils {
 	public static String renderTag(Tag tag, RenderType renderType, RenderResult result) throws NodeException {
 		int editMode = renderType.getEditMode();
 
-		if ((editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
+		if (RenderType.isAlohaEditMode(editMode) && tag.isEditable()) {
 			StringBuffer source = new StringBuffer();
 			List<ParserTag> omitTags = new ArrayList<ParserTag>();
 			List<ParserTag> omitTagsEdit = new ArrayList<ParserTag>();
@@ -488,6 +488,7 @@ public class RenderUtils {
 		case RenderType.EM_LIVEPREVIEW:
 			return "live";
 		case RenderType.EM_ALOHA:
+		case RenderType.EM_ALOHA_PREVIEW:
 			return "edit";
 		case RenderType.EM_PREVIEW:
 		case RenderType.EM_ALOHA_READONLY:

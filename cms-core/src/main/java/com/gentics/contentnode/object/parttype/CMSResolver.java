@@ -385,7 +385,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 		public boolean getEdit() throws NodeException {
 			int editMode = getEditMode();
 
-			return editMode == RenderType.EM_ALOHA;
+			return RenderType.isAlohaEditMode(editMode);
 		}
 
 		/**

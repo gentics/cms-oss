@@ -58,6 +58,24 @@ public class ApiTokenDataModelAssert extends AbstractAssert<ApiTokenDataModelAss
 	}
 
 	/**
+	 * Assert that the model will be pruned on expiry
+	 * @return fluent API
+	 */
+	public ApiTokenDataModelAssert willBePrunedOnExpiry() {
+		assertThat(actual.isPruneOnExpiry()).as("%s pruneOnExpiry".formatted(descriptionText())).isTrue();
+		return myself;
+	}
+
+	/**
+	 * Assert that the model will not be pruned on expiry
+	 * @return fluent API
+	 */
+	public ApiTokenDataModelAssert willNotBePrunedOnExpiry() {
+		assertThat(actual.isPruneOnExpiry()).as("%s pruneOnExpiry".formatted(descriptionText())).isFalse();
+		return myself;
+	}
+
+	/**
 	 * Assert that the model was last used at the given time
 	 * @param lastUsed expected time
 	 * @return fluent API

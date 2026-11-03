@@ -16,18 +16,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.stream.IntStream;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
@@ -53,16 +48,11 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
+import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
-import com.gentics.contentnode.rest.model.response.Message.Type;
-import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
-import com.gentics.mesh.json.JsonUtil;
-
-import jakarta.ws.rs.core.Response.Status;
 
 /**
  * An objectfactory which can create {@link Part} objects, based on the
@@ -660,9 +650,6 @@ public class PartFactory extends AbstractFactory {
 			if (!isNew) {
 				origPart = t.getObject(Part.class, getId());
 			}
-			// validate
-			validatePart(this, getDefaultValue(), reason -> supplyInvalidJSONException(getKeyname(), reason, this));
-
 			// save the construct, if necessary
 			if (isModified) {
 				saveFactoryObject(this);
@@ -855,52 +842,45 @@ public class PartFactory extends AbstractFactory {
 
 	/**
 	 * Perform the validation of a part, where applicable.
+	 * The validation is done by the part type (see {@link PartType#validateValue(Part, Value, ValueContainer, Function)}).
 	 * 
 	 * @param part part to validate for
 	 * @param value value to validate
-	 * @param exceptionSupplier the supplier of a wrapping exception to throw upon a JSON validation error
+	 * @param container container of the value (tag or construct for default values)
+	 * @param exceptionSupplier the supplier of a wrapping exception to throw upon a validation error. Parameters are the part type and the reason
 	 * 
 	 * @throws NodeException
 	 */
-	public static void validatePart(Part part, Object value, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
-		if (part.getPartTypeId() == Part.JSON) {
-			if (value == null || !(value instanceof Value val)) {
-				// Nothing to validate
-				return;
-			}
-			String stringValue = val.getValueText();
-			if (StringUtils.isEmpty(stringValue)) {
-				// Nothing to validate
-				return;
-			}
-			ObjectMapper objectMapper = MiscUtils.newObjectMapper();
-			try {
-				JsonNode jsonNode = objectMapper.readTree(stringValue);
-				if (!StringUtils.isEmpty(part.getInfoText())) {
-					JsonNode jsonSchemaContent = objectMapper.readTree(part.getInfoText());
-					JsonNode[] allowedSchemas = null;
-					if (jsonSchemaContent.isArray()) {
-						ArrayNode jsonSchemas = (ArrayNode)jsonSchemaContent;
-
-						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::get)
-								.filter(JsonNode::isObject).map(ObjectNode.class::cast).toArray(size -> new JsonNode[size]);
-					} else {
-						allowedSchemas = new JsonNode[] { jsonSchemaContent };
-					}
-					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
-						throw exceptionSupplier.apply(I18NHelper.get("validation.jsonschema.nomatch"))
-							.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
-						}
-				}
-			} catch (JsonProcessingException e) {
-				throw exceptionSupplier.apply(I18NHelper.get("validation.json.unparseable"))
-					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
-			}
+	public static void validatePart(Part part, Object value, ValueContainer container, BiFunction<PartType, String, RestMappedException> exceptionSupplier) throws NodeException {
+		if (value == null || !(value instanceof Value val)) {
+			// Nothing to validate
+			return;
 		}
+		// the part type is only created to validate the given value, it gets an empty value with the part,
+		// because creating the part type with the value to validate could already fail (e.g. JSONPartType fails for unparseable JSON)
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Value emptyValue = t.createObject(Value.class);
+		emptyValue.setPart(part);
+		PartType partType = part.getPartType(emptyValue);
+		if (partType == null) {
+			// Nothing to validate
+			return;
+		}
+		partType.validateValue(part, val, container, reason -> exceptionSupplier.apply(partType, reason));
 	}
 
-	private static RestMappedException supplyInvalidJSONException(String property, String reason, Part part) {
-		return new RestMappedException(I18NHelper.get("validation.json.part.failed", part.getKeyname(), reason));
+	/**
+	 * Perform the validation of the default value of a part (see {@link #validatePart(Part, Object, ValueContainer, BiFunction)})
+	 * @param part part
+	 * @param construct construct of the part, as it will be saved (e.g. with the new node assignment)
+	 * @throws NodeException
+	 */
+	public static void validateDefaultValue(Part part, Construct construct) throws NodeException {
+		validatePart(part, part.getDefaultValue(), construct, (partType, reason) -> createPartValidationException(part, partType, reason));
+	}
+
+	private static RestMappedException createPartValidationException(Part part, PartType partType, String reason) {
+		return new RestMappedException(I18NHelper.get(partType.getPartValidationMessageKey(), part.getKeyname(), reason));
 	}
 
 	/**

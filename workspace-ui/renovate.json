@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  "extends": ["config:recommended"],
+
+  "dependencyDashboard": true,
+
+  "rangeStrategy": "replace",
+
+  "packageRules": [
+    {
+      "description": "Group non-major npm dependency updates",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "npm dependencies"
+    },
+    {
+      "description": "Keep major updates separate",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["major"],
+      "separateMajorMinor": true
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    }
+  ]
+}

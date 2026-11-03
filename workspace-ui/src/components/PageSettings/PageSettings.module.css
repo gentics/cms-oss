@@ -1,0 +1,113 @@
+/* design.md §6.3 "Seiten-Einstellungen, die über die Vorschau fallen": a sheet from the top of the stage
+   over the page, scrolling inside itself; `drop` motion (§10). */
+.sheet {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  box-shadow: var(--elevation-sheet);
+  animation: drop var(--duration-card) var(--easing);
+  container-type: inline-size;
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.icon {
+  flex: none;
+  color: var(--interactive);
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+.status {
+  margin: 0;
+  padding: 26px 0;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+/* Narrow column: one field per row. */
+@container (max-width: 460px) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+/* design.md §8 "Nur lesen": text in `--fg-secondary`. */
+.readOnly {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  padding: 0 14px 14px;
+  font-size: var(--font-size-sm);
+
+  & dt {
+    color: var(--fg-muted);
+  }
+
+  & dd {
+    margin: 0;
+    color: var(--fg-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}

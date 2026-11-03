@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomUtils;
 
@@ -35,12 +36,12 @@ public class ApiTokenFactory {
 	/**
 	 * Select clause
 	 */
-	protected final static String SELECT_CLAUSE = "SELECT id, user_id, name, cdate, expires, last_used FROM %s".formatted(TABLE_NAME);
+	protected final static String SELECT_CLAUSE = "SELECT id, user_id, name, cdate, expires, prune_on_expiry, last_used FROM %s".formatted(TABLE_NAME);
 
 	/**
 	 * SQL to insert a new record
 	 */
-	protected final static String INSERT_SQL = "INSERT INTO %s (user_id, name, token_hash, cdate, expires) VALUES (?, ?, ?, ?, ?)".formatted(TABLE_NAME);
+	protected final static String INSERT_SQL = "INSERT INTO %s (user_id, name, token_hash, cdate, expires, prune_on_expiry) VALUES (?, ?, ?, ?, ?, ?)".formatted(TABLE_NAME);
 
 	/**
 	 * SQL to delete a record
@@ -60,6 +61,7 @@ public class ApiTokenFactory {
 			.setName(rs.getString("name"))
 			.setCdate(rs.getInt("cdate"))
 			.setExpires(expiry)
+			.setPruneOnExpiry(rs.getBoolean("prune_on_expiry"))
 			.setLastUsed(rs.getInt("last_used"))
 			.setValid(expiry > 0 ? expiry > now : true);
 
@@ -107,7 +109,7 @@ public class ApiTokenFactory {
 
 		List<Integer> ids = DBUtils.executeInsert(
 				INSERT_SQL,
-				new Object[] { userId, request.getName(), hash, cDate, request.getExpires() });
+				new Object[] { userId, request.getName(), hash, cDate, request.getExpires(), request.isPruneOnExpiry() });
 
 		if (ids.size() != 1) {
 			throw new NodeException("Error while creating API Token. Unexpected number of inserts: %d".formatted(ids.size()));
@@ -171,5 +173,20 @@ public class ApiTokenFactory {
 		return DBUtils.select(SELECT_CLAUSE + " WHERE token_hash = ?", pst -> {
 			pst.setString(1, hash);
 		}, DBUtils.getFirst(ROW_HANDLER)).filter(ResolvableApiTokenDataModel::isValid);
+	}
+
+	/**
+	 * Prune all expired tokens that have pruneOnExpiry set
+	 * @throws NodeException
+	 */
+	public final static void pruneExpiredTokens() throws NodeException {
+		List<ResolvableApiTokenDataModel> allTokens = DBUtils.select(SELECT_CLAUSE, DBUtils.getAll(ROW_HANDLER));
+		List<Integer> prunableTokenIds = allTokens.stream().filter(token -> !token.isValid())
+				.filter(ResolvableApiTokenDataModel::isPruneOnExpiry).map(ResolvableApiTokenDataModel::getId)
+				.collect(Collectors.toList());
+
+		for (int id : prunableTokenIds) {
+			delete(id);
+		}
 	}
 }

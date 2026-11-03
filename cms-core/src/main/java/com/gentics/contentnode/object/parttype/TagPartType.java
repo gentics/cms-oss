@@ -210,7 +210,7 @@ public abstract class TagPartType extends AbstractPartType {
 
 			int editMode = renderType.getInfo(renderType.getDepth() - 2).getEditMode();
 
-			if (editMode == RenderType.EM_ALOHA) {
+			if (RenderType.isAlohaEditMode(editMode)) {
 				renderType.setEditMode(RenderType.EM_ALOHA_READONLY);
 			}
 

@@ -271,7 +271,7 @@ public class TablePartType extends AbstractPartType {
 				lengthBefore = code.length();
 				if (cellTag != null) {
 					// edit mode
-					if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY) {
+					if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY || editMode == RenderType.EM_ALOHA_PREVIEW) {
 						AlohaRenderer alohaRenderer = (AlohaRenderer) RendererFactory.getRenderer(ContentRenderer.RENDERER_ALOHA);
 						code.append(alohaRenderer.block(cellTag.render(result), cellTag, result));
 					} else {

@@ -172,6 +172,7 @@ public class OSSRunner {
 		// add UIs
 		context.addServlet(getWebrootResourceServlet("editor"), "/editor/*");
 		context.addServlet(getWebrootResourceServlet("admin"), "/admin/*");
+		context.addServlet(getWebrootResourceServlet("workspace"), "/workspace/*");
 		context.addServlet(
 				getStaticFileServletForPath(ConfigurationValue.UI_CONF_PATH.get()),
 				"/ui-conf/*");

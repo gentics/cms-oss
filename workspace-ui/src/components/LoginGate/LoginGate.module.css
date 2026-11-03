@@ -1,0 +1,5 @@
+/* While the session is being checked: the canvas, nothing on it (design.md §11). */
+.waiting {
+  height: 100svh;
+  background: var(--bg-canvas);
+}

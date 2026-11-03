@@ -1,0 +1,21 @@
+/* One open plan in the menu (design.md §12 "Popover / Menü", "Listenzeile"): its summary, cut with an
+   ellipsis, and its status as meta text below. */
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 320px;
+}
+
+.summary {
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.status {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}

@@ -86,7 +86,7 @@ public class FormPartType extends AbstractPartType {
 	@Override
 	public String render(RenderResult renderResult, String template) throws NodeException {
 		super.render(renderResult, template);
-		if (TransactionManager.getCurrentTransaction().getRenderType().getEditMode() == RenderType.EM_ALOHA) {
+		if (RenderType.isAlohaEditMode(TransactionManager.getCurrentTransaction().getRenderType().getEditMode())) {
 			return I18NHelper.get("form.editmode.placeholder");
 		}
 		return getFormUUID();

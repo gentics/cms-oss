@@ -14,6 +14,7 @@ export interface ApiTokenData {
     name: string;
     cdate: number;
     expires: number;
+    pruneOnExpiry: boolean;
     lastUsed: number;
     valid: boolean;
 }
@@ -21,4 +22,5 @@ export interface ApiTokenData {
 export type EditableApiToken = {
     name: ApiTokenData['name'];
     expires?: string;
+    pruneOnExpiry: boolean;
 };

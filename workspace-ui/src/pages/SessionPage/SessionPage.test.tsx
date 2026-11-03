@@ -1,0 +1,585 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { UiProvider } from '@/components/ui/provider';
+import { routeTree } from '@/router';
+import type { GenaixEvent, Plan } from '@/services/apiService/genaix/types';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { useHandOffStore } from '@/store/useHandOffStore';
+import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
+import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
+import { stubUploads } from '@/test/stubUploads';
+
+import '@/i18n';
+
+// The page follows the session's event stream (tested in useSessionEvents.test.tsx); here it would
+// take the stubbed fetch responses meant for sending.
+vi.mock('@/hooks/useSessionEvents', () => ({ useSessionEvents: () => {} }));
+
+// The conversation is tested in ChatStream.test.tsx; here its history request (`GET …/messages`)
+// would take the stubbed fetch responses meant for sending.
+vi.mock('@/components/ChatStream/ChatStream', () => ({ ChatStream: () => null }));
+
+// Making sure the session holds a CMS credential before a turn is tested in
+// sessionAuthorization.test.ts; here it would take the stubbed fetch responses meant for sending.
+vi.mock('@/helper/sessionAuthorization/sessionAuthorization', () => ({
+    ensureSessionCmsAuthorization: () => Promise.resolve(),
+    newSessionCmsAuthorization: () => Promise.resolve({ connection_id: 'c-1', auth_type: 'bearer', token: 'cmstok_dev_1' }),
+}));
+
+// jsdom has no ResizeObserver; the page's AppShell measures its columns with one.
+class ResizeObserverStub {
+    observe() {}
+
+    disconnect() {}
+}
+
+// Stands in for the browser's recognizer: the test plays the results and the end of listening.
+class FakeRecognizer {
+    static last: FakeRecognizer | undefined;
+    lang = '';
+    interimResults = false;
+    continuous = true;
+    onresult: ((event: unknown) => void) | null = null;
+    onend: (() => void) | null = null;
+    start = vi.fn();
+    stop = vi.fn(() => this.onend?.());
+    abort = vi.fn(() => this.onend?.());
+
+    constructor() {
+        FakeRecognizer.last = this;
+    }
+
+    say(transcript: string) {
+        this.onresult?.({ results: [[{ transcript }]] });
+    }
+}
+
+// The left column lists the sessions; `withEmptySessionList` answers that, so `fetchMock` sees only
+// the calls of sending.
+function stubFetch(...responses: Response[]) {
+    const fetchMock = vi.fn<typeof fetch>();
+
+    responses.forEach((response) => fetchMock.mockResolvedValueOnce(response));
+    vi.stubGlobal('fetch', withEmptySessionList(fetchMock));
+
+    return fetchMock;
+}
+
+const accepted = () => Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 });
+
+async function renderComposer() {
+    return (await renderPage()).field;
+}
+
+async function renderPage() {
+    const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/sessions/s-1'] }) });
+
+    render(
+        <QueryClientProvider client={new QueryClient()}>
+            <UiProvider>
+                <RouterProvider router={router} />
+            </UiProvider>
+        </QueryClientProvider>,
+    );
+
+    return { router, field: await screen.findByRole('textbox', { name: 'What should happen?' }) };
+}
+
+describe('SessionPage', () => {
+    beforeEach(() => {
+        FakeRecognizer.last = undefined;
+        vi.stubGlobal('ResizeObserver', ResizeObserverStub);
+        useWorkspaceEventStore.setState({ sessions: {} });
+        useErrorNotificationStore.setState({ errors: [] });
+        useHandOffStore.setState({ handOffs: {} });
+        useInteractionDraftStore.setState({ drafts: {}, locks: {} });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('sends the turn on Enter, records it in the store and empties the field', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubFetch(accepted());
+        const field = await renderComposer();
+
+        await user.click(field);
+        await user.keyboard('Shorten the intro{Enter}');
+
+        await waitFor(() => expect(field).toHaveTextContent(''));
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/messages');
+        expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Shorten the intro' }] });
+        expect(selectSession('s-1')(useWorkspaceEventStore.getState()).messages).toMatchObject([
+            { kind: 'sent', messageId: 'm-1', status: 'sent' },
+        ]);
+    });
+
+    it('disables send while there is nothing to send, and sends with the button', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubFetch(accepted());
+        const field = await renderComposer();
+        const send = screen.getByRole('button', { name: 'Send' });
+
+        expect(send).toBeDisabled();
+
+        await user.click(field);
+        await user.keyboard('Hello');
+        await user.click(send);
+
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    });
+
+    // The upload goes through XMLHttpRequest (`stubUploads`), the message through fetch; both write to
+    // `log`, so their order can be checked.
+    it('uploads an attached file before the message and drops the chip after sending', async () => {
+        const user = userEvent.setup();
+        const log: string[] = [];
+        const fetchMock = stubFetch(accepted());
+
+        // The session list of the left column is answered as `stubFetch` does, and not logged.
+        vi.stubGlobal('fetch', withEmptySessionList(vi.fn<typeof fetch>((url, init) => {
+            log.push(`${init?.method} ${String(url)}`);
+
+            return fetchMock(url, init);
+        })));
+        stubUploads([{ status: 201, body: { id: 'f-1' } }], log);
+
+        await renderComposer();
+
+        await user.upload(screen.getByLabelText('File', { selector: 'input' }), new File(['a'], 'brief.pdf'));
+
+        expect(screen.getByText('brief.pdf')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        await waitFor(() => expect(screen.queryByText('brief.pdf')).not.toBeInTheDocument());
+        expect(log.map((entry) => entry.split(' ')[1])).toEqual([
+            '/rest/proxy/genaix/sessions/s-1/files',
+            '/rest/proxy/genaix/sessions/s-1/messages',
+        ]);
+        expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
+            parts: [{ type: 'file_ref', file_id: 'f-1', mode: 'source' }],
+        });
+    });
+
+    it('shows each file\'s upload progress on its chip while the message is sent', async () => {
+        const user = userEvent.setup();
+        let release = () => {};
+        const hold = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+
+        stubFetch(accepted());
+        stubUploads([{ status: 201, body: { id: 'f-1' }, progress: [0.4], hold }, { status: 201, body: { id: 'f-2' } }]);
+
+        await renderComposer();
+
+        await user.upload(screen.getByLabelText('File', { selector: 'input' }), [new File(['a'], 'brief.pdf'), new File(['b'], 'notes.txt')]);
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        // The first file is on its way, the second waits its turn.
+        expect(await screen.findByText('40 %')).toBeInTheDocument();
+        expect(screen.getByRole('progressbar', { name: 'brief.pdf' })).toHaveAttribute('aria-valuenow', '40');
+        expect(screen.getByText('waiting')).toBeInTheDocument();
+
+        act(() => release());
+
+        await waitFor(() => expect(screen.queryByText('brief.pdf')).not.toBeInTheDocument());
+    });
+
+    it('keeps the input and shows an error when sending fails', async () => {
+        const user = userEvent.setup();
+
+        stubFetch(Response.json({ type: 't', title: 't', status: 409, genaix_code: 'run_already_active' }, { status: 409 }));
+
+        const field = await renderComposer();
+
+        await user.click(field);
+        await user.keyboard('Shorten the intro{Enter}');
+
+        await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
+            { messageKey: 'chat.sendFailed', detailKey: 'errors.genaix.run_already_active' },
+        ]));
+        expect(field).toHaveTextContent('Shorten the intro');
+    });
+
+    it('dictates into the field without sending by itself', async () => {
+        vi.stubGlobal('SpeechRecognition', FakeRecognizer);
+
+        const user = userEvent.setup();
+        const fetchMock = stubFetch();
+        const field = await renderComposer();
+
+        await user.click(screen.getByRole('button', { name: 'Dictate' }));
+        act(() => FakeRecognizer.last!.say('Shorten the intro'));
+        await user.click(screen.getByRole('button', { name: 'Stop dictating' }));
+
+        expect(field).toHaveTextContent('Shorten the intro');
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('starts another session with an empty composer, without the draft of the one before', async () => {
+        const user = userEvent.setup();
+        const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/sessions/s-1'] }) });
+
+        stubFetch();
+        render(
+            <QueryClientProvider client={new QueryClient()}>
+                <UiProvider>
+                    <RouterProvider router={router} />
+                </UiProvider>
+            </QueryClientProvider>,
+        );
+
+        await user.click(await screen.findByRole('textbox', { name: 'What should happen?' }));
+        await user.keyboard('Shorten the intro');
+
+        expect(screen.getByRole('textbox', { name: 'What should happen?' })).toHaveTextContent('Shorten the intro');
+
+        await act(() => router.navigate({ to: '/sessions/$id', params: { id: 's-2' } }));
+
+        await waitFor(() => expect(screen.getByRole('textbox', { name: 'What should happen?' }).textContent).toBe(''));
+    });
+
+    it('lists the sessions, searchable, in the left column', async () => {
+        stubSessionRoutes(() => ({ items: [sessionFixture({ id: 's-2', title: 'Careers page' })], next_cursor: null }));
+        await renderComposer();
+
+        const column = screen.getByRole('region', { name: 'Sessions' });
+
+        expect(within(column).getByRole('searchbox', { name: 'Find a session' })).toBeInTheDocument();
+        expect(await within(column).findByRole('link', { name: /Careers page/ })).toHaveAttribute('href', '/sessions/s-2');
+    });
+
+    it('shows a disabled mic without speech recognition, saying why', async () => {
+        await renderComposer();
+
+        expect(screen.getByRole('button', { name: 'Voice input is not available in this browser' })).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('offers attaching and verbatim as labelled buttons, as on the dashboard', async () => {
+        await renderComposer();
+
+        expect(screen.getByRole('button', { name: 'File' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Verbatim' })).toBeInTheDocument();
+    });
+
+    // The big mic shows only up to 640 px; jsdom applies no media query, so it counts as hidden
+    // here and is queried with `hidden: true`. Its visibility is tested in e2e/SessionMobile.spec.ts.
+    describe('voice first (mobile)', () => {
+        it('offers the big mic and "Type instead" only with speech recognition', async () => {
+            await renderComposer();
+
+            expect(screen.queryByRole('button', { name: 'Tap to speak', hidden: true })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Type instead', hidden: true })).not.toBeInTheDocument();
+        });
+
+        it('dictates from the big mic into the field without sending', async () => {
+            vi.stubGlobal('SpeechRecognition', FakeRecognizer);
+
+            const user = userEvent.setup();
+            const fetchMock = stubFetch();
+            const field = await renderComposer();
+
+            await user.click(screen.getByRole('button', { name: 'Tap to speak', hidden: true }));
+            act(() => FakeRecognizer.last!.say('Shorten the intro'));
+
+            expect(field).toHaveTextContent('Shorten the intro');
+            expect(screen.queryByRole('button', { name: 'Type instead', hidden: true })).not.toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Tap to stop', hidden: true }));
+
+            expect(FakeRecognizer.last?.stop).toHaveBeenCalledTimes(1);
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('opens the text prompt with "Type instead" and focuses the field', async () => {
+            vi.stubGlobal('SpeechRecognition', FakeRecognizer);
+
+            const user = userEvent.setup();
+            const field = await renderComposer();
+
+            await user.click(screen.getByRole('button', { name: 'Type instead', hidden: true }));
+
+            expect(field).toHaveFocus();
+            expect(screen.queryByRole('button', { name: 'Type instead', hidden: true })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Tap to speak', hidden: true })).toBeInTheDocument();
+        });
+    });
+    it('stops the working run with Stop', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubFetch(Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+
+        useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-07T09:00:00Z', session_id: 's-1', type: 'run.started', run: { id: 'r-1', status: 'running', started_at: '2026-10-07T09:00:00Z', step_count: 0 } });
+        await renderComposer();
+
+        await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
+        expect(fetchMock.mock.calls[0]![1]?.method).toBe('POST');
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Stop' })).toBeDisabled());
+
+        act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 2, ts: '2026-10-07T09:00:01Z', session_id: 's-1', type: 'run.cancelled', run: { id: 'r-1', status: 'cancelled', started_at: '2026-10-07T09:00:00Z', step_count: 0 } }));
+
+        expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+    });
+
+    it('shows the right column only once the session has a preview', async () => {
+        stubFetch();
+        await renderComposer();
+
+        expect(screen.queryByRole('button', { name: 'Hide the right column' })).not.toBeInTheDocument();
+        expect(screen.queryByTitle('Preview of the page in the CMS')).not.toBeInTheDocument();
+
+        act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
+            seq: 1,
+            ts: '2026-10-07T09:00:01Z',
+            session_id: 's-1',
+            type: 'preview.updated',
+            cms_ref: { type: 'page', id: 9142, node_id: 3 },
+            preview_url: 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view',
+            mode: 'view',
+        }));
+
+        expect(screen.getByRole('button', { name: 'Hide the right column' })).toBeInTheDocument();
+        expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view&real=view&tagmarkers=true');
+    });
+
+    describe('answering the question the run waits on', () => {
+        // A run that waits on an `ask_user` question expiring `expiresAt`, by default in 10 minutes.
+        function waitOnQuestion(expiresAt = new Date(Date.now() + 10 * 60_000).toISOString()) {
+            const store = useWorkspaceEventStore.getState();
+
+            store.applyEvent('s-1', { seq: 1, ts: '2026-10-07T09:00:00Z', session_id: 's-1', type: 'run.started', run: { id: 'r-1', status: 'running', started_at: '2026-10-07T09:00:00Z', step_count: 0 } });
+            store.applyEvent('s-1', {
+                seq: 2,
+                ts: '2026-10-07T09:00:01Z',
+                session_id: 's-1',
+                run_id: 'r-1',
+                type: 'interaction.requested',
+                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'Which audience?', multi: false, other_allowed: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:00:01Z', expires_at: expiresAt, run_id: 'r-1' },
+            });
+        }
+
+        it('answers it once with the turn, then offers Stop instead of a second answer', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+
+            waitOnQuestion();
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            await waitFor(() => expect(field).toHaveTextContent(''));
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toMatchObject({
+                reply_to_interaction: { interaction_id: 'i-1', answer: { text: 'Existing customers' } },
+            });
+            expect(useInteractionDraftStore.getState().locks['i-1']).toBe('answered');
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+
+            await user.keyboard('Existing customers{Enter}');
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+        });
+
+        it('sends no answer while the card is sending one', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+
+            waitOnQuestion();
+            useInteractionDraftStore.getState().lock('i-1', 'sending');
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('sends no answer once the question has expired', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+
+            waitOnQuestion(new Date(Date.now() - 1000).toISOString());
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('keeps the input and locks the question as expired when GenAIx refuses the answer with 410', async () => {
+            const user = userEvent.setup();
+
+            stubFetch(Response.json({ type: 't', title: 'Expired', status: 410, genaix_code: 'interaction_expired' }, { status: 410 }));
+            waitOnQuestion();
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
+                { messageKey: 'chat.sendFailed', detailKey: 'errors.genaix.interaction_expired' },
+            ]));
+            expect(useInteractionDraftStore.getState().locks['i-1']).toBe('expired');
+            expect(field).toHaveTextContent('Existing customers');
+        });
+    });
+
+    describe('changing a plan (rc.5)', () => {
+        function showPlan(status: Plan['status']) {
+            const plan: Plan = {
+                id: 'p-1',
+                workflows: [{ id: 'content_create', version: '1.0.0' }],
+                status,
+                version: 1,
+                summary: 'Invitation page PNDemo',
+                items: [{ id: 'p1', label: 'Create page PNDemo', kind: 'create', workflow: 'content_create', status: 'done' }],
+            };
+
+            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-14T14:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
+        }
+
+        // Sends the messages to `posts`; every read goes to `reads`: a plan's state (`GET …/plans/p-1`) without
+        // objects, every list (the modules, the plans) empty.
+        function stubPosts(response: () => Response = accepted) {
+            const posts = vi.fn<typeof fetch>(async () => response());
+            const reads = vi.fn<typeof fetch>(async (input) => (String(input).endsWith('/sessions/s-1/plans/p-1')
+                ? Response.json({ cms_objects: [] })
+                : Response.json({ items: [], next_cursor: null })));
+
+            vi.stubGlobal('fetch', withEmptySessionList(async (input, init) => (init?.method === 'POST' ? posts(input, init) : reads(input, init))));
+
+            return Object.assign(posts, { reads });
+        }
+
+        it('offers no "Ask for a change" on a finished plan: a follow-up is a plain message, which GenAIx tells apart', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts();
+
+            showPlan('done');
+
+            const { field } = await renderPage();
+
+            // Whether a message revises the plan, GenAIx's session agent decides (contract §4.4).
+            expect(screen.queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
+
+            await user.click(field);
+            await user.keyboard('Make it more colourful{Enter}');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Make it more colourful' }] });
+        });
+
+        it('sends a plain message while a plan executes, for GenAIx to tell a question from a redirect', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts();
+
+            showPlan('running');
+
+            const { field } = await renderPage();
+
+            // No switch and no "Stop and change": the router decides (09-integration-guide.md, "Stop and change").
+            expect(screen.queryByRole('button', { name: 'Ask a question' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Change course' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Stop and change' })).not.toBeInTheDocument();
+
+            await user.click(field);
+            await user.keyboard('Use red instead{Enter}');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Use red instead' }] });
+        });
+
+        it('stops the plan\'s run from the plan\'s head, with one Stop only', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts(() => Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+
+            showPlan('running');
+            act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
+                seq: 2,
+                ts: '2026-10-14T14:00:01Z',
+                session_id: 's-1',
+                run_id: 'r-1',
+                plan_id: 'p-1',
+                type: 'run.started',
+                run: { id: 'r-1', status: 'running', plan_id: 'p-1', started_at: '2026-10-14T14:00:01Z', step_count: 0 },
+            } as GenaixEvent));
+
+            await renderPage();
+
+            expect(screen.getAllByRole('button', { name: 'Stop' })).toHaveLength(1);
+            // A turn beside the plan's run is a side run: send stays.
+            expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(String(posts.mock.calls[0]![0])).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
+        });
+    });
+
+    describe('Edit these', () => {
+        const first = { type: 'page' as const, id: '8871', node_id: 3, label: 'Garantiebedingungen' };
+        const second = { type: 'page' as const, id: '8903', node_id: 3, label: 'Nutzungsbedingungen' };
+
+        function editThese(...references: (typeof first)[]) {
+            act(() => useHandOffStore.getState().request('s-1', references));
+        }
+
+        it('puts the objects into the field, and the next message goes to this session', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+            const { router, field } = await renderPage();
+
+            editThese(first, second);
+
+            await waitFor(() => expect(field).toHaveTextContent('Garantiebedingungen Nutzungsbedingungen'));
+            await waitFor(() => expect(field).toHaveFocus());
+            expect(useHandOffStore.getState().handOffs).toEqual({});
+
+            await user.keyboard('Publish all these pages{Enter}');
+
+            await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+            expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/messages');
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
+                parts: [
+                    { type: 'reference', ref: first },
+                    { type: 'text', text: ' ' },
+                    { type: 'reference', ref: second },
+                    { type: 'text', text: ' Publish all these pages' },
+                ],
+            });
+            expect(router.state.location.pathname).toBe('/sessions/s-1');
+        });
+
+        it('keeps what is typed, and adds the objects of a later "Edit these" before it', async () => {
+            const user = userEvent.setup();
+
+            stubFetch();
+
+            const { field } = await renderPage();
+
+            await user.click(field);
+            await user.keyboard('Publish');
+            editThese(first);
+
+            await waitFor(() => expect(field).toHaveTextContent('Garantiebedingungen Publish'));
+
+            editThese(second);
+
+            await waitFor(() => expect(field).toHaveTextContent('Nutzungsbedingungen Garantiebedingungen Publish'));
+        });
+    });
+});

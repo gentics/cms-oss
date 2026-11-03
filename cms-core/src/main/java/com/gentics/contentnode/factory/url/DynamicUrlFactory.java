@@ -69,12 +69,12 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 				extension = page.getTemplate().getMarkupLanguage().getExtension();
 			}
 			String realViewMode = "newview";
-			if ((editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY
+			if ((editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY || editMode == RenderType.EM_ALOHA_PREVIEW
 					|| editMode == RenderType.EM_PREVIEW)
 					&& !"css".equalsIgnoreCase(extension)
 					&& !"js".equalsIgnoreCase(extension)) {
 
-				if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY) {
+				if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY || editMode == RenderType.EM_ALOHA_PREVIEW) {
 					url.append(renderType.getPreferences().getProperty(PORTLETAPP_PREFIX_PARAM));
 					url.append("alohapage");
 					url.append("?nodeid=");

@@ -2317,6 +2317,22 @@ public class ContentNodeTestDataUtils {
 	}
 
 	/**
+	 * Create a MultiPart object with one body part per file, for PackageResource.saveFile.
+	 * You must call the cleanup() method on the returned object yourself.
+	 * @param contentByFilename map of filenames to file contents
+	 * @return a multi part object with one body part per file, carrying the filename in its content disposition
+	 */
+	public static MultiPart createPackageFileUploadMultiPart(Map<String, String> contentByFilename) {
+		MultiPart multiPart = new MultiPart();
+		for (Map.Entry<String, String> entry : contentByFilename.entrySet()) {
+			// the filename is set with the builder (not parsed from a header), so that it is used unchanged
+			multiPart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("file").fileName(entry.getKey()).build(),
+					entry.getValue(), MediaType.APPLICATION_OCTET_STREAM_TYPE));
+		}
+		return multiPart;
+	}
+
+	/**
 	 * Unlock the given object
 	 * @param object object to unlock
 	 * @return unlocked object

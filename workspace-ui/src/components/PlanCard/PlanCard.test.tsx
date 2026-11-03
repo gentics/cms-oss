@@ -480,3 +480,46 @@ describe('PlanCard', () => {
         });
     });
 });
+
+// The session `s-1` on node 3, whose package `corporate` has the one guideline `seo-basics`.
+function stubGuidelines() {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
+        const url = new URL(String(input), 'http://localhost');
+
+        if (url.pathname === '/rest/proxy/genaix/sessions/s-1') {
+            return Response.json({ id: 's-1', context: { node_id: 3, references: [], guidelines: [], connection_ids: [] } });
+        }
+
+        if (url.pathname === '/rest/devtools/nodes/3/packages') {
+            return Response.json({ items: [{ name: 'corporate' }] });
+        }
+
+        if (url.pathname === '/rest/devtools/packages/corporate/files-internal') {
+            return Response.json({ items: [{ path: 'guidelines/20_seo-basics.md', name: '20_seo-basics.md', directory: false, size: 0, lastModified: 0 }] });
+        }
+
+        return Response.json({ items: [], next_cursor: null });
+    }));
+}
+
+describe('PlanCard guidelines', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('names a step\'s guideline the session\'s node no longer has as removed or renamed', async () => {
+        stubGuidelines();
+        const plan: Plan = {
+            ...PLAN,
+            items: [
+                { id: 'p1', label: 'Sharpen the SEO guideline', kind: 'update', workflow: 'content_edit', target: { type: 'guideline', id: 'corporate/seo-basics', label: 'SEO basics' }, status: 'pending' },
+                { id: 'p2', label: 'Shorten the tone guideline', kind: 'update', workflow: 'content_edit', target: { type: 'guideline', id: 'corporate/tone-of-voice', label: 'Tone of voice' }, status: 'pending' },
+            ],
+        };
+
+        render(<AdjustablePlan plan={plan} />, { wrapper: createWrapper() });
+
+        expect(await screen.findByText('Tone of voice was removed or renamed')).toBeInTheDocument();
+        expect(screen.getByText('SEO basics')).toBeInTheDocument();
+    });
+});

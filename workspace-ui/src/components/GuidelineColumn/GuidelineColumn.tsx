@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { SaveIcon, Undo2Icon } from 'lucide-react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GuidelineEditor } from '@/components/GuidelineEditor/GuidelineEditor';
@@ -10,6 +10,7 @@ import { guidelineName, guidelinePath } from '@/helper/guidelines/guidelines';
 import { cmsKeys, useCmsGuidelines, useCmsGuidelineText, useSaveCmsGuideline } from '@/hooks/useCmsQueries';
 import { useSessionNodeId } from '@/hooks/useSessionNodeId';
 import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
+import { guidelineDraftKey, useGuidelineDraftStore } from '@/store/useGuidelineDraftStore';
 
 import styles from './GuidelineColumn.module.css';
 
@@ -36,6 +37,10 @@ interface GuidelineColumnProps {
  * The text is read again whenever the plan moves on (its status, version or a finished item), as its
  * run may have written the file; changes not saved yet stay. While a run may write it, the editor is
  * read-only (`EDITABLE`).
+ *
+ * Changes not saved yet are kept in `useGuidelineDraftStore`, so a change of session or of the plan
+ * shown loses none: back at the guideline, they are there again. While the editor shows such changes,
+ * the browser asks before the page is reloaded or closed (`beforeunload`).
  */
 export function GuidelineColumn({ sessionId, plan, slug }: GuidelineColumnProps) {
     const { t } = useTranslation();
@@ -46,13 +51,27 @@ export function GuidelineColumn({ sessionId, plan, slug }: GuidelineColumnProps)
     const guideline = guidelines.data?.find((candidate) => candidate.slug === slug);
     const text = useCmsGuidelineText(guideline);
     const save = useSaveCmsGuideline();
-    // The user's text while it differs from the file's.
-    const [draft, setDraft] = useState<string>();
+    // The user's text not saved yet, kept beyond this column (`useGuidelineDraftStore`).
+    const draftKey = guideline && guidelineDraftKey(guideline.package, guidelinePath(guideline));
+    const draft = useGuidelineDraftStore((state) => (draftKey ? state.drafts[draftKey] : undefined));
     const isEditable = EDITABLE.includes(plan.status) && text.data !== undefined && !save.isPending;
     const isChanged = draft !== undefined && draft !== text.data;
     // What the plan has done so far: when it changes, its run may have written the file.
     const progress = `${plan.status}:${plan.version}:${plan.items.filter(({ status }) => status === 'done').length}`;
     const seenProgress = useRef(progress);
+
+    // Changes not saved yet: the browser asks before the page goes.
+    useEffect(() => {
+        if (!isChanged) {
+            return;
+        }
+
+        const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+
+        window.addEventListener('beforeunload', warn);
+
+        return () => window.removeEventListener('beforeunload', warn);
+    }, [isChanged]);
 
     useEffect(() => {
         if (seenProgress.current === progress || nodeId === undefined) {
@@ -66,6 +85,12 @@ export function GuidelineColumn({ sessionId, plan, slug }: GuidelineColumnProps)
             void queryClient.invalidateQueries({ queryKey: cmsKeys.packageFile(guideline.package, guidelinePath(guideline)) });
         }
     }, [guideline, nodeId, progress, queryClient]);
+
+    function setDraft(text: string | undefined) {
+        if (draftKey) {
+            useGuidelineDraftStore.getState().setDraft(draftKey, text);
+        }
+    }
 
     function body() {
         if (guidelines.data && !guideline) {
@@ -105,7 +130,7 @@ export function GuidelineColumn({ sessionId, plan, slug }: GuidelineColumnProps)
                         disabled={!isChanged || !isEditable || !guideline}
                         onClick={() => {
                             if (guideline && draft !== undefined) {
-                                save.mutate({ guideline, text: draft }, { onSuccess: () => setDraft(undefined) });
+                                save.mutate({ guideline, text: draft });
                             }
                         }}
                     >

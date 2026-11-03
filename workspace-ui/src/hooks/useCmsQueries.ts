@@ -21,6 +21,7 @@ import {
     searchCmsItems,
 } from '@/services/cmsApiService/cmsApiService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { guidelineDraftKey, useGuidelineDraftStore } from '@/store/useGuidelineDraftStore';
 
 /** Query keys of the CMS server state. */
 export const cmsKeys = {
@@ -282,8 +283,9 @@ export function useCmsGuidelineText(guideline: Guideline | undefined) {
 
 /**
  * Writes the text of a guideline (`saveCmsPackageInternalFile`), directly through the CMS, not through
- * the agent; the saved text goes into the cache that `useCmsGuidelineText` reads. A failure is an error
- * notification. Not retried: the user saves again.
+ * the agent; the saved text goes into the cache that `useCmsGuidelineText` reads, and its draft
+ * (`useGuidelineDraftStore`) is dropped, also when the editor is gone by then. A failure is an error
+ * notification and keeps the draft. Not retried: the user saves again.
  */
 export function useSaveCmsGuideline() {
     const queryClient = useQueryClient();
@@ -292,6 +294,7 @@ export function useSaveCmsGuideline() {
         mutationFn: ({ guideline, text }: { guideline: Guideline; text: string }) => saveCmsPackageInternalFile(guideline.package, guidelinePath(guideline), text),
         onSuccess: (_result, { guideline, text }) => {
             queryClient.setQueryData(cmsKeys.packageFile(guideline.package, guidelinePath(guideline)), text);
+            useGuidelineDraftStore.getState().setDraft(guidelineDraftKey(guideline.package, guidelinePath(guideline)), undefined);
         },
         onError: (error) => {
             useErrorNotificationStore.getState().addError({ messageKey: 'guidelineEditor.saveFailed', detailKey: errorMessageKey(error) });

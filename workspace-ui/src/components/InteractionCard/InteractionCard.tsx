@@ -33,6 +33,8 @@ interface KindProps {
     interaction: Interaction;
     onSubmit: Submit;
     disabled: boolean;
+    /** The session the interaction belongs to, for the references of its options (`RefToken`). */
+    sessionId: string;
 }
 
 // `ask_user`: free text, at most 4000 characters (contract `TextAnswer`).
@@ -69,7 +71,7 @@ function recommendedOf(interaction: Interaction): string[] {
 // why it is offered (`reason`). With `other_allowed`, "Something else" takes the user's own text, sent as
 // `other`: instead of the option in a single choice (`selected` then empty), besides those chosen in a
 // multiple one.
-function Choice({ interaction, onSubmit, disabled }: KindProps) {
+function Choice({ interaction, onSubmit, disabled, sessionId }: KindProps) {
     const { t } = useTranslation();
     const recommended = useMemo(() => recommendedOf(interaction), [interaction]);
     const items = useMemo(() => {
@@ -111,6 +113,7 @@ function Choice({ interaction, onSubmit, disabled }: KindProps) {
                 value={selected}
                 onChange={setSelected}
                 label={interaction.prompt}
+                sessionId={sessionId}
                 other={interaction.other_allowed
                     ? {
                         label: t('chat.interaction.other'),
@@ -496,7 +499,7 @@ export function InteractionCard({ interaction, sessionId }: { interaction: Inter
             >
                 {/* A settings review is its fields alone; its prompt is not shown. */}
                 {interaction.kind !== 'settings_review' && <p className={styles.prompt}>{interaction.prompt}</p>}
-                <Kind interaction={interaction} onSubmit={submit} disabled={Boolean(lock)} />
+                <Kind interaction={interaction} onSubmit={submit} disabled={Boolean(lock)} sessionId={sessionId} />
             </PartCard>
         </div>
     );

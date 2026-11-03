@@ -501,3 +501,45 @@ describe('ConfirmedSettingsCard', () => {
         expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     });
 });
+
+// The session `s-1` on node 3, whose package `corporate` has the one guideline `seo-basics`.
+function stubGuidelines() {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
+        const url = new URL(String(input), 'http://localhost');
+
+        if (url.pathname === '/rest/proxy/genaix/sessions/s-1') {
+            return Response.json({ id: 's-1', context: { node_id: 3, references: [], guidelines: [], connection_ids: [] } });
+        }
+
+        if (url.pathname === '/rest/devtools/nodes/3/packages') {
+            return Response.json({ items: [{ name: 'corporate' }] });
+        }
+
+        if (url.pathname === '/rest/devtools/packages/corporate/files-internal') {
+            return Response.json({ items: [{ path: 'guidelines/20_seo-basics.md', name: '20_seo-basics.md', directory: false, size: 0, lastModified: 0 }] });
+        }
+
+        return Response.json({ items: [], next_cursor: null });
+    }));
+}
+
+describe('InteractionCard guidelines', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('names an option\'s guideline the session\'s node no longer has as removed or renamed', async () => {
+        stubGuidelines();
+        renderCard(interaction({
+            kind: 'choice',
+            prompt: 'Which guideline should I edit?',
+            options: [
+                { id: 'o-1', label: 'SEO', ref: { type: 'guideline', id: 'corporate/seo-basics', label: 'SEO basics' } },
+                { id: 'o-2', label: 'Tone', ref: { type: 'guideline', id: 'corporate/tone-of-voice', label: 'Tone of voice' } },
+            ],
+        }));
+
+        expect(await screen.findByText('Tone of voice was removed or renamed')).toBeInTheDocument();
+        expect(screen.getByText('SEO basics')).toBeInTheDocument();
+    });
+});

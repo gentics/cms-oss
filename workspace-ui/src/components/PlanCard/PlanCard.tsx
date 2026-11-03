@@ -95,19 +95,21 @@ function moved(rows: PlanRow[], index: number, by: -1 | 1): PlanRow[] {
 }
 
 // The object a row concerns: what it created once written, else what it will create, else its target.
-function ObjectToken({ row }: { row: PlanRow }) {
+// In the session `sessionId`, so that a guideline its node no longer has shows as such (`RefToken`).
+function ObjectToken({ row, sessionId }: { row: PlanRow; sessionId: string }) {
     if (row.created) {
-        return <span><RefToken value={row.created} /></span>;
+        return <span><RefToken value={row.created} sessionId={sessionId} /></span>;
     }
 
     if (row.creates) {
         return <span><PlannedToken value={row.creates} /></span>;
     }
 
-    return row.target ? <span><RefToken value={row.target} /></span> : null;
+    return row.target ? <span><RefToken value={row.target} sessionId={sessionId} /></span> : null;
 }
 
 interface PlanEditorProps {
+    sessionId: string;
     rows: PlanRow[];
     onChange: (update: (rows: PlanRow[]) => PlanRow[]) => void;
     onDone: () => void;
@@ -130,7 +132,7 @@ interface PlanEditorProps {
  * A sub-step (`parent`, rc.5 addition) is read-only under its step: it moves with it, is removed and
  * restored with it, and a step added after it goes after its last sub-step.
  */
-function PlanEditor({ rows, onChange: setRows, onDone, onCancel, invalid }: PlanEditorProps) {
+function PlanEditor({ sessionId, rows, onChange: setRows, onDone, onCancel, invalid }: PlanEditorProps) {
     const { t } = useTranslation();
     // The row whose field gets the focus after the next render: the first editable at the start, then
     // the one added, moved or before the one removed.
@@ -259,7 +261,7 @@ function PlanEditor({ rows, onChange: setRows, onDone, onCancel, invalid }: Plan
                                     <span className={styles.marker} aria-hidden><MinusIcon size={11} strokeWidth={2.4} /></span>
                                     <span className={styles.text}>
                                         <span className={styles.label}>{row.label}</span>
-                                        <ObjectToken row={row} />
+                                        <ObjectToken row={row} sessionId={sessionId} />
                                     </span>
                                     <Button variant="ghost" size="sm" disabled={!canRestore(index)} onClick={() => restore(index)}>
                                         <Undo2Icon size={14} />
@@ -293,7 +295,7 @@ function PlanEditor({ rows, onChange: setRows, onDone, onCancel, invalid }: Plan
                                         onChange={(event) => update(row.key, event.target.value)}
                                         onKeyDown={(event) => handleKeyDown(event, index)}
                                     />
-                                    <ObjectToken row={row} />
+                                    <ObjectToken row={row} sessionId={sessionId} />
                                     {invalidKey && <span className={styles.problem}>{t(invalidKey)}</span>}
                                 </span>
                                 <span className={styles.rowActions}>
@@ -464,7 +466,7 @@ export function PlanCard({ plan, sessionId, adjustment }: PlanCardProps) {
                             <span className={styles.change}>{t(`parts.plan.change.${row.change}`)}</span>
                         )}
                     </span>
-                    <ObjectToken row={row} />
+                    <ObjectToken row={row} sessionId={sessionId} />
                     {item?.detail && <span className={styles.detail}>{item.detail}</span>}
                     {invalidKey && (
                         <span className={styles.problem}>
@@ -491,7 +493,7 @@ export function PlanCard({ plan, sessionId, adjustment }: PlanCardProps) {
             <GlanceTiles plan={plan} />
             {needsYou && <NeedsYou interaction={needsYou} />}
             {draft
-                ? <PlanEditor rows={draft} invalid={invalid} onChange={adjustment.updateDraft} onDone={adjustment.finish} onCancel={adjustment.cancel} />
+                ? <PlanEditor sessionId={sessionId} rows={draft} invalid={invalid} onChange={adjustment.updateDraft} onDone={adjustment.finish} onCancel={adjustment.cancel} />
                 : (
                     <ol className={styles.items}>
                         {listedBlocks.map((block, index) => {

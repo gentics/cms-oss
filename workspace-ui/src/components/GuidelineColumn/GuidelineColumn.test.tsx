@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { useGuidelineDraftStore } from '@/store/useGuidelineDraftStore';
 import { createWrapper } from '@/test/renderWithProviders';
 
 import { GuidelineColumn } from './GuidelineColumn';
@@ -61,12 +62,22 @@ async function savedTexts(fetchMock: ReturnType<typeof stubRoutes>): Promise<str
 }
 
 function renderColumn(status: PlanStatus, slug = 'corporate/seo-basics') {
-    render(<GuidelineColumn sessionId="s-1" plan={plan(status)} slug={slug} />, { wrapper: createWrapper() });
+    return render(<GuidelineColumn sessionId="s-1" plan={plan(status)} slug={slug} />, { wrapper: createWrapper() });
+}
+
+// Whether the page would ask before it goes (`beforeunload` cancelled).
+function asksBeforeLeaving(): boolean {
+    const event = new Event('beforeunload', { cancelable: true });
+
+    window.dispatchEvent(event);
+
+    return event.defaultPrevented;
 }
 
 describe('GuidelineColumn', () => {
     beforeEach(() => {
         useErrorNotificationStore.setState({ errors: [] });
+        useGuidelineDraftStore.setState({ drafts: {} });
     });
 
     afterEach(() => {
@@ -122,5 +133,38 @@ describe('GuidelineColumn', () => {
 
         expect(await screen.findByText('tone-of-voice was removed or renamed')).toBeInTheDocument();
         expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+
+    it('keeps changes not saved yet when the column goes and comes back', async () => {
+        const user = userEvent.setup();
+
+        stubRoutes();
+        const { unmount } = renderColumn('done');
+
+        await user.type(await screen.findByRole('textbox', { name: 'Guideline 20_seo-basics.md' }), ' draft');
+        unmount();
+        renderColumn('done');
+
+        expect(await screen.findByRole('textbox', { name: 'Guideline 20_seo-basics.md' })).toHaveValue('# SEO basics draft');
+        expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    });
+
+    it('asks before the page goes only while there are changes not saved yet', async () => {
+        const user = userEvent.setup();
+
+        stubRoutes();
+        renderColumn('done');
+
+        const field = await screen.findByRole('textbox', { name: 'Guideline 20_seo-basics.md' });
+
+        expect(asksBeforeLeaving()).toBe(false);
+
+        await user.type(field, ' draft');
+
+        expect(asksBeforeLeaving()).toBe(true);
+
+        await user.click(screen.getByRole('button', { name: 'Undo changes' }));
+
+        expect(asksBeforeLeaving()).toBe(false);
     });
 });

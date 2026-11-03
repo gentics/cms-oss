@@ -352,6 +352,47 @@ describe('SessionPage', () => {
         expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view&real=view&tagmarkers=true');
     });
 
+    it('edits the guideline in the right column, in place of a preview, while the shown plan works on one', async () => {
+        // The session on node 3, whose package `corporate` has `20_seo-basics.md`; every list is empty.
+        vi.stubGlobal('fetch', withEmptySessionList(vi.fn<typeof fetch>(async (input) => {
+            const url = new URL(String(input), 'http://localhost');
+
+            if (url.pathname === '/rest/proxy/genaix/sessions/s-1') {
+                return Response.json({ id: 's-1', context: { node_id: 3, references: [], guidelines: [], connection_ids: [] } });
+            }
+
+            if (url.pathname === '/rest/devtools/nodes/3/packages') {
+                return Response.json({ items: [{ name: 'corporate' }] });
+            }
+
+            if (url.pathname === '/rest/devtools/packages/corporate/files-internal') {
+                return Response.json({ items: [{ path: 'guidelines/20_seo-basics.md', name: '20_seo-basics.md', directory: false, size: 0, lastModified: 0 }] });
+            }
+
+            if (url.pathname === '/rest/devtools/packages/corporate/files-internal/content') {
+                return new Response('# SEO basics', { headers: { 'Content-Type': 'text/markdown' } });
+            }
+
+            return Response.json({ items: [], next_cursor: null });
+        })));
+        await renderComposer();
+
+        const plan: Plan = {
+            id: 'p-1',
+            workflows: [{ id: 'content_edit', version: '1.0.0' }],
+            status: 'proposed',
+            version: 1,
+            summary: 'Sharpen the SEO guideline',
+            items: [{ id: 'p1', label: 'Edit the guideline', kind: 'update', workflow: 'content_edit', status: 'pending', target: { type: 'guideline', id: 'corporate/seo-basics' } }],
+        };
+
+        act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-14T14:00:00Z', session_id: 's-1', plan_id: 'p-1', type: 'plan.updated', plan } as GenaixEvent));
+
+        expect(await screen.findByRole('textbox', { name: 'Guideline 20_seo-basics.md' })).toHaveValue('# SEO basics');
+        expect(screen.getByRole('button', { name: 'Hide the right column' })).toBeInTheDocument();
+        expect(screen.queryByTitle('Preview of the page in the CMS')).not.toBeInTheDocument();
+    });
+
     describe('answering the question the run waits on', () => {
         // A run that waits on an `ask_user` question expiring `expiresAt`, by default in 10 minutes.
         function waitOnQuestion(expiresAt = new Date(Date.now() + 10 * 60_000).toISOString()) {

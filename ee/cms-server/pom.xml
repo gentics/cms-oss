@@ -7,6 +7,7 @@
         <groupId>com.gentics</groupId>
         <artifactId>cms-oss</artifactId>
         <version>9.0.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>com.gentics.cms</groupId>
@@ -20,6 +21,12 @@
 	</organization>
 	<name>Gentics CMS Enterprise Server</name>
 	<description>Gentics CMS Enterprise Server</description>
+	<licenses>
+		<license>
+			<name>BUSL-1.1</name>
+			<url>https://github.com/gentics/cms-oss/blob/dev/ee/LICENSE</url>
+		</license>
+	</licenses>
 	<url>http://www.gentics.com</url>
 
 	<build>
@@ -64,6 +71,8 @@
 									<type>zip</type>
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.build.directory}/classes/webroot/tools</outputDirectory>
+									<!-- The link-checker tool is part of cms-oss-server -->
+									<includes>form-translations/**</includes>
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.gentics.cms</groupId>
@@ -141,7 +150,7 @@
 							<goal>java-transform</goal>
 						</goals>
 						<configuration>
-							<reportFile>../target/dependency-updates-aggregate-report.xml</reportFile>
+							<reportFile>../../target/dependency-updates-aggregate-report.xml</reportFile>
 							<componentName>CMS EE</componentName>
 							<moduleName>Java Backend</moduleName>
 							<staticInput>${project.basedir}/src/static_dependencies.json</staticInput>

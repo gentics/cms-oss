@@ -4,7 +4,7 @@ This directory contains all the required files and configurations to start the r
 
 ## Managing Services
 
-Both variants use the image `gentics/cms-oss`. To start the services for the OSS Tests, simply run:
+To start the services for the OSS Tests, simply run:
 
 ```sh
 docker compose up -d --wait

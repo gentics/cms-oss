@@ -20,6 +20,11 @@ def runJUnitTests              = true
 
 def imageHost                  = "push.docker.gentics.com"
 def imageRepo                  = "docker-snapshots"
+// Docker images: gentics/cms-oss contains the Apache licensed modules, gentics/cms additionally the modules from ee/
+def dockerImages               = [
+    [name: "gentics/cms-oss", dir: "cms-oss-server"],
+    [name: "gentics/cms",     dir: "ee/cms-server"],
+]
 def helmRepository             = helmRepositoryProd;
 
 pipeline {
@@ -256,7 +261,7 @@ spec:
                         mvnArguments += skipDBs
                         if (params.singleTest) {
                             mvnGoal = "test"
-                            mvnProjects = " -am -pl 'cms-core,cms-oss-server,cms-cluster/cms-cluster-core,cms-linkchecker/cms-linkchecker-core,cms-search/cms-search-core,cms-translation/cms-translation-core,cms-server,ee/cms-forms/cms-forms-core,ee/cms-multichannelling/cms-multichannelling-core,ee/cms-contentstaging/cms-contentstaging-core'"
+                            mvnProjects = " -am -pl 'cms-core,cms-oss-server,cms-cluster/cms-cluster-core,cms-linkchecker/cms-linkchecker-core,cms-search/cms-search-core,cms-translation/cms-translation-core,ee/cms-server,ee/cms-forms/cms-forms-core,ee/cms-multichannelling/cms-multichannelling-core,ee/cms-contentstaging/cms-contentstaging-core'"
                             mvnArguments += "  -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest
                         }
                     } else {
@@ -384,7 +389,7 @@ spec:
                                 junit testResults: "cms-linkchecker/cms-linkchecker-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit testResults: "cms-search/cms-search-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit testResults: "cms-translation/cms-translation-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
-                                junit testResults: "cms-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "ee/cms-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit testResults: "ee/cms-forms/cms-forms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit testResults: "ee/cms-multichannelling/cms-multichannelling-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit testResults: "ee/cms-contentstaging/cms-contentstaging-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
@@ -412,20 +417,23 @@ spec:
                     if (params.runReleaseBuild) {
                         imageRepo = "docker-products"
                     }
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
-                    def imageNameWithTag = "${imageName}:${branchName}"
-
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
-                    sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
 
-                    if (!params.omitScan) {
-                        scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
+                    for (dockerImage in dockerImages) {
+                        def imageName = "${imageHost}/${imageRepo}/${dockerImage.name}"
+                        def imageNameWithTag = "${imageName}:${branchName}"
+
+                        sh "cd ${dockerImage.dir} ; docker build --network=host -t ${imageNameWithTag} ."
+
+                        if (!params.omitScan) {
+                            scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
+                        }
+                        if (tagName != null) {
+                            String dockerImageVersionTag = imageName + ":" + tagName
+                            sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
+                        }
                     }
-                    if (tagName != null) {
-                        String dockerImageVersionTag = imageName + ":" + tagName
-                        sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
-                    } 
                 }
             }
 		}
@@ -444,19 +452,21 @@ spec:
 
             steps {
                 script {
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
-                    def imageNameWithTag = "${imageName}:${branchName}"
-
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
 
-                    // Push released image
-                    if (tagName != null) {
-                        String dockerImageVersionTag = imageName + ":" + tagName
-                        sh "docker push " + dockerImageVersionTag
-                    } else if (params.deploy || params.deployTesting) {
-                        // push snapshot build image
-                        sh "docker push ${imageNameWithTag}"
+                    for (dockerImage in dockerImages) {
+                        def imageName = "${imageHost}/${imageRepo}/${dockerImage.name}"
+                        def imageNameWithTag = "${imageName}:${branchName}"
+
+                        // Push released image
+                        if (tagName != null) {
+                            String dockerImageVersionTag = imageName + ":" + tagName
+                            sh "docker push " + dockerImageVersionTag
+                        } else if (params.deploy || params.deployTesting) {
+                            // push snapshot build image
+                            sh "docker push ${imageNameWithTag}"
+                        }
                     }
                 }
             }

@@ -15,6 +15,7 @@ The modules below `ee/` are:
 * `ee/cms-forms`
 * `ee/cms-keycloak`
 * `ee/cms-multichannelling`
+* `ee/cms-server`
 * `ee/formgen`
 
 The Maven artifacts of these modules declare the license `BUSL-1.1`, all other artifacts declare `Apache-2.0`.
@@ -23,11 +24,11 @@ The Maven artifacts of these modules declare the license `BUSL-1.1`, all other a
 
 | Parameter | Value |
 |-----------|-------|
-| Licensor | `<<LICENSOR>>` |
-| Licensed Work | `<<LICENSED_WORK>>` |
-| Additional Use Grant | `<<ADDITIONAL_USE_GRANT>>` |
+| Licensor | Gentics Software GmbH |
+| Licensed Work | Everything under the folder `ee/` of Gentics CMS |
+| Additional Use Grant | None |
 | Change Date | `<<CHANGE_DATE>>` |
-| Change License | `<<CHANGE_LICENSE>>` |
+| Change License | Apache-2.0 |
 
 ## Third-party software
 

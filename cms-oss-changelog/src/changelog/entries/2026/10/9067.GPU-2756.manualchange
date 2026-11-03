@@ -5,4 +5,4 @@ The license check has been removed, together with the license management in the 
 * The support login with RSA tokens has been removed; the support login with JWT is still available.
 * The permission "License management" has been removed.
 
-The Docker image @gentics/cms-oss@ now contains the modules from the folder @ee/@ (Business Source License 1.1).
+There are two Docker images: @gentics/cms-oss@ contains the modules under the Apache License 2.0, now including Clustering, Link Checker, Elasticsearch and Automatic Translation; @gentics/cms@ additionally contains the modules from the folder @ee/@ (Business Source License 1.1).

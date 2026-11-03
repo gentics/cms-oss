@@ -13,8 +13,11 @@ import java.util.Collection;
 
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -138,13 +141,41 @@ public class PackageResourceFilesRoutingTest {
 	public void testSaveFile() throws Exception {
 		try (LoggedInClient client = restContext.client("system", PASSWORD);
 				FormDataMultiPart multiPart = new FormDataMultiPart()) {
-			multiPart.field("file", "new content");
-			Response response = packageTarget(client).path(mode).path("sub/new.txt").request()
+			multiPart.bodyPart(filePart("new.txt", "new content"));
+			multiPart.bodyPart(filePart("other.txt", "other content"));
+			Response response = packageTarget(client).path(mode).path("sub").request()
 					.post(Entity.entity(multiPart, multiPart.getMediaType()));
 			assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
 		}
 
 		assertThat(new String(Files.readAllBytes(new File(filesRoot, "sub/new.txt").toPath()), StandardCharsets.UTF_8)).isEqualTo("new content");
+		assertThat(new String(Files.readAllBytes(new File(filesRoot, "sub/other.txt").toPath()), StandardCharsets.UTF_8)).isEqualTo("other content");
+	}
+
+	@Test
+	public void testSaveFileIntoRoot() throws Exception {
+		try (LoggedInClient client = restContext.client("system", PASSWORD);
+				FormDataMultiPart multiPart = new FormDataMultiPart()) {
+			multiPart.bodyPart(filePart("root.txt", "root content"));
+			Response response = packageTarget(client).path(mode + "/").request()
+					.post(Entity.entity(multiPart, multiPart.getMediaType()));
+			assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+		}
+
+		assertThat(new String(Files.readAllBytes(new File(filesRoot, "root.txt").toPath()), StandardCharsets.UTF_8)).isEqualTo("root content");
+	}
+
+	@Test
+	public void testSaveFileWithoutFilename() throws Exception {
+		try (LoggedInClient client = restContext.client("system", PASSWORD);
+				FormDataMultiPart multiPart = new FormDataMultiPart()) {
+			multiPart.field("file", "new content");
+			Response response = packageTarget(client).path(mode).path("sub").request()
+					.post(Entity.entity(multiPart, multiPart.getMediaType()));
+			assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+		}
+
+		assertThat(new File(filesRoot, "sub")).doesNotExist();
 	}
 
 	@Test
@@ -228,6 +259,17 @@ public class PackageResourceFilesRoutingTest {
 	private void assertStorageNotFound(Response response, String unknownMode) {
 		assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 		assertThat(response.readEntity(GenericResponse.class).getResponseInfo().getResponseMessage()).contains("'" + unknownMode + "'");
+	}
+
+	/**
+	 * Create a body part containing a file with the given filename
+	 * @param filename filename
+	 * @param content file content
+	 * @return body part
+	 */
+	private FormDataBodyPart filePart(String filename, String content) {
+		return new FormDataBodyPart(FormDataContentDisposition.name("file").fileName(filename).build(), content,
+				MediaType.APPLICATION_OCTET_STREAM_TYPE);
 	}
 
 	private void writeFile(String relativePath, String content) throws IOException {

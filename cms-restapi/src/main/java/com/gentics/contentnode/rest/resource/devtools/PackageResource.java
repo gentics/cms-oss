@@ -223,11 +223,15 @@ public interface PackageResource {
 	Response getFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path) throws Exception;
 
 	/**
-	 * Create or update the file at the given path in the package's given files storage.
+	 * Create or update files in the given directory of the package's given files storage.
+	 * Every body part of the multipart request is one file, which is stored in the directory under the filename
+	 * of the body part's content disposition. The name of the body part is ignored.
+	 * Files are uploaded into the files storage root by posting to the path with a trailing slash
+	 * (e.g. <code>/devtools/packages/{name}/files/</code>).
 	 * @param name Package name
 	 * @param mode files storage, either "files" or "files-internal"
-	 * @param path file path, relative to the files storage root, at which to store the uploaded content
-	 * @param multiPart multipart request containing the file data
+	 * @param path directory path, relative to the files storage root, into which the uploaded files are stored (created if it does not exist)
+	 * @param multiPart multipart request containing the files
 	 * @return response
 	 * @throws Exception
 	 */
@@ -235,8 +239,9 @@ public interface PackageResource {
 	@Path("/packages/{name}/{mode}/{path: .*}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@StatusCodes({
-		@ResponseCode(code = 201, condition = "The file was created or updated."),
-		@ResponseCode(code = 400, condition = "The given path is invalid, or no file data was sent."),
+		@ResponseCode(code = 201, condition = "The files were created or updated."),
+		@ResponseCode(code = 400, condition = "The given path is invalid or is a file, no file data was sent, a body part has no filename, "
+				+ "or a filename contains a path, is used more than once or is an existing directory."),
 		@ResponseCode(code = 404, condition = "Package {name} or files storage {mode} does not exist.")
 	})
 	Response saveFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path, MultiPart multiPart) throws Exception;

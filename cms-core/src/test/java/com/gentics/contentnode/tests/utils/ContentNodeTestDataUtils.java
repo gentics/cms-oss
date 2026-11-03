@@ -2317,16 +2317,19 @@ public class ContentNodeTestDataUtils {
 	}
 
 	/**
-	 * Create a MultiPart object with a single "file" body part, for endpoints that only need the raw uploaded
-	 * content (e.g. PackageResource.saveFile).
+	 * Create a MultiPart object with one body part per file, for PackageResource.saveFile.
 	 * You must call the cleanup() method on the returned object yourself.
-	 * @param content file content
-	 * @return a multi part object with a single "file" body part
-	 * @throws ParseException
+	 * @param contentByFilename map of filenames to file contents
+	 * @return a multi part object with one body part per file, carrying the filename in its content disposition
 	 */
-	public static MultiPart createPackageFileUploadMultiPart(String content) throws ParseException {
-		return new MultiPart().bodyPart(createformDataBodyPart("form-data; name=\"file\"; filename=\"file\"", content,
-				MediaType.APPLICATION_OCTET_STREAM_TYPE));
+	public static MultiPart createPackageFileUploadMultiPart(Map<String, String> contentByFilename) {
+		MultiPart multiPart = new MultiPart();
+		for (Map.Entry<String, String> entry : contentByFilename.entrySet()) {
+			// the filename is set with the builder (not parsed from a header), so that it is used unchanged
+			multiPart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("file").fileName(entry.getKey()).build(),
+					entry.getValue(), MediaType.APPLICATION_OCTET_STREAM_TYPE));
+		}
+		return multiPart;
 	}
 
 	/**

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -454,15 +455,22 @@ public class PackageResourceImpl implements PackageResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			MainPackageSynchronizer packageSynchronizer = getPackage(name);
 			java.nio.file.Path base = getFilesRoot(packageSynchronizer, mode);
-			java.nio.file.Path target = resolveFilesPath(base, path);
+			java.nio.file.Path dir = resolveFilesPath(base, path);
 
-			if (StringUtils.isBlank(path) || Files.isDirectory(target)) {
-				throw new InvalidRequestException(I18NHelper.get("package.files.not_a_file", path));
-			}
+			try {
+				if (Files.exists(dir) && !Files.isDirectory(dir)) {
+					throw new InvalidRequestException(I18NHelper.get("package.files.not_a_directory", path));
+				}
 
-			try (InputStream inputStream = extractUploadedInputStream(multiPart)) {
-				Files.createDirectories(target.getParent());
-				Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+				// validate all uploaded files before writing any of them
+				Map<java.nio.file.Path, BodyPart> uploadedFiles = getUploadedFiles(dir, multiPart);
+
+				Files.createDirectories(dir);
+				for (Map.Entry<java.nio.file.Path, BodyPart> entry : uploadedFiles.entrySet()) {
+					try (InputStream inputStream = getInputStream(entry.getValue())) {
+						Files.copy(inputStream, entry.getKey(), StandardCopyOption.REPLACE_EXISTING);
+					}
+				}
 			} catch (IOException e) {
 				throw new NodeException(e);
 			} finally {
@@ -556,24 +564,53 @@ public class PackageResourceImpl implements PackageResource {
 	}
 
 	/**
-	 * Extract the uploaded file content from the given multipart request. The request is expected to contain a
-	 * single relevant body part, named "file" if there is more than one body part.
+	 * Get the uploaded files from the given multipart request. Every body part is one file, which is stored in the
+	 * given directory under the filename of the body part's content disposition (the name of the body part is ignored).
+	 * All body parts are validated, so that nothing needs to be written, if the request is invalid.
+	 * @param dir directory into which the files are uploaded
 	 * @param multiPart multipart request
-	 * @return input stream with the uploaded content
-	 * @throws NodeException if no file data could be found in the request
+	 * @return map of target paths to the body parts containing the file data, in the order of the request
+	 * @throws NodeException if the request contains no body parts, a body part has no filename, a filename is
+	 *         invalid or used more than once, or a target path is a directory
 	 */
-	private InputStream extractUploadedInputStream(MultiPart multiPart) throws NodeException {
+	private Map<java.nio.file.Path, BodyPart> getUploadedFiles(java.nio.file.Path dir, MultiPart multiPart) throws NodeException {
 		List<BodyPart> bodyParts = multiPart.getBodyParts();
-		BodyPart filePart = bodyParts.stream()
-				.filter(part -> part.getContentDisposition() != null
-						&& "file".equals(part.getContentDisposition().getParameters().get("name")))
-				.findFirst()
-				.orElse(bodyParts.size() == 1 ? bodyParts.get(0) : null);
+		if (bodyParts.isEmpty()) {
+			throw new InvalidRequestException(I18NHelper.get("package.files.no_data"));
+		}
 
+		Map<java.nio.file.Path, BodyPart> uploadedFiles = new LinkedHashMap<>();
+		for (BodyPart part : bodyParts) {
+			String filename = part.getContentDisposition() != null ? part.getContentDisposition().getFileName() : null;
+			if (StringUtils.isBlank(filename)) {
+				throw new InvalidRequestException(I18NHelper.get("package.files.no_filename"));
+			}
+			if (StringUtils.containsAny(filename, '/', '\\') || ".".equals(filename) || "..".equals(filename)) {
+				throw new InvalidRequestException(I18NHelper.get("package.files.invalid_filename", filename));
+			}
+
+			java.nio.file.Path target = dir.resolve(filename);
+			if (Files.isDirectory(target)) {
+				throw new InvalidRequestException(I18NHelper.get("package.files.not_a_file", filename));
+			}
+			if (uploadedFiles.putIfAbsent(target, part) != null) {
+				throw new InvalidRequestException(I18NHelper.get("package.files.duplicate_filename", filename));
+			}
+		}
+		return uploadedFiles;
+	}
+
+	/**
+	 * Get the file content of the given body part
+	 * @param part body part
+	 * @return input stream with the uploaded content
+	 * @throws NodeException if the body part does not contain file data
+	 */
+	private InputStream getInputStream(BodyPart part) throws NodeException {
 		// When the request was actually parsed from a real HTTP multipart body, the entity is a BodyPartEntity.
 		// When the MultiPart was constructed directly in memory (e.g. in tests), the entity may just be the
 		// raw value that was passed in, matching the same fallback used in FileResourceImpl.
-		Object entity = filePart != null ? filePart.getEntity() : null;
+		Object entity = part.getEntity();
 		if (entity instanceof BodyPartEntity) {
 			return ((BodyPartEntity) entity).getInputStream();
 		} else if (entity instanceof String) {

@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.devtools;
 
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThatThrownBy;
 import static org.junit.runners.Parameterized.Parameters;
 
 import java.io.File;
@@ -9,7 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.ws.rs.core.Response;
 
@@ -200,9 +203,9 @@ public class PackageResourceFilesTest {
 
 	@Test
 	public void testSaveFileCreate() throws Exception {
-		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("hello");
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("new.txt", "hello"));
 		try (Trx trx = new Trx()) {
-			Response response = resource.saveFile(PACKAGE_NAME, mode, "sub/new.txt", multiPart);
+			Response response = resource.saveFile(PACKAGE_NAME, mode, "sub", multiPart);
 			assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
 			trx.success();
 		}
@@ -216,9 +219,9 @@ public class PackageResourceFilesTest {
 	public void testSaveFileOverwrite() throws Exception {
 		writeFile("existing.txt", "old content");
 
-		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("new content");
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("existing.txt", "new content"));
 		try (Trx trx = new Trx()) {
-			Response response = resource.saveFile(PACKAGE_NAME, mode, "existing.txt", multiPart);
+			Response response = resource.saveFile(PACKAGE_NAME, mode, "", multiPart);
 			assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
 			trx.success();
 		}
@@ -227,32 +230,122 @@ public class PackageResourceFilesTest {
 		assertThat(new String(Files.readAllBytes(savedFile.toPath()), StandardCharsets.UTF_8)).isEqualTo("new content");
 	}
 
-	@Test(expected = InvalidRequestException.class)
-	public void testSaveFilePathIsDirectory() throws Exception {
-		Files.createDirectories(filesRoot.toPath().resolve("sub"));
-		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("data");
+	@Test
+	public void testSaveMultipleFiles() throws Exception {
+		Map<String, String> files = new LinkedHashMap<>();
+		files.put("a.txt", "content a");
+		files.put("b.txt", "content b");
+		files.put("c.bin", "content c");
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(files);
 		try (Trx trx = new Trx()) {
-			resource.saveFile(PACKAGE_NAME, mode, "sub", multiPart);
+			Response response = resource.saveFile(PACKAGE_NAME, mode, "sub/deeper", multiPart);
+			assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+			trx.success();
+		}
+
+		for (Map.Entry<String, String> entry : files.entrySet()) {
+			File savedFile = new File(filesRoot, "sub/deeper/" + entry.getKey());
+			assertThat(new String(Files.readAllBytes(savedFile.toPath()), StandardCharsets.UTF_8)).isEqualTo(entry.getValue());
+		}
+	}
+
+	@Test(expected = InvalidRequestException.class)
+	public void testSaveFilePathIsFile() throws Exception {
+		writeFile("a.txt", "a");
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("new.txt", "data"));
+		try (Trx trx = new Trx()) {
+			resource.saveFile(PACKAGE_NAME, mode, "a.txt", multiPart);
 			trx.success();
 		}
 	}
 
 	@Test(expected = InvalidRequestException.class)
 	public void testSaveFilePathTraversal() throws Exception {
-		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("data");
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("passwd", "data"));
 		try (Trx trx = new Trx()) {
-			resource.saveFile(PACKAGE_NAME, mode, "../../etc/passwd", multiPart);
+			resource.saveFile(PACKAGE_NAME, mode, "../../etc", multiPart);
 			trx.success();
 		}
 	}
 
 	@Test(expected = EntityNotFoundException.class)
 	public void testSaveFileMissingPackage() throws Exception {
-		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart("data");
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("a.txt", "data"));
 		try (Trx trx = new Trx()) {
-			resource.saveFile("doesnotexist", mode, "a.txt", multiPart);
+			resource.saveFile("doesnotexist", mode, "", multiPart);
 			trx.success();
 		}
+	}
+
+	@Test
+	public void testSaveFileNoBodyParts() throws Exception {
+		assertSaveRejected("", new MultiPart());
+	}
+
+	@Test
+	public void testSaveFileWithoutFilename() throws Exception {
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("valid.txt", "data"))
+				.bodyPart(ContentNodeTestDataUtils.createformDataBodyPart("form-data; name=\"description\"", "no file", null));
+		assertSaveRejected("", multiPart);
+	}
+
+	@Test
+	public void testSaveFileFilenameWithSlash() throws Exception {
+		assertSaveRejected("", uploadWithInvalidFile("sub/b.txt"));
+	}
+
+	@Test
+	public void testSaveFileFilenameWithBackslash() throws Exception {
+		assertSaveRejected("", uploadWithInvalidFile("sub\\b.txt"));
+	}
+
+	@Test
+	public void testSaveFileFilenameDotDot() throws Exception {
+		assertSaveRejected("", uploadWithInvalidFile(".."));
+	}
+
+	@Test
+	public void testSaveFileDuplicateFilename() throws Exception {
+		MultiPart multiPart = ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("a.txt", "first"))
+				.bodyPart(ContentNodeTestDataUtils.createPackageFileUploadMultiPart(Map.of("a.txt", "second")).getBodyParts().get(0));
+		assertSaveRejected("", multiPart);
+	}
+
+	@Test
+	public void testSaveFileFilenameIsDirectory() throws Exception {
+		Files.createDirectories(filesRoot.toPath().resolve("sub"));
+		Map<String, String> files = new LinkedHashMap<>();
+		files.put("valid.txt", "data");
+		files.put("sub", "data");
+		assertSaveRejected("", ContentNodeTestDataUtils.createPackageFileUploadMultiPart(files));
+	}
+
+	/**
+	 * Create an upload with a valid file, followed by a file with the given (invalid) filename
+	 * @param invalidFilename invalid filename
+	 * @return multi part object
+	 */
+	private MultiPart uploadWithInvalidFile(String invalidFilename) {
+		Map<String, String> files = new LinkedHashMap<>();
+		files.put("valid.txt", "data");
+		files.put(invalidFilename, "data");
+		return ContentNodeTestDataUtils.createPackageFileUploadMultiPart(files);
+	}
+
+	/**
+	 * Assert that uploading the given multi part object into the given directory is rejected as invalid request and
+	 * that nothing is written into the files storage
+	 * @param path directory path
+	 * @param multiPart multi part object
+	 */
+	private void assertSaveRejected(String path, MultiPart multiPart) throws Exception {
+		try (Trx trx = new Trx()) {
+			assertThatThrownBy(() -> resource.saveFile(PACKAGE_NAME, mode, path, multiPart)).isInstanceOf(InvalidRequestException.class);
+			trx.success();
+		}
+
+		assertThat(new File(filesRoot, "valid.txt")).doesNotExist();
+		assertThat(new File(filesRoot, "a.txt")).doesNotExist();
 	}
 
 	@Test

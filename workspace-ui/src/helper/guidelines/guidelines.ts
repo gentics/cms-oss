@@ -3,9 +3,12 @@ import type { Plan } from '@/services/apiService/genaix/types';
 /** The folder of a devtools package's `files-internal` storage that holds its guidelines. */
 export const GUIDELINES_DIR = 'guidelines';
 
-// `<prio>_<name>.md` or `<prio>_<name>.default.md`; the first `_` ends the priority. A name never
-// starts with `.`, so `10_.default.md` is no guideline named `.default`.
-const FILE_NAME = /^(\d+)_([^.].*?)(\.default)?\.md$/;
+// An optional priority: digits and the first `_`, before the name.
+const PRIO = /^(\d+)_(.*)$/;
+
+// `<name>.md` or `<name>.default.md`. A name never starts with `.`, so `10_.default.md` is no guideline
+// named `.default`.
+const FILE_NAME = /^([^.].*?)(\.default)?\.md$/;
 
 const DEFAULT_SUFFIX = '.default';
 
@@ -15,11 +18,11 @@ export interface Guideline {
     slug: string;
     package: string;
     name: string;
-    /** The number before the first `_`; not part of the slug. */
-    prio: number;
+    /** The number before the first `_`, if the file name has one; not part of the slug. */
+    prio?: number;
     /** A default guideline applies to every session of the package's nodes; any other is added by the user. */
     isDefault: boolean;
-    /** The file in the package's `files-internal/guidelines/`, e.g. `10_tone-of-voice.default.md`. */
+    /** The file in the package's `files-internal/guidelines/`, e.g. `tone-of-voice.default.md` or `10_tone-of-voice.default.md`. */
     fileName: string;
 }
 
@@ -29,20 +32,29 @@ export function guidelineSlug(packageName: string, name: string, isDefault: bool
 }
 
 /**
- * The guideline that the file `fileName` (the last path segment, e.g. `10_tone-of-voice.default.md`) of
- * `packageName` is, or `undefined` for a file whose name does not follow `<prio>_<name>[.default].md`.
+ * The guideline that the file `fileName` (the last path segment, e.g. `tone-of-voice.default.md`) of
+ * `packageName` is, or `undefined` for a file whose name does not follow `[<prio>_]<name>[.default].md`.
+ * With a priority, the name is what follows it: `10_tone-of-voice.md` is `tone-of-voice`.
  */
 export function guidelineFromFile(packageName: string, fileName: string): Guideline | undefined {
-    const match = FILE_NAME.exec(fileName);
+    const [, prio, rest] = PRIO.exec(fileName) ?? [undefined, undefined, fileName];
+    const match = FILE_NAME.exec(rest!);
 
     if (!match) {
         return undefined;
     }
 
-    const [, prio, name, defaultSuffix] = match;
+    const [, name, defaultSuffix] = match;
     const isDefault = defaultSuffix !== undefined;
 
-    return { slug: guidelineSlug(packageName, name!, isDefault), package: packageName, name: name!, prio: Number(prio), isDefault, fileName };
+    return {
+        slug: guidelineSlug(packageName, name!, isDefault),
+        package: packageName,
+        name: name!,
+        ...(prio !== undefined && { prio: Number(prio) }),
+        isDefault,
+        fileName,
+    };
 }
 
 /** The path of a guideline's file in its package's `files-internal` storage. */
@@ -73,9 +85,15 @@ export function guidelineName(slug: string): string {
     return parseGuidelineSlug(slug)?.name ?? slug;
 }
 
-/** The guidelines by `prio`, lowest first, then by slug. */
+/**
+ * The guidelines by `prio`, lowest first, those without one after them, then by slug; of guidelines with
+ * the same slug (`10_seo.md` and `seo.md` in one package) the first only.
+ */
 export function sortGuidelines(guidelines: Guideline[]): Guideline[] {
-    return [...guidelines].sort((a, b) => a.prio - b.prio || a.slug.localeCompare(b.slug));
+    const byPrio = (guideline: Guideline) => guideline.prio ?? Number.POSITIVE_INFINITY;
+    const sorted = [...guidelines].sort((a, b) => byPrio(a) - byPrio(b) || a.slug.localeCompare(b.slug));
+
+    return sorted.filter((guideline, index) => sorted.findIndex(({ slug }) => slug === guideline.slug) === index);
 }
 
 /** The ids of `guidelines` that name no guideline in `known`: guidelines removed or renamed since. */

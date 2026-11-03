@@ -15,11 +15,13 @@ import {
     listCmsPackageInternalFiles,
     listCmsTemplates,
     loadCmsFolderNodeId,
+    loadCmsMasterNodeId,
     loadCmsPackageInternalFile,
     loadCmsPage,
     saveCmsPackageInternalFile,
     searchCmsItems,
 } from '@/services/cmsApiService/cmsApiService';
+import { HttpError } from '@/services/httpService/httpService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { guidelineDraftKey, useGuidelineDraftStore } from '@/store/useGuidelineDraftStore';
 
@@ -236,10 +238,24 @@ export function useCmsTemplates(folderId: number | undefined, nodeId: number | u
     });
 }
 
-// Every guideline of the node `nodeId`: the files in `files-internal/guidelines/` of each of its
-// packages that are named as guidelines (`guidelineFromFile`), by priority.
+// The packages of the node `nodeId`; a channel has none of its own (`405`), its master node's apply.
+async function listGuidelinePackages(nodeId: number, signal: AbortSignal) {
+    try {
+        return await listCmsNodePackages(nodeId, signal);
+    } catch (error) {
+        if (error instanceof HttpError && error.status === 405) {
+            return listCmsNodePackages(await loadCmsMasterNodeId(nodeId, signal), signal);
+        }
+
+        throw error;
+    }
+}
+
+// Every guideline of the node `nodeId` (of its master node for a channel): the files in
+// `files-internal/guidelines/` of each of its packages that are named as guidelines
+// (`guidelineFromFile`), by priority.
 async function listCmsGuidelines(nodeId: number, signal: AbortSignal): Promise<Guideline[]> {
-    const packages = await listCmsNodePackages(nodeId, signal);
+    const packages = await listGuidelinePackages(nodeId, signal);
     const perPackage = await Promise.all(packages.map(async ({ name }) => {
         const files = await listCmsPackageInternalFiles(name, GUIDELINES_DIR, signal);
 

@@ -31,9 +31,23 @@ describe('guidelineFromFile', () => {
         expect(guidelineFromFile('p', '5_press_release.md')).toMatchObject({ prio: 5, name: 'press_release', slug: 'p/press_release' });
     });
 
+    it('reads a guideline without a priority, which has the same slug as with one', () => {
+        expect(guidelineFromFile('corporate', 'tone-of-voice.default.md')).toEqual({
+            slug: 'corporate/tone-of-voice.default',
+            package: 'corporate',
+            name: 'tone-of-voice',
+            isDefault: true,
+            fileName: 'tone-of-voice.default.md',
+        });
+        expect(guidelineFromFile('corporate', 'seo-basics.md')).toMatchObject({ slug: 'corporate/seo-basics', isDefault: false });
+    });
+
+    it('takes what does not start with digits and _ as the name', () => {
+        expect(guidelineFromFile('p', 'a_tone-of-voice.md')).toMatchObject({ name: 'a_tone-of-voice', slug: 'p/a_tone-of-voice' });
+        expect(guidelineFromFile('p', 'a_tone-of-voice.md')).not.toHaveProperty('prio');
+    });
+
     it.each([
-        ['no priority', 'tone-of-voice.md'],
-        ['a priority that is no number', 'a_tone-of-voice.md'],
         ['no name', '10_.md'],
         ['no name before .default', '10_.default.md'],
         ['another extension', '10_tone-of-voice.txt'],
@@ -81,7 +95,14 @@ describe('guidelineName', () => {
     });
 });
 
-const guideline = (slug: string, prio: number): Guideline => ({ slug, package: 'p', name: slug, prio, isDefault: false, fileName: `${prio}_${slug}.md` });
+const guideline = (slug: string, prio?: number): Guideline => ({
+    slug,
+    package: 'p',
+    name: slug,
+    ...(prio !== undefined && { prio }),
+    isDefault: false,
+    fileName: prio === undefined ? `${slug}.md` : `${prio}_${slug}.md`,
+});
 
 describe('sortGuidelines', () => {
     it('sorts by priority, lowest first, then by slug, without changing the input', () => {
@@ -89,6 +110,18 @@ describe('sortGuidelines', () => {
 
         expect(sortGuidelines(input).map(({ slug }) => slug)).toEqual(['p/b', 'p/a', 'p/c']);
         expect(input.map(({ slug }) => slug)).toEqual(['p/c', 'p/b', 'p/a']);
+    });
+
+    it('puts the guidelines without a priority after the others, by slug', () => {
+        const input = [guideline('p/z'), guideline('p/c', 20), guideline('p/a')];
+
+        expect(sortGuidelines(input).map(({ slug }) => slug)).toEqual(['p/c', 'p/a', 'p/z']);
+    });
+
+    it('keeps the first of guidelines with the same slug', () => {
+        const input = [guideline('p/seo'), guideline('p/seo', 10)];
+
+        expect(sortGuidelines(input).map(({ fileName }) => fileName)).toEqual(['10_p/seo.md']);
     });
 });
 

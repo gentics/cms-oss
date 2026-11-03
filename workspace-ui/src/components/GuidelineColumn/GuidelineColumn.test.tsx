@@ -9,7 +9,9 @@ import { createWrapper } from '@/test/renderWithProviders';
 
 import { GuidelineColumn } from './GuidelineColumn';
 
-const FILE_URL = '/rest/devtools/packages/corporate/files-internal/content?path=guidelines%2F20_seo-basics.md';
+const FILE_URL = '/rest/devtools/packages/corporate/files-internal/guidelines/20_seo-basics.md';
+// Saving posts to the file's directory, the file named in the multipart part.
+const SAVE_URL = '/rest/devtools/packages/corporate/files-internal/guidelines/';
 
 function plan(status: PlanStatus): Plan {
     return {
@@ -42,8 +44,12 @@ function stubRoutes() {
             return Response.json({ items: [{ path: 'guidelines/20_seo-basics.md', name: '20_seo-basics.md', directory: false, size: 0, lastModified: 0 }] });
         }
 
-        if (url.pathname === '/rest/devtools/packages/corporate/files-internal/content') {
-            return init?.method === 'POST' ? new Response(null, { status: 201 }) : new Response('# SEO basics', { headers: { 'Content-Type': 'text/markdown' } });
+        if (init?.method === 'POST' && url.pathname === SAVE_URL) {
+            return new Response(null, { status: 201 });
+        }
+
+        if (url.pathname === FILE_URL) {
+            return new Response('# SEO basics', { headers: { 'Content-Type': 'text/markdown' } });
         }
 
         return Response.json({}, { status: 404 });
@@ -56,9 +62,15 @@ function stubRoutes() {
 
 // The text sent by every save, in order.
 async function savedTexts(fetchMock: ReturnType<typeof stubRoutes>): Promise<string[]> {
-    const saves = fetchMock.mock.calls.filter(([input, init]) => String(input) === FILE_URL && init?.method === 'POST');
+    const saves = fetchMock.mock.calls.filter(([input, init]) => String(input) === SAVE_URL && init?.method === 'POST');
 
-    return Promise.all(saves.map(([, init]) => ((init?.body as FormData).get('file') as Blob).text()));
+    return Promise.all(saves.map(([, init]) => {
+        const part = (init?.body as FormData).get('file') as File;
+
+        expect(part.name).toBe('20_seo-basics.md');
+
+        return part.text();
+    }));
 }
 
 function renderColumn(status: PlanStatus, slug = 'corporate/seo-basics') {

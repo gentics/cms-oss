@@ -445,7 +445,20 @@ export interface CmsPackage {
     name: string;
 }
 
-/** The devtools packages assigned to the node `nodeId`, all of them: `GET /rest/devtools/nodes/{nodeId}/packages`. */
+/**
+ * The master node of the node or channel `id`: `GET /rest/node/{id}`, its `masterNodeId`
+ * (`rest/model/Node.java`); the node itself if it names none.
+ */
+export async function loadCmsMasterNodeId(id: number, signal?: AbortSignal): Promise<number> {
+    const { node } = await httpRequest<{ node: { id: number; masterNodeId?: number } }>(`/rest/node/${id}`, { ...CMS_GET, signal });
+
+    return node.masterNodeId ?? node.id;
+}
+
+/**
+ * The devtools packages assigned to the node `nodeId`, all of them: `GET /rest/devtools/nodes/{nodeId}/packages`.
+ * Only a master node has packages; for a channel the CMS answers `405`.
+ */
 export async function listCmsNodePackages(nodeId: number, signal?: AbortSignal): Promise<CmsPackage[]> {
     const { items } = await httpRequest<{ items?: CmsPackage[] }>(`/rest/devtools/nodes/${nodeId}/packages`, { ...CMS_GET, signal });
 
@@ -465,9 +478,15 @@ export interface CmsPackageFile {
     lastModified: number;
 }
 
-// The `files-internal` routes of the package `packageName`, with `path` as the query.
-function packageFilesUrl(packageName: string, path: string, content: boolean): string {
-    return `/rest/devtools/packages/${encodeURIComponent(packageName)}/files-internal${content ? '/content' : ''}?${new URLSearchParams({ path })}`;
+// The `files-internal` storage of the package `packageName` (`rest/resource/devtools/PackageResource.java`).
+function packageFilesRoot(packageName: string): string {
+    return `/rest/devtools/packages/${encodeURIComponent(packageName)}/files-internal`;
+}
+
+// The route of the file or directory `path` of that storage, each segment encoded: the path is part of
+// the URL, `/` between its segments.
+function packageFileUrl(packageName: string, path: string): string {
+    return `${packageFilesRoot(packageName)}/${path.split('/').map(encodeURIComponent).join('/')}`;
 }
 
 /**
@@ -477,7 +496,8 @@ function packageFilesUrl(packageName: string, path: string, content: boolean): s
  */
 export async function listCmsPackageInternalFiles(packageName: string, path: string, signal?: AbortSignal): Promise<CmsPackageFile[]> {
     try {
-        const { items } = await httpRequest<{ items?: CmsPackageFile[] }>(packageFilesUrl(packageName, path, false), { ...CMS_GET, signal });
+        const url = `${packageFilesRoot(packageName)}?${new URLSearchParams({ path })}`;
+        const { items } = await httpRequest<{ items?: CmsPackageFile[] }>(url, { ...CMS_GET, signal });
 
         return items ?? [];
     } catch (error) {
@@ -489,9 +509,9 @@ export async function listCmsPackageInternalFiles(packageName: string, path: str
     }
 }
 
-/** The text of the file `path` in the package's `files-internal` storage: `GET …/files-internal/content?path=`. */
+/** The text of the file `path` in the package's `files-internal` storage: `GET …/files-internal/{path}`. */
 export async function loadCmsPackageInternalFile(packageName: string, path: string, signal?: AbortSignal): Promise<string> {
-    const url = packageFilesUrl(packageName, path, true);
+    const url = packageFileUrl(packageName, path);
     // The CMS answers the file as it is, with the type it guesses from the name; errors are JSON.
     const response = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/markdown, text/plain, */*' }, signal });
 
@@ -503,15 +523,19 @@ export async function loadCmsPackageInternalFile(packageName: string, path: stri
 }
 
 /**
- * Creates or replaces the file `path` in the package's `files-internal` storage with `text`:
- * `POST …/files-internal/content?path=` as multipart, the content in the part `file`. `201` without a body.
+ * Creates or replaces the file `path` in the package's `files-internal` storage with `text`: a multipart
+ * `POST` to the file's directory, `…/files-internal/{directory}/` (the storage's root with the trailing
+ * slash alone), the file named by its part's file name; the CMS creates the directory if need be. `201`
+ * without a body.
  */
 export async function saveCmsPackageInternalFile(packageName: string, path: string, text: string): Promise<void> {
-    const url = packageFilesUrl(packageName, path, true);
+    const segments = path.split('/');
+    const fileName = segments.pop() ?? path;
+    const url = `${packageFileUrl(packageName, segments.join('/'))}${segments.length > 0 ? '/' : ''}`;
     const body = new FormData();
 
-    // No `Content-Type` header: the browser adds the multipart boundary.
-    body.append('file', new Blob([text], { type: 'text/markdown' }), path.split('/').pop());
+    // No `Content-Type` header: the browser adds the multipart boundary. The CMS ignores the part's name.
+    body.append('file', new Blob([text], { type: 'text/markdown' }), fileName);
 
     const response = await fetch(url, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }, body });
 
@@ -520,7 +544,7 @@ export async function saveCmsPackageInternalFile(packageName: string, path: stri
     }
 }
 
-/** Deletes the file `path` from the package's `files-internal` storage: `DELETE …/files-internal/content?path=`, `204`. */
+/** Deletes the file `path` from the package's `files-internal` storage: `DELETE …/files-internal/{path}`, `204`. */
 export async function deleteCmsPackageInternalFile(packageName: string, path: string): Promise<void> {
-    await httpRequest<void>(packageFilesUrl(packageName, path, true), { ...CMS_GET, method: 'DELETE' });
+    await httpRequest<void>(packageFileUrl(packageName, path), { ...CMS_GET, method: 'DELETE' });
 }

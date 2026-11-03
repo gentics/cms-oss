@@ -369,7 +369,7 @@ describe('SessionPage', () => {
                 return Response.json({ items: [{ path: 'guidelines/20_seo-basics.md', name: '20_seo-basics.md', directory: false, size: 0, lastModified: 0 }] });
             }
 
-            if (url.pathname === '/rest/devtools/packages/corporate/files-internal/content') {
+            if (url.pathname === '/rest/devtools/packages/corporate/files-internal/guidelines/20_seo-basics.md') {
                 return new Response('# SEO basics', { headers: { 'Content-Type': 'text/markdown' } });
             }
 

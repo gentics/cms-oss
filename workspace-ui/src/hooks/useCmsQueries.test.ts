@@ -125,17 +125,26 @@ describe('useCmsGuidelines', () => {
 
     const entry = (name: string, directory = false) => ({ path: `guidelines/${name}`, name, directory, size: 0, lastModified: 0 });
 
-    // Two packages: `corporate` with guidelines, `legal` without a guidelines folder (404).
+    // Two packages of node 3: `corporate` with guidelines, `legal` without a guidelines folder (404).
+    // Node 7 is a channel of node 3, which has no packages of its own (405).
     function stubPackages() {
         const fetchMock = vi.fn<typeof fetch>(async (input) => {
             const url = new URL(String(input), 'http://app.test');
+
+            if (url.pathname === '/rest/devtools/nodes/7/packages') {
+                return Response.json({ messages: [] }, { status: 405 });
+            }
+
+            if (url.pathname === '/rest/node/7') {
+                return Response.json({ node: { id: 7, name: 'Channel', masterNodeId: 3 } });
+            }
 
             if (url.pathname === '/rest/devtools/nodes/3/packages') {
                 return Response.json({ items: [{ name: 'corporate' }, { name: 'legal' }] });
             }
 
             if (url.pathname === '/rest/devtools/packages/corporate/files-internal') {
-                return Response.json({ items: [entry('archive', true), entry('20_seo-basics.md'), entry('10_tone-of-voice.default.md'), entry('README.md')] });
+                return Response.json({ items: [entry('archive', true), entry('20_seo-basics.md'), entry('10_tone-of-voice.default.md'), entry('legal-notes.md'), entry('notes.txt')] });
             }
 
             return Response.json({ messages: [] }, { status: 404 });
@@ -151,11 +160,25 @@ describe('useCmsGuidelines', () => {
         const { result } = renderHook(() => useCmsGuidelines(3), { wrapper: createWrapper() });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
-        expect(result.current.data?.map(({ slug }) => slug)).toEqual(['corporate/tone-of-voice.default', 'corporate/seo-basics']);
+        // `legal-notes.md` has no priority: after those with one.
+        expect(result.current.data?.map(({ slug }) => slug)).toEqual(['corporate/tone-of-voice.default', 'corporate/seo-basics', 'corporate/legal-notes']);
         expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([
             '/rest/devtools/nodes/3/packages',
             '/rest/devtools/packages/corporate/files-internal?path=guidelines',
             '/rest/devtools/packages/legal/files-internal?path=guidelines',
+        ]);
+    });
+
+    it('lists the guidelines of the master node for a channel', async () => {
+        const fetchMock = stubPackages();
+        const { result } = renderHook(() => useCmsGuidelines(7), { wrapper: createWrapper() });
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+        expect(result.current.data?.map(({ slug }) => slug)).toContain('corporate/seo-basics');
+        expect(fetchMock.mock.calls.map(([input]) => String(input)).slice(0, 3)).toEqual([
+            '/rest/devtools/nodes/7/packages',
+            '/rest/node/7',
+            '/rest/devtools/nodes/3/packages',
         ]);
     });
 

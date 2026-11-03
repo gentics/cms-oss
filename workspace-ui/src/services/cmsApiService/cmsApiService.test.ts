@@ -19,6 +19,7 @@ import {
     listCmsPackageInternalFiles,
     listCmsTemplates,
     loadCmsFolderNodeId,
+    loadCmsMasterNodeId,
     loadCmsPackageInternalFile,
     loadCmsPage,
     loginToCms,
@@ -258,6 +259,23 @@ describe('loadCmsFolderNodeId', () => {
     });
 });
 
+describe('loadCmsMasterNodeId', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('returns the master node of a channel, and a node without one itself', async () => {
+        const fetchMock = stubFetchSequence(
+            Response.json({ node: { id: 7, name: 'Channel', masterNodeId: 3 } }),
+            Response.json({ node: { id: 3, name: 'Corporate Website' } }),
+        );
+
+        await expect(loadCmsMasterNodeId(7)).resolves.toBe(3);
+        await expect(loadCmsMasterNodeId(3)).resolves.toBe(3);
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/node/7');
+    });
+});
+
 describe('loadCmsPage', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
@@ -463,7 +481,7 @@ describe('devtools package files', () => {
         const fetchMock = stubFetchSequence(new Response('# Tone of voice\n', { headers: { 'Content-Type': 'text/markdown' } }));
 
         await expect(loadCmsPackageInternalFile('corporate', file.path)).resolves.toBe('# Tone of voice\n');
-        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/devtools/packages/corporate/files-internal/content?path=guidelines%2F10_tone-of-voice.default.md');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/devtools/packages/corporate/files-internal/guidelines/10_tone-of-voice.default.md');
     });
 
     it('loadCmsPackageInternalFile throws an HttpError for a file that does not exist', async () => {
@@ -472,7 +490,7 @@ describe('devtools package files', () => {
         await expect(loadCmsPackageInternalFile('corporate', file.path)).rejects.toBeInstanceOf(HttpError);
     });
 
-    it('saveCmsPackageInternalFile posts the text as the multipart part file, named as the file', async () => {
+    it('saveCmsPackageInternalFile posts the text as a multipart part to the file\'s directory, named as the file', async () => {
         const fetchMock = stubFetchSequence(new Response(null, { status: 201 }));
 
         await expect(saveCmsPackageInternalFile('corporate', file.path, '# Tone of voice\n')).resolves.toBeUndefined();
@@ -480,11 +498,19 @@ describe('devtools package files', () => {
         const [url, init] = fetchMock.mock.calls[0]!;
         const part = (init?.body as FormData).get('file') as File;
 
-        expect(url).toBe('/rest/devtools/packages/corporate/files-internal/content?path=guidelines%2F10_tone-of-voice.default.md');
+        expect(url).toBe('/rest/devtools/packages/corporate/files-internal/guidelines/');
         expect(init?.method).toBe('POST');
         expect(new Headers(init?.headers).has('Content-Type')).toBe(false);
         expect(part.name).toBe('10_tone-of-voice.default.md');
         await expect(part.text()).resolves.toBe('# Tone of voice\n');
+    });
+
+    it('saveCmsPackageInternalFile posts a file of the storage\'s root to the root, with the trailing slash', async () => {
+        const fetchMock = stubFetchSequence(new Response(null, { status: 201 }));
+
+        await saveCmsPackageInternalFile('corporate', 'notes.md', '');
+
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/devtools/packages/corporate/files-internal/');
     });
 
     it('saveCmsPackageInternalFile throws an HttpError for a refused save', async () => {
@@ -497,7 +523,15 @@ describe('devtools package files', () => {
         const fetchMock = stubFetchSequence(new Response(null, { status: 204 }));
 
         await expect(deleteCmsPackageInternalFile('corporate', file.path)).resolves.toBeUndefined();
-        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/devtools/packages/corporate/files-internal/content?path=guidelines%2F10_tone-of-voice.default.md');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/devtools/packages/corporate/files-internal/guidelines/10_tone-of-voice.default.md');
         expect(fetchMock.mock.calls[0]![1]?.method).toBe('DELETE');
+    });
+
+    it('encodes each segment of a file\'s path, and the package name', async () => {
+        const fetchMock = stubFetchSequence(new Response(null, { status: 204 }));
+
+        await deleteCmsPackageInternalFile('my package', 'guidelines/tone of voice.md');
+
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/devtools/packages/my%20package/files-internal/guidelines/tone%20of%20voice.md');
     });
 });

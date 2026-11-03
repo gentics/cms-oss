@@ -17,7 +17,7 @@ vi.mock('@/helper/sessionAuthorization/sessionAuthorization', () => ({
 
 const SESSION = 's-1';
 const TRANSITIONS = `/rest/proxy/genaix/sessions/${SESSION}/plans/pl-1/transitions`;
-const FILE_URL = '/rest/devtools/packages/corporate/files-internal/content?path=guidelines%2F20_seo-basics.md';
+const FILE_URL = '/rest/devtools/packages/corporate/files-internal/guidelines/20_seo-basics.md';
 
 // A done plan whose one item created the guideline `corporate/seo-basics`.
 const createdGuideline: Plan = {

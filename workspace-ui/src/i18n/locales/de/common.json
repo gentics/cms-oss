@@ -340,7 +340,8 @@
             "title": "Diesen Plan verwerfen?",
             "keep": "Der Plan wird geschlossen. Seiten, die er schon geändert hat, bleiben als Entwurf im CMS.",
             "restore": "Der Plan wird geschlossen und die Seiten, die er geändert hat, gehen auf ihre Version von vorher zurück.",
-            "cancel": "Abbrechen"
+            "cancel": "Abbrechen",
+            "guideline": "Der Plan wird geschlossen und die von ihm angelegte Richtlinie {{name}} gelöscht."
         },
         "switcher": {
             "label": "Offene Pläne",
@@ -936,7 +937,8 @@
         "construct_other": "Bausteine"
     },
     "guidelineEditor": {
-        "label": "Richtlinie"
+        "label": "Richtlinie",
+        "saveFailed": "Die Richtlinie konnte nicht gespeichert werden"
     },
     "planGuidelines": {
         "title": "Richtlinien",
@@ -948,5 +950,12 @@
     "guidelines": {
         "missing": "{{name}} wurde entfernt oder umbenannt",
         "removedOrRenamed": "Entfernt oder umbenannt"
+    },
+    "guidelineColumn": {
+        "loading": "Richtlinie wird geladen…",
+        "loadFailed": "Die Richtlinie konnte nicht geladen werden",
+        "save": "Speichern",
+        "revert": "Änderungen verwerfen",
+        "deleteFailed": "Die Richtlinie konnte nicht gelöscht werden"
     }
 }

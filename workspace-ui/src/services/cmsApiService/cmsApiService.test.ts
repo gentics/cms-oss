@@ -18,6 +18,7 @@ import {
     listCmsNodes,
     listCmsPackageInternalFiles,
     listCmsTemplates,
+    loadCmsFolderNodeId,
     loadCmsPackageInternalFile,
     loadCmsPage,
     loginToCms,
@@ -241,6 +242,19 @@ describe('isCmsFeatureActive', () => {
         await expect(isCmsFeatureActive('elasticsearch')).resolves.toBe(true);
         await expect(isCmsFeatureActive('elasticsearch')).resolves.toBe(false);
         expect(fetchMock).toHaveBeenCalledWith('/rest/admin/features/elasticsearch', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+});
+
+describe('loadCmsFolderNodeId', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('loads the folder and returns its node', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ folder: { id: 42, name: 'Richtlinien', nodeId: 3 } }));
+
+        await expect(loadCmsFolderNodeId(42)).resolves.toBe(3);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/folder/load/42', expect.objectContaining({ credentials: 'same-origin' }));
     });
 });
 

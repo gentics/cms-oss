@@ -1,6 +1,7 @@
-import { keepPreviousData, type QueryClient, skipToken, useInfiniteQuery, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, type QueryClient, skipToken, useInfiniteQuery, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { type Guideline, guidelineFromFile, GUIDELINES_DIR, sortGuidelines } from '@/helper/guidelines/guidelines';
+import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
+import { type Guideline, guidelineFromFile, guidelinePath, GUIDELINES_DIR, sortGuidelines } from '@/helper/guidelines/guidelines';
 import {
     canPublishCmsPage,
     type CmsItem,
@@ -13,9 +14,13 @@ import {
     listCmsNodes,
     listCmsPackageInternalFiles,
     listCmsTemplates,
+    loadCmsFolderNodeId,
+    loadCmsPackageInternalFile,
     loadCmsPage,
+    saveCmsPackageInternalFile,
     searchCmsItems,
 } from '@/services/cmsApiService/cmsApiService';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 /** Query keys of the CMS server state. */
 export const cmsKeys = {
@@ -32,6 +37,8 @@ export const cmsKeys = {
     templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
     languages: (nodeId: number) => ['cms', 'nodes', nodeId, 'languages'] as const,
     guidelines: (nodeId: number) => ['cms', 'nodes', nodeId, 'guidelines'] as const,
+    folderNode: (folderId: number) => ['cms', 'folders', folderId, 'node'] as const,
+    packageFile: (packageName: string, path: string) => ['cms', 'packages', packageName, 'files-internal', path] as const,
 };
 
 /**
@@ -250,5 +257,45 @@ export function useCmsGuidelines(nodeId: number | undefined) {
     return useQuery({
         queryKey: cmsKeys.guidelines(nodeId ?? 0),
         queryFn: nodeId === undefined ? skipToken : ({ signal }) => listCmsGuidelines(nodeId, signal),
+    });
+}
+
+/** The node of the folder `folderId` (`loadCmsFolderNodeId`); a folder stays in its node. Off without a folder. */
+export function useCmsFolderNodeId(folderId: number | undefined) {
+    return useQuery({
+        queryKey: cmsKeys.folderNode(folderId ?? 0),
+        queryFn: folderId === undefined ? skipToken : ({ signal }) => loadCmsFolderNodeId(folderId, signal),
+        staleTime: Infinity,
+    });
+}
+
+/**
+ * The text of the guideline `guideline` (`loadCmsPackageInternalFile`). Asked anew on every mount and
+ * whenever `invalidate`d, as the agent may have written it meanwhile. Off without a guideline.
+ */
+export function useCmsGuidelineText(guideline: Guideline | undefined) {
+    return useQuery({
+        queryKey: cmsKeys.packageFile(guideline?.package ?? '', guideline ? guidelinePath(guideline) : ''),
+        queryFn: guideline === undefined ? skipToken : ({ signal }) => loadCmsPackageInternalFile(guideline.package, guidelinePath(guideline), signal),
+    });
+}
+
+/**
+ * Writes the text of a guideline (`saveCmsPackageInternalFile`), directly through the CMS, not through
+ * the agent; the saved text goes into the cache that `useCmsGuidelineText` reads. A failure is an error
+ * notification. Not retried: the user saves again.
+ */
+export function useSaveCmsGuideline() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ guideline, text }: { guideline: Guideline; text: string }) => saveCmsPackageInternalFile(guideline.package, guidelinePath(guideline), text),
+        onSuccess: (_result, { guideline, text }) => {
+            queryClient.setQueryData(cmsKeys.packageFile(guideline.package, guidelinePath(guideline)), text);
+        },
+        onError: (error) => {
+            useErrorNotificationStore.getState().addError({ messageKey: 'guidelineEditor.saveFailed', detailKey: errorMessageKey(error) });
+        },
+        retry: false,
     });
 }

@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { guidelineName, unknownGuidelines } from '@/helper/guidelines/guidelines';
 import { useCmsGuidelines } from '@/hooks/useCmsQueries';
 import { useSession, useSetSessionGuidelines } from '@/hooks/useGenaixQueries';
+import { useSessionNodeId } from '@/hooks/useSessionNodeId';
 import type { Plan } from '@/services/apiService/genaix/types';
 
 import styles from './PlanGuidelines.module.css';
@@ -19,7 +20,8 @@ interface PlanGuidelinesProps {
 /**
  * The guidelines the user added to the session (`SessionContext.guidelines`), in the plan card. Only
  * while the plan is proposed can the user add one of the available guidelines of the session's node
- * (the files without `.default`, `useCmsGuidelines`) or take one out again (`useSetSessionGuidelines`).
+ * (`useSessionNodeId`: the context's node, else its target folder's), the files without `.default`
+ * (`useCmsGuidelines`), or take one out again (`useSetSessionGuidelines`).
  * The default guidelines are GenAIx's business: they are neither listed nor offered, and kept as they
  * are in the context. A guideline that no longer exists, because it was removed or renamed, is named
  * with a warning; the UI tells that from the node's guidelines, so nothing is warned while they load.
@@ -28,7 +30,7 @@ interface PlanGuidelinesProps {
 export function PlanGuidelines({ plan, sessionId }: PlanGuidelinesProps) {
     const { t } = useTranslation();
     const context = useSession(sessionId).data?.context;
-    const guidelines = useCmsGuidelines(context?.node_id).data;
+    const guidelines = useCmsGuidelines(useSessionNodeId(sessionId)).data;
     const setGuidelines = useSetSessionGuidelines(sessionId);
     const selected = context?.guidelines ?? [];
     const isEditable = plan.status === 'proposed';

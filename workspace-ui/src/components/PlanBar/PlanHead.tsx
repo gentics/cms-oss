@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { errorMessageKey, problemMessageKey } from '@/helper/errorMapper/errorMapper';
 import { isFirstDraft, planActions } from '@/helper/planActions/planActions';
+import { useCreatedGuideline } from '@/hooks/useCreatedGuideline';
 import { canAcknowledgeRefusal, latestGateRefusal, useCancelRun, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
 import type { Plan, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
@@ -114,7 +115,8 @@ interface PlanHeadProps {
  * (`/sessions/$id/published?plan=`). A refusal by the gates shows in the checklist like any other; a
  * publish run that fails or is stopped leaves the plan `released` (contract) and is an error
  * notification. Discard asks first, saying what happens to the pages by the modules'
- * `plan_policy.on_discard` (`onDiscardOf`). Its button is a quiet icon (`trash`, design.md §9; red on hover) with its
+ * `plan_policy.on_discard` (`onDiscardOf`); for a plan that created a guideline, that its file is
+ * deleted, which the UI does once the plan is discarded (`useCreatedGuideline`). Its button is a quiet icon (`trash`, design.md §9; red on hover) with its
  * name as tooltip, at the very start of the head, a line between it and the status, far from the way forward.
  *
  * Outside the review page, while a run of the plan works (proposing, executing, publishing), Stop cancels
@@ -148,6 +150,22 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     const [publishing, setPublishing] = useState<Publishing>();
     const notices = useWorkspaceEventStore((state) => selectSession(sessionId)(state).notices);
     const onDiscard = onDiscardOf(plan, useWorkflows().data);
+    // A guideline the plan created: discarding the plan deletes its file (ticket).
+    const createdGuideline = useCreatedGuideline(sessionId, plan);
+
+    // Discard; for a plan that created a guideline, its file is deleted once GenAIx has closed the plan. A
+    // discard that fails deletes nothing; its failure is handled where every transition's is.
+    function discard() {
+        if (!createdGuideline) {
+            transition('discard');
+
+            return;
+        }
+
+        if (!pending) {
+            transitionPlan.mutateAsync({ planId: plan.id, request: { action: 'discard' } }).then(createdGuideline.deleteFile).catch(() => undefined);
+        }
+    }
 
     function transition(action: Action, { acknowledgeChecks }: TransitionOptions = {}) {
         if (pending) {
@@ -329,7 +347,11 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                         <DialogTitle>{t('planBar.discard.title')}</DialogTitle>
                     </DialogHeader>
                     <DialogBody>
-                        <DialogDescription>{t(`planBar.discard.${onDiscard}`)}</DialogDescription>
+                        <DialogDescription>
+                            {createdGuideline
+                                ? t('planBar.discard.guideline', { name: createdGuideline.guideline.name })
+                                : t(`planBar.discard.${onDiscard}`)}
+                        </DialogDescription>
                     </DialogBody>
                     <DialogFooter>
                         <Button variant="secondary" size="sm" onClick={() => setIsDiscardOpen(false)}>{t('planBar.discard.cancel')}</Button>
@@ -339,7 +361,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                             disabled={Boolean(pending)}
                             onClick={() => {
                                 setIsDiscardOpen(false);
-                                transition('discard');
+                                discard();
                             }}
                         >
                             <TrashIcon size={14} />

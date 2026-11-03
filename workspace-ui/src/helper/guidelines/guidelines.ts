@@ -1,3 +1,5 @@
+import type { Plan } from '@/services/apiService/genaix/types';
+
 /** The folder of a devtools package's `files-internal` storage that holds its guidelines. */
 export const GUIDELINES_DIR = 'guidelines';
 
@@ -81,4 +83,34 @@ export function unknownGuidelines(guidelines: string[], known: Guideline[]): str
     const slugs = new Set(known.map(({ slug }) => slug));
 
     return guidelines.filter((slug) => !slugs.has(slug));
+}
+
+/** The guideline a plan works on (`planGuideline`). */
+export interface PlanGuideline {
+    /** Its id, `<package>/<name>[.default]`. */
+    slug: string;
+    /** The plan created it (a `create` item whose write completed), rather than edits one that was there. */
+    isCreated: boolean;
+}
+
+/**
+ * The guideline `plan` works on: the first of its top-level items (no `parent`, not `removed`) whose
+ * object is a guideline, the one it created (`created`) or acts on (`target`), as a `ContextReference`
+ * of type `guideline`. A guideline the plan is still to create has no id yet (`creates` names no
+ * guideline type), so it counts once written. None for a plan on other objects.
+ */
+export function planGuideline(plan: Plan): PlanGuideline | undefined {
+    for (const item of plan.items) {
+        if (item.parent !== undefined || item.status === 'removed') {
+            continue;
+        }
+
+        const ref = [item.created, item.target].find((candidate) => candidate?.type === 'guideline');
+
+        if (ref) {
+            return { slug: String(ref.id), isCreated: item.kind === 'create' && ref === item.created };
+        }
+    }
+
+    return undefined;
 }

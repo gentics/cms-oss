@@ -340,7 +340,8 @@
             "title": "Discard this plan?",
             "keep": "The plan is closed. Pages it already changed stay as drafts in the CMS.",
             "restore": "The plan is closed and the pages it changed go back to their version from before it.",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "guideline": "The plan is closed and the guideline {{name}} it created is deleted."
         },
         "switcher": {
             "label": "Open plans",
@@ -936,7 +937,8 @@
         "construct_other": "constructs"
     },
     "guidelineEditor": {
-        "label": "Guideline"
+        "label": "Guideline",
+        "saveFailed": "The guideline could not be saved"
     },
     "planGuidelines": {
         "title": "Guidelines",
@@ -948,5 +950,12 @@
     "guidelines": {
         "missing": "{{name}} was removed or renamed",
         "removedOrRenamed": "Removed or renamed"
+    },
+    "guidelineColumn": {
+        "loading": "Loading the guideline…",
+        "loadFailed": "The guideline could not be loaded",
+        "save": "Save",
+        "revert": "Undo changes",
+        "deleteFailed": "The guideline could not be deleted"
     }
 }

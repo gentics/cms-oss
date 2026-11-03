@@ -1,0 +1,50 @@
+/* The guideline in the right column (design.md §11, §12 "Eingabefelder"): a panel head with the
+   guideline's name and its actions, below it the editor in a scrolling body. */
+.column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-surface);
+}
+
+.head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 9px 0 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.title {
+  overflow: hidden;
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  padding: 14px 15px;
+  overflow-y: auto;
+}
+
+.empty {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+}

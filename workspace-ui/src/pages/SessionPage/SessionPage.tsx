@@ -7,11 +7,13 @@ import { AppShell } from '@/components/AppShell/AppShell';
 import { ChatStream } from '@/components/ChatStream/ChatStream';
 import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
 import { EventLog } from '@/components/EventLog/EventLog';
+import { GuidelineColumn } from '@/components/GuidelineColumn/GuidelineColumn';
 import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
 import { PlanBar } from '@/components/PlanBar/PlanBar';
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
 import { pageElementEditParts, pageElementImageParts, pageElementLinkNaming, pageElementLinkParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
+import { planGuideline } from '@/helper/guidelines/guidelines';
 import { type SendTurnInput, type StartFile, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
 import { type PickedPlan, useOpenPlan, useOpenPlans } from '@/hooks/useOpenPlan';
@@ -240,6 +242,8 @@ export function SessionPage() {
     const openPlan = usePlanPresence(id ?? '', barPlan) === 'none' ? undefined : barPlan;
     const [planBarHeight, setPlanBarHeight] = useState(0);
     const chatStyle = openPlan ? ({ '--plan-bar-space': `${planBarHeight}px` } as CSSProperties) : undefined;
+    // The guideline the shown plan works on, if any: edited in the right column instead of a preview.
+    const guideline = barPlan && planGuideline(barPlan);
 
     // The composer floats over the bottom of the middle column, the column scrolls underneath (draft
     // `.composerwrap`), with the plan bar right above it (design.md §11). Both routes have an `id`; the
@@ -266,7 +270,12 @@ export function SessionPage() {
     );
 
     // A session starts without a preview; the right column appears once GenAIx sends one
-    // (`preview.updated`, design.md §11 "Vorschau erst bei Bedarf").
+    // (`preview.updated`, design.md §11 "Vorschau erst bei Bedarf"), or once the shown plan works on a
+    // guideline, which has no preview but its text to edit (`GuidelineColumn`).
+    const right = id && (guideline && barPlan
+        ? <GuidelineColumn key={guideline.slug} sessionId={id} plan={barPlan} slug={guideline.slug} />
+        : preview && <SessionPreview key={id} sessionId={id} preview={preview} composerRef={composerRef} />);
+
     return (
         <AppShell
             left={<HistoryColumn />}
@@ -278,8 +287,8 @@ export function SessionPage() {
                     </div>
                 )
                 : chat}
-            right={id && preview && <SessionPreview key={id} sessionId={id} preview={preview} composerRef={composerRef} />}
-            isRightColumnVisible={Boolean(preview)}
+            right={right}
+            isRightColumnVisible={Boolean(id && (guideline || preview))}
         />
     );
 }

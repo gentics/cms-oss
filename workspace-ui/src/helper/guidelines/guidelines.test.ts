@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { type Guideline, guidelineFromFile, guidelineName, guidelinePath, guidelineSlug, parseGuidelineSlug, sortGuidelines, unknownGuidelines } from './guidelines';
+import type { Plan, PlanItem } from '@/services/apiService/genaix/types';
+
+import { type Guideline, guidelineFromFile, guidelineName, guidelinePath, guidelineSlug, parseGuidelineSlug, planGuideline, sortGuidelines, unknownGuidelines } from './guidelines';
 
 describe('guidelineFromFile', () => {
     it('reads a default guideline: the slug ends in .default, the priority is left out', () => {
@@ -97,5 +99,26 @@ describe('unknownGuidelines', () => {
         // `tone-of-voice` was made a default guideline, so its old slug is gone.
         expect(unknownGuidelines(['corporate/tone-of-voice', 'corporate/seo-basics', 'other/legal'], known))
             .toEqual(['corporate/tone-of-voice', 'other/legal']);
+    });
+});
+
+describe('planGuideline', () => {
+    const item = (extra: Partial<PlanItem>): PlanItem => ({ id: 'p1', label: 'Item', kind: 'update', workflow: 'w', status: 'pending', ...extra });
+    const plan = (...items: PlanItem[]): Plan => ({ id: 'pl-1', workflows: [{ id: 'w', version: '1.0.0' }], status: 'proposed', version: 1, summary: '', items });
+    const guideline = { type: 'guideline' as const, id: 'corporate/seo-basics' };
+
+    it('is the guideline an item edits', () => {
+        expect(planGuideline(plan(item({ target: { type: 'page', id: '1' } }), item({ id: 'p2', target: guideline })))).toEqual({ slug: 'corporate/seo-basics', isCreated: false });
+    });
+
+    it('is the guideline a create item wrote, as created by the plan', () => {
+        expect(planGuideline(plan(item({ kind: 'create', status: 'done', created: guideline })))).toEqual({ slug: 'corporate/seo-basics', isCreated: true });
+    });
+
+    it('is none for a guideline still to be created, a sub-step, a removed item or a plan on pages only', () => {
+        expect(planGuideline(plan(item({ kind: 'create', target: { type: 'folder', id: '42' } })))).toBeUndefined();
+        expect(planGuideline(plan(item({ parent: 'p0', target: guideline })))).toBeUndefined();
+        expect(planGuideline(plan(item({ status: 'removed', target: guideline })))).toBeUndefined();
+        expect(planGuideline(plan(item({ target: { type: 'page', id: '1' } })))).toBeUndefined();
     });
 });

@@ -16,10 +16,17 @@ const entry = (name: string) => ({ path: `guidelines/${name}`, name, directory: 
 // The node's guidelines: `tone-of-voice` (default), `seo-basics` and `legal-notes` (available).
 const FILES = [entry('10_tone-of-voice.default.md'), entry('20_seo-basics.md'), entry('30_legal-notes.md')];
 
-// Answers the session with `guidelines` in its context (on node 3 unless `nodeId` is undefined), a patch
-// with the session as patched, and the CMS with the package `corporate` and its `FILES`.
-function stubSession(guidelines: string[], nodeId: number | undefined = 3) {
-    let context: SessionContext = { ...(nodeId !== undefined && { node_id: nodeId }), references: [], guidelines, connection_ids: [] };
+// Answers the session with `guidelines` in its context (on node 3 unless `nodeId` is undefined, then in
+// the folder `folderId` if given, which is in node 3), a patch with the session as patched, and the CMS
+// with the package `corporate` and its `FILES`.
+function stubSession(guidelines: string[], nodeId: number | undefined = 3, folderId?: number) {
+    let context: SessionContext = {
+        ...(nodeId !== undefined && { node_id: nodeId }),
+        ...(folderId !== undefined && { folder_id: folderId }),
+        references: [],
+        guidelines,
+        connection_ids: [],
+    };
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
         const url = new URL(String(input), 'http://app.test');
 
@@ -29,6 +36,10 @@ function stubSession(guidelines: string[], nodeId: number | undefined = 3) {
             }
 
             return Response.json({ id: 's-1', context });
+        }
+
+        if (url.pathname === `/rest/folder/load/${folderId}`) {
+            return Response.json({ folder: { id: folderId, name: 'Richtlinien', nodeId: 3 } });
         }
 
         if (url.pathname === '/rest/devtools/nodes/3/packages') {
@@ -131,6 +142,16 @@ describe('PlanGuidelines', () => {
 
         await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain('/rest/devtools/packages/corporate/files-internal?path=guidelines'));
         expect(screen.queryByRole('region', { name: 'Guidelines' })).not.toBeInTheDocument();
+    });
+
+    it('offers the guidelines of the target folder\'s node when the session names no node (a create flow)', async () => {
+        const user = userEvent.setup();
+
+        stubSession([], undefined, 42);
+        render(<PlanGuidelines plan={plan('proposed')} sessionId="s-1" />, { wrapper: createWrapper() });
+        await user.click(await screen.findByRole('button', { name: 'Add guideline' }));
+
+        expect(screen.getByRole('menuitemcheckbox', { name: 'seo-basics' })).toBeInTheDocument();
     });
 
     it('asks the CMS nothing and shows nothing while the session has no node', async () => {

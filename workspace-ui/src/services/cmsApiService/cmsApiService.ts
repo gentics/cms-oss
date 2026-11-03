@@ -386,6 +386,15 @@ export async function loadCmsPage(id: number, nodeId?: number, signal?: AbortSig
 }
 
 /**
+ * The node of the folder `id`: `GET /rest/folder/load/{id}`, its `nodeId` (`rest/model/Folder.java`).
+ */
+export async function loadCmsFolderNodeId(id: number, signal?: AbortSignal): Promise<number> {
+    const { folder } = await httpRequest<{ folder: { nodeId: number } }>(`/rest/folder/load/${id}`, { ...CMS_GET, signal });
+
+    return folder.nodeId;
+}
+
+/**
  * Whether the current CMS user may publish the page `id`: `GET /rest/perm/publish/page/{id}`, in
  * `nodeId` if given. The CMS checks `publishpages` on the page's folder and the role permission for its
  * language (`PermHandler.canPublish`), the permission that decides between publishing a page and

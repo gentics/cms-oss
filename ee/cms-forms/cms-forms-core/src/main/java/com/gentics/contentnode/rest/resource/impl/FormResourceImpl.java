@@ -957,8 +957,6 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				return mp.get(uriBuilder -> {
 					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId, "binary", field);
-				}, requestBuilder -> {
-					requestBuilder.addHeader("Accept", "application/zip");
 				});
 			}
 		}
@@ -981,8 +979,6 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				return mp.get(uriBuilder -> {
 					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId, "binary", field, Integer.toString(index));
-				}, requestBuilder -> {
-					requestBuilder.addHeader("Accept", "application/zip");
 				});
 			}
 		}

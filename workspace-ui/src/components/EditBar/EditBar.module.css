@@ -1,0 +1,28 @@
+/* The bar of the editing in place (final_draft.html "fmt"): a floating layer like the element menu (design.md §12
+   "Popover / Menü"), just above the element; `.editBarBelow` just below it, when there is no room above. */
+.editBar {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 16px);
+  padding: 4px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--elevation-pop);
+  transform: translateY(calc(-100% - 6px));
+}
+
+.editBarBelow {
+  transform: translateY(6px);
+}
+
+.editCount {
+  padding: 0 4px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}

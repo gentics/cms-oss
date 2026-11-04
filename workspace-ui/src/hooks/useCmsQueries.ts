@@ -1,5 +1,7 @@
-import { keepPreviousData, type QueryClient, skipToken, useInfiniteQuery, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, type QueryClient, skipToken, useInfiniteQuery, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { applyPlan, type EditPlan, type RefusalReason } from '@/helper/cmsEditable/cmsEditable';
+import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import {
     canPublishCmsPage,
     type CmsItem,
@@ -11,8 +13,11 @@ import {
     listCmsNodes,
     listCmsTemplates,
     loadCmsPage,
+    loadCmsPageTags,
+    saveCmsPageTag,
     searchCmsItems,
 } from '@/services/cmsApiService/cmsApiService';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 /** Query keys of the CMS server state. */
 export const cmsKeys = {
@@ -187,6 +192,45 @@ export function useCmsPage(id: number, nodeId: number | undefined) {
     return useQuery({
         queryKey: cmsKeys.page(id, nodeId),
         queryFn: ({ signal }) => loadCmsPage(id, nodeId, signal),
+    });
+}
+
+/** How a direct edit ended: saved in the CMS, nothing to save, or why it could not be saved. */
+export type CmsEditResult = 'saved' | 'unchanged' | { refused: RefusalReason };
+
+/**
+ * Saves an edit made in the preview directly in the CMS, without GenAIx: loads the page's tags as the CMS
+ * has them now (`loadCmsPageTags`), applies the edit's plan to them (`applyPlan`) and saves the one tag
+ * it changes (`saveCmsPageTag`). A refused plan loads nothing; an unchanged value saves nothing. A failed
+ * request is the mutation's error and shows an error notification naming the CMS's reason.
+ */
+export function useSaveCmsEdit() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ pageId, nodeId, plan }: { pageId: number; nodeId: number | undefined; plan: EditPlan }): Promise<CmsEditResult> => {
+            if (plan.kind === 'refused') {
+                return { refused: plan.reason };
+            }
+
+            const result = applyPlan(await loadCmsPageTags(pageId, nodeId), plan);
+
+            if ('tag' in result) {
+                await saveCmsPageTag(pageId, result.tag);
+
+                return 'saved';
+            }
+
+            return 'unchanged' in result ? 'unchanged' : result;
+        },
+        onSuccess: (result, { pageId, nodeId }) => {
+            if (result === 'saved') {
+                void queryClient.invalidateQueries({ queryKey: cmsKeys.page(pageId, nodeId) });
+            }
+        },
+        onError: (error) => {
+            useErrorNotificationStore.getState().addError({ messageKey: 'preview.save.failed', detailKey: errorMessageKey(error) });
+        },
     });
 }
 

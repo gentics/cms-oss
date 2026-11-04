@@ -46,7 +46,7 @@ import okhttp3.Response;
  * {@link com.gentics.contentnode.rest.resource.impl.FormResourceImpl#downloadDataMultivalueBinaryField(String, String, String, int)}.
  * These test cases require a Mesh instance with deployed forms-plugin
  */
-@GCNFeature(set = { Feature.FORMS, Feature.MESH_CONTENTREPOSITORY })
+@GCNFeature(set = { Feature.FORMS, Feature.MESH_CONTENTREPOSITORY, Feature.DISABLE_INSTANT_DELETE })
 @Category(MeshTest.class)
 public class FormResourceBinaryDownloadTest extends AbstractFormPublishTest {
 	/**

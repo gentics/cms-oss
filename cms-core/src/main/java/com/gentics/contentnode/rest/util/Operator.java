@@ -27,6 +27,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.PrefixedThreadFactory;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -45,6 +46,8 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
+
+import de.jkeylockmanager.manager.ReturnValueLockCallback;
 
 /**
  * Operator class, that executes instances of {@link Callable} in a thread pool.
@@ -400,6 +403,38 @@ public class Operator {
 			throw new NodeException("Cannot create lock without type and key");
 		}
 		return new Lock(type, key);
+	}
+
+	/**
+	 * Execute the given supplier in the current thread (and transaction) with the given lock.
+	 * The supplier is not executed concurrently with callables, which are executed with the same lock
+	 * (e.g. via {@link #executeLockedRethrowing(String, long, Lock, Callable)}).
+	 * @param lock optional lock (if null, the supplier is executed without lock)
+	 * @param supplier supplier
+	 * @return supplied value
+	 * @throws NodeException
+	 */
+	public static <R> R executeLockedInCurrentThread(Lock lock, Supplier<R> supplier) throws NodeException {
+		if (lock == null) {
+			return supplier.supply();
+		}
+
+		List<NodeException> exceptions = new ArrayList<>(1);
+		R result = RestCallable.lockManager.executeLocked(lock, new ReturnValueLockCallback<R>() {
+			@Override
+			public R doInLock() {
+				try {
+					return supplier.supply();
+				} catch (NodeException e) {
+					exceptions.add(e);
+					return null;
+				}
+			}
+		});
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+		return result;
 	}
 
 	/**

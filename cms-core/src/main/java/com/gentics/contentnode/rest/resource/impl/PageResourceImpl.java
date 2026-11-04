@@ -408,15 +408,27 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Operator.Lock lock = null;
 
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
-			Page page = t.getObject(Page.class, id);
-			if (page != null) {
-				lock = Operator.lock(LockType.contentId, page.getContent().getId());
-			}
+			lock = getContentLock(id);
 		}
 
 		t.commit(false);
 
 		return Operator.executeLockedRethrowing(description, 0, lock, callable);
+	}
+
+	/**
+	 * Get the lock for the content of the page with given ID (in the current channel)
+	 * @param id page ID
+	 * @return lock or null, if the page does not exist
+	 * @throws NodeException
+	 */
+	public static Operator.Lock getContentLock(String id) throws NodeException {
+		Page page = TransactionManager.getCurrentTransaction().getObject(Page.class, id);
+		if (page != null) {
+			return Operator.lock(LockType.contentId, page.getContent().getId());
+		} else {
+			return null;
+		}
 	}
 
 	/**

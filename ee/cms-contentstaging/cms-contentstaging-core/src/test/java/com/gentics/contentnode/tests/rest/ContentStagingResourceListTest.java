@@ -15,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.object.File;
@@ -27,6 +28,7 @@ import com.gentics.contentnode.rest.model.response.AbstractListResponse;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
 import com.gentics.contentnode.rest.resource.ContentStagingResource;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.ContentPackageListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -105,11 +107,11 @@ public class ContentStagingResourceListTest extends AbstractListSortAndFilterTes
 		List<Pair<String, Function<StagedContentPackage, String>>> sortAttributes = Arrays.asList(
 				Pair.of("name", StagedContentPackage::getName),
 				Pair.of("description", StagedContentPackage::getDescription),
-				Pair.of("nodes", item -> AbstractListSortAndFilterTest.addLeadingZeros(item.getNodes())),
-				Pair.of("pages", item -> AbstractListSortAndFilterTest.addLeadingZeros(item.getPages())),
-				Pair.of("folders", item -> AbstractListSortAndFilterTest.addLeadingZeros(item.getFolders())),
-				Pair.of("files", item -> AbstractListSortAndFilterTest.addLeadingZeros(item.getFiles())),
-				Pair.of("images", item -> AbstractListSortAndFilterTest.addLeadingZeros(item.getImages()))
+				Pair.of("nodes", item -> AbstractListSortAndFilterTest.addLeadingZeros(ObjectTransformer.getInt(item.getNodes(), 0))),
+				Pair.of("pages", item -> AbstractListSortAndFilterTest.addLeadingZeros(ObjectTransformer.getInt(item.getPages(), 0))),
+				Pair.of("folders", item -> AbstractListSortAndFilterTest.addLeadingZeros(ObjectTransformer.getInt(item.getFolders(), 0))),
+				Pair.of("files", item -> AbstractListSortAndFilterTest.addLeadingZeros(ObjectTransformer.getInt(item.getFiles(), 0))),
+				Pair.of("images", item -> AbstractListSortAndFilterTest.addLeadingZeros(ObjectTransformer.getInt(item.getImages(), 0)))
 		);
 		List<Pair<String, Function<StagedContentPackage, String>>> filterAttributes = Arrays.asList(
 				Pair.of("name", StagedContentPackage::getName),
@@ -172,6 +174,6 @@ public class ContentStagingResourceListTest extends AbstractListSortAndFilterTes
 
 	@Override
 	protected AbstractListResponse<StagedContentPackage> getResult(SortParameterBean sort, FilterParameterBean filter, PagingParameterBean paging) throws NodeException {
-		return new ContentStagingResourceImpl().list(filter, sort, paging);
+		return new ContentStagingResourceImpl().list(filter, sort, paging, new ContentPackageListParameterBean());
 	}
 }

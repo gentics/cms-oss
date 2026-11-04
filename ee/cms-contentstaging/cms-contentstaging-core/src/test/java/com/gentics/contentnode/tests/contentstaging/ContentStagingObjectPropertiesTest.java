@@ -47,6 +47,7 @@ import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.ContentPackageListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -149,7 +150,7 @@ public class ContentStagingObjectPropertiesTest {
 
 		operate(() -> {
 			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			ContentPackageListResponse list = resource.list(new FilterParameterBean(), new SortParameterBean(), new PagingParameterBean());
+			ContentPackageListResponse list = resource.list(new FilterParameterBean(), new SortParameterBean(), new PagingParameterBean(), new ContentPackageListParameterBean());
 			for (StagedContentPackage pack : list.getItems()) {
 				resource.delete(pack.getName());
 			}

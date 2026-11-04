@@ -16,13 +16,13 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 
 	private static final long serialVersionUID = 8051924103845219672L;
 
-	private int forms = 0;
-	private int files = 0;
-	private int pages = 0;
-	private int folders = 0;
-	private int images = 0;
-	private int nodes = 0;
-	private int channels = 0;
+	private Integer forms;
+	private Integer files;
+	private Integer pages;
+	private Integer folders;
+	private Integer images;
+	private Integer nodes;
+	private Integer channels;
 
 	@XmlAttribute(name = "import")
 	private JobStatus import_;
@@ -34,7 +34,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * 
 	 * @return forms count
 	 */
-	public int getForms() {
+	public Integer getForms() {
 		return forms;
 	}
 
@@ -42,7 +42,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Set the count of forms in the package.
 	 * @param forms count
 	 */
-	public void setForms(int forms) {
+	public void setForms(Integer forms) {
 		this.forms = forms;
 	}
 
@@ -50,7 +50,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Count of files in the package.
 	 * @return files count
 	 */
-	public int getFiles() {
+	public Integer getFiles() {
 		return files;
 	}
 
@@ -58,7 +58,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Set the count of files in the package.
 	 * @param files count
 	 */
-	public void setFiles(int files) {
+	public void setFiles(Integer files) {
 		this.files = files;
 	}
 
@@ -66,7 +66,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Count of pages in the package.
 	 * @return pages count
 	 */
-	public int getPages() {
+	public Integer getPages() {
 		return pages;
 	}
 
@@ -74,7 +74,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Set the count of pages in the package.
 	 * @param pages count
 	 */
-	public void setPages(int pages) {
+	public void setPages(Integer pages) {
 		this.pages = pages;
 	}
 
@@ -82,7 +82,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Count of folders in the package.
 	 * @return folders count
 	 */
-	public int getFolders() {
+	public Integer getFolders() {
 		return folders;
 	}
 
@@ -90,7 +90,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Set the count of folders in the package.
 	 * @param folders count
 	 */
-	public void setFolders(int folders) {
+	public void setFolders(Integer folders) {
 		this.folders = folders;
 	}
 
@@ -98,7 +98,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Count of images in the package.
 	 * @return images count
 	 */
-	public int getImages() {
+	public Integer getImages() {
 		return images;
 	}
 
@@ -106,7 +106,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Set the count of images in the package.
 	 * @param images count
 	 */
-	public void setImages(int images) {
+	public void setImages(Integer images) {
 		this.images = images;
 	}
 
@@ -114,7 +114,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Count of nodes in the package.
 	 * @return nodes count
 	 */
-	public int getNodes() {
+	public Integer getNodes() {
 		return nodes;
 	}
 
@@ -122,7 +122,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Set the count of nodes in the package.
 	 * @param nodes count
 	 */
-	public void setNodes(int nodes) {
+	public void setNodes(Integer nodes) {
 		this.nodes = nodes;
 	}
 
@@ -130,7 +130,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Count of channels in the package.
 	 * @return channels count
 	 */
-	public int getChannels() {
+	public Integer getChannels() {
 		return channels;
 	}
 
@@ -138,7 +138,7 @@ public class StagedContentPackage extends ContentPackageBase implements Resolvab
 	 * Set the number of channels in the package.
 	 * @param channels count
 	 */
-	public void setChannels(int channels) {
+	public void setChannels(Integer channels) {
 		this.channels = channels;
 	}
 

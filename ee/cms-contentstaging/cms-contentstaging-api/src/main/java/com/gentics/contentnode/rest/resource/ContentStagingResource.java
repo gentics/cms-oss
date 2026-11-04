@@ -12,6 +12,7 @@ import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.StagingStatusResponse;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
+import com.gentics.contentnode.rest.resource.parameter.ContentPackageListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -55,6 +56,7 @@ public interface ContentStagingResource {
 	 * @param filterParams filter parameters
 	 * @param sortingParams sorting parameters
 	 * @param pagingParams paging parameters
+	 * @param listParams list parameters
 	 * @return list of packages
 	 * @throws Exception
 	 */
@@ -63,7 +65,8 @@ public interface ContentStagingResource {
 	ContentPackageListResponse list(
 				@BeanParam FilterParameterBean filterParams,
 				@BeanParam SortParameterBean sortingParams,
-				@BeanParam PagingParameterBean pagingParams
+				@BeanParam PagingParameterBean pagingParams,
+				@BeanParam ContentPackageListParameterBean listParams
 			) throws Exception;
 
 	/**

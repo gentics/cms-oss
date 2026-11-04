@@ -153,7 +153,7 @@
 						<configuration>
 							<artifactItems>
 								<artifactItem>
-									<groupId>com.gentics.mesh.plugin.commercial</groupId>
+									<groupId>com.gentics.mesh.plugin</groupId>
 									<artifactId>mesh-forms-plugin</artifactId>
 									<type>jar</type>
 									<overWrite>true</overWrite>

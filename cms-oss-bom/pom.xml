@@ -341,7 +341,7 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.mesh.plugin.commercial</groupId>
+				<groupId>com.gentics.mesh.plugin</groupId>
 				<artifactId>mesh-forms-plugin</artifactId>
 				<version>${mesh.forms.plugin.version}</version>
 				<type>jar</type>

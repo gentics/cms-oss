@@ -3,8 +3,8 @@
   "name": "andp-cpa",
   "version": "1.0.0",
   "engines": {
-    "npm": "^10.9.2",
-    "node": "^22.15.0"
+    "npm": "^11.20.0",
+    "node": "^26.13.0"
   },
   "scripts": {
     "start:mobile": "cd apps/andp-mobile && npm start",

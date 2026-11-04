@@ -59,6 +59,7 @@ import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.ContentPackageListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -165,7 +166,9 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		}
 
 		for (int i = 0; i <= 5; i++) {
-			ContentPackageListResponse response = new ContentStagingResourceImpl().list(new FilterParameterBean().setQuery("8th "), null, new PagingParameterBean().setPage(i).setPageSize(2));
+			ContentPackageListResponse response = new ContentStagingResourceImpl().list(
+					new FilterParameterBean().setQuery("8th "), null,
+					new PagingParameterBean().setPage(i).setPageSize(2), new ContentPackageListParameterBean());
 			assertResponseOK(response);
 			assertThat(response.getItems()).as("Content Packages " + i).hasSize(i <= 5 ? 2 : 0);
 			assertThat(response.getHasMoreItems()).as("More items " + i).isEqualTo(i < 5);
@@ -181,7 +184,9 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		}
 
 		for (int i = 0; i <= 11; i++) {
-			ContentPackageListResponse response = new ContentStagingResourceImpl().list(null, new SortParameterBean().setSort("-description"), new PagingParameterBean().setPage(i).setPageSize(10));
+			ContentPackageListResponse response = new ContentStagingResourceImpl().list(null,
+					new SortParameterBean().setSort("-description"),
+					new PagingParameterBean().setPage(i).setPageSize(10), new ContentPackageListParameterBean());
 			assertResponseOK(response);
 			assertThat(response.getHasMoreItems()).as("More items " + i).isEqualTo(i < 11);
 			assertThat(response.getNumItems()).as("Total items " + i).isEqualTo(101);
@@ -197,7 +202,9 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		}
 
 		for (int i = 0; i <= 5; i++) {
-			ContentPackageListResponse response = new ContentStagingResourceImpl().list(new FilterParameterBean().setQuery("8th "), new SortParameterBean().setSort("-description"), new PagingParameterBean().setPage(i).setPageSize(2));
+			ContentPackageListResponse response = new ContentStagingResourceImpl().list(
+					new FilterParameterBean().setQuery("8th "), new SortParameterBean().setSort("-description"),
+					new PagingParameterBean().setPage(i).setPageSize(2), new ContentPackageListParameterBean());
 			assertResponseOK(response);
 			assertThat(response.getHasMoreItems()).as("More items " + i).isEqualTo(i < 5);
 			assertThat(response.getNumItems()).as("Total items " + i).isEqualTo(10);
@@ -1261,7 +1268,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 			}
 		}
 		ContentPackageListResponse list = supply(() -> {
-			return new ContentStagingResourceImpl().list(null, null, null);
+			return new ContentStagingResourceImpl().list(null, null, null, new ContentPackageListParameterBean());
 		});
 		assertThat(list.getItems())
 			.isNotEmpty()

@@ -68,6 +68,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -126,6 +127,7 @@ import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
 import com.gentics.contentnode.rest.resource.ContentStagingResource;
 import com.gentics.contentnode.rest.resource.impl.internal.JobProgress;
 import com.gentics.contentnode.rest.resource.impl.internal.JobStatus;
+import com.gentics.contentnode.rest.resource.parameter.ContentPackageListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -236,7 +238,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	public ContentPackageListResponse list(
 				@BeanParam FilterParameterBean filterParams,
 				@BeanParam SortParameterBean sortingParams,
-				@BeanParam PagingParameterBean pagingParams
+				@BeanParam PagingParameterBean pagingParams,
+				@BeanParam ContentPackageListParameterBean listParams
 			) throws NodeException {
 		Path path = checkFeatureGetPath();
 
@@ -268,19 +271,19 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						comparators.push((a,b) -> ObjectUtils.compare(StringUtils.lowerCase(a.getDescription()), StringUtils.lowerCase(b.getDescription())) * (desc ? -1 : 1));
 						break;
 					case "nodes":
-						comparators.push((a,b) -> (a.getNodes() - b.getNodes()) * (desc ? -1 : 1));
+						comparators.push((a,b) -> (ObjectTransformer.getInt(a.getNodes(), 0) - ObjectTransformer.getInt(b.getNodes(), 0)) * (desc ? -1 : 1));
 						break;
 					case "folders":
-						comparators.push((a,b) -> (a.getFolders() - b.getFolders()) * (desc ? -1 : 1));
+						comparators.push((a,b) -> (ObjectTransformer.getInt(a.getFolders(), 0) - ObjectTransformer.getInt(b.getFolders(), 0)) * (desc ? -1 : 1));
 						break;
 					case "pages":
-						comparators.push((a,b) -> (a.getPages() - b.getPages()) * (desc ? -1 : 1));
+						comparators.push((a,b) -> (ObjectTransformer.getInt(a.getPages(), 0) - ObjectTransformer.getInt(b.getPages(), 0)) * (desc ? -1 : 1));
 						break;
 					case "files":
-						comparators.push((a,b) -> (a.getFiles() - b.getFiles()) * (desc ? -1 : 1));
+						comparators.push((a,b) -> (ObjectTransformer.getInt(a.getFiles(), 0) - ObjectTransformer.getInt(b.getFiles(), 0)) * (desc ? -1 : 1));
 						break;
 					case "images":
-						comparators.push((a,b) -> (a.getImages() - b.getImages()) * (desc ? -1 : 1));
+						comparators.push((a,b) -> (ObjectTransformer.getInt(a.getImages(), 0) - ObjectTransformer.getInt(b.getImages(), 0)) * (desc ? -1 : 1));
 						break;
 					default:
 						logger.warn("Unknown sort field: " + item);
@@ -289,6 +292,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 				sortComparator = new ComparatorChain(Arrays.asList(comparators.toArray()));
 			}
+
+			final boolean addStats = listParams != null ? listParams.stats : true;
 
 			// Collect
 			List<StagedContentPackage> packages = Files.walk(path, 1)
@@ -299,7 +304,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 							return executeLocked(lockKey, () -> {
 								try (InputStream is = Channels.newInputStream(FileChannel.open(p.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StandardOpenOption.READ).lock(0, Long.MAX_VALUE, true).channel())) {
 									StagedContentPackage cp = StoredContentPackage.NODE2REST.apply(mapper.readValue(is, StoredContentPackage.class), new StagedContentPackage());
-									fillContentPackageStatistic(p, cp);
+									if (addStats) {
+										fillContentPackageStatistic(p, cp);
+									}
 									addImportProgress(cp);
 									return cp;
 								} catch (Throwable e) {
@@ -1814,14 +1821,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) throws NodeException {
 		processContentPackageItems(
 				path, cp, false,
-				page -> cp.setPages(cp.getPages() + 1),
-				folder -> cp.setFolders(cp.getFolders() + 1),
-				file -> cp.setFiles(cp.getFiles() + 1),
-				image -> cp.setImages(cp.getImages() + 1),
-				form -> cp.setForms(cp.getForms() + 1),
+				page -> cp.setPages(ObjectTransformer.getInt(cp.getPages(), 0) + 1),
+				folder -> cp.setFolders(ObjectTransformer.getInt(cp.getFolders(), 0) + 1),
+				file -> cp.setFiles(ObjectTransformer.getInt(cp.getFiles(), 0) + 1),
+				image -> cp.setImages(ObjectTransformer.getInt(cp.getImages(), 0) + 1),
+				form -> cp.setForms(ObjectTransformer.getInt(cp.getForms(), 0) + 1),
 				binary -> {},
-				node -> cp.setNodes(cp.getNodes() + 1),
-				channel -> cp.setChannels(cp.getChannels() + 1),
+				node -> cp.setNodes(ObjectTransformer.getInt(cp.getNodes(), 0) + 1),
+				channel -> cp.setChannels(ObjectTransformer.getInt(cp.getChannels(), 0) + 1),
 				metadata -> {},
 				error -> {},
 				alien -> {
@@ -2722,7 +2729,13 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			this.name = name;
 			this.isTest = isTest;
 			this.packagePath = packagePath;
-			progress.setTotal(initialState.getChannels() + initialState.getFiles() + initialState.getFolders() + initialState.getForms() + initialState.getImages() + initialState.getNodes() + initialState.getPages());
+			progress.setTotal(ObjectTransformer.getInt(initialState.getChannels(), 0)
+					+ ObjectTransformer.getInt(initialState.getFiles(), 0)
+					+ ObjectTransformer.getInt(initialState.getFolders(), 0)
+					+ ObjectTransformer.getInt(initialState.getForms(), 0)
+					+ ObjectTransformer.getInt(initialState.getImages(), 0)
+					+ ObjectTransformer.getInt(initialState.getNodes(), 0)
+					+ ObjectTransformer.getInt(initialState.getPages(), 0));
 		}
 
 		@Override

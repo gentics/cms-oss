@@ -100,6 +100,27 @@ export async function getCmsUser(): Promise<CmsUser | null> {
     }
 }
 
+/** A CMS group, as far as the workspace needs it. In the CMS a user's role is the groups they are in. */
+export interface CmsGroup {
+    id: number;
+    name: string;
+}
+
+/**
+ * The groups of the logged-in CMS user: `GET /rest/user/me?groups=true` (without `groups` the CMS leaves
+ * them out). An answer with a `responseInfo.responseCode` other than `OK` is thrown as an `HttpError`.
+ */
+export async function getCmsUserGroups(): Promise<CmsGroup[]> {
+    const url = '/rest/user/me?groups=true';
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; user?: { groups?: CmsGroup[] } }>(url, CMS_GET);
+
+    if (response.responseInfo?.responseCode !== 'OK') {
+        throw new HttpError(url, 200, response);
+    }
+
+    return response.user?.groups ?? [];
+}
+
 /**
  * Logs in with user name and password, as the editor and admin UI do: `POST /rest/auth/login`. The
  * CMS sets the session cookie itself. It answers `200` for a refused login too, with the reason in

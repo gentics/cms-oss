@@ -9,7 +9,13 @@
         },
         "darkMode": "Dark mode",
         "lightMode": "Light mode",
-        "logout": "Log out"
+        "logout": "Log out",
+        "profile": {
+            "label": "Profile",
+            "labelWithName": "Profile of {{name}}",
+            "groups_one": "Group",
+            "groups_other": "Groups"
+        }
     },
     "login": {
         "username": "User name",

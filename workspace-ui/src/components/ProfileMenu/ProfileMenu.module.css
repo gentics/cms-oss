@@ -1,0 +1,123 @@
+/* The profile in the topbar and its menu (design.md §12 "Popover / Menü"): avatars round
+   (`--corner-full`) in the icon-chip tint (§9), the roles in one framed container. */
+
+/* The trigger's avatar: 26 px, like the avatar in the chat (§12 "Chat-Blasen"). */
+.avatar,
+.avatarLarge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--corner-full);
+  background: rgba(var(--interactive-rgb), .11);
+  color: var(--fg-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: .02em;
+  line-height: 1;
+}
+
+.avatarLarge {
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-size-sm);
+}
+
+/* Avatar, name and login, the head of the menu, on the menu's own surface. */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 300px;
+  padding: 10px 8px 8px;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name,
+.login {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.name {
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+
+.login {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* The roles (the user's groups) below the head, across the menu's full width: one container framed in
+   blue with a soft glow that holds every group, so it stands out without a label (user decision:
+   departs from design.md §3.2 "Verweis / Chip", which has no glow). The margin leaves room for the
+   glow. */
+.roles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 284px;
+  margin: 4px 8px 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--interactive-rgb), .30);
+  border-radius: var(--corner-md);
+  background: rgba(var(--interactive-rgb), .05);
+  box-shadow: 0 0 8px rgba(var(--interactive-rgb), .14);
+  list-style: none;
+}
+
+/* One group: a row in the container. */
+.role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+
+  & svg {
+    flex: none;
+    color: var(--interactive);
+  }
+}
+
+.roleName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* While the roles load (§8 "Lädt"), where the container will be. */
+.rolesSkeleton {
+  height: 30px;
+  margin: 4px 8px 10px;
+  border-radius: var(--corner-md);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--fg-primary-rgb), .05) 0%,
+    rgba(var(--fg-primary-rgb), .11) 50%,
+    rgba(var(--fg-primary-rgb), .05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--duration-skeleton) linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}

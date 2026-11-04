@@ -9,7 +9,13 @@
         },
         "darkMode": "Dunkler Modus",
         "lightMode": "Heller Modus",
-        "logout": "Abmelden"
+        "logout": "Abmelden",
+        "profile": {
+            "label": "Profil",
+            "labelWithName": "Profil von {{name}}",
+            "groups_one": "Gruppe",
+            "groups_other": "Gruppen"
+        }
     },
     "login": {
         "username": "Benutzername",

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { leaveAfterLogout, startSingleSignOn } from '@/helper/keycloak/keycloak';
-import { getCmsUiLanguage, getCmsUser, loginToCms, logoutFromCms } from '@/services/cmsApiService/cmsApiService';
+import { getCmsUiLanguage, getCmsUser, getCmsUserGroups, loginToCms, logoutFromCms } from '@/services/cmsApiService/cmsApiService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 /** Query key of the logged-in CMS user (`GET /rest/user/me`); `null` data means not logged in. */
@@ -21,10 +21,21 @@ const UI_LANGUAGES = ['de', 'en'];
  * The CMS user of the browser's CMS session cookie, `null` without a valid session. Fetched again
  * when the window regains focus, so an expired session leads back to the login. `refetchOnMount:
  * false` reads it from the cache when a component mounts, e.g. on a page inside `LoginGate`, which
- * has loaded it already.
+ * has loaded it already; `enabled: false` only ever reads the cache and never asks the CMS.
  */
-export function useCmsUser({ refetchOnMount }: { refetchOnMount?: boolean } = {}) {
-    return useQuery({ queryKey: CMS_USER_QUERY_KEY, queryFn: getCmsUser, retry: false, refetchOnMount });
+export function useCmsUser({ refetchOnMount, enabled }: { refetchOnMount?: boolean; enabled?: boolean } = {}) {
+    return useQuery({ queryKey: CMS_USER_QUERY_KEY, queryFn: getCmsUser, retry: false, refetchOnMount, enabled });
+}
+
+/** Query key of the logged-in CMS user's groups (`GET /rest/user/me?groups=true`). */
+export const CMS_USER_GROUPS_QUERY_KEY = ['cms', 'user', 'groups'] as const;
+
+/**
+ * The groups of the logged-in CMS user, fetched once `enabled` (e.g. while the profile menu is open) and
+ * again each time it is enabled anew, so a changed membership shows; meanwhile the last answer is shown.
+ */
+export function useCmsUserGroups(enabled: boolean) {
+    return useQuery({ queryKey: CMS_USER_GROUPS_QUERY_KEY, queryFn: getCmsUserGroups, enabled, retry: false });
 }
 
 /**

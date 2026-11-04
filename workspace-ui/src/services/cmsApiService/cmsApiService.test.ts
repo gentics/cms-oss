@@ -13,6 +13,7 @@ import {
     getCmsKeycloakConfig,
     getCmsUiLanguage,
     getCmsUser,
+    getCmsUserGroups,
     isCmsFeatureActive,
     listCmsFolders,
     listCmsNodes,
@@ -322,6 +323,25 @@ describe('CMS login', () => {
         stubFetchSequence(new Response('', { status: 500 }));
 
         await expect(getCmsUser()).rejects.toBeInstanceOf(HttpError);
+    });
+
+    it('getCmsUserGroups asks for the user with groups and returns them', async () => {
+        const groups = [{ id: 31, name: 'Chief Content Creator' }];
+        const fetchMock = stubFetchSequence(
+            Response.json({ responseInfo: { responseCode: 'OK' }, user: { ...user, groups } }),
+            Response.json({ responseInfo: { responseCode: 'OK' }, user }),
+        );
+
+        await expect(getCmsUserGroups()).resolves.toEqual(groups);
+        await expect(getCmsUserGroups()).resolves.toEqual([]);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/user/me?groups=true', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('getCmsUserGroups throws an answer with another code than OK, and HTTP errors', async () => {
+        stubFetchSequence(Response.json({ responseInfo: { responseCode: 'FAILURE' } }), new Response('', { status: 401 }));
+
+        await expect(getCmsUserGroups()).rejects.toBeInstanceOf(HttpError);
+        await expect(getCmsUserGroups()).rejects.toBeInstanceOf(HttpError);
     });
 
     it('loginToCms posts the credentials and returns the user', async () => {

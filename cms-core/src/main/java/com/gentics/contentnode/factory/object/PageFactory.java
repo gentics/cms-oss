@@ -6186,7 +6186,7 @@ public class PageFactory extends AbstractFactory {
 	 * @return comma separated list of DatasourcePartType parts
 	 * @throws NodeException
 	 */
-	private static String getDatasourcePartIds() throws NodeException {
+	static String getDatasourcePartIds() throws NodeException {
 		final Set<Integer> partIds = new HashSet<Integer>();
 		DBUtils.executeStatement("SELECT id FROM part WHERE type_id = 32", new SQLExecutor() {
 			@Override
@@ -6328,7 +6328,7 @@ public class PageFactory extends AbstractFactory {
 	 * @return true iff the snapshot of the transaction is stale
 	 * @throws NodeException
 	 */
-	private static boolean lockForVersioning(int contentId) throws NodeException {
+	static boolean lockForVersioning(int contentId) throws NodeException {
 		var versioningLocks = getTransactionScopedAttribute(VERSIONING_LOCKS_IN_TRX, new HashMap<Integer, Boolean>());
 		var stale = versioningLocks.get(contentId);
 

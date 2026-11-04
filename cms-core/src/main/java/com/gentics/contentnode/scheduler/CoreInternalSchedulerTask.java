@@ -14,6 +14,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.factory.object.DuplicatePageVersions;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.logger.LogCollector;
 import com.gentics.contentnode.logger.StringListAppender;
@@ -135,7 +136,21 @@ public enum CoreInternalSchedulerTask implements InternalSchedulerTask {
 	convertimages(
 		"Convert images",
 		"Converts images to WebP format for all nodes where the webp_conversion feature is active",
-		new ConvertImagesJob()::convert);
+		new ConvertImagesJob()::convert),
+
+	/**
+	 * Task that checks for duplicate page versions (without changing anything) and estimates the duration of the repair
+	 */
+	checkduplicatepageversions("Check Duplicate Page Versions",
+			"Check for duplicate page versions and estimate the duration of the repair. Nothing is changed.",
+			DuplicatePageVersions::check),
+
+	/**
+	 * Task that repairs duplicate page versions
+	 */
+	repairduplicatepageversions("Repair Duplicate Page Versions",
+			"Repair duplicate page versions and republish the affected online pages.",
+			DuplicatePageVersions::repair);
 	;
 
 	/**

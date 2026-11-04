@@ -90,7 +90,7 @@ test.describe('Form Management', () => {
         await test.step('Specialized Test Setup', async () => {
             await IMPORTER.setupFeatures(TestSize.MINIMAL, {
                 [NodeFeature.FORMS]: true,
-            });
+            }) as any;
             await IMPORTER.importData([FORM_ONE]);
         });
     });

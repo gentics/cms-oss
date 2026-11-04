@@ -167,9 +167,10 @@ describe('PlanCard', () => {
         expect(p5).toHaveTextContent('Removed');
     });
 
-    it('shows only the next steps of a revision, not what an earlier version did, until it is accepted', () => {
+    it('shows only the next steps of a revision, not what an earlier version did or failed, until it is accepted', () => {
         const items: PlanItem[] = [
             { id: 'p1', label: 'Create page Fair', kind: 'create', workflow: 'content_create', status: 'done', creates: { type: 'page', label: 'Fair' } },
+            { id: 'p1b', label: 'Create page Fest', kind: 'create', workflow: 'content_create', status: 'failed', creates: { type: 'page', label: 'Fest' } },
             { id: 'p2', label: 'Create page Expo', kind: 'create', workflow: 'content_create', status: 'pending', creates: { type: 'page', label: 'Expo' } },
             { id: 'p3', label: 'Create page Gala', kind: 'create', workflow: 'content_create', status: 'pending', creates: { type: 'page', label: 'Gala' } },
         ];
@@ -177,13 +178,15 @@ describe('PlanCard', () => {
         const { rerender } = render(<AdjustablePlan plan={revision} />, { wrapper: createWrapper() });
 
         expect(screen.queryByText('Create page Fair')).not.toBeInTheDocument();
+        expect(screen.queryByText('Create page Fest')).not.toBeInTheDocument();
         expect(screen.getAllByRole('listitem')[0]).toHaveTextContent(/^1Create page Expo/);
         expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('+2 new pages');
 
         rerender(<AdjustablePlan plan={{ ...revision, status: 'running' }} />);
 
         expect(screen.getByText('Create page Fair')).toBeInTheDocument();
-        expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('1/3 new pages');
+        expect(screen.getByText('Create page Fest')).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'At a glance' })).toHaveTextContent('1/4 new pages');
     });
 
     it('marks nothing on a plan that was never accepted, where every step is added', () => {

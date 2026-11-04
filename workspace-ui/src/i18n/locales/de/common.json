@@ -165,6 +165,7 @@
         "startFailed": "Die Session konnte nicht gestartet werden"
     },
     "composer": {
+        "sideQuestion": "Nebenfrage",
         "file": "Datei",
         "verbatim": "Verbatim",
         "typeInstead": "Stattdessen tippen",
@@ -878,7 +879,8 @@
             "rate_limited": "Zu viele Anfragen. Bitte versuchen Sie es gleich noch einmal.",
             "service_unavailable": "Der KI-Dienst ist derzeit nicht verfügbar.",
             "plan_not_revisable": "Dieser Plan ist endgültig abgeschlossen und kann nicht mehr geändert werden.",
-            "dependency_order": "Ein Schritt steht vor einem Schritt, von dem er abhängt."
+            "dependency_order": "Ein Schritt steht vor einem Schritt, von dem er abhängt.",
+            "revise_plan_missing": "Es gibt keinen Plan zum Überarbeiten."
         },
         "cms": {
             "AUTHREQUIRED": "Bitte melden Sie sich im CMS an.",

@@ -1,36 +1,31 @@
 package com.gentics.contentnode.scheduler;
 
-import static com.gentics.contentnode.factory.Trx.operate;
-
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.logger.LogCollector;
 import com.gentics.contentnode.logger.StringListAppender;
 import com.gentics.contentnode.msg.NodeMessage;
-import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.LogFileArchiver;
 import com.gentics.contentnode.publish.PublishController;
 import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.IntegerColumnRetriever;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+
+import static com.gentics.contentnode.factory.Trx.operate;
 
 /**
  * Enum containing all internal scheduler tasks
@@ -49,7 +44,8 @@ public enum CoreInternalSchedulerTask implements InternalSchedulerTask {
 	 * Task that purges the wastebin
 	 */
 	purgewastebin("Purge Wastebin", "Purge objects from the wastebin, which are older than the configured maximum wastebin age", out -> {
-		AtomicBoolean success = new AtomicBoolean(true);
+		var success = new AtomicBoolean(true);
+
 		operate(t -> {
 			try (LogCollector logCollector = new LogCollector("wastebin",
 					new StringListAppender(PatternLayout.newBuilder().withPattern("%d %-5p - %m%n").build(), out))) {
@@ -58,22 +54,23 @@ public enum CoreInternalSchedulerTask implements InternalSchedulerTask {
 				DBUtils.executeStatement("SELECT id FROM node", ex);
 
 				List<Node> nodes = t.getObjects(Node.class, ex.getValues());
-				for (Node node : nodes) {
-					// purge every node in its own transaction, so that an error while purging a node (which might also close the transaction)
-					// does not prevent purging the other nodes
-					try (Trx nodeTrx = new Trx()) {
-						nodeTrx.getTransaction().setInstantPublishingEnabled(false);
-						Map<String, Integer> result = nodeTrx.getTransaction().getObject(node).purgeWastebin();
-					if (result == null || result.isEmpty()) {
-						out.add(String.format("Skipped purge for node %s", I18NHelper.getName(node)));
-						continue;
-					}
 
-					out.add(String.format("Purged %s for node %s",
-								result.entrySet().stream()
+				for (Node node : nodes) {
+					try {
+						var result = node.purgeWastebin();
+
+						if (MapUtils.isEmpty(result)) {
+							out.add(String.format("Skipped purge for node %s", I18NHelper.getName(node)));
+
+							continue;
+						}
+
+						out.add(String.format("Purged %s for node %s",
+							result.entrySet().stream()
 								.map((entry) -> String.format("%d %s(s)", entry.getValue(), entry.getKey()))
 								.collect(Collectors.joining(", ")), I18NHelper.getName(node)));
-						nodeTrx.success();
+
+						t.commit(false);
 					} catch (NodeException e) {
 						success.set(false);
 						out.add(String.format("Error while purging wastebin for node %s:", I18NHelper.getName(node)));

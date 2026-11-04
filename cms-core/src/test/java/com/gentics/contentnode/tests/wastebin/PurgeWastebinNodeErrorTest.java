@@ -1,17 +1,8 @@
 package com.gentics.contentnode.tests.wastebin;
 
-import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplateAndPage;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.ClassRule;
-import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
@@ -24,6 +15,15 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.scheduler.CoreInternalSchedulerTask;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplateAndPage;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test cases for purging the wastebin, when purging fails for a node
@@ -32,6 +32,11 @@ import com.gentics.contentnode.testutils.GCNFeature;
 public class PurgeWastebinNodeErrorTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setUpOnce() throws Exception {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Test that the purge task continues with the other nodes, when purging fails for a node, and reports the failure

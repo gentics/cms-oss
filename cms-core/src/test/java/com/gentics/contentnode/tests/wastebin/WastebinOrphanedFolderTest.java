@@ -1,21 +1,9 @@
 package com.gentics.contentnode.tests.wastebin;
 
-import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFile;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplateAndPage;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
@@ -31,6 +19,18 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.scheduler.CoreInternalSchedulerTask;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFile;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplateAndPage;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test cases for deleting a folder, which has subfolders in the wastebin, while the wastebin feature is deactivated
@@ -50,6 +50,11 @@ public class WastebinOrphanedFolderTest {
 	private Page page;
 
 	private File file;
+
+	@BeforeClass
+	public static void setUpOnce() throws Exception {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Create a folder with a subfolder (containing a page and a file), put the subfolder into the wastebin and delete the folder while the wastebin feature is deactivated

@@ -29,7 +29,7 @@ public class WastebinResource extends InternalResource {
 	/**
 	 * Logger
 	 */
-	protected final static NodeLogger logger = NodeLogger.getNodeLogger("wastebin");
+	protected final static NodeLogger logger = NodeLogger.getNodeLogger(WastebinResource.class);
 
 	/**
 	 * Job Controller for the purge wastebin job
@@ -42,13 +42,11 @@ public class WastebinResource extends InternalResource {
 
 		List<Node> nodes = t.getObjects(Node.class, ex.getValues());
 		List<String> failedNodes = new ArrayList<>();
+
 		for (Node node : nodes) {
-			// purge every node in its own transaction, so that an error while purging a node (which might also close the transaction)
-			// does not prevent purging the other nodes
-			try (Trx nodeTrx = new Trx()) {
-				nodeTrx.getTransaction().setInstantPublishingEnabled(false);
-				nodeTrx.getTransaction().getObject(node).purgeWastebin();
-				nodeTrx.success();
+			try {
+				node.purgeWastebin();
+				t.commit(false);
 			} catch (NodeException e) {
 				failedNodes.add(I18NHelper.getName(node));
 				logger.error(String.format("Error while purging wastebin for node %s", I18NHelper.getName(node)), e);

@@ -1256,7 +1256,7 @@
         "token_expires": "Ablaufdatum",
         "token_issued": "Erstelldatum",
         "token_valid": "Valide",
-		"token_unlimited": "Unablaufbar"
+		"token_unlimited": "Unbegrenzt"
     },
     "object_property": {
         "objectProperty_plural": "Objekteigenschaften",

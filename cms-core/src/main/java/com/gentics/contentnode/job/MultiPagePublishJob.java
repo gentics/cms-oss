@@ -199,8 +199,14 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 					Operator.Lock lock = PageResourceImpl.getContentLock(id);
 					// commit the transaction, so that the page is published with a snapshot, which is created after the lock was acquired
 					t.commit(false);
-					PublishSuccessState state = Operator.executeLockedInCurrentThread(lock,
-							() -> publishPage(id, isAlllang, at, message, keepPublishAt, keepVersion, feedback));
+					PublishSuccessState state = Operator.executeLockedInCurrentThread(lock, () -> {
+						try {
+							return publishPage(id, isAlllang, at, message, keepPublishAt, keepVersion, feedback);
+						} finally {
+							// commit while still holding the lock, so that the next holder of the lock sees the changes
+							t.commit(false);
+						}
+					});
 
 					switch (state) {
 					case INHERITED:

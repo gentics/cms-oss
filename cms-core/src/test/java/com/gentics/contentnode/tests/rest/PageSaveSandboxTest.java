@@ -13,6 +13,7 @@ import org.junit.Test;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
@@ -140,8 +141,7 @@ public class PageSaveSandboxTest {
 		PageCreateRequest pageCreateRequest = new PageCreateRequest();
 		pageCreateRequest.setFolderId(node.getFolder().getId().toString());
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		Page testPage = pageResource.create(pageCreateRequest).getPage();
+		Page testPage = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().create(pageCreateRequest).getPage());
 
 		Page invalidDataPage = new Page();
 		String description = "description was updated!";
@@ -152,15 +152,15 @@ public class PageSaveSandboxTest {
 		invalidDataPage.setDescription(description);
 
 		PageSaveRequest pageSaveRequest = new PageSaveRequest(invalidDataPage);
-		GenericResponse saveResponse = pageResource.save(testPage.getId()
-				.toString(), pageSaveRequest);
+		GenericResponse saveResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().save(testPage.getId()
+				.toString(), pageSaveRequest));
 
 		assertEquals("Saving should be successful", saveResponse
 				.getResponseInfo().getResponseCode(), ResponseCode.OK);
 
-		Page resultPage = pageResource.load(testPage.getId().toString(), false,
+		Page resultPage = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().load(testPage.getId().toString(), false,
 				false, false, false, false, false, false, false, false,
-				false, ObjectTransformer.getInteger(node.getId(), -1), null).getPage();
+				false, ObjectTransformer.getInteger(node.getId(), -1), null).getPage());
 
 		assertEquals("Description should be updated",
 				resultPage.getDescription(), description);
@@ -198,21 +198,20 @@ public class PageSaveSandboxTest {
 		PageCreateRequest pageCreateRequest = new PageCreateRequest();
 		pageCreateRequest.setFolderId(node.getFolder().getId().toString());
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		Page testPage = pageResource.create(pageCreateRequest).getPage();
+		Page testPage = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().create(pageCreateRequest).getPage());
 
 		String name = "90a8hgasfjnasldfhasdf";
 		testPage.setName(name);
 
-		GenericResponse response = pageResource.save(testPage.getId()
-				.toString(), new PageSaveRequest(testPage));
+		GenericResponse response = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().save(testPage.getId()
+				.toString(), new PageSaveRequest(testPage)));
 
 		assertEquals("Response code should be OK", ResponseCode.OK, response
 				.getResponseInfo().getResponseCode());
 
-		Page checkPage = pageResource.load(testPage.getId().toString(), false,
+		Page checkPage = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().load(testPage.getId().toString(), false,
 				false, false, false, false, false, false, false, false, false, null, null)
-				.getPage();
+				.getPage());
 
 		assertEquals("Name should be updated", checkPage.getName(), name);
 	}
@@ -248,16 +247,15 @@ public class PageSaveSandboxTest {
 
 		saveRequest.setDeriveFileName(true);
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+		GenericResponse saveResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().save(id.toString(),saveRequest));
 
 		assertEquals("Saving should be successful",
 			saveResponse.getResponseInfo().getResponseCode(),
 			ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
+		PageLoadResponse loadResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().load(id.toString(),
 			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			false, node.getId(), null));
 
 		assertEquals("Empty filename should have been fixed",
 			loadResponse.getPage().getFileName(),
@@ -296,16 +294,15 @@ public class PageSaveSandboxTest {
 
 		saveRequest.setDeriveFileName(true);
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+		GenericResponse saveResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().save(id.toString(),saveRequest));
 
 		assertEquals("Saving should be successful",
 			saveResponse.getResponseInfo().getResponseCode(),
 			ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
+		PageLoadResponse loadResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().load(id.toString(),
 			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			false, node.getId(), null));
 
 		assertEquals("Filename should have been updated normally",
 				loadResponse.getPage().getFileName(),
@@ -342,16 +339,15 @@ public class PageSaveSandboxTest {
 		newPage.setFileName("");
 
 		PageSaveRequest saveRequest = new PageSaveRequest(newPage);
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+		GenericResponse saveResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().save(id.toString(),saveRequest));
 
 		assertEquals("Saving should be successful",
 			saveResponse.getResponseInfo().getResponseCode(),
 			ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
+		PageLoadResponse loadResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().load(id.toString(),
 			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			false, node.getId(), null));
 
 		assertEquals("Filename should not have changed",
 				loadResponse.getPage().getFileName(),
@@ -388,16 +384,15 @@ public class PageSaveSandboxTest {
 		newPage.setFileName(expectedFilename);
 
 		PageSaveRequest saveRequest = new PageSaveRequest(newPage);
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+		GenericResponse saveResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().save(id.toString(),saveRequest));
 
 		assertEquals("Saving should be successful",
 			saveResponse.getResponseInfo().getResponseCode(),
 			ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
+		PageLoadResponse loadResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().load(id.toString(),
 			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			false, node.getId(), null));
 
 		assertEquals("Filename should have been updated normally",
 				loadResponse.getPage().getFileName(),

@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.PageFactory;
 import com.gentics.contentnode.object.Content;
@@ -46,12 +46,14 @@ import com.gentics.contentnode.object.parttype.ShortTextPartType;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.request.ContentTagCreateRequest;
 import com.gentics.contentnode.rest.model.request.LinksType;
+import com.gentics.contentnode.rest.model.request.MultiPagePublishRequest;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.model.response.TagCreateResponse;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -115,6 +117,37 @@ public class ConcurrentPageVersionTest {
 	 */
 	@Test
 	public void testConcurrentSaveAndPublish() throws Exception {
+		concurrentSaveAndPublish(pageId -> {
+			PagePublishRequest request = new PagePublishRequest();
+			request.setAlllang(false);
+			request.setAt(0);
+			return new PageResourceImpl().publish(pageId, null, request);
+		});
+	}
+
+	/**
+	 * Run save (with createVersion) and publish (via the endpoint for publishing multiple pages) concurrently and check the published version and the version numbers
+	 * @throws Exception
+	 */
+	@Test
+	public void testConcurrentSaveAndMultiPagePublish() throws Exception {
+		concurrentSaveAndPublish(pageId -> {
+			MultiPagePublishRequest request = new MultiPagePublishRequest();
+			request.setIds(Collections.singletonList(pageId));
+			request.setAlllang(false);
+			request.setAt(0);
+			// do not send the job into the background
+			request.setForegroundTime(60);
+			return new PageResourceImpl().publish(null, request);
+		});
+	}
+
+	/**
+	 * Run save (with createVersion) and the given publish call concurrently and check the published version and the version numbers
+	 * @param publishCall publish call
+	 * @throws Exception
+	 */
+	protected void concurrentSaveAndPublish(PublishCall publishCall) throws Exception {
 		Trx.operate(() -> {
 			System.out.println("DB isolation level: " + getIsolationLevel());
 		});
@@ -159,10 +192,7 @@ public class ConcurrentPageVersionTest {
 			}));
 			Future<GenericResponse> publishFuture = executor.submit(concurrently(barrier, () -> {
 				try (Trx trx = new Trx(user)) {
-					PagePublishRequest request = new PagePublishRequest();
-					request.setAlllang(false);
-					request.setAt(0);
-					GenericResponse response = new PageResourceImpl().publish(pageId, null, request);
+					GenericResponse response = publishCall.publish(pageId);
 					trx.success();
 					return response;
 				}
@@ -228,160 +258,142 @@ public class ConcurrentPageVersionTest {
 	}
 
 	/**
-	 * Test creating a page version in a transaction, whose snapshot does not contain the page version, which was created (and committed)
+	 * Test saving the page (with createVersion) in a transaction, whose snapshot does not contain the page version, which was created (and committed)
 	 * by another transaction in the meantime (with isolation level REPEATABLE READ, the snapshot of the transaction is stale).
 	 * Unlike {@link #testConcurrentSaveAndPublish()}, this does not depend on timing.
 	 * @throws Exception
 	 */
 	@Test
-	public void testCreateVersionWithStaleSnapshot() throws Exception {
-		int base = (int) (System.currentTimeMillis() / 1000) + 3600;
-		Page page = Trx.supply(user, () -> createPage(node.getFolder(), template, "Stale"));
-		List<String> tagNames = Trx.supply(user, t -> {
-			Page editablePage = t.getObject(page, true);
+	public void testSaveWithStaleSnapshot() throws Exception {
+		StalePage page = executeWithStaleSnapshot("Stale save",
+				p -> new PageResourceImpl().save(Integer.toString(p.id()), saveRequest(p.id(), p.thisTag(), "this")));
+
+		Trx.operate(user, t -> {
+			NodeObjectVersion[] versions = t.getObject(Page.class, page.id()).getVersions();
+			Page latest = t.getObject(Page.class, page.id(), versions[0].getDate().getIntTimestamp());
+			assertThat(getUrl(latest, page.thisTag())).as("Value of this tag in the latest version").isEqualTo("this");
+			assertThat(getUrl(latest, page.otherTag())).as("Value of the other tag in the latest version").isEqualTo("other");
+		});
+	}
+
+	/**
+	 * Test publishing the page in a transaction, whose snapshot does not contain the page version, which was created (and committed)
+	 * by another transaction in the meantime. The published version must contain the changes of the other transaction.
+	 * @throws Exception
+	 */
+	@Test
+	public void testPublishWithStaleSnapshot() throws Exception {
+		StalePage page = executeWithStaleSnapshot("Stale publish", p -> {
+			PagePublishRequest request = new PagePublishRequest();
+			request.setAlllang(false);
+			request.setAt(0);
+			return new PageResourceImpl().publish(Integer.toString(p.id()), null, request);
+		});
+
+		Trx.operate(user, t -> {
+			NodeObjectVersion publishedVersion = t.getObject(Page.class, page.id()).getPublishedVersion();
+			assertThat(publishedVersion).as("Published version").isNotNull();
+			Page published = t.getObject(Page.class, page.id(), publishedVersion.getDate().getIntTimestamp());
+			assertThat(getUrl(published, page.otherTag())).as("Value of the other tag in the published version").isEqualTo("other");
+		});
+	}
+
+	/**
+	 * Test restoring the initial page version in a transaction, whose snapshot does not contain the page version, which was created (and committed)
+	 * by another transaction in the meantime. The changes of the other transaction must be reverted.
+	 * @throws Exception
+	 */
+	@Test
+	public void testRestoreWithStaleSnapshot() throws Exception {
+		StalePage page = executeWithStaleSnapshot("Stale restore",
+				p -> new PageResourceImpl().restoreVersion(Integer.toString(p.id()), p.initialVersion()));
+
+		Trx.operate(user, t -> {
+			Page current = t.getObject(Page.class, page.id());
+			assertThat(getUrl(current, page.otherTag())).as("Value of the other tag in the page").isEqualTo("initial");
+			NodeObjectVersion[] versions = current.getVersions();
+			Page latest = t.getObject(Page.class, page.id(), versions[0].getDate().getIntTimestamp());
+			assertThat(getUrl(latest, page.otherTag())).as("Value of the other tag in the latest version").isEqualTo("initial");
+		});
+	}
+
+	/**
+	 * Create a page with two tags (both with value "initial") and a page version in the past. Then execute the given operation in a transaction,
+	 * whose snapshot was established before another transaction saved the page (setting the value "other" into the other tag and creating a page version).
+	 * Finally assert that the page versions have unique numbers and timestamps.
+	 * @param name page name
+	 * @param operation operation
+	 * @return page
+	 * @throws Exception
+	 */
+	protected StalePage executeWithStaleSnapshot(String name, StaleOperation operation) throws Exception {
+		int past = (int) (System.currentTimeMillis() / 1000) - 60;
+		StalePage page = Trx.supply(user, t -> {
+			t.setTimestamp(past * 1000L);
+			Page editablePage = t.getObject(createPage(node.getFolder(), template, name), true);
 			ContentTag first = editablePage.getContent().addContentTag(constructId);
 			first.setEnabled(true);
+			getPartType(ShortTextPartType.class, first, "url").setText("initial");
 			ContentTag second = editablePage.getContent().addContentTag(constructId);
 			second.setEnabled(true);
+			getPartType(ShortTextPartType.class, second, "url").setText("initial");
 			editablePage.save();
-			return Arrays.asList(first.getName(), second.getName());
+			return new StalePage(editablePage.getId(), first.getName(), second.getName(), past);
 		});
-		String thisTag = tagNames.get(0);
-		String otherTag = tagNames.get(1);
 
 		try (Trx trx = new Trx(user)) {
-			Transaction t = trx.getTransaction();
-			t.setTimestamp((base + 30) * 1000L);
-
 			// establish the snapshot of this transaction (with a consistent read of an InnoDB table)
 			System.out.println("DB isolation level: " + getIsolationLevel());
 			int versionCount = DBUtils.select("SELECT COUNT(*) c FROM nodeversion WHERE o_type = ? AND o_id = ?", ps -> {
 				ps.setInt(1, Page.TYPE_PAGE);
-				ps.setInt(2, page.getId());
+				ps.setInt(2, page.id());
 			}, rs -> rs.next() ? rs.getInt("c") : 0);
 			System.out.println("Page versions seen by this transaction before the other transaction: " + versionCount);
 
 			// another transaction changes the other tag and creates a version (and is committed)
 			executor.submit(() -> {
-				Trx.operate(user, t2 -> {
-					t2.setTimestamp((base + 20) * 1000L);
-					Page editablePage = t2.getObject(page, true);
-					getPartType(ShortTextPartType.class, editablePage.getContentTag(otherTag), "url").setText("other");
-					editablePage.save();
-				});
+				try (Trx trx2 = new Trx(user)) {
+					assertResponseOK(new PageResourceImpl().save(Integer.toString(page.id()), saveRequest(page.id(), page.otherTag(), "other")));
+					trx2.success();
+				}
 				return null;
 			}).get(1, TimeUnit.MINUTES);
 
-			// this transaction changes this tag and creates a version
-			Page editablePage = t.getObject(page, true);
-			getPartType(ShortTextPartType.class, editablePage.getContentTag(thisTag), "url").setText("this");
-			editablePage.save();
+			// this transaction executes the operation
+			assertResponseOK(operation.execute(page));
 			trx.success();
 		}
 
-		dumpNodeversions(page.getId());
+		dumpNodeversions(page.id());
 
-		Trx.operate(user, t -> {
-			Page current = t.getObject(Page.class, page.getId());
-			NodeObjectVersion[] versions = current.getVersions();
-			List<String> numbers = Arrays.stream(versions).map(NodeObjectVersion::getNumber).collect(Collectors.toList());
-			assertThat(duplicates(numbers)).as("Duplicate page version numbers").isEmpty();
-			assertThat(versions[0].getDate().getIntTimestamp()).as("Timestamp of latest version").isEqualTo(base + 30);
+		List<NodeObjectVersion> versions = Arrays.asList(Trx.supply(() -> PageFactory.loadPageVersions(page.id())));
+		assertThat(duplicates(versions.stream().map(NodeObjectVersion::getNumber).collect(Collectors.toList())))
+				.as("Duplicate page version numbers").isEmpty();
+		assertThat(duplicates(versions.stream().map(v -> v.getDate().getIntTimestamp()).collect(Collectors.toList())))
+				.as("Duplicate page version timestamps").isEmpty();
 
-			Page latest = t.getObject(Page.class, page.getId(), versions[0].getDate().getIntTimestamp());
-			assertThat(getUrl(latest, thisTag)).as("Value of this tag in the latest version").isEqualTo("this");
-			for (String tagName : tagNames) {
-				assertThat(getUrl(latest, tagName)).as("Value of tag " + tagName + " in the latest version").isEqualTo(getUrl(current, tagName));
-			}
-		});
+		return page;
 	}
 
 	/**
-	 * Test creating a page version in a transaction with a stale snapshot, when another transaction published the page without
-	 * changing data in the meantime. Such a publish only updates the existing page version (renames it to a major version and marks it
-	 * as published) without inserting versioned records. The published version must not be modified by this transaction, the new
-	 * version must get a newer timestamp instead.
-	 * Like {@link #testCreateVersionWithStaleSnapshot()}, this does not depend on timing.
-	 * @throws Exception
+	 * Create a request for saving the page with a new value for the url of the given tag (creating a page version)
+	 * @param pageId page ID
+	 * @param tagName tag name
+	 * @param url url
+	 * @return save request
+	 * @throws NodeException
 	 */
-	@Test
-	public void testCreateVersionAfterPublishWithoutChangesWithStaleSnapshot() throws Exception {
-		int base = (int) (System.currentTimeMillis() / 1000) + 3600;
+	protected PageSaveRequest saveRequest(int pageId, String tagName, String url) throws NodeException {
+		Page page = TransactionManager.getCurrentTransaction().getObject(Page.class, pageId);
+		Tag tag = ModelBuilder.getTag(page.getContentTag(tagName), false);
+		tag.getProperties().get("url").setStringValue(url);
 
-		// create and publish the page, so that the publisher is set (publishing again by the same user does not change versioned data)
-		Page page = Trx.supply(user, () -> createPage(node.getFolder(), template, "Stale publish"));
-		String tagName = Trx.supply(user, t -> {
-			t.setTimestamp(base * 1000L);
-			Page editablePage = t.getObject(page, true);
-			ContentTag tag = editablePage.getContent().addContentTag(constructId);
-			tag.setEnabled(true);
-			getPartType(ShortTextPartType.class, tag, "url").setText("first");
-			editablePage.save();
-			editablePage.publish();
-			return tag.getName();
-		});
-
-		// change the tag and save (creates an unpublished version)
-		Trx.operate(user, t -> {
-			t.setTimestamp((base + 10) * 1000L);
-			Page editablePage = t.getObject(page, true);
-			getPartType(ShortTextPartType.class, editablePage.getContentTag(tagName), "url").setText("second");
-			editablePage.save();
-		});
-
-		try (Trx trx = new Trx(user)) {
-			Transaction t = trx.getTransaction();
-			t.setTimestamp((base + 10) * 1000L);
-
-			// establish the snapshot of this transaction (with a consistent read of an InnoDB table)
-			System.out.println("DB isolation level: " + getIsolationLevel());
-			int versionCount = DBUtils.select("SELECT COUNT(*) c FROM nodeversion WHERE o_type = ? AND o_id = ?", ps -> {
-				ps.setInt(1, Page.TYPE_PAGE);
-				ps.setInt(2, page.getId());
-			}, rs -> rs.next() ? rs.getInt("c") : 0);
-			System.out.println("Page versions seen by this transaction before the other transaction: " + versionCount);
-
-			// another transaction publishes the page without changing it (and is committed)
-			executor.submit(() -> {
-				Trx.operate(user, t2 -> {
-					t2.setTimestamp((base + 10) * 1000L);
-					Page editablePage = t2.getObject(page, true);
-					editablePage.publish();
-				});
-				return null;
-			}).get(1, TimeUnit.MINUTES);
-			dumpNodeversions(page.getId());
-
-			// show the page versions as seen in the snapshot of this transaction
-			System.out.println("Page versions seen by this transaction after the other transaction: " + Arrays.stream(PageFactory.loadPageVersions(page.getId()))
-					.map(v -> v.getNumber() + "@" + v.getDate().getIntTimestamp() + (v.isPublished() ? " (published)" : ""))
-					.collect(Collectors.joining(", ")));
-
-			// this transaction changes the tag and creates a version
-			Page editablePage = t.getObject(page, true);
-			getPartType(ShortTextPartType.class, editablePage.getContentTag(tagName), "url").setText("third");
-			editablePage.save();
-			trx.success();
-		}
-
-		dumpNodeversions(page.getId());
-
-		Trx.operate(user, t -> {
-			Page current = t.getObject(Page.class, page.getId());
-			NodeObjectVersion[] versions = current.getVersions();
-			List<String> numbers = Arrays.stream(versions).map(NodeObjectVersion::getNumber).collect(Collectors.toList());
-			assertThat(duplicates(numbers)).as("Duplicate page version numbers").isEmpty();
-
-			NodeObjectVersion publishedVersion = current.getPublishedVersion();
-			assertThat(publishedVersion).as("Published version").isNotNull();
-			assertThat(publishedVersion.getDate().getIntTimestamp()).as("Timestamp of the published version").isEqualTo(base + 10);
-			Page published = t.getObject(Page.class, page.getId(), publishedVersion.getDate().getIntTimestamp());
-			assertThat(getUrl(published, tagName)).as("Value of the tag in the published version").isEqualTo("second");
-
-			assertThat(versions[0].getDate().getIntTimestamp()).as("Timestamp of the latest version").isEqualTo(base + 11);
-			Page latest = t.getObject(Page.class, page.getId(), versions[0].getDate().getIntTimestamp());
-			assertThat(getUrl(latest, tagName)).as("Value of the tag in the latest version").isEqualTo("third");
-		});
+		com.gentics.contentnode.rest.model.Page restPage = new com.gentics.contentnode.rest.model.Page();
+		restPage.setId(pageId);
+		restPage.setTags(Collections.singletonMap(tagName, tag));
+		PageSaveRequest request = new PageSaveRequest(restPage);
+		request.setCreateVersion(true);
+		return request;
 	}
 
 	/**
@@ -591,5 +603,43 @@ public class ConcurrentPageVersionTest {
 						return null;
 					});
 		});
+	}
+
+	/**
+	 * Page used in the tests with a stale snapshot
+	 * @param id page ID
+	 * @param thisTag name of the tag, which can be changed by the tested operation
+	 * @param otherTag name of the tag, which is changed by the other transaction
+	 * @param initialVersion timestamp of the initial page version
+	 */
+	protected record StalePage(int id, String thisTag, String otherTag, int initialVersion) {
+	}
+
+	/**
+	 * Operation executed in a transaction with a stale snapshot
+	 */
+	@FunctionalInterface
+	protected interface StaleOperation {
+		/**
+		 * Execute the operation for the page
+		 * @param page page
+		 * @return response
+		 * @throws NodeException
+		 */
+		GenericResponse execute(StalePage page) throws NodeException;
+	}
+
+	/**
+	 * Call, which publishes the page
+	 */
+	@FunctionalInterface
+	protected interface PublishCall {
+		/**
+		 * Publish the page
+		 * @param pageId page ID
+		 * @return response
+		 * @throws NodeException
+		 */
+		GenericResponse publish(String pageId) throws NodeException;
 	}
 }

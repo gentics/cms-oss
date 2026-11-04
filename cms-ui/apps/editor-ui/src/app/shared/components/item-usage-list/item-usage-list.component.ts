@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
-import { BaseUsageOptions, File, Image, Item, Language, Page, UsageInPagesOptions } from '@gentics/cms-models';
+import { BaseUsageOptions, File, Image, Item, Form, Language, Page, UsageInPagesOptions } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { cancelEvent, ChangesOf } from '@gentics/ui-core';
 import { Observable, of, Subscription } from 'rxjs';
@@ -38,7 +38,7 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     public type: UsageType | LinkType;
 
     @Input()
-    public item: Page | Image | File;
+    public item: Page | Image | File | Form;
 
     @Input()
     public nodeId: number;
@@ -212,6 +212,14 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
                     })),
                 );
 
+            case 'form':
+                return this.client.form.usageInPages(this.getPageLoadOptions()).pipe(
+                    map(res => ({
+                        items: res.pages,
+                        totalCount: res.total,
+                    })),
+                );
+
             default:
                 return of({ items: [], totalCount: 0 });
         }
@@ -287,6 +295,14 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
 
             case 'page':
                 return this.client.page.usageInTemplates(this.getLoadOptions()).pipe(
+                    map(res => ({
+                        items: res.templates,
+                        totalCount: res.total,
+                    })),
+                );
+
+            case 'form':
+                return this.client.form.usageInTemplates(this.getLoadOptions()).pipe(
                     map(res => ({
                         items: res.templates,
                         totalCount: res.total,

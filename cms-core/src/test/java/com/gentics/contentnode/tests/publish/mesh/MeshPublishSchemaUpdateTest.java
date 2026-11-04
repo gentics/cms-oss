@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.publish.mesh;
 
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertNewJobs;
+import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertSchema;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMesh;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.crResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
@@ -36,8 +37,8 @@ import com.gentics.contentnode.object.TagmapEntry.AttributeType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.tests.category.MeshTest;
-import com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.Job;
 import com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.Job;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -46,8 +47,11 @@ import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.mesh.core.rest.job.JobResponse;
 import com.gentics.mesh.core.rest.job.JobType;
+import com.gentics.mesh.core.rest.schema.impl.SchemaCreateRequest;
 import com.gentics.mesh.core.rest.schema.impl.SchemaResponse;
 import com.gentics.mesh.core.rest.schema.impl.SchemaUpdateRequest;
+import com.gentics.mesh.core.rest.schema.impl.StringFieldSchemaImpl;
+import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 
 /**
  * Test cases for schema updates
@@ -261,5 +265,43 @@ public class MeshPublishSchemaUpdateTest {
 		assertThat(response.getContentRepository())
 				.as(String.format("Check status: %s", response.getContentRepository().getCheckResult()))
 				.hasFieldOrPropertyWithValue("checkStatus", ContentRepositoryModel.Status.error);
+	}
+
+	/**
+	 * Test that checking and repairing the CR only handles the versions of the own schemas in the branch, but leaves the versions of
+	 * foreign schemas (e.g. the schemas of a Mesh plugin) unchanged
+	 * @throws Exception
+	 */
+	@Test
+	public void testForeignSchemaVersionNotChecked() throws Exception {
+		String foreignSchemaName = "forms_plugin";
+
+		// repair CR (which will generate the schemas and the project)
+		ContentNodeRESTUtils.assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create a foreign schema and assign it to the project (like a Mesh plugin would do)
+		SchemaResponse foreignSchema = mesh.client()
+				.createSchema(new SchemaCreateRequest().setName(foreignSchemaName).setFields(List.of(new StringFieldSchemaImpl().setName("name"))))
+				.blockingGet();
+		mesh.client().assignSchemaToProject(projectName, foreignSchema.getUuid()).blockingAwait();
+
+		// update the foreign schema without assigning the new version to the branch
+		mesh.client().updateSchema(foreignSchema.getUuid(), new SchemaUpdateRequest().setName(foreignSchemaName)
+				.setFields(List.of(new StringFieldSchemaImpl().setName("name"), new StringFieldSchemaImpl().setName("description"))),
+				new SchemaUpdateParametersImpl().setUpdateAssignedBranches(false)).blockingAwait();
+		assertSchema(mesh.client(), projectName, projectName, foreignSchemaName,
+				info -> assertThat(info.getVersion()).as("Foreign schema version in branch").isEqualTo("1.0"));
+
+		// the outdated foreign schema version must not fail the check
+		ContentRepositoryResponse response = crResource.check(Integer.toString(crId), 0);
+		ContentNodeRESTUtils.assertResponseOK(response);
+		assertThat(response.getContentRepository())
+				.as(String.format("Check status: %s", response.getContentRepository().getCheckResult()))
+				.hasFieldOrPropertyWithValue("checkStatus", ContentRepositoryModel.Status.ok);
+
+		// the repair must not change the foreign schema version in the branch
+		ContentNodeRESTUtils.assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+		assertSchema(mesh.client(), projectName, projectName, foreignSchemaName,
+				info -> assertThat(info.getVersion()).as("Foreign schema version in branch").isEqualTo("1.0"));
 	}
 }

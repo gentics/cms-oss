@@ -85,7 +85,11 @@
 
 <ng-template #dateRenderer let-value="value">
   <span class="gtx-table-cell-text">
-    {{ value | gtxI18nDate:'date' }}
+@if (value) {
+	{{ value | gtxI18nDate:'date' }}
+} @else {
+	{{ 'mesh.token_unlimited' | gtxI18n }}
+}
   </span>
 </ng-template>
 

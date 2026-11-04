@@ -390,6 +390,36 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 
 	/**
+	 * Execute the given callable with a lock on the content of the page with given ID, so that page versions of the content
+	 * (which is shared by all page variants) are not created concurrently.
+	 * The current transaction is committed, and the callable is executed in a new transaction, which is started after the lock
+	 * was acquired, so it sees all changes committed by the previous holder of the lock.
+	 * If the page does not exist, the callable is executed without lock (and is expected to handle the missing page).
+	 * @param id page ID
+	 * @param nodeId optional node ID, for which the page is loaded
+	 * @param description job description
+	 * @param callable callable
+	 * @return response of the callable
+	 * @throws NodeException
+	 */
+	protected GenericResponse executeLockedForContent(String id, Integer nodeId, String description, Callable<GenericResponse> callable)
+			throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Operator.Lock lock = null;
+
+		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			Page page = t.getObject(Page.class, id);
+			if (page != null) {
+				lock = Operator.lock(LockType.contentId, page.getContent().getId());
+			}
+		}
+
+		t.commit(false);
+
+		return Operator.executeLockedRethrowing(description, 0, lock, callable);
+	}
+
+	/**
 	 * Helper method to get the tags stored in the given render result in the reverse order in which
 	 * they were rendered
 	 *
@@ -1089,7 +1119,26 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@POST
 	@Path("/save/{id}")
 	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) {
-		Transaction t = getTransaction();
+		try {
+			return executeLockedForContent(id, null, I18NHelper.get("page.save.job"), () -> doSave(id, request));
+		} catch (NodeException e) {
+			logger.error("Error while saving page " + id, e);
+			I18nString message = new CNI18nString("rest.general.error");
+			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE,
+							"Error while saving page " + id + ": " + e.getLocalizedMessage()));
+		}
+	}
+
+	/**
+	 * Save the page in the current transaction
+	 * @param id page ID
+	 * @param request save request
+	 * @return response
+	 * @throws NodeException
+	 */
+	protected GenericResponse doSave(String id, PageSaveRequest request) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = null;
 
 		try (AutoCommit cmt = new AutoCommit()) {
@@ -1651,6 +1700,25 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/publish/{id}")
 	public GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			PagePublishRequest request) {
+		try {
+			return executeLockedForContent(id, nodeId, I18NHelper.get("page.publish.job"), () -> doPublish(id, nodeId, request));
+		} catch (NodeException e) {
+			logger.error("Error while publishing page " + id, e);
+			return new GenericResponse(new Message(Message.Type.CRITICAL,
+					new CNI18nString("rest.general.error").toString()), new ResponseInfo(ResponseCode.FAILURE,
+					"Error while publishing page " + id + ": "
+							+ e.getLocalizedMessage()));
+		}
+	}
+
+	/**
+	 * Publish the page in the current transaction
+	 * @param id page ID
+	 * @param nodeId optional node ID
+	 * @param request publish request
+	 * @return response
+	 */
+	protected GenericResponse doPublish(String id, Integer nodeId, PagePublishRequest request) {
 		boolean channelIdSet = false;
 		Transaction t = null;
 		String restError = new CNI18nString("rest.general.error").toString();
@@ -2843,7 +2911,29 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/restore/{id}")
 	public PageLoadResponse restoreVersion(@PathParam("id") String id,
 			@QueryParam("version") Integer versionTimestamp) {
-		Transaction t = getTransaction();
+		try {
+			// the cast is safe, because the callable is never sent to the background (no timeout)
+			return (PageLoadResponse) executeLockedForContent(id, null, I18NHelper.get("page.restore.job"),
+					() -> doRestoreVersion(id, versionTimestamp));
+		} catch (NodeException e) {
+			logger.error("Error while restoring version of page " + id, e);
+			I18nString message = new CNI18nString("rest.general.error");
+			return new PageLoadResponse(
+					new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(
+					ResponseCode.FAILURE, "Error while restoring version of page " + id
+					+ ": " + e.getLocalizedMessage()), null);
+		}
+	}
+
+	/**
+	 * Restore the given version of the page in the current transaction
+	 * @param id page ID
+	 * @param versionTimestamp version timestamp
+	 * @return response
+	 * @throws NodeException
+	 */
+	protected PageLoadResponse doRestoreVersion(String id, Integer versionTimestamp) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = null;
 
 		// get the page
@@ -4022,7 +4112,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		// And finally: Validate
 		PageValidator validator = new PageValidatorAndErrorCollector(page.getFolder().getNode());
-		validator.processRestPage(restPage, getTransaction());
+		validator.processRestPage(restPage, TransactionManager.getCurrentTransaction());
 		for (ValidationResult result : validator.getResults()) {
 			if (result.hasErrors()) {
 				throw new NodeException(ValidationUtils.formatValidationError(result));

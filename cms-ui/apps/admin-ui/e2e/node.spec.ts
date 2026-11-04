@@ -1,21 +1,43 @@
 import {
+    clickModalAction,
     clickTableRow,
     EntityImporter,
     findTableRowById,
     loginWithForm,
+    matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    onRequest,
+    selectTab,
+    selectTableRow,
     TestSize,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { expect, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
-import { navigateToModule } from './helpers';
+import { findEntityTableActionButton, navigateToModule } from './helpers';
 
 const SELECTORS = {
     MASTER: 'gtx-node-master',
     EDITOR: 'gtx-node-editor',
     MESH_PROJECT_NAME_INPUT: 'gtx-node-properties gtx-input[formcontrolname="meshProjectName"] input',
+    WIZARD: 'gtx-create-node-wizard gtx-wizard',
+    TAB_LINK: 'gtx-tabs .tab-link',
+    NAME_INPUT: 'gtx-node-properties gtx-input[formcontrolname="name"] input',
+    HOST_INPUT: 'gtx-node-properties gtx-input[formcontrolname="host"] input',
+    LANGUAGE_ROW: 'gtx-language-table .grid-row.data-row',
 } as const;
+
+/** IDs of the create node wizard steps. The "Forms" step is only shown when the feature is activated, which it isn't by default. */
+const WIZARD_STEP = {
+    PROPERTIES: 0,
+    PUBLISHING: 1,
+    FEATURES: 2,
+    LANGUAGES: 3,
+} as const;
+
+const CLASS_ACTIVE = /is-active/;
+const CLASS_DISABLED = /disabled/;
 
 test.describe('Node Settings', () => {
 
@@ -85,6 +107,154 @@ test.describe('Node Settings', () => {
                 const input = page.locator(SELECTORS.MESH_PROJECT_NAME_INPUT);
                 await expect(input).toBeVisible();
                 await expect(input).toHaveValue(MESH_PROJECT_NAME);
+            });
+        });
+    });
+
+    test.describe('Create Node Wizard', () => {
+        const NODE_NAME = 'Wizard Test Node';
+        const NODE_HOST = 'wizard-test.localhost';
+
+        let wizard: Locator;
+        let createNodeRequestCount: number;
+
+        test.beforeEach(async ({ page }) => {
+            // Count the requests which actually create a node
+            createNodeRequestCount = 0;
+            onRequest(page, matchRequest('PUT', '/rest/node'), () => createNodeRequestCount++);
+
+            await test.step('Open the Create Node Wizard', async () => {
+                const module = await navigateToModule(page, 'nodes');
+                await findEntityTableActionButton(module, 'create').click();
+
+                wizard = page.locator(SELECTORS.WIZARD);
+                await expect(findTab(WIZARD_STEP.PROPERTIES)).toHaveClass(CLASS_ACTIVE);
+            });
+        });
+
+        function findTab(step: number): Locator {
+            return wizard.locator(`${SELECTORS.TAB_LINK}[data-id="${step}"]`);
+        }
+
+        async function fillRequiredProperties(page: Page): Promise<void> {
+            await page.locator(SELECTORS.NAME_INPUT).fill(NODE_NAME);
+            await page.locator(SELECTORS.HOST_INPUT).fill(NODE_HOST);
+        }
+
+        test.describe('Tab Navigation', () => {
+            test('should not allow selecting the following steps while the current step is invalid', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20153',
+                }],
+            }, async () => {
+                await test.step('All following steps should be disabled', async () => {
+                    await expect(findTab(WIZARD_STEP.PUBLISHING)).toHaveClass(CLASS_DISABLED);
+                    await expect(findTab(WIZARD_STEP.FEATURES)).toHaveClass(CLASS_DISABLED);
+                    await expect(findTab(WIZARD_STEP.LANGUAGES)).toHaveClass(CLASS_DISABLED);
+                });
+
+                await test.step('Clicking a disabled step should not change the active step', async () => {
+                    await selectTab(wizard, WIZARD_STEP.LANGUAGES);
+                    await expect(findTab(WIZARD_STEP.PROPERTIES)).toHaveClass(CLASS_ACTIVE);
+                });
+            });
+
+            test('should allow selecting the following steps once the steps in between are valid', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20153',
+                }],
+            }, async ({ page }) => {
+                await fillRequiredProperties(page);
+
+                await expect(findTab(WIZARD_STEP.PUBLISHING)).not.toHaveClass(CLASS_DISABLED);
+                await expect(findTab(WIZARD_STEP.FEATURES)).not.toHaveClass(CLASS_DISABLED);
+                await expect(findTab(WIZARD_STEP.LANGUAGES)).not.toHaveClass(CLASS_DISABLED);
+            });
+
+            test('should jump forward to the last step without creating the node', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20153',
+                }],
+            }, async ({ page }) => {
+                await fillRequiredProperties(page);
+
+                const languagesTab = await selectTab(wizard, WIZARD_STEP.LANGUAGES);
+
+                await expect(findTab(WIZARD_STEP.LANGUAGES)).toHaveClass(CLASS_ACTIVE);
+                await expect(languagesTab.locator(SELECTORS.LANGUAGE_ROW).first()).toBeVisible();
+                expect(createNodeRequestCount).toBe(0);
+            });
+
+            test('should go back to a previous step and keep the entered values', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20153',
+                }],
+            }, async ({ page }) => {
+                await fillRequiredProperties(page);
+
+                await test.step('Jump forward to the last step', async () => {
+                    await selectTab(wizard, WIZARD_STEP.LANGUAGES);
+                    await expect(findTab(WIZARD_STEP.LANGUAGES)).toHaveClass(CLASS_ACTIVE);
+                });
+
+                await test.step('Go back to the first step', async () => {
+                    await selectTab(wizard, WIZARD_STEP.PROPERTIES);
+                    await expect(findTab(WIZARD_STEP.PROPERTIES)).toHaveClass(CLASS_ACTIVE);
+                    await expect(page.locator(SELECTORS.NAME_INPUT)).toHaveValue(NODE_NAME);
+                    await expect(page.locator(SELECTORS.HOST_INPUT)).toHaveValue(NODE_HOST);
+                });
+            });
+
+            test('should disable the following steps again when a previous step becomes invalid', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20153',
+                }],
+            }, async ({ page }) => {
+                await fillRequiredProperties(page);
+
+                await test.step('Navigate forward and back again', async () => {
+                    await selectTab(wizard, WIZARD_STEP.PUBLISHING);
+                    await expect(findTab(WIZARD_STEP.PUBLISHING)).toHaveClass(CLASS_ACTIVE);
+                    await selectTab(wizard, WIZARD_STEP.PROPERTIES);
+                    await expect(findTab(WIZARD_STEP.PROPERTIES)).toHaveClass(CLASS_ACTIVE);
+                });
+
+                await test.step('Invalidate the first step', async () => {
+                    await page.locator(SELECTORS.NAME_INPUT).clear();
+
+                    await expect(findTab(WIZARD_STEP.PUBLISHING)).toHaveClass(CLASS_DISABLED);
+                    await selectTab(wizard, WIZARD_STEP.LANGUAGES);
+                    await expect(findTab(WIZARD_STEP.PROPERTIES)).toHaveClass(CLASS_ACTIVE);
+                });
+            });
+
+            test('should create exactly one node when finishing the wizard after navigating via the tabs', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20153',
+                }],
+            }, async ({ page }) => {
+                await fillRequiredProperties(page);
+
+                await test.step('Jump forward to the last step and select a language', async () => {
+                    const languagesTab = await selectTab(wizard, WIZARD_STEP.LANGUAGES);
+                    await expect(findTab(WIZARD_STEP.LANGUAGES)).toHaveClass(CLASS_ACTIVE);
+                    await selectTableRow(languagesTab.locator(SELECTORS.LANGUAGE_ROW).first());
+                });
+
+                await test.step('Finish the wizard', async () => {
+                    const createReq = waitForResponseFrom(page, 'PUT', '/rest/node');
+                    await clickModalAction(wizard, 'next');
+                    await createReq;
+
+                    await expect(wizard).toBeHidden();
+                    expect(createNodeRequestCount).toBe(1);
+                });
             });
         });
     });

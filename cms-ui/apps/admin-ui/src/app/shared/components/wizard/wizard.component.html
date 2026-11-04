@@ -5,7 +5,12 @@
   <div class="modal-content">
     <gtx-tabs pure [activeId]="currentStepIndex | json">
       @for (step of steps; track step; let i = $index) {
-        <gtx-tab [id]="i | json" [title]="step.title">
+        <gtx-tab
+          [id]="i | json"
+          [title]="step.title"
+          [disabled]="!isStepSelectable(i)"
+          (select)="onTabSelect(i)"
+          >
           <ng-content *ngTemplateOutlet="step.contentTemplate"></ng-content>
         </gtx-tab>
       }
@@ -15,6 +20,8 @@
     @if (currentStepIndex > 0) {
       <gtx-button
         type="primary"
+        data-action="previous"
+        [disabled]="nextClickHandlerExecuting"
         (click)="onPrevButtonClick()"
         >
         {{ 'modal.previous_button' | gtxI18n }}
@@ -22,6 +29,7 @@
     }
     <gtx-button
       type="primary"
+      data-action="next"
       [disabled]="!currentStep.nextEnabled || nextClickHandlerExecuting"
       (click)="onNextButtonClick()"
       >
@@ -34,6 +42,7 @@
     <gtx-button
       type="secondary"
       flat
+      data-action="cancel"
       (click)="onCancelButtonClick()"
       >
       {{ 'common.cancel_button' | gtxI18n }}

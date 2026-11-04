@@ -253,6 +253,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     /** If the currently active tab is an object-property, which determines the update permission on it's own. */
     private activeTabIsObjectProperty = false;
 
+    private nodeId$ = new BehaviorSubject<number | null>(null);
     private item$ = new BehaviorSubject<ItemWithObjectTags | Node>(null);
     editedObjectProperty: EditableObjectTag;
     private activeTabId: PropertiesTab;
@@ -323,10 +324,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             this.changeDetector.markForCheck();
         }));
 
-        const currNodeId$ = editorState$.pipe(
-            map((state) => state.nodeId),
-            filter((nodeId) => !!nodeId),
-            distinctUntilChanged(isEqual),
+        const currNodeId$ = this.nodeId$.pipe(
+            filter((id) => id != null),
+            distinctUntilChanged(),
         );
 
         this.subscriptions.push(combineLatest([
@@ -512,6 +512,10 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
+        if (changes.nodeId) {
+            this.nodeId$.next(this.nodeId);
+        }
+
         if (changes.item) {
             this.editingProperties = getItemProperties(this.item);
             if (!this.appState.now.editor.objectPropertiesModified) {
@@ -916,7 +920,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         let updatePromise: Promise<ItemWithObjectTags | Form | Node | void>;
         switch (this.item.type as ItemType) {
             case 'folder':
-                updatePromise = this.folderActions.updateFolderProperties(itemId, formValue as EditableFolderProps, postUpdateBehavior);
+                updatePromise = this.folderActions.updateFolderProperties(itemId, formValue, postUpdateBehavior);
                 break;
             case 'form':{
                 const props = formValue as EditableFormProperties;
@@ -945,17 +949,17 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 break;
             }
             case 'page':
-                updatePromise = this.folderActions.updatePageProperties(itemId, formValue as EditablePageProps, postUpdateBehavior);
+                updatePromise = this.folderActions.updatePageProperties(itemId, formValue, postUpdateBehavior);
                 break;
             case 'file':
-                updatePromise = this.folderActions.updateFileProperties(itemId, formValue as EditableFileProps, postUpdateBehavior);
+                updatePromise = this.folderActions.updateFileProperties(itemId, formValue, postUpdateBehavior);
                 break;
             case 'image':
-                updatePromise = this.folderActions.updateImageProperties(itemId, formValue as EditableImageProps, postUpdateBehavior);
+                updatePromise = this.folderActions.updateImageProperties(itemId, formValue, postUpdateBehavior);
                 break;
             case 'node':
             case 'channel':
-                updatePromise = this.folderActions.updateNodeProperties(itemId, formValue as EditableNodeProps, postUpdateBehavior);
+                updatePromise = this.folderActions.updateNodeProperties(itemId, formValue, postUpdateBehavior);
                 break;
             default:
                 throw new Error(`Type not recognized: ${JSON.stringify(this.item, null, 2)}`);

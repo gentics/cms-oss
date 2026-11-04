@@ -23,14 +23,14 @@
             @switch (feature.id) {
               @case (NodeFeature.CONTENT_AUTO_OFFLINE) {
                 <div>
-                  <a target="_blank" href="https://www.gentics.com/Content.Node/guides/feature_file_publish_dependencies.html">
+                  <a target="_blank" href="https://www.gentics.com/Content.Node/cmp8/guides/feature_file_publish_dependencies.html">
                     {{ 'node.online_documentation' | gtxI18n }} <icon>open_in_new</icon>
                   </a>
                 </div>
               }
               @default {
                 <div>
-                  <a target="_blank" [href]="'https://www.gentics.com/Content.Node/guides/feature_' + feature.id + '.html'">
+                  <a target="_blank" [href]="'https://www.gentics.com/Content.Node/cmp8/guides/feature_' + feature.id + '.html'">
                     {{ 'node.online_documentation' | gtxI18n }} <icon>open_in_new</icon>
                   </a>
                 </div>

@@ -150,7 +150,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         this.selectedInternalPage.selectedItem$.pipe(
             switchMap((selectedInternalPage) => {
                 if (selectedInternalPage) {
-                    return this.client.folder.get(selectedInternalPage.folderId)
+                    return this.client.folder.get(selectedInternalPage.folderId, { nodeId: selectedInternalPage.nodeId })
                         .pipe(
                             map((response) => response.folder),
                             catchError((err) => of(err)),
@@ -168,7 +168,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
                     return of(context.folder);
                 }
 
-                return this.client.folder.get(this.page.folderId)
+                return this.client.folder.get(this.page.folderId, { nodeId: this.page.channelId || this.page.masterNodeId })
                     .pipe(
                         map((response) => response.folder),
                         catchError((err) => of(err)),
@@ -277,7 +277,14 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
             contentLanguage,
             startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
             startNode: this.uploadDestination ? (this.uploadDestination.channelId || this.uploadDestination.nodeId) : undefined,
-        }).then((selectedPage) => this.changeSelectedPage(selectedPage));
+        }).then((selectedPage) => {
+            // Modal was dismissed/canceled
+            if (selectedPage == null) {
+                return;
+            }
+
+            this.changeSelectedPage(selectedPage);
+        });
     }
 
     onRadioButtonsChange(): void {

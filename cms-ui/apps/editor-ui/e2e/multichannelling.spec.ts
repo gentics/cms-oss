@@ -22,6 +22,8 @@ import {
     BASIC_TEMPLATE_ID,
     URL_TEMPLATE_ID,
     clickModalAction,
+    CONSTRUCT_CATEGORY_TESTS,
+    CONSTRUCT_TEST_PAGE_URL,
     EntityImporter,
     findTableAction,
     findTableRowById,
@@ -38,7 +40,6 @@ import {
     ITEM_TYPE_PAGE,
     loginWithForm,
     matchesUrl,
-    matchRequest,
     navigateToApp,
     NODE_FULL,
     NodeImportData,
@@ -48,6 +49,11 @@ import {
     PAGE_FIVE,
     PAGE_FOUR,
     PAGE_NINE,
+    PAGE_SEVEN,
+    PAGE_SIX,
+    PAGE_THREE,
+    PAGE_TWO,
+    PageImportData,
     pickSelectValue,
     TestSize,
     UserImportData,
@@ -59,13 +65,17 @@ import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 import {
+    ensureItemVisible,
     findItem,
     findList,
+    findRepoBrowserItem,
     findRepoBrowserList,
     getAlohaIFrame,
     getEditorToolbarContext,
     itemAction,
     navigateToFolder,
+    openPageForEditing,
+    selectEditorTab,
     selectNode,
     setupHelperWindowFunctions,
 } from './helpers';
@@ -183,6 +193,185 @@ test.describe('Multichannelling', () => {
         ];
 
         await IMPORTER.importData([TEST_GROUP, TEST_USER]);
+    });
+
+    test.describe('Page References', () => {
+        type PageVariant = 'master' | 'inherited' | 'localized' | 'channel';
+
+        /** A page and the node in which it has to be selected/referenced. */
+        interface PageInNode {
+            page: CMSPage;
+            nodeId: number;
+            /** The folder of the page in the node, which differs from `page.folderId` for inherited pages. */
+            folderId: number;
+        }
+
+        const VARIANT_LABELS: Record<PageVariant, string> = {
+            master: 'master page',
+            inherited: 'inherited page',
+            localized: 'localized page',
+            channel: 'channel-only page',
+        };
+
+        /** Inherited pages can't be edited in the channel without localizing them first. */
+        const SOURCE_VARIANTS: PageVariant[] = ['master', 'localized', 'channel'];
+        const TARGET_VARIANTS: PageVariant[] = ['master', 'inherited', 'localized', 'channel'];
+
+        const CHANNEL_SOURCE_PAGE: PageImportData = {
+            [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+            [IMPORT_ID]: 'pageChannelSource',
+
+            folderId: CHANNEL_IMPORT_DATA[IMPORT_ID],
+            nodeId: CHANNEL_IMPORT_DATA[IMPORT_ID],
+            templateId: BASIC_TEMPLATE_ID,
+
+            pageName: 'Channel Source',
+            fileName: 'channel-source',
+            language: 'en',
+        };
+
+        const CHANNEL_TARGET_PAGE: PageImportData = {
+            [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+            [IMPORT_ID]: 'pageChannelTarget',
+
+            folderId: CHANNEL_IMPORT_DATA[IMPORT_ID],
+            nodeId: CHANNEL_IMPORT_DATA[IMPORT_ID],
+            templateId: BASIC_TEMPLATE_ID,
+
+            pageName: 'Channel Target',
+            fileName: 'channel-target',
+            language: 'en',
+        };
+
+        let sources: Record<PageVariant, PageInNode>;
+        let targets: Record<PageVariant, PageInNode>;
+
+        async function localizePage(masterPage: CMSPage): Promise<CMSPage> {
+            await IMPORTER.client.page.localize(masterPage.id, { channelId: channelNode.id }).send();
+            const localized = (await IMPORTER.client.page.get(masterPage.id, { nodeId: channelNode.id }).send()).page;
+            expect(localized.inherited).toBe(false);
+            expect(localized.id).not.toEqual(masterPage.id);
+            return localized;
+        }
+
+        test.beforeEach(async () => {
+            await IMPORTER.importData([CHANNEL_SOURCE_PAGE, CHANNEL_TARGET_PAGE]);
+
+            sources = {
+                master: { page: IMPORTER.get(PAGE_TWO), nodeId: masterNode.id, folderId: masterNode.folderId },
+                inherited: null,
+                localized: { page: await localizePage(IMPORTER.get(PAGE_THREE)), nodeId: channelNode.id, folderId: channelNode.folderId },
+                channel: { page: IMPORTER.get(CHANNEL_SOURCE_PAGE), nodeId: channelNode.id, folderId: channelNode.folderId },
+            };
+
+            targets = {
+                master: { page: IMPORTER.get(PAGE_SIX), nodeId: masterNode.id, folderId: masterNode.folderId },
+                inherited: { page: IMPORTER.get(PAGE_SEVEN), nodeId: channelNode.id, folderId: channelNode.folderId },
+                localized: { page: await localizePage(IMPORTER.get(PAGE_EIGHT)), nodeId: channelNode.id, folderId: channelNode.folderId },
+                channel: { page: IMPORTER.get(CHANNEL_TARGET_PAGE), nodeId: channelNode.id, folderId: channelNode.folderId },
+            };
+        });
+
+        for (const sourceVariant of SOURCE_VARIANTS) {
+            test(`should reference all page variants from a ${VARIANT_LABELS[sourceVariant]}`, {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20134',
+                }],
+            }, async ({ page }) => {
+                const source = sources[sourceVariant];
+
+                await setupHelperWindowFunctions(page);
+                await navigateToApp(page);
+                await loginWithForm(page, AUTH.admin);
+                await selectNode(page, source.nodeId);
+
+                const list = findList(page, ITEM_TYPE_PAGE);
+                await ensureItemVisible(list, findItem(list, source.page.id));
+                const { editable } = await openPageForEditing(page, source.page);
+
+                let editButton: Locator;
+
+                await test.step('Insert page reference tag', async () => {
+                    await editable.click();
+                    await editable.clear();
+
+                    await selectEditorTab(page, TAB_ID_CONSTRUCTS);
+                    const category = page.locator(`content-frame gtx-construct-controls .construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_PAGE_URL}"]`).click();
+
+                    const tag = editable.locator('.aloha-block');
+                    editButton = tag.locator('.gcn-construct-button-edit');
+                    await expect(editButton).toBeAttached();
+                });
+
+                const modal = page.locator('gtx-tag-editor-modal');
+                const pageEditor = modal.locator('page-url-tag-property-editor');
+                const displayValue = pageEditor.locator('browse-box gtx-input.value-display input[type="text"]');
+                const repoBrowser = page.locator('repository-browser');
+
+                async function findInRepoBrowser(target: PageInNode): Promise<Locator> {
+                    await repoBrowser.locator('gtx-search-bar input').fill(target.page.name);
+                    const item = findRepoBrowserItem(findRepoBrowserList(repoBrowser, ITEM_TYPE_PAGE), target.page.id);
+                    await expect(item).toBeVisible();
+                    return item;
+                }
+
+                for (const targetVariant of TARGET_VARIANTS) {
+                    const target = targets[targetVariant];
+
+                    await test.step(`Select ${VARIANT_LABELS[targetVariant]}`, async () => {
+                        await editButton.click();
+                        await pageEditor.locator('browse-box [data-action="browse"] button').click();
+                        await repoBrowser.waitFor();
+
+                        await selectNode(repoBrowser, target.nodeId);
+                        const item = await findInRepoBrowser(target);
+                        await item.locator('.item-name-only').click();
+                        await clickModalAction(repoBrowser, 'confirm');
+                        await repoBrowser.waitFor({ state: 'detached' });
+
+                        await expect(displayValue).toHaveValue(target.page.name);
+                        await modal.locator('.footer [data-action="confirm"] button').click();
+                        await modal.waitFor({ state: 'detached' });
+                    });
+
+                    await test.step(`Validate ${VARIANT_LABELS[targetVariant]} after reopening`, async () => {
+                        const pageLoadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${target.page.id}`, {
+                            params: { nodeId: `${target.nodeId}` },
+                        });
+                        const folderLoadReq = waitForResponseFrom(page, 'GET', `/rest/folder/load/${target.folderId}`, {
+                            params: { nodeId: `${target.nodeId}` },
+                        });
+
+                        await editButton.click();
+
+                        const pageLoadRes: PageResponse = await (await pageLoadReq).json();
+                        expect(pageLoadRes.page.id).toEqual(target.page.id);
+                        expect(pageLoadRes.page.folderId).toEqual(target.folderId);
+                        await folderLoadReq;
+
+                        await expect(displayValue).toHaveValue(target.page.name);
+
+                        // The repository browser has to start in the node/folder of the referenced page
+                        await pageEditor.locator('browse-box [data-action="browse"] button').click();
+                        await repoBrowser.waitFor();
+                        await expect(repoBrowser.locator('repository-browser-breadcrumb gtx-breadcrumbs')).toHaveClass(
+                            target.nodeId === channelNode.id ? /isInherited/ : /notInherited/,
+                        );
+                        await findInRepoBrowser(target);
+                        await clickModalAction(repoBrowser, 'cancel');
+                        await repoBrowser.waitFor({ state: 'detached' });
+
+                        // Cancelling the repository browser must not change the selection
+                        await expect(displayValue).toHaveValue(target.page.name);
+                        await modal.locator('.footer [data-action="cancel"] button').click();
+                        await modal.waitFor({ state: 'detached' });
+                    });
+                }
+            });
+        }
     });
 
     test.describe('Edit Mode', () => {

@@ -34,6 +34,89 @@ export function findItem(list: Locator, id: string | number): Locator {
     return list.locator(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
 }
 
+/**
+ * `Locator#isVisible()` doesn't wait/poll, which makes it race-prone right after pagination changes.
+ * This waits like `expect(...).toBeVisible()`, but returns a boolean instead of throwing.
+ */
+async function isItemVisible(item: Locator, timeout: number): Promise<boolean> {
+    try {
+        await expect(item).toBeVisible({ timeout });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Waits for the list to have finished (re-)loading after a pagination change.
+ * @param list The list to check.
+ * @param previousFirst The `data-id` of the first item before the pagination change, if any.
+ * When provided, this waits until the first item's `data-id` differs from it.
+ * @returns The `data-id` of the (new) first item.
+ */
+function itemListLoaded(list: Locator, previousFirst?: string): Promise<string> {
+    const items = list.locator('.list-body item-list-row > gtx-contents-list-item, .list-body masonry-item');
+
+    if (previousFirst == null) {
+        return items.first().getAttribute('data-id');
+    }
+
+    return items.and(list.locator(`:not([data-id="${previousFirst}"])`)).first().getAttribute('data-id');
+}
+
+/**
+ * Ensures that the specified item of an `item-list` is visible, navigating through the list's
+ * pagination to find it if it isn't visible on the currently displayed page.
+ * @param list The list which contains the item (see {@link findList}).
+ * @param item The item to make visible (see {@link findItem}).
+ * @param options Options for the visibility checks.
+ * @param options.timeout How long to wait for the item to become visible on a given page,
+ * before considering it not present there and moving on. Default `2_000`.
+ */
+export async function ensureItemVisible(
+    list: Locator,
+    item: Locator,
+    options: { timeout?: number } = { timeout: 2_000 },
+): Promise<void> {
+    const timeout = options.timeout ?? 2_000;
+    if (await isItemVisible(item, timeout)) {
+        return;
+    }
+
+    await test.step('Looking for item in pagination', async () => {
+        const pagination = list.locator('.paginate-wrapper paging-controls');
+        const nextButton = pagination.locator('.pagination-next:not(.disabled) a');
+        let previousFirst: string;
+
+        // In case that we aren't on the first page, we move there and then iterate
+        // through all the pages until we find our item.
+        if (await pagination.locator('.pagination-previous.disabled').count() === 0) {
+            const currentFirst = await itemListLoaded(list);
+            await pagination.locator('li:not(.current) a', { hasText: /^\s*1\s*$/ }).click();
+            previousFirst = await itemListLoaded(list, currentFirst);
+            if (await isItemVisible(item, timeout)) {
+                return;
+            }
+        } else {
+            // Still need to get the initial first item id for later checks
+            previousFirst = await itemListLoaded(list);
+        }
+
+        while (await nextButton.count() > 0) {
+            await nextButton.click();
+            previousFirst = await itemListLoaded(list, previousFirst);
+
+            // On the last page, we skip the manual check and let the expect below fail
+            // if the item is still not visible.
+            if (await nextButton.count() > 0 && await isItemVisible(item, timeout)) {
+                return;
+            }
+        }
+
+        await expect(item).toBeVisible();
+    });
+}
+
 export function findRepoBrowserItem(list: Locator, id: string | number): Locator {
     return list.locator(`gtx-contents-list-item[data-id="${id}"], repository-browser-list-thumbnail[data-id="${id}"]`);
 }

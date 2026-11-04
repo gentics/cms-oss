@@ -5,7 +5,7 @@ import { composerExtensions } from '@/components/ComposerTextInput/composerExten
 import i18n from '@/i18n';
 import type { ContextReference, FileMode } from '@/services/apiService/genaix/types';
 
-import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementLabel, pageElementLinkNaming, pageElementLinkParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, partReferences, pendingFileSource, readParts, referenceContent, resolvePendingFileSources, selectedRange, textContent, tokenLabel, touchesVerbatim } from './composerParts';
+import { holdsToken, pageElementImageParts, pageElementLabel, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageSettingsParts, partReferences, pendingFileSource, readParts, referenceContent, resolvePendingFileSources, selectedRange, textContent, tokenLabel, touchesVerbatim } from './composerParts';
 
 const schema = getSchema(composerExtensions);
 
@@ -68,35 +68,6 @@ describe('pageElementParts', () => {
     });
 });
 
-describe('pageElementReplaceNaming', () => {
-    it('names a part and asks to replace its text, with its type or with its name alone, in the user\'s language', async () => {
-        await i18n.changeLanguage('en');
-        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: 'Text' })).toBe(' – part "content_2" (Text), replace its text with: ');
-        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: '' })).toBe(' – part "content_2", replace its text with: ');
-
-        await i18n.changeLanguage('de');
-        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: 'Text' })).toBe(' – Teil "content_2" (Text), ersetze seinen Text durch: ');
-        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: '' })).toBe(' – Teil "content_2", ersetze seinen Text durch: ');
-        await i18n.changeLanguage('en');
-    });
-});
-
-describe('pageElementEditParts', () => {
-    it('gives the page as a reference, the naming text, then the new text as a verbatim part, unchanged and labelled with the part', () => {
-        expect(pageElementEditParts({ page: page9142, tagName: 'content_2', constructName: 'Text', text: ' – part "content_2" (Text), replace its text with: ' }, ' Ab dem  1. Juli\ngilt ')).toEqual([
-            { type: 'reference', ref: page9142 },
-            { type: 'text', text: ' – part "content_2" (Text), replace its text with: ' },
-            { type: 'verbatim', text: ' Ab dem  1. Juli\ngilt ', source: 'user', label: 'Text · content_2' },
-        ]);
-    });
-
-    it('labels a part without a type by its name alone', () => {
-        const [, , quote] = pageElementEditParts({ page: page9142, tagName: 'content_3', constructName: '', text: ' – part "content_3", replace its text with: ' }, 'Neu');
-
-        expect(quote).toEqual({ type: 'verbatim', text: 'Neu', source: 'user', label: 'content_3' });
-    });
-});
-
 describe('a block of a part', () => {
     const textBlock = { index: 0, count: 2, label: 'Heading 1', excerpt: 'headline 1' };
     const headline = { tagName: 'pagecontent', constructName: 'Aloha Text (lang)', textBlock };
@@ -105,24 +76,12 @@ describe('a block of a part', () => {
         await i18n.changeLanguage('en');
         expect(pageElementNaming(i18n.t, headline)).toBe(' – part "pagecontent" (Aloha Text (lang)), block 1 of 2 (Heading 1 "headline 1"): ');
         expect(pageElementNaming(i18n.t, { ...headline, constructName: '' })).toBe(' – part "pagecontent", block 1 of 2 (Heading 1 "headline 1"): ');
-        expect(pageElementReplaceNaming(i18n.t, headline)).toBe(' – part "pagecontent" (Aloha Text (lang)), block 1 of 2 (Heading 1 "headline 1"), replace its text with: ');
-        expect(pageElementReplaceNaming(i18n.t, { ...headline, constructName: '' })).toBe(' – part "pagecontent", block 1 of 2 (Heading 1 "headline 1"), replace its text with: ');
-
-        await i18n.changeLanguage('de');
-        expect(pageElementReplaceNaming(i18n.t, { ...headline, textBlock: { ...textBlock, label: 'Überschrift 1' } })).toBe(' – Teil "pagecontent" (Aloha Text (lang)), Block 1 von 2 (Überschrift 1 „headline 1“), ersetze seinen Text durch: ');
-        await i18n.changeLanguage('en');
     });
 
     it('labels the block after the part, and the part alone without one', () => {
         expect(pageElementLabel(headline)).toBe('Aloha Text (lang) · pagecontent · Heading 1');
         expect(pageElementLabel({ ...headline, constructName: '' })).toBe('pagecontent · Heading 1');
         expect(pageElementLabel({ tagName: 'content_2', constructName: 'Text', textBlock: null })).toBe('Text · content_2');
-    });
-
-    it('labels the verbatim part of a hand edit of the block with the block', () => {
-        const [, , quote] = pageElementEditParts({ page: page9142, ...headline, text: ' – part "pagecontent" (Aloha Text (lang)), block 1 of 2 (Heading 1 "headline 1"), replace its text with: ' }, 'Neue Überschrift');
-
-        expect(quote).toEqual({ type: 'verbatim', text: 'Neue Überschrift', source: 'user', label: 'Aloha Text (lang) · pagecontent · Heading 1' });
     });
 
     it('keeps the block on the part\'s token in the field, and shows it in the token\'s label', () => {
@@ -136,45 +95,15 @@ describe('a block of a part', () => {
 describe('a link of a part', () => {
     const link = { index: 1, count: 2, label: 'Link', excerpt: '1. Juli' };
     const juli = { tagName: 'content_2', constructName: 'Text', link };
-    const naming = ' – part "content_2" (Text), link 2 of 2 ("1. Juli"), change it:';
 
     it('names the link by its place and the start of its text, after the part, in the user\'s language', async () => {
         await i18n.changeLanguage('en');
         expect(pageElementNaming(i18n.t, juli)).toBe(' – part "content_2" (Text), link 2 of 2 ("1. Juli"): ');
         expect(pageElementNaming(i18n.t, { ...juli, constructName: '' })).toBe(' – part "content_2", link 2 of 2 ("1. Juli"): ');
-        expect(pageElementLinkNaming(i18n.t, juli)).toBe(naming);
-        expect(pageElementLinkNaming(i18n.t, { ...juli, constructName: '' })).toBe(' – part "content_2", link 2 of 2 ("1. Juli"), change it:');
-
-        await i18n.changeLanguage('de');
-        expect(pageElementLinkNaming(i18n.t, juli)).toBe(' – Teil "content_2" (Text), Link 2 von 2 („1. Juli“), ändere ihn:');
-        await i18n.changeLanguage('en');
     });
 
     it('labels the link after the part', () => {
         expect(pageElementLabel(juli)).toBe('Text · content_2 · Link');
-    });
-
-    it('sends a new text and a new URL, each named and written word for word', () => {
-        expect(pageElementLinkParts(i18n.t, { page: page9142, ...juli, text: naming }, { text: 'Ab 1. August', target: 'https://example.com/agb' })).toEqual([
-            { type: 'reference', ref: page9142 },
-            { type: 'text', text: naming },
-            { type: 'text', text: '\nLink text: ' },
-            { type: 'verbatim', text: 'Ab 1. August', source: 'user', label: 'Link text' },
-            { type: 'text', text: '\nTarget: ' },
-            { type: 'verbatim', text: 'https://example.com/agb', source: 'user', label: 'Target' },
-        ]);
-    });
-
-    it('sends only what changed, a CMS page as its reference', () => {
-        const agb: ContextReference = { type: 'page', id: '9150', node_id: 3, label: 'AGB' };
-
-        expect(pageElementLinkParts(i18n.t, { page: page9142, ...juli, text: naming }, { target: agb })).toEqual([
-            { type: 'reference', ref: page9142 },
-            { type: 'text', text: naming },
-            { type: 'text', text: '\nTarget: ' },
-            { type: 'reference', ref: agb },
-        ]);
-        expect(pageElementLinkParts(i18n.t, { page: page9142, ...juli, text: naming }, { text: 'Neu' })).toHaveLength(4);
     });
 
     it('keeps the link on the part\'s token in the field, and shows it in the token\'s label', () => {

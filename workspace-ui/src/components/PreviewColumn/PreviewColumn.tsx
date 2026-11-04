@@ -1,22 +1,26 @@
-import type { TFunction } from 'i18next';
-import { ArrowUpIcon, AtSignIcon, CheckIcon, ExternalLinkIcon, EyeIcon, ImagesIcon, LinkIcon, Maximize2Icon, MessagesSquareIcon, Minimize2Icon, MonitorIcon, PencilIcon, SlidersHorizontalIcon, SmartphoneIcon, SparklesIcon, XIcon } from 'lucide-react';
-import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from 'react';
+import { useEditorState } from '@tiptap/react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { PageElementInput } from '@/components/Composer/Composer';
-import { ImagePicker } from '@/components/ImagePicker/ImagePicker';
-import { LinkTargetPicker, type LinkTargetValue } from '@/components/LinkTargetPicker/LinkTargetPicker';
+import { EditBar } from '@/components/EditBar/EditBar';
+import { ElementMenu } from '@/components/ElementMenu/ElementMenu';
+import { FeedbackCard } from '@/components/FeedbackCard/FeedbackCard';
+import { ImageCard } from '@/components/ImageCard/ImageCard';
+import { isSupportedContent } from '@/components/InlineEditor/inlineEditorSchema';
+import { focusEditor, useInlineEditor } from '@/components/InlineEditor/useInlineEditor';
+import { LinkCard, type LinkChange, type LinkValue } from '@/components/LinkCard/LinkCard';
+import type { LinkTargetValue } from '@/components/LinkTargetPicker/LinkTargetPicker';
 import { PageSettings } from '@/components/PageSettings/PageSettings';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Popover, PopoverClose, PopoverContent, PopoverTitle } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { PreviewHeader } from '@/components/PreviewHeader/PreviewHeader';
+import { PreviewOverlay } from '@/components/PreviewOverlay/PreviewOverlay';
 import { useToast } from '@/components/ui/use-toast';
-import { pageElementLabel, type PageElementLink, type PageElementLinkChange, type PageElementTextBlock, type PageSettingsChange } from '@/helper/composerParts/composerParts';
-import { type ElementBox, linkTargetOf, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
+import { EDITABLE, editLeafOf, type EditPlan, MARKED, planHtmlEdit, planImageEdit, planLinkEdit, planTextEdit, type RefusalReason, textContainerOf } from '@/helper/cmsEditable/cmsEditable';
+import type { PageSettingsChange } from '@/helper/composerParts/composerParts';
+import { elementLabel, elementLink, elementName, elementTextBlock } from '@/helper/previewElement/previewElement';
+import { refusalText } from '@/helper/refusalText/refusalText';
+import { useSaveCmsEdit } from '@/hooks/useCmsQueries';
+import { linkTargetOf, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
 import type { ContextReference } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
 import { type LivePreview, previewKey } from '@/store/useWorkspaceEventStore';
@@ -55,40 +59,6 @@ function readOnlyPreviewUrl(url: string): string {
         : parsed.toString();
 }
 
-// Where a box sits over the page, as inline style.
-function boxStyle({ top, left, width, height }: ElementBox): CSSProperties {
-    return { top, left, width, height };
-}
-
-// `text` with runs of white space as one space and without it at the ends: two texts that read the same compare equal.
-function collapseWhiteSpace(text: string): string {
-    return text.replace(/\s+/g, ' ').trim();
-}
-
-// Converts the preview's text block into the form the chat uses (`PageElementTextBlock`), its kind translated, e.g. "Heading 1"; `undefined` for a whole part.
-function elementTextBlock(t: TFunction, { textBlock }: PreviewElement): PageElementTextBlock | undefined {
-    return textBlock && { index: textBlock.index, count: textBlock.count, label: t(`preview.textBlock.${textBlock.kind}`), excerpt: textBlock.excerpt };
-}
-
-// Converts the preview's link into the form the chat uses (`PageElementLink`), labelled "Link"; `undefined` when no link is meant.
-function elementLink(t: TFunction, { link }: PreviewElement): PageElementLink | undefined {
-    return link && { index: link.index, count: link.count, label: t('preview.link.label'), excerpt: link.excerpt };
-}
-
-// Short name on the hover outline, the menu, the header and the card titles: the construct name (else the
-// tag name), with the text block kind or "Link" in front for a text block or link, e.g. "Heading 1 · Aloha Text (lang)".
-function elementName(t: TFunction, element: PreviewElement): string {
-    const name = element.constructName || element.tagName;
-    const kind = elementLink(t, element)?.label ?? elementTextBlock(t, element)?.label;
-
-    return kind ? `${kind} · ${name}` : name;
-}
-
-// Full name on the cards' @-token, the same as on the token in the chat (`pageElementLabel`), e.g. "Aloha Text (lang) · pagecontent · Heading 1".
-function elementLabel(t: TFunction, element: PreviewElement): string {
-    return pageElementLabel({ ...element, textBlock: elementTextBlock(t, element), link: elementLink(t, element) });
-}
-
 // Whether `a` and `b` are the same part (the same element of its tag) and the same text block or link of it (or both the whole part).
 function isSameElement(a: PreviewElement | null, b: PreviewElement | null): boolean {
     return a?.tagName === b?.tagName && a?.elementId === b?.elementId && a?.textBlock?.index === b?.textBlock?.index && a?.link?.index === b?.link?.index;
@@ -101,41 +71,20 @@ function linkTargetValue(href: string): LinkTargetValue {
     return target.type === 'page' ? { type: 'page', page: { id: target.pageId } } : { type: 'url', url: target.url };
 }
 
-// How far the outlines stand off a part (`outline-offset` in the CSS module); the focus mode leaves that much room.
-const OUTLINE_OFFSET = 2;
-
-// The four bands around `box` that the focus mode covers: above, below, left and right of it.
-function dimBands({ top, left, width, height }: ElementBox): CSSProperties[] {
-    const gap = OUTLINE_OFFSET;
-    const bottom = top + height + gap;
-    const right = left + width + gap;
-
-    return [
-        { top: 0, left: 0, right: 0, height: Math.max(0, top - gap) },
-        { top: bottom, left: 0, right: 0, bottom: 0 },
-        { top: top - gap, left: 0, width: Math.max(0, left - gap), height: height + 2 * gap },
-        { top: top - gap, left: right, right: 0, height: height + 2 * gap },
-    ];
-}
-
-/** What the preview hands on for a part: the page and the part, to reference in the chat, to send feedback on, to give new text or another image. */
+/**
+ * What the preview hands on for a part: the page and the part, to reference in the chat, to send feedback on,
+ * or an image uploaded for it. New text, a link and a CMS image are saved directly in the CMS instead.
+ */
 export interface PreviewActions {
     /** Adds the part to the chat composer, followed by `text` if given. */
     onReferenceInChat: (element: PageElementInput, text?: string) => void;
     /** Sends feedback on the part as a turn; rejects when it was not sent, so the card stays open. */
     onSendFeedback: (element: PageElementInput, text: string) => Promise<void>;
-    /** Sends the part's new text, written by hand, as a turn; rejects when it was not sent, so the card stays open. */
-    onSendEdit: (element: PageElementInput, text: string) => Promise<void>;
-    /**
-     * Sends the image picked for the part as a turn: a CMS image as its reference, an uploaded one as
-     * the file; rejects when it was not sent, so the card stays open.
-     */
-    onSendImage: (element: PageElementInput, image: ContextReference | File) => Promise<void>;
-    /** Sends a link's changed text and target as a turn; rejects when it was not sent, so the card stays open. */
-    onSendLink: (element: PageElementInput, change: PageElementLinkChange) => Promise<void>;
+    /** Sends an image uploaded for the part as a turn, with the file; rejects when it was not sent, so the card stays open. */
+    onSendImage: (element: PageElementInput, image: File) => Promise<void>;
     /** Sends the changed page settings of the page as a turn; rejects when they were not sent, so the sheet stays open. */
     onSendSettings: (page: ContextReference, changes: PageSettingsChange[]) => Promise<void>;
-    /** Whether a turn can be sent now (feedback, new text, an image, a link or page settings): not while a run is working or waiting. */
+    /** Whether a turn can be sent or an edit saved now (feedback, new text, an image, a link or page settings): not while a run is working or waiting. */
     canSendFeedback: boolean;
 }
 
@@ -162,7 +111,7 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  *
  * Text blocks: the CMS often stores several text blocks in one tag, e.g. a headline and a paragraph in one Aloha
  * text. Then the text block under the mouse is outlined and selected, not the whole tag (`textBlocksOf`). The
- * menu and the cards act on that text block only, and the edit card starts from its text alone. The UI
+ * menu, the cards and the editing in place act on that text block only. The UI
  * calls it e.g. "Heading 1 · Text"; the message names it by its position and the start of its text,
  * because the API has no field for a text block inside a tag.
  *
@@ -170,21 +119,31 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  * called e.g. "Link · Text"; the message names it by its position and the start of its text. Its menu
  * offers "Edit link" instead of "Write it yourself": the link card there starts from the link's text
  * and target as the page has them (a CMS page for an internal link, `linkTargetOf`), the target a URL
- * or a page of the node (`LinkTargetPicker`); Apply or Enter sends what changed (`onSendLink`), an
- * unchanged link sends nothing.
+ * or a page of the node (`LinkTargetPicker`); Apply or Enter saves what changed, an unchanged link saves
+ * nothing.
  *
  * The parts the last CMS write changed (`changed_elements`) are tinted until the next update.
  *
  * Clicking a part also opens its element menu at the part (final_draft.html "ELEMENT MENU"): "Give
  * feedback" opens the feedback card there (final_draft.html "FEEDBACK CARD AT THE ELEMENT"), which
  * sends the typed text on the part (`onSendFeedback`) or moves both into the chat; while it is open the
- * rest of the page is dimmed (design.md §12 focus mode). "Write it yourself" opens the edit card there
- * (implementation plan, "Hand edit form"): the part's current text, read from the frame, to change as
- * plain text; Apply or Ctrl/Cmd+Enter sends it (`onSendEdit`) to be written word for word, an unchanged
- * text sends nothing. For a part that shows an image, "Swap the image" takes the place of "Write it
- * yourself" (final_draft.html "askImage"), when the preview names its node: the image card there offers
- * the node's images from the CMS and an image to upload (`ImagePicker`), and "Use image" sends the
- * picked one (`onSendImage`).
+ * rest of the page is dimmed (design.md §12 focus mode). "Write it yourself" makes the element itself editable
+ * in the frame, as plain text (final_draft.html "startEdit"; in a list or table only the item or cell that was
+ * clicked, while the selection stays on the list or table), with a bar above it (character count, Cancel,
+ * Apply); Apply or Ctrl/Cmd+Enter saves it, an unchanged text saves nothing, Escape, Cancel or a click
+ * elsewhere in the page gives the text back. While editing, nothing else in the page is outlined or selected,
+ * and an update of the preview waits until the editing ends. Text that holds formatting, links or embedded
+ * tags is not edited in place: a toast says why. For a part that shows an
+ * image, "Swap the image" takes the place of "Write it yourself" (final_draft.html "askImage"), when the
+ * preview names its node: the image card there offers the node's images from the CMS and an image to
+ * upload (`ImagePicker`); "Use image" saves a CMS image, and sends an uploaded one to GenAIx
+ * (`onSendImage`), which puts it into the CMS.
+ *
+ * Saving is direct, in the CMS, without GenAIx (`useSaveCmsEdit`): the edit is planned from the page in the
+ * frame (`nodesOf`, `cmsEditable`) — new text or a plain link inside an editable rewrites that editable,
+ * a tag that is no editable (a block, a link tag, an image) gets its own part written. Saved, the card
+ * closes and the frame reloads (no `preview.updated` comes); what cannot be saved directly is named in the
+ * card, with the hint to reference it in the chat instead.
  * "Reference in the chat" hands the part to `onReferenceInChat` (the chat composer's `insertPageElement`).
  *
  * For a page, "Page settings" in the header drops the page settings over the preview (`PageSettings`,
@@ -216,7 +175,6 @@ export function PreviewColumn(props: PreviewColumnProps) {
     const url = readOnlyPreviewUrl(preview.preview_url);
     const [isMobile, setIsMobile] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const fullScreenLabel = t(isFullScreen ? 'preview.leaveFullScreen' : 'preview.fullScreen');
     const toast = useToast();
     const frameRef = useRef<HTMLIFrameElement>(null);
     const [selected, setSelected] = useState<PreviewElement | null>(null);
@@ -226,32 +184,53 @@ export function PreviewColumn(props: PreviewColumnProps) {
     // Whether the menu closes because an action moved the focus elsewhere (the chat, the feedback card).
     const hasMovedFocusRef = useRef(false);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-    const [feedback, setFeedback] = useState('');
     const [isSending, setIsSending] = useState(false);
-    const feedbackFieldId = useId();
-    const feedbackFieldRef = useRef<HTMLTextAreaElement>(null);
-    const canSend = canSendFeedback && !isSending && feedback.trim() !== '';
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const [editText, setEditText] = useState('');
-    // The part's text when the edit card opened, to tell whether anything changed.
-    const [editOriginal, setEditOriginal] = useState('');
-    const editFieldId = useId();
-    const editFieldRef = useRef<HTMLTextAreaElement>(null);
+    // The element being edited in place in the frame ("Write it yourself", final_draft.html "startEdit"): the
+    // element the inline editor is on (`textContainerOf` the target), the target the edit is planned on (the
+    // selected element or, in a list or table, the item or cell, `editLeafOf`), the selection, and whether the part
+    // is an editable (rich text, saved as HTML) or a tag's own text part (plain text). `structure` is the selected
+    // list or table while one of its items or cells is edited: the editing can move between them (`switchEdit`), its
+    // content before (given back on Cancel) and whether an item edited before the current one changed.
+    const [editing, setEditing] = useState<{
+        node: HTMLElement;
+        target: Element;
+        element: PreviewElement;
+        isRich: boolean;
+        structure: { element: Element; originalHtml: string; changed: boolean } | null;
+    } | null>(null);
+    const inlineEditor = useInlineEditor(editing?.node ?? null, {
+        marks: editing?.isRich ?? false,
+        fixedSelector: editing?.isRich ? MARKED : '',
+        onApply: () => void applyEdit(),
+        onCancel: () => stopEditing(),
+    });
+    // The text being edited, for the bar's character count and the Apply button (none once the editor is gone).
+    const editText = useEditorState({
+        editor: inlineEditor?.editor ?? null,
+        selector: ({ editor }) => (editor && !editor.isDestroyed ? editor.getText({ blockSeparator: '' }) : ''),
+    }) ?? '';
     const canApply = canSendFeedback && !isSending && editText.trim() !== '';
     const [isImageOpen, setIsImageOpen] = useState(false);
-    const [pickedImage, setPickedImage] = useState<CmsItem | File | null>(null);
-    const canUseImage = canSendFeedback && !isSending && pickedImage !== null;
     // The node whose images can replace a part's image; without it, no image can be offered (nor a page as a link's target).
     const nodeId = preview.cms_ref.node_id;
     const [isLinkOpen, setIsLinkOpen] = useState(false);
-    const [linkText, setLinkText] = useState('');
-    const [linkTarget, setLinkTarget] = useState<LinkTargetValue>({ type: 'url', url: '' });
-    // The link's text and target when the link card opened, to tell what changed.
-    const [linkOriginal, setLinkOriginal] = useState<{ text: string; target: LinkTargetValue }>({ text: '', target: { type: 'url', url: '' } });
-    const linkTextId = useId();
-    const linkTextRef = useRef<HTMLInputElement>(null);
-    const canApplyLink = canSendFeedback && !isSending && linkText.trim() !== ''
-        && (linkTarget.type === 'url' ? linkTarget.url.trim() !== '' : linkTarget.page !== null);
+    // The link's text and target when the link card opened (`LinkCard` starts from them and tells what changed).
+    const [linkInitial, setLinkInitial] = useState<LinkValue>({ text: '', target: { type: 'url', url: '' } });
+    // Why the open card's edit could not be saved directly in the CMS, shown in the card.
+    const [refusal, setRefusal] = useState<RefusalReason | null>(null);
+    const saveEdit = useSaveCmsEdit();
+    // Counts the direct saves: each one reloads the frame, as no `preview.updated` comes for it.
+    const [savedCount, setSavedCount] = useState(0);
+    // What the frame shows: the latest page (each direct save reloading it), but held while an element is edited in
+    // place, so that a `preview.updated` does not reload the page under the editing; it follows once editing ends.
+    const latestFrame = { key: `${pageKey}@${preview.seq}#${savedCount}`, url };
+    const [heldFrame, setHeldFrame] = useState(latestFrame);
+
+    if (!editing && (heldFrame.key !== latestFrame.key || heldFrame.url !== latestFrame.url)) {
+        setHeldFrame(latestFrame);
+    }
+
+    const frame = editing ? heldFrame : latestFrame;
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const settingsRef = useRef<HTMLElement>(null);
     const settingsButtonRef = useRef<HTMLButtonElement>(null);
@@ -263,34 +242,37 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setSelected(null);
         setIsMenuOpen(false);
         setIsFeedbackOpen(false);
-        setIsEditOpen(false);
+        setEditing(null);
         setIsImageOpen(false);
         setIsLinkOpen(false);
         setIsSettingsOpen(false);
     }
 
-    const { onFrameLoad, hovered, selectedBox, changedBoxes, textOf, hasImage, currentOf } = usePreviewElements(frameRef, selected, (element) => {
+    const { onFrameLoad, hovered, selectedBox, editingBox, targetBox, changedBoxes, textOf, hasImage, currentOf, nodesOf } = usePreviewElements(frameRef, selected, (element) => {
         // A click on a part selects it and opens its menu; Escape clears both. Only with actions to offer.
         if (!actions) {
             return;
         }
 
+        // Another selection, or a click elsewhere in the page while editing in place: the editing is cancelled.
+        stopEditing();
         setSelected(element);
         setIsMenuOpen(element !== null);
         setIsFeedbackOpen(false);
-        setIsEditOpen(false);
         setIsImageOpen(false);
         setIsLinkOpen(false);
     }, () => {
         // A reload without the selected part: the selection is gone.
+        stopEditing();
         setSelected(null);
         setIsMenuOpen(false);
         setIsFeedbackOpen(false);
-        setIsEditOpen(false);
         setIsImageOpen(false);
         setIsLinkOpen(false);
         toast.add({ title: t('preview.selection.removed') });
-    }, preview.changed_elements);
+    }, preview.changed_elements, editing?.node ?? null, switchEdit);
+    // Where the editing bar sits: above the edited element, or above the list or table whose item or cell it is.
+    const barBox = editing?.structure ? selectedBox : editingBox;
 
     function finalFocus(): false | HTMLElement | null {
         const hasMovedFocus = hasMovedFocusRef.current;
@@ -329,30 +311,149 @@ export function PreviewColumn(props: PreviewColumnProps) {
 
     function openFeedback() {
         hasMovedFocusRef.current = true;
-        setFeedback('');
-        setIsEditOpen(false);
         setIsImageOpen(false);
         setIsLinkOpen(false);
         setIsFeedbackOpen(true);
     }
 
-    function openEdit(element: PreviewElement) {
-        const text = textOf(element);
+    // What "Write it yourself" would edit for `element`, from the page in the frame: in an editable the item or cell that
+    // was clicked in a list or table (`editLeafOf`), else the element; the element the inline editor goes on; whether the part is an
+    // editable. Or why it cannot be edited directly, as far as the page tells already (save-time refusals need the
+    // stored page and come on Apply); `null` if the page no longer has the element. Decides the menu and `startEdit`.
+    function editStartOf(element: PreviewElement):
+        | { refused: RefusalReason }
+        | { nodes: NonNullable<ReturnType<typeof nodesOf>>; target: Element; node: HTMLElement; isRich: boolean }
+        | null {
+        const nodes = nodesOf(element);
+
+        if (!nodes) {
+            return null;
+        }
+
+        const isRich = nodes.part.matches(EDITABLE);
+        // An item or cell on its own only in an editable; any other part is written as a whole.
+        const target = isRich ? editLeafOf(nodes.target, nodes.clicked) : nodes.target;
+        const node = textContainerOf(target) as HTMLElement;
+        // Outside an editable, the plain-text plan says whether the tag's text part can take it.
+        const check = isRich ? null : planTextEdit(nodes.part, target, '');
+
+        if (check?.kind === 'refused') {
+            return { refused: check.reason };
+        }
+
+        if (!isSupportedContent(node, { marks: isRich, fixedSelector: isRich ? MARKED : '' })) {
+            return { refused: 'unsupportedContent' as const };
+        }
+
+        return { nodes, target, node, isRich };
+    }
+
+    // Whether the menu offers "Write it yourself" for `element` (`editStartOf`).
+    function canStartEdit(element: PreviewElement): boolean {
+        const start = editStartOf(element);
+
+        return start !== null && !('refused' in start);
+    }
+
+    // "Write it yourself": the element itself becomes editable in the frame with the inline editor, focused with the
+    // caret at the end (final_draft.html "startEdit"); in a list or table only the item or cell that was clicked
+    // (`editLeafOf`). In an editable it offers formatting and links, and keeps embedded tags as they are; a tag's own
+    // text part (a block) gets plain text. Content the editor could not write back unchanged (another element, a mark
+    // with attributes) is not edited: the menu does not offer it (`editStartOf`); if the page changed since the menu
+    // opened, a toast says why.
+    function startEdit(element: PreviewElement) {
+        const start = editStartOf(element);
+
+        if (!start) {
+            return;
+        }
+
+        if ('refused' in start) {
+            toast.add({ title: refusalText(t, start.refused) });
+
+            return;
+        }
+
+        const { nodes, target, node, isRich } = start;
 
         hasMovedFocusRef.current = true;
-        setEditOriginal(text);
-        setEditText(text);
+        setRefusal(null);
         setIsFeedbackOpen(false);
         setIsImageOpen(false);
         setIsLinkOpen(false);
-        setIsEditOpen(true);
+        setEditing({
+            node,
+            target,
+            element,
+            isRich,
+            structure: isRich && target !== nodes.target ? { element: nodes.target, originalHtml: nodes.target.innerHTML, changed: false } : null,
+        });
+    }
+
+    // A click while editing an item or cell of a list or table: on another item or cell of it, the editing moves there
+    // at once, the edited one keeps its text (saved together on Apply). Returns whether the click was handled; any
+    // other click ends the editing (`usePreviewElements`).
+    function switchEdit(clicked: Node): boolean {
+        const structure = editing?.structure;
+
+        if (!editing || !structure || !inlineEditor || !structure.element.contains(clicked)) {
+            return false;
+        }
+
+        const target = editLeafOf(structure.element, clicked);
+
+        // Between the items (e.g. the list's own space), or the item being edited: nothing to do.
+        if (target === structure.element || target === editing.target) {
+            return true;
+        }
+
+        const node = textContainerOf(target) as HTMLElement;
+
+        if (!isSupportedContent(node, { marks: true, fixedSelector: MARKED })) {
+            toast.add({ title: refusalText(t, 'unsupportedContent') });
+
+            return true;
+        }
+
+        const changed = structure.changed || inlineEditor.isChanged();
+
+        inlineEditor.keepContent();
+        setEditing({ ...editing, node, target, structure: { ...structure, changed } });
+
+        return true;
+    }
+
+    // Once more after the element menu has closed, which would otherwise keep the focus in the Workspace.
+    useEffect(() => {
+        if (!inlineEditor) {
+            return;
+        }
+
+        const request = requestAnimationFrame(() => focusEditor(inlineEditor.editor, 'end'));
+
+        return () => cancelAnimationFrame(request);
+    }, [inlineEditor]);
+
+    // Ends the editing in place: the inline editor gives the element its content back (Cancel, Escape, a click
+    // elsewhere), and a list or table whose items were edited one after the other gets its content from before
+    // back as a whole; after a save the frame reloads anyway.
+    function stopEditing() {
+        if (!editing) {
+            return;
+        }
+
+        if (editing.structure) {
+            editing.structure.element.innerHTML = editing.structure.originalHtml;
+        }
+
+        setEditing(null);
+        setRefusal(null);
     }
 
     function openImage() {
         hasMovedFocusRef.current = true;
-        setPickedImage(null);
+        setRefusal(null);
         setIsFeedbackOpen(false);
-        setIsEditOpen(false);
         setIsLinkOpen(false);
         setIsImageOpen(true);
     }
@@ -363,42 +464,50 @@ export function PreviewColumn(props: PreviewColumnProps) {
         const target = linkTargetValue(currentOf(element).link?.href ?? '');
 
         hasMovedFocusRef.current = true;
-        setLinkOriginal({ text, target });
-        setLinkText(text);
-        setLinkTarget(target);
+        setRefusal(null);
+        setLinkInitial({ text, target });
         setIsFeedbackOpen(false);
-        setIsEditOpen(false);
         setIsImageOpen(false);
         setIsLinkOpen(true);
     }
 
-    // What the link card changes: the text if it reads differently, the target if it is another URL or page.
-    function linkChange(): PageElementLinkChange {
-        const { text, target } = linkOriginal;
-        const change: PageElementLinkChange = {};
+    // Saves an edit planned from the page directly in the CMS (`useSaveCmsEdit`). Saved: the card closes
+    // (`close`), a toast says so, and the frame reloads. Unchanged in the CMS: the card closes with the
+    // unchanged note. Refused: the card stays and names the reason. A failed request leaves the card open;
+    // the hook shows the error.
+    async function saveDirectly(plan: EditPlan, close: () => void) {
+        setIsSending(true);
+        setRefusal(null);
 
-        if (collapseWhiteSpace(linkText) !== collapseWhiteSpace(text)) {
-            change.text = linkText;
+        try {
+            const result = await saveEdit.mutateAsync({ pageId: preview.cms_ref.id, nodeId, plan });
+
+            if (result === 'saved') {
+                close();
+                toast.add({ title: t('preview.save.saved') });
+                setSavedCount((count) => count + 1);
+            } else if (result === 'unchanged') {
+                close();
+                toast.add({ title: t('preview.edit.unchanged') });
+            } else {
+                setRefusal(result.refused);
+            }
+        } catch {
+            // Not saved: the hook has said why; the card and its values stay for another try.
+        } finally {
+            setIsSending(false);
         }
-
-        if (linkTarget.type === 'url' && (target.type !== 'url' || linkTarget.url.trim() !== target.url.trim())) {
-            change.target = linkTarget.url.trim();
-        } else if (linkTarget.type === 'page' && linkTarget.page && (target.type !== 'page' || linkTarget.page.id !== target.page?.id)) {
-            const { id, name } = linkTarget.page;
-
-            change.target = { type: 'page', id: String(id), ...(nodeId !== undefined ? { node_id: nodeId } : {}), ...(name ? { label: name } : {}) };
-        }
-
-        return change;
     }
 
-    async function applyLink(element: PreviewElement) {
-        if (!canApplyLink) {
-            return;
-        }
+    // The plan for an edit of `element` made on the page as it is now; refused if the page no longer has it.
+    function planFor(element: PreviewElement, plan: (nodes: { part: Element; target: Element }) => EditPlan): EditPlan {
+        const nodes = nodesOf(element);
 
-        const change = linkChange();
+        return nodes ? plan(nodes) : { kind: 'refused', reason: 'notFound' };
+    }
 
+    // Apply in the link card, with what it changed (`LinkCard`).
+    async function applyLink(element: PreviewElement, change: LinkChange) {
         // Nothing to write: the card closes without a message, as the edit card's.
         if (change.text === undefined && change.target === undefined) {
             setIsLinkOpen(false);
@@ -407,29 +516,28 @@ export function PreviewColumn(props: PreviewColumnProps) {
             return;
         }
 
-        setIsSending(true);
-
-        try {
-            await actions?.onSendLink(pageElementOf(element), change);
-            setIsLinkOpen(false);
-        } catch {
-            // Not sent: the caller has said why; the card and its values stay for another try.
-        } finally {
-            setIsSending(false);
-        }
+        await saveDirectly(planFor(element, ({ part, target }) => planLinkEdit(part, target, change)), () => setIsLinkOpen(false));
     }
 
-    async function applyImage(element: PreviewElement) {
-        if (!canUseImage || nodeId === undefined) {
+    // "Use image" in the image card, with the picked image (`ImageCard`).
+    async function applyImage(element: PreviewElement, picked: CmsItem | File) {
+        if (nodeId === undefined) {
+            return;
+        }
+
+        // A CMS image is saved directly; an uploaded one goes to GenAIx with the turn, which puts it into the CMS.
+        if (!(picked instanceof File)) {
+            const image = { imageId: picked.id, nodeId };
+
+            await saveDirectly(planFor(element, ({ part }) => planImageEdit(part, image)), () => setIsImageOpen(false));
+
             return;
         }
 
         setIsSending(true);
 
         try {
-            await actions?.onSendImage(pageElementOf(element), pickedImage instanceof File
-                ? pickedImage
-                : { type: 'image', id: String(pickedImage.id), node_id: nodeId, label: pickedImage.name });
+            await actions?.onSendImage(pageElementOf(element), picked);
             setIsImageOpen(false);
         } catch {
             // Not sent: the caller has said why; the card and the pick stay for another try.
@@ -438,66 +546,83 @@ export function PreviewColumn(props: PreviewColumnProps) {
         }
     }
 
-    async function applyEdit(element: PreviewElement) {
-        if (!canApply) {
+    // Apply: saves the edited content directly in the CMS, as HTML in an editable and as plain text in a tag's own
+    // text part; an unchanged content ends the editing without a save (final_draft.html "commitEdit").
+    async function applyEdit() {
+        if (!editing || !inlineEditor || !canApply) {
             return;
         }
 
-        // Nothing to write: the card closes without a message (final_draft.html "commitEdit").
-        if (collapseWhiteSpace(editText) === collapseWhiteSpace(editOriginal)) {
-            setIsEditOpen(false);
+        const { target, element, isRich, structure } = editing;
+
+        // In a list or table, also the items edited before this one count.
+        if (!structure?.changed && !inlineEditor.isChanged()) {
+            stopEditing();
             toast.add({ title: t('preview.edit.unchanged') });
 
             return;
         }
 
-        setIsSending(true);
+        const html = inlineEditor.html();
+        const text = inlineEditor.text();
 
-        try {
-            await actions?.onSendEdit(pageElementOf(element), editText);
-            setIsEditOpen(false);
-        } catch {
-            // Not sent: the caller has said why; the card and its text stay for another try.
-        } finally {
-            setIsSending(false);
-        }
+        // The element planned on when the editing started: the frame does not reload while editing, so it is still on the page.
+        await saveDirectly(
+            planFor(element, ({ part }) => {
+                if (!part.contains(target)) {
+                    return { kind: 'refused', reason: 'notFound' };
+                }
+
+                return isRich ? planHtmlEdit(part, target, html, inlineEditor.attributes) : planTextEdit(part, target, text);
+            }),
+            stopEditing,
+        );
     }
 
-    // Ctrl/Cmd+Enter applies; Enter alone starts a new line, as the text may have several (final_draft.html "startEdit").
-    function handleEditKeyDown(event: ReactKeyboardEvent<HTMLTextAreaElement>, element: PreviewElement) {
-        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-            event.preventDefault();
-            void applyEdit(element);
-        }
-    }
+    // The latest Cancel, for the listener below.
+    const cancelEditRef = useRef(() => {});
 
-    function feedbackToChat(element: PreviewElement) {
-        setIsFeedbackOpen(false);
-        referenceInChat(element, feedback.trim());
-    }
+    useEffect(() => {
+        cancelEditRef.current = stopEditing;
+    });
 
-    async function sendFeedback(element: PreviewElement) {
-        if (!canSend) {
+    // Escape cancels in the Workspace too, where the focus is after a click in the bar (e.g. an Apply the CMS
+    // refused); in the element, the inline editor's own Escape does (`onCancel`).
+    useEffect(() => {
+        if (!editing) {
             return;
         }
 
+        // Before the full-screen Escape on `window`, which leaves the default-prevented one alone.
+        function handleWorkspaceKeyDown(event: KeyboardEvent) {
+            if (event.key === 'Escape' && !event.defaultPrevented) {
+                event.preventDefault();
+                cancelEditRef.current();
+            }
+        }
+
+        document.addEventListener('keydown', handleWorkspaceKeyDown);
+
+        return () => document.removeEventListener('keydown', handleWorkspaceKeyDown);
+    }, [editing]);
+
+    // "In the chat" in the feedback card, with the typed text (`FeedbackCard`).
+    function feedbackToChat(element: PreviewElement, text: string) {
+        setIsFeedbackOpen(false);
+        referenceInChat(element, text);
+    }
+
+    // Send in the feedback card, with the typed text (`FeedbackCard`).
+    async function sendFeedback(element: PreviewElement, text: string) {
         setIsSending(true);
 
         try {
-            await actions?.onSendFeedback(pageElementOf(element), feedback.trim());
+            await actions?.onSendFeedback(pageElementOf(element), text);
             setIsFeedbackOpen(false);
         } catch {
             // Not sent: the caller has said why; the card and its text stay for another try.
         } finally {
             setIsSending(false);
-        }
-    }
-
-    // Enter sends, Shift+Enter starts a new line (final_draft.html "spotIn").
-    function handleFeedbackKeyDown(event: ReactKeyboardEvent<HTMLTextAreaElement>, element: PreviewElement) {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            void sendFeedback(element);
         }
     }
 
@@ -537,62 +662,18 @@ export function PreviewColumn(props: PreviewColumnProps) {
 
     return (
         <section className={`${styles.column} ${isFullScreen ? styles.fullScreen : ''}`} aria-labelledby={titleId}>
-            <header className={styles.head}>
-                <div className={styles.lead}>
-                    <h2 id={titleId} className={styles.title}>
-                        <EyeIcon size={16} className={styles.titleIcon} aria-hidden="true" />
-                        {t('preview.title')}
-                    </h2>
-                    {previews.length > 1 && (
-                        <div className={styles.pages}>
-                            <Select items={pageNames} value={pageKey} onValueChange={(key) => key !== null && setPicked({ key, seq: latest.seq })}>
-                                <SelectTrigger aria-label={t('preview.pages.label')}>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.entries(pageNames).map(([key, name]) => <SelectItem key={key} value={key}>{name}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )}
-                </div>
-                {/* A link in the look of a button, as "New" in the left column. */}
-                <Button
-                    size="sm"
-                    variant="ghost"
-                    nativeButton={false}
-                    role={undefined}
-                    render={<a href={url} target="_blank" rel="noopener noreferrer" />}
-                >
-                    <ExternalLinkIcon size={14} aria-hidden="true" />
-                    {t('preview.open')}
-                </Button>
-                {selected && (
-                    <span className={styles.selection}>
-                        {t('preview.selection.selected', { name: elementName(t, selected) })}
-                        <Button variant="ghost" size="icon-xs" aria-label={t('preview.selection.clear')} title={t('preview.selection.clear')} onClick={() => { setSelected(null); setIsMenuOpen(false); }}>
-                            <XIcon size={12} />
-                        </Button>
-                    </span>
-                )}
-                {actions && preview.cms_ref.type === 'page' && (
-                    <Button ref={settingsButtonRef} variant="secondary" size="sm" aria-expanded={isSettingsOpen} onClick={() => setIsSettingsOpen((open) => !open)}>
-                        <SlidersHorizontalIcon size={14} />
-                        {t('preview.settings.open')}
-                    </Button>
-                )}
-                <div className={styles.viewports} role="group" aria-label={t('preview.viewport')}>
-                    <Button variant="ghost" size="icon" aria-label={t('preview.desktop')} title={t('preview.desktop')} aria-pressed={!isMobile} onClick={() => setIsMobile(false)}>
-                        <MonitorIcon size={16} />
-                    </Button>
-                    <Button variant="ghost" size="icon" aria-label={t('preview.mobile')} title={t('preview.mobile')} aria-pressed={isMobile} onClick={() => setIsMobile(true)}>
-                        <SmartphoneIcon size={16} />
-                    </Button>
-                    <Button variant="ghost" size="icon" aria-label={fullScreenLabel} title={fullScreenLabel} aria-pressed={isFullScreen} onClick={() => setIsFullScreen((on) => !on)}>
-                        {isFullScreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
-                    </Button>
-                </div>
-            </header>
+            <PreviewHeader
+                titleId={titleId}
+                url={url}
+                pages={previews.length > 1 ? { names: pageNames, current: pageKey, onPick: (key) => setPicked({ key, seq: latest.seq }) } : null}
+                selection={selected && { name: elementName(t, selected), onClear: () => { stopEditing(); setSelected(null); setIsMenuOpen(false); } }}
+                settings={actions && preview.cms_ref.type === 'page' ? { open: isSettingsOpen, onToggle: () => setIsSettingsOpen((open) => !open) } : null}
+                settingsButtonRef={settingsButtonRef}
+                isMobile={isMobile}
+                onMobileChange={setIsMobile}
+                isFullScreen={isFullScreen}
+                onFullScreenChange={setIsFullScreen}
+            />
             <div className={`${styles.stage} ${isMobile ? styles.mobile : ''}`}>
                 {isSettingsOpen && (
                     <PageSettings
@@ -605,197 +686,95 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     />
                 )}
                 <div className={styles.page}>
-                    <iframe key={`${pageKey}@${preview.seq}`} ref={frameRef} className={styles.frame} src={url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
-                    <div className={styles.overlay} aria-hidden="true">
-                        {isFeedbackOpen && selectedBox && dimBands(selectedBox).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
-                        {changedBoxes.map(({ key, tagName, box }) => <div key={key} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
-                        {selectedBox && <div ref={selectedBoxRef} className={`${styles.selected} ${isEditOpen || isImageOpen || isLinkOpen ? styles.editing : ''}`} style={boxStyle(selectedBox)} />}
-                        {actions && hovered && !isSameElement(hovered.element, selected) && (
-                            <div className={styles.hovered} style={boxStyle(hovered.box)}>
-                                <span className={styles.label}>{elementName(t, hovered.element)}</span>
-                            </div>
-                        )}
-                    </div>
+                    <iframe key={frame.key} ref={frameRef} className={styles.frame} src={frame.url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
+                    <PreviewOverlay
+                        dimmed={isFeedbackOpen ? selectedBox : null}
+                        changed={changedBoxes}
+                        selected={selectedBox && { box: selectedBox, mode: editing ? 'anchor' : (isImageOpen || isLinkOpen ? 'card' : 'outline') }}
+                        selectedRef={selectedBoxRef}
+                        target={editing ? null : targetBox}
+                        editing={editing ? editingBox : null}
+                        hovered={actions && hovered && !isSameElement(hovered.element, selected) ? { box: hovered.box, label: elementName(t, hovered.element) } : null}
+                    />
+                    {/* The bar of the editing in place: for an item or cell above its list or table, so that it never covers the other items. */}
+                    {editing && barBox && (
+                        <EditBar
+                            box={barBox}
+                            label={elementName(t, editing.element)}
+                            editor={editing.isRich && inlineEditor ? inlineEditor.editor : null}
+                            count={editText.trim().length}
+                            refusal={refusal}
+                            canApply={canApply}
+                            onCancel={() => stopEditing()}
+                            onApply={() => void applyEdit()}
+                        />
+                    )}
                 </div>
             </div>
-            {/* The element menu. Not modal: the page and the chat stay usable while it is open, as with the draft's popover. */}
+            {/* The element menu. Closed by an action, the focus stays where the action put it; otherwise it goes back to the
+                page, where the next Escape clears the selection (`finalFocus`). A link gets a new text and target; an image
+                part another image instead of new text, if the node to pick it from is known. */}
             {selected && (
-                <DropdownMenu open={isMenuOpen && Boolean(selectedBox)} onOpenChange={setIsMenuOpen} modal={false}>
-                    {/* Closed by an action, the focus stays where the action put it; otherwise it goes back to the
-                        page, where the next Escape clears the selection. */}
-                    <DropdownMenuContent anchor={selectedBoxRef} finalFocus={finalFocus}>
-                        <DropdownMenuGroup>
-                            <DropdownMenuLabel>{elementName(t, selected)}</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={openFeedback}>
-                                <SparklesIcon size={16} />
-                                {t('preview.feedback.give')}
-                            </DropdownMenuItem>
-                            {/* A link gets a new text and target; an image part another image instead of new text, if the node to pick it from is known. */}
-                            {selected.link && (
-                                <DropdownMenuItem onClick={() => openLink(selected)}>
-                                    <LinkIcon size={16} />
-                                    {t('preview.link.edit')}
-                                </DropdownMenuItem>
-                            )}
-                            {!selected.link && (hasImage(selected)
-                                ? nodeId !== undefined && (
-                                    <DropdownMenuItem onClick={openImage}>
-                                        <ImagesIcon size={16} />
-                                        {t('preview.image.swap')}
-                                    </DropdownMenuItem>
-                                )
-                                : (
-                                    <DropdownMenuItem onClick={() => openEdit(selected)}>
-                                        <PencilIcon size={16} />
-                                        {t('preview.edit.write')}
-                                    </DropdownMenuItem>
-                                ))}
-                            <DropdownMenuItem onClick={() => referenceInChat(selected)}>
-                                <AtSignIcon size={16} />
-                                {t('preview.selection.referenceInChat')}
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <ElementMenu
+                    open={isMenuOpen && Boolean(selectedBox)}
+                    onOpenChange={setIsMenuOpen}
+                    anchor={selectedBoxRef}
+                    finalFocus={finalFocus}
+                    label={elementName(t, selected)}
+                    offers={{
+                        link: Boolean(selected.link),
+                        image: !selected.link && hasImage(selected) && nodeId !== undefined,
+                        write: !selected.link && !hasImage(selected) && canStartEdit(selected),
+                    }}
+                    onFeedback={openFeedback}
+                    onEditLink={() => openLink(selected)}
+                    onSwapImage={openImage}
+                    onWrite={() => startEdit(selected)}
+                    onReference={() => referenceInChat(selected)}
+                />
             )}
             {/* The feedback card, at the part like the element menu; not modal either. */}
             {selected && (
-                <Popover open={isFeedbackOpen && Boolean(selectedBox)} onOpenChange={setIsFeedbackOpen} modal={false}>
-                    <PopoverContent anchor={selectedBoxRef} initialFocus={feedbackFieldRef} finalFocus={false}>
-                        <div className={styles.cardHead}>
-                            <SparklesIcon size={16} className={styles.cardIcon} aria-hidden="true" />
-                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
-                            <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.feedback.cancel')} title={t('preview.feedback.cancel')} />}>
-                                <XIcon size={16} />
-                            </PopoverClose>
-                        </div>
-                        <div className={styles.cardBody}>
-                            <span className={styles.token}>
-                                <AtSignIcon size={13} aria-hidden="true" />
-                                {elementLabel(t, selected)}
-                            </span>
-                            <Label htmlFor={feedbackFieldId}>{t('preview.feedback.label')}</Label>
-                            <Textarea
-                                id={feedbackFieldId}
-                                ref={feedbackFieldRef}
-                                value={feedback}
-                                onChange={(event) => setFeedback(event.target.value)}
-                                onKeyDown={(event) => handleFeedbackKeyDown(event, selected)}
-                            />
-                        </div>
-                        <div className={styles.cardFoot}>
-                            <Button variant="secondary" size="sm" onClick={() => feedbackToChat(selected)}>
-                                <MessagesSquareIcon size={14} />
-                                {t('preview.feedback.toChat')}
-                            </Button>
-                            <Button variant="primary" size="sm" disabled={!canSend} onClick={() => void sendFeedback(selected)}>
-                                <ArrowUpIcon size={14} />
-                                {t('preview.feedback.send')}
-                            </Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-            )}
-            {/* The edit card, at the part like the feedback card; not modal either. */}
-            {selected && (
-                <Popover open={isEditOpen && Boolean(selectedBox)} onOpenChange={setIsEditOpen} modal={false}>
-                    <PopoverContent anchor={selectedBoxRef} initialFocus={editFieldRef} finalFocus={false}>
-                        <div className={styles.cardHead}>
-                            <PencilIcon size={16} className={styles.cardIcon} aria-hidden="true" />
-                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
-                            <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.edit.cancel')} title={t('preview.edit.cancel')} />}>
-                                <XIcon size={16} />
-                            </PopoverClose>
-                        </div>
-                        <div className={styles.cardBody}>
-                            <span className={styles.token}>
-                                <AtSignIcon size={13} aria-hidden="true" />
-                                {elementLabel(t, selected)}
-                            </span>
-                            <Label htmlFor={editFieldId}>{t('preview.edit.label')}</Label>
-                            <Textarea
-                                id={editFieldId}
-                                ref={editFieldRef}
-                                value={editText}
-                                onChange={(event) => setEditText(event.target.value)}
-                                onKeyDown={(event) => handleEditKeyDown(event, selected)}
-                            />
-                        </div>
-                        <div className={styles.cardFoot}>
-                            <Button variant="primary" size="sm" disabled={!canApply} onClick={() => void applyEdit(selected)}>
-                                <CheckIcon size={14} />
-                                {t('preview.edit.apply')}
-                            </Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
+                <FeedbackCard
+                    open={isFeedbackOpen && Boolean(selectedBox)}
+                    onOpenChange={setIsFeedbackOpen}
+                    anchor={selectedBoxRef}
+                    title={elementName(t, selected)}
+                    reference={elementLabel(t, selected)}
+                    disabled={!canSendFeedback || isSending}
+                    onSend={(text) => void sendFeedback(selected, text)}
+                    onToChat={(text) => feedbackToChat(selected, text)}
+                />
             )}
             {/* The image card, at the part like the other cards; not modal either. */}
             {selected && nodeId !== undefined && (
-                <Popover open={isImageOpen && Boolean(selectedBox)} onOpenChange={setIsImageOpen} modal={false}>
-                    <PopoverContent anchor={selectedBoxRef} finalFocus={false}>
-                        <div className={styles.cardHead}>
-                            <ImagesIcon size={16} className={styles.cardIcon} aria-hidden="true" />
-                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
-                            <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.image.cancel')} title={t('preview.image.cancel')} />}>
-                                <XIcon size={16} />
-                            </PopoverClose>
-                        </div>
-                        <div className={styles.cardBody}>
-                            <span className={styles.token}>
-                                <AtSignIcon size={13} aria-hidden="true" />
-                                {elementLabel(t, selected)}
-                            </span>
-                            <ImagePicker nodeId={nodeId} value={pickedImage} onValueChange={setPickedImage} />
-                        </div>
-                        <div className={styles.cardFoot}>
-                            <Button variant="primary" size="sm" disabled={!canUseImage} onClick={() => void applyImage(selected)}>
-                                <CheckIcon size={14} />
-                                {t('preview.image.use')}
-                            </Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
+                <ImageCard
+                    open={isImageOpen && Boolean(selectedBox)}
+                    onOpenChange={setIsImageOpen}
+                    anchor={selectedBoxRef}
+                    title={elementName(t, selected)}
+                    reference={elementLabel(t, selected)}
+                    nodeId={nodeId}
+                    refusal={refusal}
+                    disabled={!canSendFeedback || isSending}
+                    onUse={(picked) => void applyImage(selected, picked)}
+                />
             )}
             {/* The link card, at the link like the image card; not modal either. */}
             {selected?.link && (
-                <Popover open={isLinkOpen && Boolean(selectedBox)} onOpenChange={setIsLinkOpen} modal={false}>
-                    <PopoverContent anchor={selectedBoxRef} initialFocus={linkTextRef} finalFocus={false}>
-                        <div className={styles.cardHead}>
-                            <LinkIcon size={16} className={styles.cardIcon} aria-hidden="true" />
-                            <PopoverTitle className={styles.cardTitle}>{elementName(t, selected)}</PopoverTitle>
-                            <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('preview.link.cancel')} title={t('preview.link.cancel')} />}>
-                                <XIcon size={16} />
-                            </PopoverClose>
-                        </div>
-                        <div className={styles.cardBody}>
-                            <span className={styles.token}>
-                                <AtSignIcon size={13} aria-hidden="true" />
-                                {elementLabel(t, selected)}
-                            </span>
-                            <Label htmlFor={linkTextId}>{t('preview.link.text')}</Label>
-                            <Input
-                                id={linkTextId}
-                                ref={linkTextRef}
-                                value={linkText}
-                                onChange={(event) => setLinkText(event.target.value)}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter') {
-                                        event.preventDefault();
-                                        void applyLink(selected);
-                                    }
-                                }}
-                            />
-                            <LinkTargetPicker nodeId={nodeId} pageId={preview.cms_ref.id} value={linkTarget} onValueChange={setLinkTarget} />
-                        </div>
-                        <div className={styles.cardFoot}>
-                            <Button variant="primary" size="sm" disabled={!canApplyLink} onClick={() => void applyLink(selected)}>
-                                <CheckIcon size={14} />
-                                {t('preview.link.apply')}
-                            </Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
+                <LinkCard
+                    open={isLinkOpen && Boolean(selectedBox)}
+                    onOpenChange={setIsLinkOpen}
+                    anchor={selectedBoxRef}
+                    title={elementName(t, selected)}
+                    reference={elementLabel(t, selected)}
+                    initial={linkInitial}
+                    nodeId={nodeId}
+                    pageId={preview.cms_ref.id}
+                    refusal={refusal}
+                    disabled={!canSendFeedback || isSending}
+                    onApply={(change) => void applyLink(selected, change)}
+                />
             )}
         </section>
     );

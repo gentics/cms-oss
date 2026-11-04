@@ -1,0 +1,22 @@
+/* The `@` token naming a part of the page (design.md §12 "`@`-Token / Referenz"). */
+.token {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 270px;
+  padding: 1px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--interactive-rgb), 0.3);
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), 0.13);
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  & svg {
+    flex: none;
+    color: var(--interactive);
+  }
+}

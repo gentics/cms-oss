@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { HttpError } from '@/services/httpService/httpService';
 
 import {
@@ -17,8 +18,10 @@ import {
     listCmsNodes,
     listCmsTemplates,
     loadCmsPage,
+    loadCmsPageTags,
     loginToCms,
     logoutFromCms,
+    saveCmsPageTag,
     searchCmsItems,
     ssoLoginToCms,
 } from './cmsApiService';
@@ -410,6 +413,46 @@ describe('listCmsFolders', () => {
         expect(url.searchParams.get('search')).toBe('Camp');
         expect(url.searchParams.get('recursive')).toBe('true');
         expect(url.searchParams.get('maxItems')).toBe('50');
+    });
+});
+
+describe('CMS page tags', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    const pagecontent = { id: 888, name: 'pagecontent', constructId: 1, active: true, properties: { text: { id: 3095, type: 'RICHTEXT', stringValue: '<p>Lorem</p>' } } };
+
+    it('loads the tags of a page in its node, read only', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' }, page: { id: 32, tags: { pagecontent } } }));
+
+        await expect(loadCmsPageTags(32, 1)).resolves.toEqual({ pagecontent });
+        expect(fetchMock).toHaveBeenCalledWith('/rest/page/load/32?nodeId=1', expect.objectContaining({ credentials: 'same-origin' }));
+        expect(fetchMock.mock.calls[0]![1]?.method).toBeUndefined();
+    });
+
+    it('saves only the given tag, with its loaded state, and releases the lock', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' } }));
+        const tag = { ...pagecontent, active: false, properties: { text: { type: 'RICHTEXT', stringValue: '<p>Neu</p>' } } };
+
+        await saveCmsPageTag(32, tag);
+
+        expect(fetchMock).toHaveBeenCalledWith('/rest/page/save/32', expect.objectContaining({ method: 'POST', credentials: 'same-origin' }));
+        expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body))).toEqual({ page: { tags: { pagecontent: tag } }, unlock: true });
+    });
+
+    it('throws an answer the CMS refused with its code, so the error names it', async () => {
+        stubFetchSequence(
+            Response.json({ responseInfo: { responseCode: 'NOTFOUND' } }),
+            Response.json({ responseInfo: { responseCode: 'LOCKED' } }),
+        );
+
+        await expect(loadCmsPageTags(32, 1)).rejects.toBeInstanceOf(HttpError);
+
+        const error = await saveCmsPageTag(32, pagecontent).catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(HttpError);
+        expect(errorMessageKey(error)).toBe('errors.cms.LOCKED');
     });
 });
 

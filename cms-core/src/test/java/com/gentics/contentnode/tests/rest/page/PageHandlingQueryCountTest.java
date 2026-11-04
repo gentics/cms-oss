@@ -193,10 +193,9 @@ public class PageHandlingQueryCountTest {
 		});
 
 		// number of allowed statements for updating values depends on the number of tags (values)
-		// base is 183 statements (including the statements for locking the page for versioning and checking for concurrent
-		// version creation)
+		// base is 180 statements
 		// each updated value requires a single update statement
-		int allowed = 183 + numTags;
+		int allowed = 180 + numTags;
 
 		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(3000)) {
 			updateTags(page);
@@ -254,8 +253,7 @@ public class PageHandlingQueryCountTest {
 			putIntoWastebin(page);
 		});
 
-		// includes the statements for locking the page for versioning and checking for concurrent version creation
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(157); Trx trx = trxAt(4000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = trxAt(4000)) {
 			restoreFromWastebin(page);
 		}
 	}
@@ -309,8 +307,7 @@ public class PageHandlingQueryCountTest {
 
 		operate(() -> load(page, true));
 
-		// includes the statements for locking the page for versioning and checking for concurrent version creation
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(122); Trx trx = trxAt(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(120); Trx trx = trxAt(3000)) {
 			GenericResponse response = getPageResource().cancel(page.getId(), null);
 			assertResponseCodeOk(response);
 		}

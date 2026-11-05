@@ -248,19 +248,31 @@ public class Operator {
 		} catch (Exception e) {
 			// for ExecutionExceptions, we are more interested in the causing exception
 			Throwable cause = e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
-			if (cause instanceof WebApplicationException webApplicationException) {
-				throw webApplicationException;
-			}
-			if (cause instanceof NodeException nodeException && hasExceptionMapper(nodeException)) {
-				throw nodeException;
-			}
-			logger.error("Error while " + description, cause);
-			I18nString message = new CNI18nString("rest.general.error");
-			RestMappedException wrapped = new RestMappedException(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while " + description + ": " + cause.getLocalizedMessage())));
-			wrapped.initCause(cause);
-			throw wrapped;
+			throw toMappedException(description, cause);
 		}
+	}
+
+	/**
+	 * Map the given exception, which was thrown while executing the job with the given description:
+	 * a {@link WebApplicationException} is thrown unchanged, a {@link NodeException}, for which an exception mapper exists, is returned unchanged,
+	 * all other exceptions are logged and wrapped into a {@link RestMappedException} (with HTTP status 500), which contains the message of the exception in its response.
+	 * @param description job description
+	 * @param cause exception
+	 * @return exception to be thrown
+	 */
+	private static NodeException toMappedException(String description, Throwable cause) {
+		if (cause instanceof WebApplicationException webApplicationException) {
+			throw webApplicationException;
+		}
+		if (cause instanceof NodeException nodeException && hasExceptionMapper(nodeException)) {
+			return nodeException;
+		}
+		logger.error("Error while " + description, cause);
+		I18nString message = new CNI18nString("rest.general.error");
+		RestMappedException wrapped = new RestMappedException(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+				new ResponseInfo(ResponseCode.FAILURE, "Error while " + description + ": " + cause.getLocalizedMessage())));
+		wrapped.initCause(cause);
+		return wrapped;
 	}
 
 	/**
@@ -442,6 +454,24 @@ public class Operator {
 			throw exceptions.get(0);
 		}
 		return result;
+	}
+
+	/**
+	 * Version of {@link #executeLockedInCurrentThread(Lock, Supplier)}, which handles exceptions like {@link #executeLockedRethrowing(String, long, Lock, Callable)}:
+	 * exceptions, for which an exception mapper exists, are thrown unchanged, all other exceptions are wrapped into a {@link RestMappedException}
+	 * (with HTTP status 500), which contains the message of the cause in its response.
+	 * @param description job description (used in the error message)
+	 * @param lock optional lock (if null, the supplier is executed without lock)
+	 * @param supplier supplier
+	 * @return supplied value
+	 * @throws NodeException
+	 */
+	public static <R> R executeLockedInCurrentThreadRethrowing(String description, Lock lock, Supplier<R> supplier) throws NodeException {
+		try {
+			return executeLockedInCurrentThread(lock, supplier);
+		} catch (Exception e) {
+			throw toMappedException(description, e);
+		}
 	}
 
 	/**

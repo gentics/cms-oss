@@ -343,7 +343,7 @@
 			<dependency>
 				<groupId>com.gentics.mesh.plugin</groupId>
 				<artifactId>mesh-forms-plugin</artifactId>
-				<version>${mesh.forms.plugin.version}</version>
+				<version>${mesh.version}</version>
 				<type>jar</type>
 			</dependency>
 			<dependency>

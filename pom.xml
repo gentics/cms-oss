@@ -94,7 +94,6 @@
 		<handlebars.version>4.5.4</handlebars.version>
 		<groovy.version>5.0.8</groovy.version>
 
-		<mesh.forms.plugin.version>3.4.3</mesh.forms.plugin.version>
 		<mesh.andp.plugin.version>8.6.0</mesh.andp.plugin.version>
 		<hazelcast.version>5.7.0</hazelcast.version>
 		<jsoup.version>1.23.2</jsoup.version>

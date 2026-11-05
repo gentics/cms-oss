@@ -50,7 +50,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
-import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.factory.object.PageFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
@@ -1098,7 +1097,6 @@ public class PageResourceImpl implements PageResource {
 	 * @throws NodeException
 	 */
 	protected GenericResponse doSave(String id, PageSaveRequest request) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = null;
 
 		try (Trx trx = ContentNodeHelper.trx()) {
@@ -2704,7 +2702,6 @@ public class PageResourceImpl implements PageResource {
 	 * @throws NodeException
 	 */
 	protected PageLoadResponse doRestoreVersion(String id, Integer versionTimestamp) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = null;
 
 		// get the page

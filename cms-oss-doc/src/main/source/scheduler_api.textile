@@ -116,23 +116,6 @@ h4. @convertimages@
 
 This task will convert non-webp images to webp format for all nodes that have the "WebP Conversion feature":https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#webp-conversion activated.
 
-h4. @checkduplicatepageversions@
-
-Concurrent saving and publishing of the same page could create duplicate page versions: several versions with the same timestamp or the same version number, several versions marked as published, or several versioned records (e.g. tag values) with the same version timestamp. Such pages may be published with wrong or missing content.
-
-This task checks for duplicate page versions and outputs the number of affected pages. Nothing is changed.
-
-h4. @repairduplicatepageversions@
-
-This task repairs duplicate page versions. The pages are repaired one after the other, every page while holding the same lock, which is used when pages are saved, published or restored:
-
-* Of several versioned records with the same version timestamp, one record is kept: for tag values a record with an empty value is only kept, if all records are empty, otherwise the record which was written last.
-* Of several versions with the same timestamp, the published version is kept, otherwise the version which was written last.
-* Only the newest published version remains marked as published.
-* Versions with a version number, which is not greater than the number of the previous version, get a new version number (and so do all later versions of the page).
-
-Afterwards the repaired pages are removed from the cache, and online pages are marked for republishing, so that the next publish run publishes them with the repaired content. The output contains the number of repaired pages.
-
 h3. Custom Tasks
 
 When creating a custom task, only scripts in @/cms/scheduler-commands@ are valid commands by default. Unless the feature "INSECURE_SCHEDULER_COMMAND":https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#insecure-scheduler-command is enabled, only scripts in @/cms/scheduler-commands@ may be executed. Other commands will be not be started by the scheduler.

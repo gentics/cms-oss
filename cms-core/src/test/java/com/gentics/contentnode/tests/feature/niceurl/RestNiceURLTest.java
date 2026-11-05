@@ -171,11 +171,11 @@ public class RestNiceURLTest {
 			p.setAlternateUrls(urls("/updated/page/alt3", "/updated/page/alt2", "/updated/page/alt1"));
 			PageSaveRequest request = new PageSaveRequest(p);
 
-			GenericResponse response = supply(() -> getPageResource().save(Integer.toString(p.getId()), request));
+			GenericResponse response = getPageResource().save(Integer.toString(p.getId()), request);
 			assertResponseOK(response);
 
-			PageLoadResponse loadResponse = supply(() -> getPageResource().load(Integer.toString(p.getId()), false, false, false,
-					false, false, false, false, false, false, false, null, null));
+			PageLoadResponse loadResponse = getPageResource().load(Integer.toString(p.getId()), false, false, false,
+					false, false, false, false, false, false, false, null, null);
 			assertResponseOK(loadResponse);
 			assertThat(loadResponse.getPage()).as("Updated page").isNotNull().hasFieldOrPropertyWithValue("niceUrl",
 					"/updated/page/nice").hasFieldOrPropertyWithValue("alternateUrls", urls("/updated/page/alt1", "/updated/page/alt2", "/updated/page/alt3"));
@@ -184,11 +184,11 @@ public class RestNiceURLTest {
 			p.setNiceUrl("");
 			p.setAlternateUrls(urls());
 
-			response = supply(() -> getPageResource().save(Integer.toString(p.getId()), request));
+			response = getPageResource().save(Integer.toString(p.getId()), request);
 			assertResponseOK(response);
 
-			loadResponse = supply(() -> getPageResource().load(Integer.toString(p.getId()), false, false, false, false, false, false,
-					false, false, false, false, null, null));
+			loadResponse = getPageResource().load(Integer.toString(p.getId()), false, false, false, false, false, false,
+					false, false, false, false, null, null);
 			assertResponseOK(loadResponse);
 			assertThat(loadResponse.getPage()).as("Updated page").isNotNull()
 					.hasFieldOrPropertyWithValue("niceUrl", null).hasFieldOrPropertyWithValue("alternateUrls", urls());

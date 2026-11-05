@@ -351,9 +351,8 @@ public class PageTranslationSandboxTest {
 		germanPage.setName("This is a new name!");
 		savePage(germanPage, true);
 
-		// now get the english page again (in a new transaction) and check whether it is out of sync now
-		Integer englishPageId = englishPage.getId();
-		englishPage = Trx.supply(() -> loadPageWithTranslationStatus(englishPageId));
+		// now get the english page again and check whether it is out of sync now
+		englishPage = loadPageWithTranslationStatus(englishPage.getId());
 		translationStatus = englishPage.getTranslationStatus();
 		assertFalse("Check whether the page is out of sync now", translationStatus.isInSync());
 		assertFalse("Check whether the sync'ed version timestamp is different from the latest now",

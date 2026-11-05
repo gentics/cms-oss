@@ -176,7 +176,7 @@ public class PageFilenameExtTest {
 						create.setLanguage(language);
 					}
 
-					PageLoadResponse createResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().create(create));
+					PageLoadResponse createResponse = ContentNodeRESTUtils.getPageResource().create(create);
 					ContentNodeRESTUtils.assertResponseOK(createResponse);
 					Page created = createResponse.getPage();
 
@@ -187,10 +187,10 @@ public class PageFilenameExtTest {
 						update.setDeriveFileName(true);
 					}
 
-					GenericResponse updateResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().save(created.getId().toString(), update));
+					GenericResponse updateResponse = ContentNodeRESTUtils.getPageResource().save(created.getId().toString(), update);
 					ContentNodeRESTUtils.assertResponseOK(updateResponse);
 
-					PageLoadResponse loadResponse = Trx.supply(() -> ContentNodeRESTUtils.getPageResource().load(created.getId().toString(), false, false, false, false, false, false, false, false, false, false, null, null));
+					PageLoadResponse loadResponse = ContentNodeRESTUtils.getPageResource().load(created.getId().toString(), false, false, false, false, false, false, false, false, false, false, null, null);
 					ContentNodeRESTUtils.assertResponseOK(loadResponse);
 
 					return loadResponse.getPage();

@@ -5,13 +5,6 @@
  */
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
-import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
-import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
-import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
-import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
-import static com.gentics.contentnode.rest.util.MiscUtils.throwIfLockedByAnotherUser;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,9 +27,6 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
@@ -205,7 +195,6 @@ import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.util.FileUtil;
-
 import de.jkeylockmanager.manager.ReturnValueLockCallback;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DefaultValue;
@@ -219,6 +208,15 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
+import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
+import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
+import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
+import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
+import static com.gentics.contentnode.rest.util.MiscUtils.throwIfLockedByAnotherUser;
 
 /**
  * Resource used for loading, saving and manipulating GCN pages.
@@ -398,12 +396,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * If the page does not exist, the callable is executed without lock (and is expected to handle the missing page).
 	 * @param id page ID
 	 * @param nodeId optional node ID, for which the page is loaded
-	 * @param description job description
 	 * @param callable callable
 	 * @return response of the callable
 	 * @throws NodeException
 	 */
-	protected GenericResponse executeLockedForContent(String id, Integer nodeId, String description, Callable<GenericResponse> callable)
+	protected GenericResponse executeLockedForContent(String id, Integer nodeId, Callable<GenericResponse> callable)
 			throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		long timestamp = t.getTimestamp();
@@ -415,9 +412,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		t.commit(false);
 
-		return Operator.executeLockedRethrowing(description, 0, lock, () -> {
+		return Operator.executeLockedInCurrentThread(lock, () -> {
 			TransactionManager.getCurrentTransaction().setTimestamp(timestamp);
-			return callable.call();
+
+			try {
+				return callable.call();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
 		});
 	}
 
@@ -1137,7 +1139,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/save/{id}")
 	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) {
 		try {
-			return executeLockedForContent(id, null, I18NHelper.get("page.save.job"), () -> doSave(id, request));
+			return executeLockedForContent(id, null, () -> doSave(id, request));
 		} catch (NodeException e) {
 			logger.error("Error while saving page " + id, e);
 			I18nString message = new CNI18nString("rest.general.error");
@@ -1718,7 +1720,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	public GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			PagePublishRequest request) {
 		try {
-			return executeLockedForContent(id, nodeId, I18NHelper.get("page.publish.job"), () -> doPublish(id, nodeId, request));
+			return executeLockedForContent(id, nodeId, () -> doPublish(id, nodeId, request));
 		} catch (NodeException e) {
 			logger.error("Error while publishing page " + id, e);
 			return new GenericResponse(new Message(Message.Type.CRITICAL,
@@ -2930,8 +2932,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("version") Integer versionTimestamp) {
 		try {
 			// the cast is safe, because the callable is never sent to the background (no timeout)
-			return (PageLoadResponse) executeLockedForContent(id, null, I18NHelper.get("page.restore.job"),
-					() -> doRestoreVersion(id, versionTimestamp));
+			return (PageLoadResponse) executeLockedForContent(id, null, () -> doRestoreVersion(id, versionTimestamp));
 		} catch (NodeException e) {
 			logger.error("Error while restoring version of page " + id, e);
 			I18nString message = new CNI18nString("rest.general.error");

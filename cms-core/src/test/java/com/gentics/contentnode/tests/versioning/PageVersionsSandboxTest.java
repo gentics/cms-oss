@@ -508,7 +508,7 @@ public class PageVersionsSandboxTest {
 			ContentTag innerTag = upd.getContent().addContentTag(htmlConstructId);
 			innerTag.setName("innertag");
 			getPartType(LongHTMLPartType.class, innerTag, HTML_PART_NAME).setText(innerContent);
-		}).at(2000).doNotPublish().build();
+		}).at(3000).doNotPublish().build();
 
 		// get the page content of the published version
 		String expected = "Outer Tag, here comes the inner:[]";

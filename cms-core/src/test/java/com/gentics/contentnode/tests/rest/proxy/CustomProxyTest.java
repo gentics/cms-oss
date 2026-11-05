@@ -15,6 +15,7 @@ import org.junit.rules.RuleChain;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.client.RestApi;
@@ -175,6 +176,55 @@ public class CustomProxyTest {
 		try (LoggedInClient client = restContext.client(LOGIN_WITH, PASSWORD)) {
 			assertThat(client.get().base().path("proxy").path(RESOURCE_KEY).path("headers").queryParam("return", addedHeaderName).request()
 					.header(addedHeaderName, addedHeaderValue).get(String.class)).as("Sent Headers").isEqualTo(addedHeaderValue);
+		}
+	}
+
+	/**
+	 * Test whether a configured header replaces the header sent by the client
+	 * @throws RestException
+	 */
+	@Test
+	public void testConfiguredHeaderReplacesClientHeader() throws RestException {
+		try (LoggedInClient client = restContext.client(LOGIN_WITH, PASSWORD)) {
+			assertThat(client.get().base().path("proxy").path(RESOURCE_KEY).path("headers").queryParam("return", "Header-Name").request()
+					.header("Header-Name", "Client Value").get(String.class)).as("Sent Headers").isEqualTo("Header Value");
+		}
+	}
+
+	/**
+	 * Test that the session secret cookie is not forwarded
+	 * @throws RestException
+	 */
+	@Test
+	public void testSessionSecretCookieNotForwarded() throws RestException {
+		try (LoggedInClient client = restContext.client(LOGIN_WITH, PASSWORD)) {
+			assertThat(client.get().base().path("proxy").path(RESOURCE_KEY).path("headers").queryParam("return", "Cookie").request()
+					.get(String.class)).as("Sent Headers").isEqualTo("null");
+		}
+	}
+
+	/**
+	 * Test that other cookies are forwarded, but not the session secret cookie
+	 * @throws RestException
+	 */
+	@Test
+	public void testOtherCookiesForwarded() throws RestException {
+		try (LoggedInClient client = restContext.client(LOGIN_WITH, PASSWORD)) {
+			String cookies = client.get().base().path("proxy").path(RESOURCE_KEY).path("headers").queryParam("return", "Cookie").request()
+					.cookie("upstream", "value").get(String.class);
+			assertThat(cookies).as("Sent Cookies").contains("upstream=value").doesNotContain(SessionToken.SESSION_SECRET_COOKIE_NAME);
+		}
+	}
+
+	/**
+	 * Test that hop-by-hop headers are not forwarded
+	 * @throws RestException
+	 */
+	@Test
+	public void testHopByHopHeaderNotForwarded() throws RestException {
+		try (LoggedInClient client = restContext.client(LOGIN_WITH, PASSWORD)) {
+			assertThat(client.get().base().path("proxy").path(RESOURCE_KEY).path("headers").queryParam("return", "Proxy-Authorization")
+					.request().header("Proxy-Authorization", "Basic c2VjcmV0").get(String.class)).as("Sent Headers").isEqualTo("null");
 		}
 	}
 

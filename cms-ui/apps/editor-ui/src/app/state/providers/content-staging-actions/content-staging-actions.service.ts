@@ -27,7 +27,7 @@ export class ContentStagingActionsService {
         this.appState.dispatch(new LoadContentPackagesAction());
         this.appState.dispatch(new ClearEntitiesAction('contentPackage'));
 
-        this.api.contentStaging.listContentPackages().pipe(
+        this.api.contentStaging.listContentPackages({stats: false}).pipe(
             map(res => res.items.map(pkg => ({ ...pkg, id: pkg.name }) as ContentPackageBO)),
         ).subscribe(map => {
             const normalized = normalize(map, new schema.Array(contentPackageSchema));

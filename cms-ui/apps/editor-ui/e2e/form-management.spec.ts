@@ -3,12 +3,15 @@ import {
     FormSaveRequest,
     GcmsPermission,
     NodeFeature,
+    TagPropertyType,
     Variant,
 } from '@gentics/cms-models';
 import { cloneWithSymbols } from '@gentics/common';
 import {
+    BASIC_TEMPLATE_ID,
     clickModalAction,
     clickNotificationAction,
+    CONSTRUCT_TEST_FORM,
     EntityImporter,
     findNotification,
     FORM_ONE,
@@ -21,13 +24,16 @@ import {
     ImportPermissions,
     isVariant,
     ITEM_TYPE_FORM,
+    ITEM_TYPE_PAGE,
     LANGUAGE_DE,
     LANGUAGE_EN,
     loginWithForm,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    openContext,
     PAGE_ONE,
+    PageImportData,
     pickSelectValue,
     TestSize,
     UserImportData,
@@ -436,6 +442,86 @@ test.describe('Form Management', () => {
             const deLangIndicator = deEnFormItem.locator('.item-primary .language-indicator [data-action="page-language"][data-id="de"]');
             await expect(deLangIndicator.locator('.indicator.indicator-untranslated')).not.toBeAttached();
         });
+    });
+
+    test('should display the pages using the form in the usage modal', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20334',
+        }],
+    }, async ({ page }) => {
+        const USED_FORM = IMPORTER.get(FORM_ONE);
+        const FORM_CONSTRUCT = IMPORTER.get(CONSTRUCT_TEST_FORM);
+
+        const USING_PAGE: PageImportData = {
+            [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+            [IMPORT_ID]: `page_${NAMESPACE}_form_usage`,
+
+            folderId: NODE_MINIMAL[IMPORT_ID],
+            nodeId: NODE_MINIMAL[IMPORT_ID],
+            templateId: BASIC_TEMPLATE_ID,
+
+            pageName: 'Page using the form',
+            fileName: 'page-using-the-form',
+            language: LANGUAGE_EN,
+            priority: 1,
+
+            tags: {
+                formUsage: {
+                    id: null,
+                    constructId: FORM_CONSTRUCT.id,
+                    name: 'formUsage',
+                    active: true,
+                    type: 'CONTENTTAG',
+                    properties: {
+                        form: {
+                            type: TagPropertyType.CMSFORM,
+                            formId: USED_FORM.id,
+                        },
+                    },
+                } as any,
+            },
+        };
+
+        await test.step('Create page using the form', async () => {
+            await IMPORTER.importData([USING_PAGE]);
+        });
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+
+        await test.step('Setup display fields', async () => {
+            const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
+            await listOptions.locator('[data-action="select-display-fields"]').click();
+            const modal = page.locator('display-field-selector');
+            await modal.locator('gtx-contents-list-item[data-id="usage"] label').click();
+            await clickModalAction(modal, 'confirm');
+        });
+
+        const item = findItem(list, USED_FORM.id);
+        const usageChip = item.locator('list-item-details detail-chip.usage');
+        await expect(usageChip.locator('.usage-count')).toHaveText('1');
+
+        const usageReq = waitForResponseFrom(page, 'GET', '/rest/form/usage/page');
+        await usageChip.click();
+        await usageReq;
+
+        const usageModal = page.locator('gtx-usage-modal');
+        await expect(usageModal).toBeVisible();
+        await expect(usageModal.locator('.empty-message')).toBeHidden();
+        await expect(usageModal.locator('gtx-item-usage-list .usage-item .item-name')).toHaveText([IMPORTER.get(USING_PAGE).name]);
     });
 
     test('should be possible to toggle display of deleted items', {

@@ -7,14 +7,10 @@ import {
 } from '@gentics/cms-models';
 import { cloneWithSymbols } from '@gentics/common';
 import {
-    clickModalAction,
-    clickNotificationAction,
     EntityImporter,
     EXT_FORM_ONE,
-    findNotification,
     FORM_ONE,
     FORM_THREE,
-    FORM_TWO,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -23,24 +19,17 @@ import {
     ImportPermissions,
     isVariant,
     ITEM_TYPE_FORM,
-    LANGUAGE_DE,
     LANGUAGE_EN,
     loginWithForm,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
-    openContext,
-    PAGE_ONE,
-    pickSelectValue,
     TestSize,
     UserImportData,
-    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Page, test } from '@playwright/test';
 import {
     editorAction,
-    expectItemOffline,
-    expectItemPublished,
     fgAddBlock,
     fgAddControl,
     fgFindDropContainer,
@@ -53,7 +42,6 @@ import {
     findList,
     itemAction,
     selectNode,
-    toggleDisplayAllCheckbox,
 } from './helpers';
 
 test.describe('Form Editing', () => {
@@ -296,11 +284,12 @@ test.describe('Form Editing', () => {
         const grid = page.locator('content-frame gtx-form-grid');
         const firstPageTabLabel = grid.locator('gtx-form-page-manager .page-tab[data-page-index="0"] .page-tab-label');
 
-        await test.step('Should display all 4 imported elements with the correct structure', async () => {
+        await test.step('Should display all imported elements with the correct structure', async () => {
             const root = fgFindDropContainer(grid);
-            await expect(root.locator('> .form-item')).toHaveCount(2);
+            await expect(root.locator('> .form-item')).toHaveCount(3);
             await expect(fgFindElement(grid, 'input1')).toHaveAttribute('data-element-id', 'input1');
             await expect(fgFindElement(grid, 'agg1')).toHaveAttribute('data-element-id', 'agg1');
+            await expect(fgFindElement(grid, 'agg2')).toHaveAttribute('data-element-id', 'agg2');
 
             const aggContainer = fgFindDropContainer(grid, 'agg1');
             await expect(aggContainer.locator('> .form-item')).toHaveCount(1);
@@ -315,7 +304,7 @@ test.describe('Form Editing', () => {
             const source = fgFindElement(grid, 'input1');
             await fgMoveElement(grid, source, { containerId: 'agg1' });
 
-            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(2);
+            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(3);
             await expect(fgFindDropContainer(grid, 'agg1').locator('> .form-item')).toHaveCount(1);
             await expect(fgFindElement(grid, 'input1')).toHaveCount(1);
         });
@@ -324,7 +313,7 @@ test.describe('Form Editing', () => {
             const source = fgFindElement(grid, 'input1');
             await fgMoveElement(grid, source, { containerId: 'group1' });
 
-            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(2);
+            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(3);
             await expect(fgFindDropContainer(grid, 'group1').locator('> .form-item')).toHaveCount(1);
             await expect(fgFindElement(grid, 'input1')).toHaveCount(1);
         });
@@ -333,7 +322,7 @@ test.describe('Form Editing', () => {
             const source = fgFindElement(grid, 'group1', 'agg1');
             await fgMoveElement(grid, source);
 
-            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(2);
+            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(3);
             await expect(fgFindDropContainer(grid, 'agg1').locator('> .form-item')).toHaveCount(1);
             await expect(fgFindElement(grid, 'group1', 'agg1')).toHaveCount(1);
         });
@@ -342,7 +331,7 @@ test.describe('Form Editing', () => {
             const source = fgFindElement(grid, 'input1', 'group1');
             await fgMoveElement(grid, source);
 
-            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(2);
+            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(3);
             await expect(fgFindDropContainer(grid, 'group1').locator('> .form-item')).toHaveCount(1);
             await expect(fgFindElement(grid, 'input1', 'group1')).toHaveCount(1);
         });
@@ -373,10 +362,11 @@ test.describe('Form Editing', () => {
             await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(1);
             await expect(fgFindElement(grid, 'input1')).toHaveCount(1);
 
-            // The original/first page should no longer contain it, only agg1 should be left
+            // The original/first page should no longer contain it, only agg1 and agg2 should be left
             await firstPageTabLabel.click();
-            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(1);
+            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(2);
             await expect(fgFindElement(grid, 'agg1')).toHaveCount(1);
+            await expect(fgFindElement(grid, 'agg2')).toHaveCount(1);
         });
 
         await test.step('Should allow moving agg1 (with its nested elements) to another page', async () => {
@@ -393,9 +383,130 @@ test.describe('Form Editing', () => {
             await expect(fgFindElement(grid, 'group1', 'agg1')).toHaveCount(1);
             await expect(fgFindElement(grid, 'input1', 'group1')).toHaveCount(1);
 
-            // The original/first page should now be empty
+            // The original/first page should now only contain agg2
             await firstPageTabLabel.click();
-            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(0);
+            await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(1);
+            await expect(fgFindElement(grid, 'agg2')).toHaveCount(1);
+        });
+    });
+
+    test('should display all aggregate elements and have them editable', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20336',
+        }],
+    }, async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_THREE);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                ],
+            },
+        ]);
+
+        await test.step('Open Editor', async () => {
+            const list = findList(page, ITEM_TYPE_FORM);
+            const item = findItem(list, EDITING_FORM.id);
+            await itemAction(item, 'edit');
+        });
+
+        const grid = page.locator('content-frame gtx-form-grid');
+        const editSidebar = fgFindEditSidebar(grid);
+        const LABEL_TEXT = 'Hello World';
+        const AGG_ELEMENT_IDS = [
+            'firstName',
+            'lastName',
+            'address',
+            'addressExt',
+            'postCode',
+            'place',
+            'salutation',
+            'additionalRenters',
+        ];
+
+        await test.step('Should display agg2 with all of its nested elements', async () => {
+            const agg2 = fgFindElement(grid, 'agg2');
+            await expect(agg2).toHaveAttribute('data-element-id', 'agg2');
+            await expect(agg2).toBeVisible();
+
+            // These elements have no `formGridOptions.type`, so they can only be displayed
+            // if their schema is correctly resolved via the unique (aggregate-prefixed) id.
+            const aggContainer = fgFindDropContainer(grid, 'agg2');
+            await expect(aggContainer.locator('> .form-item')).toHaveCount(AGG_ELEMENT_IDS.length);
+            for (const id of AGG_ELEMENT_IDS) {
+                await expect(fgFindElement(grid, id, 'agg2')).toBeVisible();
+            }
+        });
+
+        await test.step('Should edit the definition of a nested string element', async () => {
+            const el = fgFindElement(grid, 'firstName', 'agg2');
+            // Click the title, as narrow elements may otherwise have their action buttons in the center
+            await el.locator('.element-container .element-title').click();
+            await expect(el).toContainClass('is-selected');
+            await expect(editSidebar).toBeVisible();
+
+            // The definition tab is only available if the schema of the element could be found
+            const definitionTab = await fgSelectElementTab(editSidebar, 'definition');
+            await expect(definitionTab.locator('[data-control="mandatory"] input[type="checkbox"]')).toBeChecked();
+
+            const updateOnChange = definitionTab.locator('[data-control="updateOnChange"]');
+            await expect(updateOnChange.locator('input[type="checkbox"]')).not.toBeChecked();
+            await updateOnChange.locator('label').click();
+            await expect(updateOnChange.locator('input[type="checkbox"]')).toBeChecked();
+        });
+
+        await test.step('Should edit the translations of a nested string element', async () => {
+            const el = fgFindElement(grid, 'firstName', 'agg2');
+            const elLabel = el.locator('.element-container .element-title');
+            const translationTab = await fgSelectElementTab(editSidebar, 'translations');
+
+            await translationTab.locator('[data-control="label"] input').fill(LABEL_TEXT);
+            await expect(elLabel).toHaveText(LABEL_TEXT);
+        });
+
+        await test.step('Should edit the definition of a nested number element', async () => {
+            const el = fgFindElement(grid, 'postCode', 'agg2');
+            await el.locator('.element-container .element-title').click();
+            await expect(el).toContainClass('is-selected');
+            await expect(fgFindElement(grid, 'firstName', 'agg2')).not.toContainClass('is-selected');
+
+            const definitionTab = await fgSelectElementTab(editSidebar, 'definition');
+            const mandatory = definitionTab.locator('[data-control="mandatory"]');
+            await expect(mandatory.locator('input[type="checkbox"]')).toBeChecked();
+            await mandatory.locator('label').click();
+            await expect(mandatory.locator('input[type="checkbox"]')).not.toBeChecked();
+        });
+
+        await test.step('Save and Validate', async () => {
+            const saveReq = page.waitForResponse(matchRequest('PUT', '/rest/form/*'));
+            await editorAction(page, 'save');
+            const res = await saveReq;
+            const req: FormSaveRequest = res.request().postDataJSON();
+
+            const rootProps = req.data.schema?.properties || {};
+            const aggProps = rootProps.agg2?.properties || {};
+
+            // Changes have to be applied to the properties within the aggregate
+            expect(aggProps.firstName?.updateOnChange).toBe(true);
+            expect(aggProps.firstName?.mandatory).toBe(true);
+            expect(aggProps.postCode?.mandatory).toBe(false);
+            expect(aggProps.postCode?.type).toBe('number');
+            expect(Object.keys(aggProps).sort()).toEqual([...AGG_ELEMENT_IDS].sort());
+
+            // And must not leak into the root level
+            expect(rootProps.firstName).toBeUndefined();
+            expect(rootProps.postCode).toBeUndefined();
+
+            const aggEl = req.data['ui-schema']?.pages?.[0]?.elements?.find((el) => el.id === 'agg2');
+            const firstNameEl = aggEl?.elements?.find((el) => el.id === 'firstName');
+            expect(Object.values(firstNameEl?.label || {})).toContain(LABEL_TEXT);
         });
     });
 
@@ -484,7 +595,7 @@ test.describe('Form Editing', () => {
 
             await test.step('Edit Form', async () => {
                 const grid = page.locator('content-frame gtx-form-grid');
-                const el = await fgAddBlock(grid, 'text', {});
+                const el = await fgAddBlock(grid, 'sectionheadline', {});
 
                 await expect(el).toBeVisible();
                 await el.click();

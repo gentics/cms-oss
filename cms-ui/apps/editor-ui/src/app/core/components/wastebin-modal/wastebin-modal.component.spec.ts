@@ -11,7 +11,7 @@ import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.c
 import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
 import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
 import { PagingControls } from '../../../shared/components/paging-controls/paging-controls.component';
-import { TypeIconPipe } from '../../../shared/pipes';
+import { TypeIconPipe, UserFullNamePipe } from '../../../shared/pipes';
 import { ApplicationStateService, FolderActionsService, WastebinActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
@@ -46,6 +46,7 @@ describe('WastebinModal', () => {
                 I18nDatePipe,
                 PagingControls,
                 TypeIconPipe,
+                UserFullNamePipe,
             ],
         });
 

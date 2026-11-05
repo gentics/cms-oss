@@ -4,6 +4,7 @@ import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
 import java.util.List;
 
 import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -16,6 +17,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.SseFeature;
 
@@ -30,6 +32,7 @@ import com.gentics.contentnode.rest.model.response.DatasourceLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ObjectPropertyLoadResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
+import com.gentics.contentnode.rest.model.response.devtools.PackageFileListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedConstructInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryFragmentInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryInPackageListResponse;
@@ -184,6 +187,81 @@ public interface PackageResource {
 		@ResponseCode(code = 404, condition = "Package {name} does not exist.")
 	})
 	GenericResponse synchronizeFromFS(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
+
+	/**
+	 * List files and directories contained in the given directory of the package's given files storage.
+	 * @param name Package name
+	 * @param mode files storage, either "files" or "files-internal"
+	 * @param path directory path, relative to the files storage root (defaults to the root)
+	 * @return list of files and directories
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/packages/{name}/{mode}")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "List of files is returned."),
+		@ResponseCode(code = 400, condition = "The given path is invalid."),
+		@ResponseCode(code = 404, condition = "Package {name} or files storage {mode} does not exist, or the given path does not exist or is not a directory.")
+	})
+	PackageFileListResponse listFiles(@PathParam("name") String name, @PathParam("mode") String mode, @QueryParam("path") @DefaultValue("") String path) throws Exception;
+
+	/**
+	 * Load the content of the file at the given path in the package's given files storage.
+	 * @param name Package name
+	 * @param mode files storage, either "files" or "files-internal"
+	 * @param path file path, relative to the files storage root
+	 * @return the file content
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/packages/{name}/{mode}/{path: .*}")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "The file content is returned."),
+		@ResponseCode(code = 400, condition = "The given path is invalid."),
+		@ResponseCode(code = 404, condition = "Package {name} or files storage {mode} does not exist, or the file at the given path does not exist or is a directory.")
+	})
+	Response getFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path) throws Exception;
+
+	/**
+	 * Create or update files in the given directory of the package's given files storage.
+	 * Every body part of the multipart request is one file, which is stored in the directory under the filename
+	 * of the body part's content disposition. The name of the body part is ignored.
+	 * Files are uploaded into the files storage root by posting to the path with a trailing slash
+	 * (e.g. <code>/devtools/packages/{name}/files/</code>).
+	 * @param name Package name
+	 * @param mode files storage, either "files" or "files-internal"
+	 * @param path directory path, relative to the files storage root, into which the uploaded files are stored (created if it does not exist)
+	 * @param multiPart multipart request containing the files
+	 * @return response
+	 * @throws Exception
+	 */
+	@POST
+	@Path("/packages/{name}/{mode}/{path: .*}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@StatusCodes({
+		@ResponseCode(code = 201, condition = "The files were created or updated."),
+		@ResponseCode(code = 400, condition = "The given path is invalid or is a file, no file data was sent, a body part has no filename, "
+				+ "or a filename contains a path, is used more than once or is an existing directory."),
+		@ResponseCode(code = 404, condition = "Package {name} or files storage {mode} does not exist.")
+	})
+	Response saveFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path, MultiPart multiPart) throws Exception;
+
+	/**
+	 * Delete the file at the given path in the package's given files storage.
+	 * @param name Package name
+	 * @param mode files storage, either "files" or "files-internal"
+	 * @param path file path, relative to the files storage root
+	 * @return response
+	 * @throws Exception
+	 */
+	@DELETE
+	@Path("/packages/{name}/{mode}/{path: .*}")
+	@StatusCodes({
+		@ResponseCode(code = 204, condition = "The file was deleted."),
+		@ResponseCode(code = 400, condition = "The given path is invalid."),
+		@ResponseCode(code = 404, condition = "Package {name} or files storage {mode} does not exist, or the file at the given path does not exist or is a directory.")
+	})
+	Response deleteFile(@PathParam("name") String name, @PathParam("mode") String mode, @PathParam("path") String path) throws Exception;
 
 	/**
 	 * Get the list of constructs assigned to the package.<br>

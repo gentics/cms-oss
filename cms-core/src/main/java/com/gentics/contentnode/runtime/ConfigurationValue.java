@@ -205,7 +205,43 @@ public enum ConfigurationValue {
 	/**
 	 * Path to the built formgen path to serve instead of the bundled/prebuilt formgen.
 	 */ 
-	FORMGEN_PATH("FORMGEN_PATH", "com.gentics.contentnode.forms.formgen.path")
+	FORMGEN_PATH("FORMGEN_PATH", "com.gentics.contentnode.forms.formgen.path"),
+
+	/**
+	 * Whether the MCP (Model Context Protocol) endpoint shall be available
+	 */
+	MCP_ENABLED("MCP_ENABLED", "com.gentics.contentnode.mcp.enabled", "mcp.enabled", () -> "true"),
+
+	/**
+	 * Path of the MCP (Model Context Protocol) endpoint
+	 */
+	MCP_PATH("MCP_PATH", "com.gentics.contentnode.mcp.path", "mcp.path", () -> "/mcp",
+			path -> StringUtils.removeEnd(StringUtils.prependIfMissing(path, "/"), "/")),
+
+	/**
+	 * Whether the MCP (Model Context Protocol) endpoint shall reject a request with HTTP 401 at
+	 * the transport level, when it carries neither an {@code Authorization: Bearer} header nor
+	 * the CMS session cookie (see {@code com.gentics.contentnode.mcp.auth.CmsMcpSecurityValidator}).
+	 * This is a coarse, presence-only check; it does not validate the credential. An MCP tool call
+	 * itself always rejects an unresolvable/invalid credential regardless of this setting -
+	 * enabling it only makes a missing credential fail earlier, and more explicitly, at the
+	 * transport level. Disabled (i.e. {@code false}) by default.
+	 */
+	MCP_REQUIRE_AUTH("MCP_REQUIRE_AUTH", "com.gentics.contentnode.mcp.requireAuth", "mcp.requireAuth", () -> "false"),
+
+	/**
+	 * Comma-separated hosts the MCP tool {@code upload_file} may fetch a URL source from, each as {@code host} (default
+	 * port of the scheme) or {@code host:port}. Empty (the default) refuses URL sources.
+	 */
+	MCP_UPLOAD_URL_HOSTS("MCP_UPLOAD_URL_HOSTS", "com.gentics.contentnode.mcp.uploadUrlHosts", "mcp.upload_url_hosts",
+			() -> ""),
+
+	/**
+	 * Base URL of the CMS as its users open it (e.g. {@code https://cms.example.com}), which the MCP tool
+	 * {@code whoami} returns as {@code cms.baseUrl}, so that a client can make the CMS's relative URLs absolute. Empty
+	 * (the default) omits it.
+	 */
+	MCP_BASE_URL("MCP_BASE_URL", "com.gentics.contentnode.mcp.baseUrl", "mcp.base_url", () -> "")
 
 	;
 

@@ -97,6 +97,14 @@ public class NodeException extends Exception {
 	}
 
 	/**
+	 * Get the message key of the localized message
+	 * @return message key, may be null
+	 */
+	public String getMessageKey() {
+		return messageKey;
+	}
+
+	/**
 	 * Returns the localized message from the given message key.
 	 * If no messageKey was provided, the standard message is returned.
 	 */

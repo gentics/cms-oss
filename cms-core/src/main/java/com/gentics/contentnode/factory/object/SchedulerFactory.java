@@ -668,8 +668,10 @@ public class SchedulerFactory extends AbstractFactory {
 					logger.error(String.format("Could not create scheduler execution for schedule %d (%s): %s", scheduleId, schedule.getName(), e.getMessage()), e);
 
 					if (useExecutionQueue) {
-						executionQueue.remove(scheduleId);
-						executionQueue.notifyAll();
+						synchronized (executionQueue) {
+							executionQueue.remove(scheduleId);
+							executionQueue.notifyAll();
+						}
 					}
 
 					return;

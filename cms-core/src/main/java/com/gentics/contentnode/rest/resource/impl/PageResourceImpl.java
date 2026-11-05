@@ -388,22 +388,20 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 
 	/**
-	 * Execute the given callable with a lock on the content of the page with given ID, so that page versions of the content
+	 * Execute the given supplier with a lock on the content of the page with given ID, so that page versions of the content
 	 * (which is shared by all page variants) are not created concurrently.
-	 * The current transaction is committed, and the callable is executed in a new transaction, which is started after the lock
-	 * was acquired, so it sees all changes committed by the previous holder of the lock. The new transaction gets the timestamp of
-	 * the current transaction (which is used e.g. as timestamp of created page versions).
-	 * If the page does not exist, the callable is executed without lock (and is expected to handle the missing page).
+	 * The current transaction is committed before the lock is acquired, and the supplier is executed in the current thread and transaction,
+	 * so it sees all changes committed by the previous holder of the lock. The supplier must commit its changes before it returns
+	 * (so that they are committed while the lock is still held).
+	 * If the page does not exist, the supplier is executed without lock (and is expected to handle the missing page).
 	 * @param id page ID
 	 * @param nodeId optional node ID, for which the page is loaded
-	 * @param callable callable
-	 * @return response of the callable
+	 * @param supplier supplier
+	 * @return value of the supplier
 	 * @throws NodeException
 	 */
-	protected GenericResponse executeLockedForContent(String id, Integer nodeId, Callable<GenericResponse> callable)
-			throws NodeException {
+	protected <T> T executeLockedForContent(String id, Integer nodeId, Supplier<T> supplier) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		long timestamp = t.getTimestamp();
 		Operator.Lock lock = null;
 
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
@@ -412,15 +410,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		t.commit(false);
 
-		return Operator.executeLockedInCurrentThread(lock, () -> {
-			TransactionManager.getCurrentTransaction().setTimestamp(timestamp);
-
-			try {
-				return callable.call();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		});
+		return Operator.executeLockedInCurrentThread(lock, supplier);
 	}
 
 	/**
@@ -2931,8 +2921,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	public PageLoadResponse restoreVersion(@PathParam("id") String id,
 			@QueryParam("version") Integer versionTimestamp) {
 		try {
-			// the cast is safe, because the callable is never sent to the background (no timeout)
-			return (PageLoadResponse) executeLockedForContent(id, null, () -> doRestoreVersion(id, versionTimestamp));
+			return executeLockedForContent(id, null, () -> doRestoreVersion(id, versionTimestamp));
 		} catch (NodeException e) {
 			logger.error("Error while restoring version of page " + id, e);
 			I18nString message = new CNI18nString("rest.general.error");

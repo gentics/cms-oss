@@ -18,7 +18,7 @@ function filterBy(filter: string, item: InheritableItem, prop: string): boolean 
     styleUrls: ['./wastebin-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [PaginationService],
-    standalone: false
+    standalone: false,
 })
 export class WastebinList implements OnChanges, OnInit {
 
@@ -55,27 +55,27 @@ export class WastebinList implements OnChanges, OnInit {
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['filter'] || changes['items']) {
-            this.updateDispalyItems();
+            this.updateDisplayItems();
         }
 
         if (changes['selectedItems']) {
             this.selected = {};
             if (this.selectedItems) {
-                this.selectedItems.forEach(id => {
+                this.selectedItems.forEach((id) => {
                     this.selected[id] = true;
                 });
             }
         }
     }
 
-    updateDispalyItems(): void {
+    updateDisplayItems(): void {
         if (this.items && this.filter !== '') {
             this.filteredItems = this.items
-                .filter(item => item != null)
-                .filter(item => filterBy(this.filter, item, 'name') || filterBy(this.filter, item, 'fileName'));
+                .filter((item) => item != null)
+                .filter((item) => filterBy(this.filter, item, 'name') || filterBy(this.filter, item, 'fileName'));
         } else {
             this.filteredItems = this.items
-                .filter(item => item != null);
+                .filter((item) => item != null);
         }
     }
 
@@ -101,7 +101,7 @@ export class WastebinList implements OnChanges, OnInit {
      */
     private getAllIds(): number[] {
         if (this.type !== 'page') {
-            return this.filteredItems.map(item => item.id);
+            return this.filteredItems.map((item) => item.id);
         }
 
         return this.filteredItems.reduce((allPages: number[], page: Page<Normalized>) => {
@@ -109,15 +109,10 @@ export class WastebinList implements OnChanges, OnInit {
                 return allPages;
             }
 
-            const variantIds =  Object.keys(page.languageVariants || {}).map(lang => page.languageVariants[+lang]);
+            const variantIds = Object.keys(page.languageVariants || {}).map((lang) => page.languageVariants[+lang]);
             const idsToAdd = 0 < variantIds.length ? variantIds : [page.id];
             return allPages.concat(idsToAdd);
         }, []);
-    }
-
-    getDeletedByName(item: InheritableItem): string {
-        const user = item.deleted.by;
-        return `${user.firstName} ${user.lastName}`;
     }
 
     /**
@@ -127,7 +122,7 @@ export class WastebinList implements OnChanges, OnInit {
         if (item.type === 'page') {
             // for pages, we consider the row selected if any of its language variants are selected
             const variants = this.getVariants(item as Page<Normalized>);
-            return 0 < variants.filter(page => this.selected[page.id] === true).length;
+            return 0 < variants.filter((page) => this.selected[page.id] === true).length;
         } else {
             return this.selected[item.id] === true;
         }
@@ -160,12 +155,12 @@ export class WastebinList implements OnChanges, OnInit {
 
     toggleSelection(item: InheritableItem<Normalized>, selected: boolean): void {
         let ids: number[] = [];
-        const deletableVariantIds = this.items.filter(item => this.isDeleted(item)).map(item => item.id);
+        const deletableVariantIds = this.items.filter((item) => this.isDeleted(item)).map((item) => item.id);
         if (item.type === 'page') {
             // for pages, we need to toggle the selected state of all of its language variants
             ids = this.getVariants(item as Page<Normalized>)
-                .filter(item => this.isDeleted(item))
-                .map(item => item.id);
+                .filter((item) => this.isDeleted(item))
+                .map((item) => item.id);
         } else {
             ids = [item.id];
         }
@@ -184,7 +179,7 @@ export class WastebinList implements OnChanges, OnInit {
             newSelection = selectedItems.concat(ids);
         } else {
             newSelection = selectedItems.slice();
-            ids.forEach(id => newSelection.splice(newSelection.indexOf(id), 1));
+            ids.forEach((id) => newSelection.splice(newSelection.indexOf(id), 1));
         }
         this.selectionChange.emit(newSelection);
     }
@@ -197,13 +192,13 @@ export class WastebinList implements OnChanges, OnInit {
             return [page];
         }
         return Object.keys(page.languageVariants)
-            .map(languageId => this.entityResolver.getPage(page.languageVariants[+languageId]));
+            .map((languageId) => this.entityResolver.getPage(page.languageVariants[+languageId]));
     }
 
     getLanguages(page: Page): Language[] {
         if (page.type !== 'page' || !page.languageVariants) {
             return [];
         }
-        return Object.keys(page.languageVariants).map(id => this.entityResolver.getLanguage(+id));
+        return Object.keys(page.languageVariants).map((id) => this.entityResolver.getLanguage(+id));
     }
 }

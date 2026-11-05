@@ -206,6 +206,12 @@ public class FolderFactory extends AbstractFactory {
 	protected final static ServiceLoaderUtil<NodeService> nodeFactoryServiceLoader = ServiceLoaderUtil
 			.load(NodeService.class);
 
+	/**
+	 * Loader for {@link WastebinService}s
+	 */
+	protected final static ServiceLoaderUtil<WastebinService> wastebinServiceLoader = ServiceLoaderUtil
+			.load(WastebinService.class);
+
 	static {
 		// register the factory classes
 		try {
@@ -5903,8 +5909,8 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
-		public Map<Integer, Integer> purgeWastebin() throws NodeException {
-			Map<Integer, Integer> result = new HashMap<>();
+		public Map<String, Integer> purgeWastebin() throws NodeException {
+			Map<String, Integer> result = new HashMap<>();
 
 			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 				wastebinLogger.info("Start purging wastebin for " + this + " (" + getFolder().getName() + ")");
@@ -5929,6 +5935,9 @@ public class FolderFactory extends AbstractFactory {
 					return result;
 				}
 
+				// folders without existing mother could not be purged, so move them into the root folder first
+				moveOrphanedFoldersToRoot(this);
+
 				List<Page> pages = getPagesToPurge(this, deletedBefore);
 				int pageCount = pages.size();
 				for (Page page : pages) {
@@ -5936,7 +5945,7 @@ public class FolderFactory extends AbstractFactory {
 					t.commit(false);
 				}
 				wastebinLogger.info("Purged " + pageCount + (pageCount == 1 ? " page": " pages"));
-				result.put(Page.TYPE_PAGE_INTEGER, pageCount);
+				result.put("page", pageCount);
 
 				List<File> files = getFilesToPurge(this, deletedBefore);
 				int fileCount = files.size();
@@ -5945,7 +5954,7 @@ public class FolderFactory extends AbstractFactory {
 					t.commit(false);
 				}
 				wastebinLogger.info("Purged " + fileCount + (fileCount == 1 ? " file" : " files"));
-				result.put(File.TYPE_FILE_INTEGER, fileCount);
+				result.put("file", fileCount);
 
 				List<Folder> folders = getFoldersToPurge(this, deletedBefore);
 				int folderCount = folders.size();
@@ -5955,7 +5964,20 @@ public class FolderFactory extends AbstractFactory {
 					t.commit(false);
 				}
 				wastebinLogger.info("Purged " + folderCount + (folderCount == 1 ? " folder" : " folders"));
-				result.put(Folder.TYPE_FOLDER_INTEGER, folderCount);
+				result.put("folder", folderCount);
+
+				for (WastebinService service : wastebinServiceLoader) {
+					Map<String, Integer> serviceResult = service.purgeInNode(t,this, deletedBefore);
+
+					if (serviceResult == null || serviceResult.isEmpty()) {
+						continue;
+					}
+
+					// Merge the service-results with the regular results
+					for (Map.Entry<String, Integer> entry : serviceResult.entrySet()) {
+						result.compute(entry.getKey(), (key, value) -> value == null ? entry.getValue() : value + entry.getValue());
+					}
+				}
 			}
 
 			return result;
@@ -7722,6 +7744,32 @@ public class FolderFactory extends AbstractFactory {
 			break;
 		}
 		return reducedList;
+	}
+
+	/**
+	 * Move the folders of the given node, which are in the wastebin, but whose mother does not exist (inconsistent data), into the root folder of the node,
+	 * so that they can be purged
+	 * @param node node
+	 * @throws NodeException
+	 */
+	private static void moveOrphanedFoldersToRoot(Node node) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		int nodeId = node.getMaster().getId();
+		Set<Integer> orphanedIds = DBUtils.select(
+				"SELECT folder.id FROM folder LEFT JOIN folder mother ON folder.mother = mother.id WHERE folder.node_id = ? AND folder.deleted > 0 AND folder.mother != 0 AND mother.id IS NULL",
+				ps -> ps.setInt(1, nodeId), DBUtils.IDS);
+		if (orphanedIds.isEmpty()) {
+			return;
+		}
+
+		int rootFolderId = node.getMaster().getFolder().getId();
+		for (int orphanedId : orphanedIds) {
+			wastebinLogger.warn("Mother of folder " + orphanedId + " does not exist, moving it into the root folder " + rootFolderId);
+			DBUtils.update("UPDATE folder SET mother = ? WHERE id = ?", rootFolderId, orphanedId);
+			t.dirtObjectCache(Folder.class, orphanedId, true);
+		}
+		t.dirtObjectCache(Folder.class, rootFolderId, true);
+		t.commit(false);
 	}
 
 	/**

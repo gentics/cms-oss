@@ -28,8 +28,11 @@ export class ContentPackageTableLoaderService extends BaseTableLoaderService<Con
     }
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ContentPackageBO>> {
-        const loadOptions = this.createDefaultOptions(options);
-
+        const loadOptions = {
+            ...this.createDefaultOptions(options),
+            // statistics (number of items per type) are turned off for performance reasons
+            stats: false
+        };
 
         return this.api.contentStaging.listContentPackages(loadOptions).pipe(
             map(response => {

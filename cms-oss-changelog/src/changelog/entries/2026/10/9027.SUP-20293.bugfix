@@ -1,0 +1,2 @@
+The multithreaded publish process will now handle database connection losses better.
+It will fail immediately, instead of possibly hanging for a long time.

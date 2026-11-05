@@ -123,29 +123,97 @@ export class WizardComponent implements AfterContentInit, OnDestroy {
     }
 
     onPrevButtonClick(): void {
-        if (this.currentStepIndex > 0) {
-            this.switchToStep(this.currentStepIndex - 1);
+        if (this.nextClickHandlerExecuting || this.currentStepIndex <= 0) {
+            return;
+        }
+        this.switchToStep(this.currentStepIndex - 1);
+    }
+
+    /** Previous steps are always selectable, later ones only if "Next" is enabled on every step up to them. */
+    isStepSelectable(stepIndex: number): boolean {
+        if (this.currentStepIndex < 0) {
+            return false;
+        }
+        if (stepIndex <= this.currentStepIndex) {
+            return true;
+        }
+        return this.wizardSteps
+            .slice(this.currentStepIndex, stepIndex)
+            .every((step) => step.nextEnabled);
+    }
+
+    onTabSelect(stepIndex: number): void {
+        if (this.nextClickHandlerExecuting || stepIndex === this.currentStepIndex || !this.isStepSelectable(stepIndex)) {
+            return;
+        }
+        if (stepIndex < this.currentStepIndex) {
+            this.switchToStep(stepIndex);
+        } else {
+            this.goForward(this.wizardSteps[stepIndex], false);
         }
     }
 
     onNextButtonClick(): void {
-        this.nextClickHandlerExecuting = true;
-        const nextClickFn = this.currentStep.nextClick;
-        const proceed = nextClickFn ? nextClickFn() : Promise.resolve();
-
-        proceed.then(stepOutput => {
-            if (this.currentStepIndex < this.wizardSteps.length - 1) {
-                this.switchToStep(this.currentStepIndex + 1);
-                this.currentStep.activate.emit(stepOutput);
-            } else {
-                this.wizardFinish.emit(stepOutput);
-            }
-        }).catch(() => {})
-            .finally(() => this.nextClickHandlerExecuting = false);
+        if (this.nextClickHandlerExecuting) {
+            return;
+        }
+        this.goForward(this.wizardSteps[this.currentStepIndex + 1], true);
     }
 
     onCancelButtonClick(): void {
         this.wizardCancel.emit();
+    }
+
+    /**
+     * Runs the "Next" logic step by step until `targetStep` is active.
+     * Stops early if a step cannot proceed, `targetStep` was removed or the wizard was destroyed.
+     */
+    private async goForward(targetStep: WizardStepDirective<any, any> | undefined, finishOnLastStep: boolean): Promise<void> {
+        this.nextClickHandlerExecuting = true;
+        this.changeDetector.markForCheck();
+
+        try {
+            while (this.currentStep !== targetStep && this.currentStep.nextEnabled) {
+                if (this.isLastStep() && !finishOnLastStep) {
+                    return;
+                }
+
+                const nextClickFn = this.currentStep.nextClick;
+                const stepOutput = await (nextClickFn ? nextClickFn() : Promise.resolve());
+                if (this.stopper.isStopped) {
+                    return;
+                }
+
+                if (this.isLastStep()) {
+                    if (finishOnLastStep) {
+                        this.wizardFinish.emit(stepOutput);
+                    }
+                    return;
+                }
+
+                this.switchToStep(this.currentStepIndex + 1);
+                this.currentStep.activate.emit(stepOutput);
+
+                await this.waitForChangeDetection();
+                if (this.stopper.isStopped || (targetStep && !this.wizardSteps.includes(targetStep))) {
+                    return;
+                }
+            }
+        } catch (error) {
+            // Stay on the current step
+        } finally {
+            this.nextClickHandlerExecuting = false;
+            this.changeDetector.markForCheck();
+        }
+    }
+
+    private isLastStep(): boolean {
+        return this.currentStepIndex >= this.wizardSteps.length - 1;
+    }
+
+    /** Waits one tick, so that the step inputs (e.g. `nextEnabled`) and the list of steps are up to date. */
+    private waitForChangeDetection(): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve));
     }
 
     private switchToStep(stepIndex: number): void {

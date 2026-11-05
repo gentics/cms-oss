@@ -34,13 +34,13 @@ export enum Feature {
     KEYCLOAK = 'keycloak',
     KEYCLOAK_SIGNOUT = 'keycloak_signout',
     FOLDER_BASED_TEMPLATE_SELECTION = 'folder_based_template_selection',
+    FORMS = 'forms',
     CONTENT_STAGING = 'content_staging',
     MULTICHANNELLING = 'multichannelling',
     PARTIAL_MULTICHANNELLING = 'partial_multichannelling',
     MESH_CR = 'mesh_contentrepository',
     OBJECT_TAG_SYNC = 'objtag_sync',
     LINK_CHECKER = 'link_checker',
-    FORMS = 'forms',
     /**
      * If this feature is activated, automatic page translation is available.
      * Has to be activated for the nodes as well, see {@link NodeFeature.AUTOMATIC_TRANSLATION}.

@@ -12,7 +12,7 @@ when not using the Gentics CMS Docker Compose Stack
 
 <shell>
 docker network create genticscms
-docker run -d --name db --net genticscms -e MYSQL_RANDOM_ROOT_PASSWORD=true -e MYSQL_DATABASE=node_utf8 -e MYSQL_USER=node -e MYSQL_PASSWORD=node mariadb:10.3 --sql-mode=""
+docker run -d --name db --net genticscms -e MYSQL_RANDOM_ROOT_PASSWORD=true -e MYSQL_DATABASE=node_utf8 -e MYSQL_USER=node -e MYSQL_PASSWORD=node mariadb:11.4 --sql-mode="" --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
 docker run -d -p 8080:80 --net genticscms --name cms -e NODE_DB_HOST=db docker.gentics.com/gentics/cms:5.33
 </shell>
 

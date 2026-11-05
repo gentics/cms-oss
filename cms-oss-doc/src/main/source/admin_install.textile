@@ -102,22 +102,28 @@ The following mysql permissions are needed.
   mysql> GRANT all ON node_utf8_todo.* to node_cms@HOSTNAME;
 </shell>
 
+The database must be created with the character set @utf8mb4@ (see "Database character set":#database-character-set).
+
+<shell>
+  mysql> CREATE DATABASE node_utf8 CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+</shell>
+
 The following mysql custom settings are mandatory. (MariaDB / MySQL 5.7)
 <shell>
 [mysqld]
   innodb_flush_log_at_trx_commit = 2
   character-set-server           = utf8mb4
-  character_set_client           = utf8
+  character_set_client           = utf8mb4
   character-set-filesystem       = utf8
 
   sql_mode                       = ""
   innodb                         = FORCE
   default-storage-engine         = InnoDB
   max_allowed_packet             = 256M
-  collation_server               = utf8_general_ci
+  collation_server               = utf8mb4_general_ci
 
 [client]
-  default-character-set          = utf8
+  default-character-set          = utf8mb4
 </shell>
 
 When using a MariaDB version 11.6 and up the following additional setting is necessary.
@@ -126,6 +132,30 @@ When using a MariaDB version 11.6 and up the following additional setting is nec
 [mysqld]
   innodb_snapshot_isolation      = 0
 </shell>
+
+h4. Database character set
+
+IMPORTANT: The database of Gentics CMS and all of its tables must use the character set @utf8mb4@. The character sets @utf8@ (which is an alias for @utf8mb3@), @utf8mb3@ and @latin1@ cannot store characters outside the Basic Multilingual Plane (e.g. emoji).
+
+Tables which are added by updates of Gentics CMS are created with the default character set of the database. Installations with a database that was not created with @utf8mb4@ should therefore check the character sets of the database and its tables:
+
+<shell>
+mysql> SELECT default_character_set_name, default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = 'node_utf8';
+mysql> SELECT table_name, table_collation FROM information_schema.TABLES WHERE table_schema = 'node_utf8' AND table_collation NOT LIKE 'utf8mb4%';
+</shell>
+
+If the database does not use @utf8mb4@ or the second query lists any tables, the database and the listed tables must be converted:
+
+# Stop Gentics CMS.
+# Create a "backup":admin_backup.html of the database.
+# Change the default character set of the database and convert every listed table:
+
+<shell>
+mysql> ALTER DATABASE node_utf8 CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+mysql> ALTER TABLE <table_name> CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+</shell>
+
+WARNING: Converting large tables can take a long time. Test the conversion on a copy of the database first.
 
 h3. Reverse proxy configuration
 
@@ -147,7 +177,7 @@ The database of the Gentics CMS can by reset anytime by dropping & recreating th
 
 <shell>
 mysql> DROP database node_utf8;
-mysql> CREATE database node_utf8;
+mysql> CREATE database node_utf8 CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 </shell>
 
 The database structure will be recreated during the next startup of Gentics CMS.

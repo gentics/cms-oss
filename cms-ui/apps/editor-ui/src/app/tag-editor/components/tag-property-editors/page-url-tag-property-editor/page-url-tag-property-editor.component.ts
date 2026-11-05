@@ -100,7 +100,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         this.selectedInternalPage.selectedItem$.pipe(
             switchMap((selectedInternalPage) => {
                 if (selectedInternalPage) {
-                    return this.client.folder.get(selectedInternalPage.folderId)
+                    return this.client.folder.get(selectedInternalPage.folderId, { nodeId: selectedInternalPage.nodeId })
                         .pipe(
                             map((response) => response.folder),
                             catchError((err) => of(err)),
@@ -118,7 +118,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
                     return of(context.folder);
                 }
 
-                return this.client.folder.get(this.page.folderId)
+                return this.client.folder.get(this.page.folderId, { nodeId: this.page.channelId || this.page.masterNodeId })
                     .pipe(
                         map((response) => response.folder),
                         catchError((err) => of(err)),
@@ -173,10 +173,10 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
           && newSelectedPage.length > 0;
         const newIsInternalValue = newSelectedPage instanceof Object
           && (
-              Number.isInteger((newSelectedPage as unknown as ItemInNode<Page<Raw>>).id)
-              && (newSelectedPage as unknown as ItemInNode<Page<Raw>>).id > 0
-              && Number.isInteger((newSelectedPage as unknown as ItemInNode<Page<Raw>>).nodeId)
-              && (newSelectedPage as unknown as ItemInNode<Page<Raw>>).nodeId > 0
+              Number.isInteger((newSelectedPage).id)
+              && (newSelectedPage).id > 0
+              && Number.isInteger((newSelectedPage).nodeId)
+              && (newSelectedPage).nodeId > 0
           );
         const newIsNoValue = !newIsExternalValue && !newIsInternalValue;
 
@@ -239,20 +239,4 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         this.changeDetector.detectChanges();
         setTimeout(() => this.changeDetector.detectChanges());
     }
-
-    /**
-     * @returns A string with the breadcrumbs path of the specified Page.
-     */
-    private generateBreadcrumbsPath(selectedItem: Page): string {
-        let breadcrumbsPath = '';
-        if (selectedItem) {
-            breadcrumbsPath = selectedItem.path.replace('/', '');
-            if (breadcrumbsPath.length > 0 && breadcrumbsPath.charAt(breadcrumbsPath.length - 1) === '/') {
-                breadcrumbsPath = breadcrumbsPath.substring(0, breadcrumbsPath.length - 1);
-            }
-            breadcrumbsPath = breadcrumbsPath.split('/').join(' > ');
-        }
-        return breadcrumbsPath;
-    }
-
 }

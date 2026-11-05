@@ -2393,7 +2393,9 @@ export type ScheduleSaveRequest = Partial<WriteableSchedule>;
 
 // CONTENT STAGING /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface ContentPackageListOptions extends BaseListOptionsWithPaging<ContentPackage> {}
+export interface ContentPackageListOptions extends BaseListOptionsWithPaging<ContentPackage> {
+    stats?: boolean;
+}
 
 export interface ContentPackageSyncOptions {
     wait?: number;

@@ -522,6 +522,78 @@ public class SchedulingTest {
 	}
 
 	/**
+	 * Check that a non-parallel schedule waiting in the execution queue is
+	 * still executed, when creating the execution for the schedule before it
+	 * in the queue fails.
+	 */
+	@Test
+	public void testNonParallelSchedulesAfterFailedExecutionCreation() throws NodeException, IOException, InterruptedException {
+		CountDownLatch startedLatchA = new CountDownLatch(1);
+		CountDownLatch finishedLatchA = new CountDownLatch(1);
+		SchedulerSchedule scheduleA = mockSchedule(
+			createSchedule("Schedule A", new ScheduleData().setType(ScheduleType.manual)),
+			mockTask(dummyTask, 0, startedLatchA, finishedLatchA));
+		CountDownLatch startedLatchFailing = new CountDownLatch(1);
+		CountDownLatch finishedLatchFailing = new CountDownLatch(1);
+		SchedulerSchedule failingSchedule = mockSchedule(
+			createSchedule("Failing schedule", new ScheduleData().setType(ScheduleType.manual)),
+			mockTask(dummyTask, 0, startedLatchFailing, finishedLatchFailing));
+		CountDownLatch startedLatchB = new CountDownLatch(1);
+		CountDownLatch finishedLatchB = new CountDownLatch(1);
+		SchedulerSchedule scheduleB = mockSchedule(
+			createSchedule("Schedule B", new ScheduleData().setType(ScheduleType.manual)),
+			mockTask(dummyTask, 0, startedLatchB, finishedLatchB));
+
+		// Delete the failing schedule, so that creating its execution fails
+		// because of the foreign key constraint.
+		Trx.operate(() -> DBUtils.executeUpdate("DELETE FROM scheduler_schedule WHERE id = ?", new Object[] { failingSchedule.getId() }));
+
+		assertThat(factory.executeNow(scheduleA))
+			.as("Execute A now")
+			.isTrue();
+
+		startedLatchA.await(10, TimeUnit.SECONDS);
+
+		assertThat(startedLatchA.getCount() == 0)
+			.as("Schedule A is running")
+			.isTrue();
+
+		assertThat(factory.executeNow(failingSchedule))
+			.as("Execute failing schedule now")
+			.isTrue();
+
+		// Give the failing schedule some time to enter the execution queue
+		// before B.
+		Thread.sleep(1000);
+
+		assertThat(factory.executeNow(scheduleB))
+			.as("Execute B now")
+			.isTrue();
+
+		Thread.sleep(1000);
+
+		finishedLatchA.countDown();
+		startedLatchB.await(10, TimeUnit.SECONDS);
+
+		assertThat(startedLatchFailing.getCount() == 0)
+			.as("Failing schedule was executed")
+			.isFalse();
+
+		assertThat(startedLatchB.getCount() == 0)
+			.as("Schedule B is running")
+			.isTrue();
+
+		finishedLatchB.countDown();
+
+		// Wait for the scheduling factory to clean up.
+		Thread.sleep(1000);
+
+		assertThat(factory.getRunningSchedules())
+			.as("Running schedules after finish")
+			.isEmpty();
+	}
+
+	/**
 	 * Check if the scheduler executor is restarted after reloading the configuration.
 	 */
 	@Test

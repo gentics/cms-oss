@@ -1,17 +1,17 @@
-import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
-import { FeatureOperations, NodeHandlerService, NodeOperations } from '@admin-ui/core';
-import { LanguageTableComponent, Wizard, WizardComponent } from '@admin-ui/shared';
-import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { createNestedControlValidator, I18nService } from '@gentics/cms-components';
+import { I18nService } from '@gentics/cms-components';
 import { FormTypeConfiguration, Language, Node, NodeCreateRequest, NodeFeature, NodeFeatureModel, NodeUrlMode, Raw } from '@gentics/cms-models';
+import { PickListItem } from '@gentics/ui-core';
 import { Observable, of as observableOf, of } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
+import { createFormValidityTracker, WizardStepNextClickFn } from '../../../../common';
+import { FeatureOperations, NodeHandlerService, NodeOperations } from '../../../../core';
+import { LanguageTableComponent, Wizard, WizardComponent } from '../../../../shared';
+import { AppStateService } from '../../../../state';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesComponent, NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
-import { PickListItem } from '@gentics/ui-core';
 
 const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
@@ -117,13 +117,11 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     private initForms(): void {
         this.fgProperties = new FormControl<NodePropertiesFormData>(null, [
             Validators.required,
-            createNestedControlValidator(),
         ]);
         this.fgPropertiesValid$ = createFormValidityTracker(this.fgProperties);
 
         this.fgPublishing = new FormControl<NodePublishingPropertiesFormData>(FG_PUBLISHING_DEFAULT as any, [
             Validators.required,
-            createNestedControlValidator(),
         ]);
         this.fgPublishingValid$ = createFormValidityTracker(this.fgPublishing);
 

@@ -1,0 +1,1 @@
+Fixed an issue where deleting a folder could leave its children that are in the wastebin orphaned, which would in turn cause the PurgeWastebinJob to fail.

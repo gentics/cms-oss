@@ -56,7 +56,7 @@ export class WizardStepDirective<I, O> {
     /**
      * Emits when this wizard step is activated after the "Next" button of
      * the previous step has been clicked and the promise of the `WizardStepNextClickFn`
-     * has resolved. It is not called when clicking the "Previous" button.
+     * has resolved. It is not called when going back.
      *
      * The argument of the event is the value that the promise of
      * the previous step's `WizardStepNextClickFn` has resolved to, or
@@ -66,7 +66,8 @@ export class WizardStepDirective<I, O> {
     activate = new EventEmitter<I>();
 
     /**
-     * @optional Called when the "Next" or "Finish" button is clicked.
+     * @optional Called when the "Next" or "Finish" button is clicked,
+     * and for every passed step when a later step is selected via its tab.
      *
      * If not set, the wizard will advance to the next step immediately
      * and the output of this step will be `void`.

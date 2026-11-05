@@ -6131,7 +6131,7 @@ public class PageFactory extends AbstractFactory {
 	 * @return comma separated list of DatasourcePartType parts
 	 * @throws NodeException
 	 */
-	private static String getDatasourcePartIds() throws NodeException {
+	static String getDatasourcePartIds() throws NodeException {
 		final Set<Integer> partIds = new HashSet<Integer>();
 		DBUtils.executeStatement("SELECT id FROM part WHERE type_id = 32", new SQLExecutor() {
 			@Override

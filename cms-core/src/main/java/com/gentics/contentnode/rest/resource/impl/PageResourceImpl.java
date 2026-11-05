@@ -1,12 +1,5 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
-import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
-import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
-import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
-import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
-import static com.gentics.contentnode.rest.util.MiscUtils.throwIfLockedByAnotherUser;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,9 +22,6 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
@@ -202,7 +192,6 @@ import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
-
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -215,6 +204,15 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
+import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
+import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
+import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
+import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
+import static com.gentics.contentnode.rest.util.MiscUtils.throwIfLockedByAnotherUser;
 
 /**
  * Resource used for loading, saving and manipulating GCN pages.
@@ -365,6 +363,57 @@ public class PageResourceImpl implements PageResource {
 		}
 
 		return page;
+	}
+
+	/**
+	 * Execute the given callable with a lock on the content of the page with given ID, so that page versions of the content
+	 * (which is shared by all page variants) are not created concurrently.
+	 * The current transaction is committed, and the callable is executed in a new transaction, which is started after the lock
+	 * was acquired, so it sees all changes committed by the previous holder of the lock. The new transaction gets the timestamp of
+	 * the current transaction (which is used e.g. as timestamp of created page versions).
+	 * If the page does not exist, the callable is executed without lock (and is expected to handle the missing page).
+	 * @param id page ID
+	 * @param nodeId optional node ID, for which the page is loaded
+	 * @param callable callable
+	 * @return response of the callable
+	 * @throws NodeException
+	 */
+	protected GenericResponse executeLockedForContent(String id, Integer nodeId, Callable<GenericResponse> callable)
+			throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		long timestamp = t.getTimestamp();
+		Operator.Lock lock = null;
+
+		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			lock = getContentLock(id);
+		}
+
+		t.commit(false);
+
+		return Operator.executeLockedInCurrentThread(lock, () -> {
+			TransactionManager.getCurrentTransaction().setTimestamp(timestamp);
+
+			try {
+				return callable.call();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
+
+	/**
+	 * Get the lock for the content of the page with given ID (in the current channel)
+	 * @param id page ID
+	 * @return lock or null, if the page does not exist
+	 * @throws NodeException
+	 */
+	public static Operator.Lock getContentLock(String id) throws NodeException {
+		Page page = TransactionManager.getCurrentTransaction().getObject(Page.class, id);
+		if (page != null) {
+			return Operator.lock(LockType.contentId, page.getContent().getId());
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -1029,7 +1078,27 @@ public class PageResourceImpl implements PageResource {
 	@Override
 	@POST
 	@Path("/save/{id}")
-	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) throws NodeException {
+	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) {
+		try {
+			return executeLockedForContent(id, null, () -> doSave(id, request));
+		} catch (NodeException e) {
+			logger.error("Error while saving page " + id, e);
+			I18nString message = new CNI18nString("rest.general.error");
+			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE,
+							"Error while saving page " + id + ": " + e.getLocalizedMessage()));
+		}
+	}
+
+	/**
+	 * Save the page in the current transaction
+	 * @param id page ID
+	 * @param request save request
+	 * @return response
+	 * @throws NodeException
+	 */
+	protected GenericResponse doSave(String id, PageSaveRequest request) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = null;
 
 		try (Trx trx = ContentNodeHelper.trx()) {
@@ -1505,7 +1574,26 @@ public class PageResourceImpl implements PageResource {
 	@POST
 	@Path("/publish/{id}")
 	public GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
-			PagePublishRequest request) throws NodeException {
+			PagePublishRequest request) {
+		try {
+			return executeLockedForContent(id, nodeId, () -> doPublish(id, nodeId, request));
+		} catch (NodeException e) {
+			logger.error("Error while publishing page " + id, e);
+			return new GenericResponse(new Message(Message.Type.CRITICAL,
+					new CNI18nString("rest.general.error").toString()), new ResponseInfo(ResponseCode.FAILURE,
+					"Error while publishing page " + id + ": "
+							+ e.getLocalizedMessage()));
+		}
+	}
+
+	/**
+	 * Publish the page in the current transaction
+	 * @param id page ID
+	 * @param nodeId optional node ID
+	 * @param request publish request
+	 * @return response
+	 */
+	protected GenericResponse doPublish(String id, Integer nodeId, PagePublishRequest request) throws NodeException {
 		GenericResponse response = new GenericResponse();
 		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -2594,7 +2682,29 @@ public class PageResourceImpl implements PageResource {
 	@POST
 	@Path("/restore/{id}")
 	public PageLoadResponse restoreVersion(@PathParam("id") String id,
-			@QueryParam("version") Integer versionTimestamp) throws NodeException {
+			@QueryParam("version") Integer versionTimestamp) {
+		try {
+			// the cast is safe, because the callable is never sent to the background (no timeout)
+			return (PageLoadResponse) executeLockedForContent(id, null, () -> doRestoreVersion(id, versionTimestamp));
+		} catch (NodeException e) {
+			logger.error("Error while restoring version of page " + id, e);
+			I18nString message = new CNI18nString("rest.general.error");
+			return new PageLoadResponse(
+					new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(
+					ResponseCode.FAILURE, "Error while restoring version of page " + id
+					+ ": " + e.getLocalizedMessage()), null);
+		}
+	}
+
+	/**
+	 * Restore the given version of the page in the current transaction
+	 * @param id page ID
+	 * @param versionTimestamp version timestamp
+	 * @return response
+	 * @throws NodeException
+	 */
+	protected PageLoadResponse doRestoreVersion(String id, Integer versionTimestamp) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = null;
 
 		// get the page

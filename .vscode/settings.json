@@ -36,5 +36,6 @@
             "mode": "auto"
         }
     ],
-    "nxConsole.nxWorkspacePath": "cms-ui"
+    "nxConsole.nxWorkspacePath": "cms-ui",
+    "java.compile.nullAnalysis.mode": "automatic"
 }

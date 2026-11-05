@@ -46,7 +46,7 @@ public class RestCallable<T extends GenericResponse> implements Callable<T> {
 	/**
 	 * Keyed lock to synchronize calls for the same lock
 	 */
-	private static final KeyLockManager lockManager = KeyLockManagers.newLock();
+	static final KeyLockManager lockManager = KeyLockManagers.newLock();
 
 	/**
 	 * Internal jobId

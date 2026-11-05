@@ -1,0 +1,1 @@
+Fixed an issue where simultaneous requests to save and publish a page could lead to duplicated versions and missing tag contents.

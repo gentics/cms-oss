@@ -46,6 +46,7 @@ import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.lib.i18n.CNI18nString;
 
@@ -194,7 +195,18 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 
 			for (String id : ids) {
 				try {
-					PublishSuccessState state = publishPage(id, isAlllang, at, message, keepPublishAt, keepVersion, feedback);
+					// lock the content of the page, so that page versions of the content are not created concurrently
+					Operator.Lock lock = PageResourceImpl.getContentLock(id);
+					// commit the transaction, so that the page is published with a snapshot, which is created after the lock was acquired
+					t.commit(false);
+					PublishSuccessState state = Operator.executeLockedInCurrentThread(lock, () -> {
+						try {
+							return publishPage(id, isAlllang, at, message, keepPublishAt, keepVersion, feedback);
+						} finally {
+							// commit while still holding the lock, so that the next holder of the lock sees the changes
+							t.commit(false);
+						}
+					});
 
 					switch (state) {
 					case INHERITED:

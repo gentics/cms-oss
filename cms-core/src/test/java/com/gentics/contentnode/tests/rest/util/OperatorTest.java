@@ -406,6 +406,80 @@ public class OperatorTest {
 	}
 
 	/**
+	 * Test that executing in the current thread returns the value of the supplier (with and without lock)
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLockedInCurrentThreadRethrowingReturnsValue() throws NodeException {
+		assertThat(Operator.executeLockedInCurrentThreadRethrowing("Job", Operator.lock(LockType.contentId, 4711), () -> "locked"))
+				.as("Value with lock").isEqualTo("locked");
+		assertThat(Operator.executeLockedInCurrentThreadRethrowing("Job", null, () -> "unlocked")).as("Value without lock").isEqualTo("unlocked");
+	}
+
+	/**
+	 * Test that a NodeException without exception mapper, which is thrown while executing in the current thread, is wrapped into a RestMappedException
+	 * containing the cause
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLockedInCurrentThreadRethrowingWrapsNodeException() throws NodeException {
+		NodeException cause = new NodeException("Failed");
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeLockedInCurrentThreadRethrowing("Job", Operator.lock(LockType.contentId, 4711), () -> {
+				throw cause;
+			}));
+			assertWrapped(thrown, cause);
+		});
+	}
+
+	/**
+	 * Test that an exception, which is no NodeException and is thrown while executing in the current thread, is wrapped into a RestMappedException
+	 * containing the cause
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLockedInCurrentThreadRethrowingWrapsOtherException() throws NodeException {
+		IllegalStateException cause = new IllegalStateException("Failed");
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeLockedInCurrentThreadRethrowing("Job", Operator.lock(LockType.contentId, 4711), () -> {
+				throw cause;
+			}));
+			assertWrapped(thrown, cause);
+		});
+	}
+
+	/**
+	 * Test that an exception with an exception mapper, which is thrown while executing in the current thread, is rethrown unchanged
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLockedInCurrentThreadRethrowingMappedException() throws NodeException {
+		EntityNotFoundException cause = new EntityNotFoundException("Not found");
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeLockedInCurrentThreadRethrowing("Job", Operator.lock(LockType.contentId, 4711), () -> {
+				throw cause;
+			}));
+			assertThat(thrown).as("Thrown exception").isSameAs(cause);
+		});
+	}
+
+	/**
+	 * Test that a RestMappedException, which is thrown while executing in the current thread, is rethrown unchanged (keeping its status)
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLockedInCurrentThreadRethrowingRestMappedException() throws NodeException {
+		RestMappedException cause = new RestMappedException("Conflict").setStatus(Status.CONFLICT);
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeLockedInCurrentThreadRethrowing("Job", Operator.lock(LockType.contentId, 4711), () -> {
+				throw cause;
+			}));
+			assertThat(thrown).as("Thrown exception").isSameAs(cause);
+			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.CONFLICT);
+		});
+	}
+
+	/**
 	 * Assert that the thrown exception is a RestMappedException with status 500, which wraps the given cause
 	 * and has a response containing the message of the cause
 	 * @param thrown thrown exception

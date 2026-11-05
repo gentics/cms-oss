@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import com.gentics.lib.genericexceptions.IllegalUsageException;
@@ -1167,6 +1168,13 @@ public class PageFactory extends AbstractFactory {
 
 			// dirt the content cache
 			t.dirtObjectCache(Content.class, contentId, false);
+
+			// dirting the content does not remove the versioned contents (used by the page versions) from the cache, so we do it here
+			List<Integer> versionTimestamps = Stream.of(getVersions())
+				.map(version -> version.getDate().getIntTimestamp())
+				.collect(Collectors.toList());
+
+			getObjectInfo().getFactory().clearVersionsLocal(Content.class, contentId, versionTimestamps);
 		}
 
 		/* (non-Javadoc)
@@ -6123,7 +6131,7 @@ public class PageFactory extends AbstractFactory {
 	 * @return comma separated list of DatasourcePartType parts
 	 * @throws NodeException
 	 */
-	private static String getDatasourcePartIds() throws NodeException {
+	static String getDatasourcePartIds() throws NodeException {
 		final Set<Integer> partIds = new HashSet<Integer>();
 		DBUtils.executeStatement("SELECT id FROM part WHERE type_id = 32", new SQLExecutor() {
 			@Override

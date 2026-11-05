@@ -27,6 +27,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.PrefixedThreadFactory;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -45,6 +46,8 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
+
+import de.jkeylockmanager.manager.ReturnValueLockCallback;
 
 /**
  * Operator class, that executes instances of {@link Callable} in a thread pool.
@@ -245,19 +248,31 @@ public class Operator {
 		} catch (Exception e) {
 			// for ExecutionExceptions, we are more interested in the causing exception
 			Throwable cause = e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
-			if (cause instanceof WebApplicationException webApplicationException) {
-				throw webApplicationException;
-			}
-			if (cause instanceof NodeException nodeException && hasExceptionMapper(nodeException)) {
-				throw nodeException;
-			}
-			logger.error("Error while " + description, cause);
-			I18nString message = new CNI18nString("rest.general.error");
-			RestMappedException wrapped = new RestMappedException(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while " + description + ": " + cause.getLocalizedMessage())));
-			wrapped.initCause(cause);
-			throw wrapped;
+			throw toMappedException(description, cause);
 		}
+	}
+
+	/**
+	 * Map the given exception, which was thrown while executing the job with the given description:
+	 * a {@link WebApplicationException} is thrown unchanged, a {@link NodeException}, for which an exception mapper exists, is returned unchanged,
+	 * all other exceptions are logged and wrapped into a {@link RestMappedException} (with HTTP status 500), which contains the message of the exception in its response.
+	 * @param description job description
+	 * @param cause exception
+	 * @return exception to be thrown
+	 */
+	private static NodeException toMappedException(String description, Throwable cause) {
+		if (cause instanceof WebApplicationException webApplicationException) {
+			throw webApplicationException;
+		}
+		if (cause instanceof NodeException nodeException && hasExceptionMapper(nodeException)) {
+			return nodeException;
+		}
+		logger.error("Error while " + description, cause);
+		I18nString message = new CNI18nString("rest.general.error");
+		RestMappedException wrapped = new RestMappedException(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+				new ResponseInfo(ResponseCode.FAILURE, "Error while " + description + ": " + cause.getLocalizedMessage())));
+		wrapped.initCause(cause);
+		return wrapped;
 	}
 
 	/**
@@ -407,6 +422,56 @@ public class Operator {
 			throw new NodeException("Cannot create lock without type and key");
 		}
 		return new Lock(type, key);
+	}
+
+	/**
+	 * Execute the given supplier in the current thread (and transaction) with the given lock.
+	 * The supplier is not executed concurrently with callables, which are executed with the same lock
+	 * (e.g. via {@link #executeLockedRethrowing(String, long, Lock, Callable)}).
+	 * @param lock optional lock (if null, the supplier is executed without lock)
+	 * @param supplier supplier
+	 * @return supplied value
+	 * @throws NodeException
+	 */
+	public static <R> R executeLockedInCurrentThread(Lock lock, Supplier<R> supplier) throws NodeException {
+		if (lock == null) {
+			return supplier.supply();
+		}
+
+		List<NodeException> exceptions = new ArrayList<>(1);
+		R result = RestCallable.lockManager.executeLocked(lock, new ReturnValueLockCallback<R>() {
+			@Override
+			public R doInLock() {
+				try {
+					return supplier.supply();
+				} catch (NodeException e) {
+					exceptions.add(e);
+					return null;
+				}
+			}
+		});
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+		return result;
+	}
+
+	/**
+	 * Version of {@link #executeLockedInCurrentThread(Lock, Supplier)}, which handles exceptions like {@link #executeLockedRethrowing(String, long, Lock, Callable)}:
+	 * exceptions, for which an exception mapper exists, are thrown unchanged, all other exceptions are wrapped into a {@link RestMappedException}
+	 * (with HTTP status 500), which contains the message of the cause in its response.
+	 * @param description job description (used in the error message)
+	 * @param lock optional lock (if null, the supplier is executed without lock)
+	 * @param supplier supplier
+	 * @return supplied value
+	 * @throws NodeException
+	 */
+	public static <R> R executeLockedInCurrentThreadRethrowing(String description, Lock lock, Supplier<R> supplier) throws NodeException {
+		try {
+			return executeLockedInCurrentThread(lock, supplier);
+		} catch (Exception e) {
+			throw toMappedException(description, e);
+		}
 	}
 
 	/**
@@ -646,6 +711,6 @@ public class Operator {
 	 * Enum of possible lock types
 	 */
 	public static enum LockType {
-		channelSet, contentSet, contentPackage, devtoolPackage, fileName, motherId
+		channelSet, contentSet, contentPackage, devtoolPackage, fileName, motherId, contentId
 	}
 }

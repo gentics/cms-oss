@@ -367,27 +367,26 @@ public class PageResourceImpl implements PageResource {
 	/**
 	 * Execute the given supplier with a lock on the content of the page with given ID, so that page versions of the content
 	 * (which is shared by all page variants) are not created concurrently.
-	 * The current transaction is committed before the lock is acquired, and the supplier is executed in the current thread and transaction,
-	 * so it sees all changes committed by the previous holder of the lock. The supplier must commit its changes before it returns
-	 * (so that they are committed while the lock is still held).
+	 * The lock is determined in a separate transaction, which is closed before the lock is acquired. The supplier is executed in the current thread
+	 * and must start its own transaction and commit it before it returns, so that the transaction sees all changes committed by the previous holder
+	 * of the lock and its changes are committed while the lock is still held.
 	 * If the page does not exist, the supplier is executed without lock (and is expected to handle the missing page).
+	 * Exceptions are handled like in {@link Operator#executeLockedInCurrentThreadRethrowing(String, Operator.Lock, Supplier)}.
 	 * @param id page ID
 	 * @param nodeId optional node ID, for which the page is loaded
+	 * @param description description (used in the error message)
 	 * @param supplier supplier
 	 * @return value of the supplier
 	 * @throws NodeException
 	 */
-	protected <T> T executeLockedForContent(String id, Integer nodeId, Supplier<T> supplier) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
+	protected <T> T executeLockedForContent(String id, Integer nodeId, String description, Supplier<T> supplier) throws NodeException {
 		Operator.Lock lock = null;
 
-		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			lock = getContentLock(id);
 		}
 
-		t.commit(false);
-
-		return Operator.executeLockedInCurrentThread(lock, supplier);
+		return Operator.executeLockedInCurrentThreadRethrowing(description, lock, supplier);
 	}
 
 	/**
@@ -1067,20 +1066,12 @@ public class PageResourceImpl implements PageResource {
 	@Override
 	@POST
 	@Path("/save/{id}")
-	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) {
-		try {
-			return executeLockedForContent(id, null, () -> doSave(id, request));
-		} catch (NodeException e) {
-			logger.error("Error while saving page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while saving page " + id + ": " + e.getLocalizedMessage()));
-		}
+	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) throws NodeException {
+		return executeLockedForContent(id, null, "saving page " + id, () -> doSave(id, request));
 	}
 
 	/**
-	 * Save the page in the current transaction
+	 * Save the page (in a new transaction)
 	 * @param id page ID
 	 * @param request save request
 	 * @return response
@@ -1562,20 +1553,12 @@ public class PageResourceImpl implements PageResource {
 	@POST
 	@Path("/publish/{id}")
 	public GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
-			PagePublishRequest request) {
-		try {
-			return executeLockedForContent(id, nodeId, () -> doPublish(id, nodeId, request));
-		} catch (NodeException e) {
-			logger.error("Error while publishing page " + id, e);
-			return new GenericResponse(new Message(Message.Type.CRITICAL,
-					new CNI18nString("rest.general.error").toString()), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while publishing page " + id + ": "
-							+ e.getLocalizedMessage()));
-		}
+			PagePublishRequest request) throws NodeException {
+		return executeLockedForContent(id, nodeId, "publishing page " + id, () -> doPublish(id, nodeId, request));
 	}
 
 	/**
-	 * Publish the page in the current transaction
+	 * Publish the page (in a new transaction)
 	 * @param id page ID
 	 * @param nodeId optional node ID
 	 * @param request publish request
@@ -2670,21 +2653,12 @@ public class PageResourceImpl implements PageResource {
 	@POST
 	@Path("/restore/{id}")
 	public PageLoadResponse restoreVersion(@PathParam("id") String id,
-			@QueryParam("version") Integer versionTimestamp) {
-		try {
-			return executeLockedForContent(id, null, () -> doRestoreVersion(id, versionTimestamp));
-		} catch (NodeException e) {
-			logger.error("Error while restoring version of page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(
-					new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(
-					ResponseCode.FAILURE, "Error while restoring version of page " + id
-					+ ": " + e.getLocalizedMessage()), null);
-		}
+			@QueryParam("version") Integer versionTimestamp) throws NodeException {
+		return executeLockedForContent(id, null, "restoring version of page " + id, () -> doRestoreVersion(id, versionTimestamp));
 	}
 
 	/**
-	 * Restore the given version of the page in the current transaction
+	 * Restore the given version of the page (in a new transaction)
 	 * @param id page ID
 	 * @param versionTimestamp version timestamp
 	 * @return response

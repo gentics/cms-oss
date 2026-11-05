@@ -1,22 +1,32 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { componentTest } from '@editor-ui/testing';
-import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
+import { componentTest } from '../../../../testing';
+import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { I18nService } from '@gentics/cms-components';
 import { MockI18nPipe, MockI18nService } from '@gentics/cms-components/testing';
 import {
     File as CmsFile,
     EditableFileProps,
     EditableImageProps,
+    FilePermissions,
     Folder,
+    FolderItemOrTemplateType,
     FolderItemSaveOptionsMap,
     FolderItemType,
     FolderItemTypeMap,
+    FolderPermissions,
+    Form,
+    FormPermissions,
     Image,
+    ImagePermissions,
+    Item,
+    ItemPermissions,
     ModelType,
     Node,
     Normalized,
+    Page,
+    PagePermissions,
     Raw,
     Tags,
 } from '@gentics/cms-models';
@@ -34,7 +44,7 @@ import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { provideTranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Api, ApiBase } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -86,7 +96,31 @@ class MockFolderActionsService implements Partial<FolderActionsService> {
     }
 }
 class MockNavigationService {}
-class MockPermissionService {}
+class MockPermissionService implements Partial<PermissionService> {
+    forItem(item: Folder, nodeId: number): Observable<FolderPermissions>;
+    forItem(item: Form, nodeId: number): Observable<FormPermissions>;
+    forItem(item: Page, nodeId: number): Observable<PagePermissions>;
+    forItem(item: CmsFile, nodeId: number): Observable<FilePermissions>;
+    forItem(item: Image, nodeId: number): Observable<ImagePermissions>;
+    forItem(item: Item, nodeId: number): Observable<ItemPermissions>;
+    forItem(id: number, type: 'folder', nodeId: number): Observable<FolderPermissions>;
+    forItem(id: number, type: 'form', nodeId: number): Observable<FormPermissions>;
+    forItem(id: number, type: 'page', nodeId: number): Observable<PagePermissions>;
+    forItem(id: number, type: 'file', nodeId: number): Observable<FilePermissions>;
+    forItem(id: number, type: 'image', nodeId: number): Observable<ImagePermissions>;
+    forItem(id: number, type: FolderItemOrTemplateType, nodeId: number): Observable<ItemPermissions>;
+    forItem(idOrItem: any, typeOrNodeId: FolderItemOrTemplateType | number, nodeId?: number): Observable<ItemPermissions> {
+        return of({
+            create: true,
+            delete: true,
+            edit: true,
+            inherit: true,
+            localize: true,
+            unlocalize: true,
+            view: true,
+        });
+    }
+}
 class MockTagEditorService {}
 class MockModalService {}
 class MockErrorHandler {}

@@ -39,7 +39,7 @@
   <gtx-wizard-step
     [title]="'node.create_node_wizard_step_node_features' | gtxI18n"
     [nextEnabled]="fgNodeFeaturesValid$ | async"
-    [nextClick]="isChildNode && !isFormsEnabled && finishClickAction"
+    [nextClick]="isChildNode && finishClickAction"
     >
     <ng-template>
       <div>

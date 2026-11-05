@@ -526,6 +526,10 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             return;
         }
 
+        if (this.currentNode == null || this.item == null) {
+            return;
+        }
+
         this.navigationService
             .detailOrModal(this.currentNode.id, this.item.type, this.item.id, EditMode.EDIT_PROPERTIES, {
                 openTab: 'properties',

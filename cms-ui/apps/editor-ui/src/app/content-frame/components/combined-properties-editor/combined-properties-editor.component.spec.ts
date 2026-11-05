@@ -1706,7 +1706,7 @@ class MockI18nNotification {
 @Component({
     selector: 'test-component',
     template: `
-        <combined-properties-editor [item]="item"></combined-properties-editor>
+        <combined-properties-editor [nodeId]="nodeId" [item]="item"></combined-properties-editor>
         <gtx-overlay-host></gtx-overlay-host>
     `,
     standalone: false,
@@ -1715,6 +1715,7 @@ class TestComponent {
     @ViewChild(CombinedPropertiesEditorComponent, { static: true })
     combinedPropertiesEditor: CombinedPropertiesEditorComponent;
 
+    nodeId = 1;
     item: ItemWithObjectTags | Node;
 }
 

@@ -1,13 +1,12 @@
-import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
-import { FeatureOperations, NodeOperations } from '@admin-ui/core';
-import { LanguageTableComponent, Wizard, WizardComponent } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language, Node, NodeCreateRequest, NodeFeatureModel, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
+import { createFormValidityTracker, WizardStepNextClickFn } from '../../../../common';
+import { FeatureOperations, NodeOperations } from '../../../../core';
+import { LanguageTableComponent, Wizard, WizardComponent } from '../../../../shared';
+import { AppStateService } from '../../../../state';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesComponent, NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
@@ -21,7 +20,7 @@ const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     selector: 'gtx-create-node-wizard',
     templateUrl: './create-node-wizard.component.html',
     styleUrls: ['./create-node-wizard.component.scss'],
-    standalone: false
+    standalone: false,
 })
 export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
@@ -57,12 +56,12 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
     finishClickAction: WizardStepNextClickFn<Node<Raw>> = () => {
         return this.onFinishClick();
-    }
+    };
 
     setChildNodeAction: WizardStepNextClickFn<void> = () => {
         this.setChildNode();
         return Promise.resolve();
-    }
+    };
 
     constructor(
         private appState: AppStateService,
@@ -73,9 +72,9 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     ngOnInit(): void {
         this.initForms();
 
-        this.nodeFeatures$ = this.appState.select(state => state.ui.language).pipe(
+        this.nodeFeatures$ = this.appState.select((state) => state.ui.language).pipe(
             startWith(observableOf(true)),
-            switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [ { attribute: 'id' } ] })),
+            switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [{ attribute: 'id' }] })),
         );
     }
 
@@ -86,13 +85,11 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     private initForms(): void {
         this.fgProperties = new FormControl<NodePropertiesFormData>(null, [
             Validators.required,
-            createNestedControlValidator(),
         ]);
         this.fgPropertiesValid$ = createFormValidityTracker(this.fgProperties);
 
         this.fgPublishing = new FormControl<NodePublishingPropertiesFormData>(FG_PUBLISHING_DEFAULT as any, [
             Validators.required,
-            createNestedControlValidator(),
         ]);
         this.fgPublishingValid$ = createFormValidityTracker(this.fgPublishing);
 

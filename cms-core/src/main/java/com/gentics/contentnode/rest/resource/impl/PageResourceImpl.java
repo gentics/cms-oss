@@ -371,22 +371,20 @@ public class PageResourceImpl implements PageResource {
 	 * and must start its own transaction and commit it before it returns, so that the transaction sees all changes committed by the previous holder
 	 * of the lock and its changes are committed while the lock is still held.
 	 * If the page does not exist, the supplier is executed without lock (and is expected to handle the missing page).
-	 * Exceptions are handled like in {@link Operator#executeLockedInCurrentThreadRethrowing(String, Operator.Lock, Supplier)}.
 	 * @param id page ID
 	 * @param nodeId optional node ID, for which the page is loaded
-	 * @param description description (used in the error message)
 	 * @param supplier supplier
 	 * @return value of the supplier
 	 * @throws NodeException
 	 */
-	protected <T> T executeLockedForContent(String id, Integer nodeId, String description, Supplier<T> supplier) throws NodeException {
+	protected <T> T executeLockedForContent(String id, Integer nodeId, Supplier<T> supplier) throws NodeException {
 		Operator.Lock lock = null;
 
 		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			lock = getContentLock(id);
 		}
 
-		return Operator.executeLockedInCurrentThreadRethrowing(description, lock, supplier);
+		return Operator.executeLockedInCurrentThread(lock, supplier);
 	}
 
 	/**
@@ -1067,7 +1065,7 @@ public class PageResourceImpl implements PageResource {
 	@POST
 	@Path("/save/{id}")
 	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) throws NodeException {
-		return executeLockedForContent(id, null, "saving page " + id, () -> doSave(id, request));
+		return executeLockedForContent(id, null, () -> doSave(id, request));
 	}
 
 	/**
@@ -1554,7 +1552,7 @@ public class PageResourceImpl implements PageResource {
 	@Path("/publish/{id}")
 	public GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			PagePublishRequest request) throws NodeException {
-		return executeLockedForContent(id, nodeId, "publishing page " + id, () -> doPublish(id, nodeId, request));
+		return executeLockedForContent(id, nodeId, () -> doPublish(id, nodeId, request));
 	}
 
 	/**
@@ -2654,7 +2652,7 @@ public class PageResourceImpl implements PageResource {
 	@Path("/restore/{id}")
 	public PageLoadResponse restoreVersion(@PathParam("id") String id,
 			@QueryParam("version") Integer versionTimestamp) throws NodeException {
-		return executeLockedForContent(id, null, "restoring version of page " + id, () -> doRestoreVersion(id, versionTimestamp));
+		return executeLockedForContent(id, null, () -> doRestoreVersion(id, versionTimestamp));
 	}
 
 	/**

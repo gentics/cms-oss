@@ -47,6 +47,7 @@
 		<module>ee/cms-server</module>
 		<module>ee/cms-multichannelling</module>
 		<module>ee/cms-forms</module>
+		<module>ee/cms-mcp</module>
 		<module>ee/cms-contentstaging</module>
 		<module>ee/cms-keycloak</module>
 		<module>ee/formgen</module>

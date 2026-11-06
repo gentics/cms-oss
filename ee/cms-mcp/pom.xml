@@ -1,0 +1,74 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.gentics</groupId>
+		<artifactId>cms-oss</artifactId>
+		<version>9.0.0-SNAPSHOT</version>
+		<relativePath>../../pom.xml</relativePath>
+	</parent>
+
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-mcp</artifactId>
+	<packaging>jar</packaging>
+	<organization>
+		<name>Gentics Software</name>
+		<url>http://www.gentics.com/</url>
+	</organization>
+	<description>MCP tools of the enterprise modules</description>
+	<name>Gentics CMS MCP Tools</name>
+	<licenses>
+		<license>
+			<name>BUSL-1.1</name>
+			<url>https://github.com/gentics/cms-oss/blob/dev/ee/LICENSE</url>
+		</license>
+	</licenses>
+	<url>http://www.gentics.com</url>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.gentics.cms-oss</groupId>
+				<artifactId>cms-oss-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-core</artifactId>
+		</dependency>
+
+		<!--Test dependencies -->
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-core</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

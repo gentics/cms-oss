@@ -3,7 +3,7 @@
 	"adminEmailSubject": {},
 	"adminEmailPageId": 0,
 	"adminEmailNodeId": 0,
-	"adminEmailTemplate": {},
+	"adminEmailTemplate": "",
 	"successPageId": 4711,
 	"successNodeId": 42,
 	"successUrl": {},

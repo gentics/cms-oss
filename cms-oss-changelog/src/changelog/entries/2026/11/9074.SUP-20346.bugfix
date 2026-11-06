@@ -1,0 +1,2 @@
+Forms: The automatic migration of forms from CMP versions <= 8.4 failed to migrate the setting for admin mail templates correctly.
+The migration has been fixed and incorrectly migrated forms will automatically be corrected and republished when the CMS is started after the update.

@@ -1,6 +1,5 @@
 package com.gentics.contentnode.mcp;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -118,13 +117,9 @@ public abstract class AbstractMcpTool {
 			}
 			return builder.build();
 		} catch (Exception e) {
-			// reflective calls (e.g. into the enterprise search module, see EnterpriseSearch) wrap the
-			// real cause in an InvocationTargetException, whose own getMessage() is null - unwrap it so
-			// the actual error is logged/reported instead of "null".
-			Throwable cause = e instanceof InvocationTargetException && e.getCause() != null ? e.getCause() : e;
-			logger.error(String.format("Error while invoking MCP tool '%s'", tool().name()), cause);
-			Problem problem = Problem.of(tool().name(), cause);
-			return CallToolResult.builder().isError(true).addTextContent(String.valueOf(cause.getMessage()))
+			logger.error(String.format("Error while invoking MCP tool '%s'", tool().name()), e);
+			Problem problem = Problem.of(tool().name(), e);
+			return CallToolResult.builder().isError(true).addTextContent(String.valueOf(e.getMessage()))
 					.structuredContent(Map.of("problem", MAPPER.convertValue(problem, Map.class))).build();
 		}
 	}

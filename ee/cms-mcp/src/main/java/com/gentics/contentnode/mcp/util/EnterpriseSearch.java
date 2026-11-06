@@ -1,12 +1,10 @@
 package com.gentics.contentnode.mcp.util;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -33,13 +31,14 @@ import com.gentics.contentnode.object.NamedNodeObject;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInFolder;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.search.IndexType;
+import com.gentics.contentnode.object.search.Indexer;
+import com.gentics.contentnode.rest.resource.impl.search.SearchResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.SearchParameterBean;
-import com.gentics.lib.log.NodeLogger;
 
 /**
- * Access to the Elasticsearch passthrough of the enterprise module cms-search, which cms-oss cannot compile against.
- * Every enterprise class and method is looked up by reflection; when the module or the {@code elasticsearch} feature
- * is missing, a {@link SearchUnavailableException} is thrown.
+ * Access to the Elasticsearch passthrough of cms-search. When the {@code elasticsearch} feature is off, a
+ * {@link SearchUnavailableException} is thrown.
  *
  * <p>
  * A search runs the passthrough's own request path: the body (which must have {@code query.bool}, see
@@ -51,14 +50,6 @@ import com.gentics.lib.log.NodeLogger;
  * </p>
  */
 public final class EnterpriseSearch {
-	private static final NodeLogger logger = NodeLogger.getNodeLogger(EnterpriseSearch.class);
-
-	static final String SEARCH_RESOURCE_CLASS = "com.gentics.contentnode.rest.resource.impl.search.SearchResourceImpl";
-
-	static final String INDEXER_CLASS = "com.gentics.contentnode.object.search.Indexer";
-
-	static final String INDEX_TYPE_CLASS = "com.gentics.contentnode.object.search.IndexType";
-
 	/**
 	 * Object mapper
 	 */
@@ -108,6 +99,15 @@ public final class EnterpriseSearch {
 		}
 	}
 
+	/**
+	 * Gives access to the filters of the passthrough. Never registered as a resource.
+	 */
+	private static final class FilteringResource extends SearchResourceImpl {
+		String filter(String body, SearchParameterBean bean) throws IOException, NodeException {
+			return addFilters(body, bean);
+		}
+	}
+
 	private EnterpriseSearch() {
 	}
 
@@ -121,21 +121,21 @@ public final class EnterpriseSearch {
 	 * @throws Exception if the search fails
 	 */
 	public static Response search(ObjectNode body, Scope scope) throws Exception {
-		Class<?> resourceClass = available(SEARCH_RESOURCE_CLASS, Feature.ELASTICSEARCH::isActivated);
+		requireActivated(Feature.ELASTICSEARCH.isActivated());
 
 		try (Trx trx = ContentNodeHelper.trx();
 				ChannelTrx cTrx = new ChannelTrx(scope.nodeId());
 				WastebinFilter wbf = new WastebinFilter(Wastebin.EXCLUDE)) {
-			ObjectNode sent = addFilters(resourceClass, body, scope);
-			String indices = (String) enterpriseMethod(INDEXER_CLASS, "getMultiIndexUrl", List.class, List.class)
-					.invoke(null, scope.languages(), indexTypes(scope.types()));
+			ObjectNode sent = addFilters(body, scope);
+			String indices = Indexer.getMultiIndexUrl(scope.languages(),
+					scope.types().stream().map(IndexType::valueOf).toList());
 			if (indices == null || indices.equals("/")) {
 				// no index for the types and languages: never send "//_search", which searches every index
 				trx.success();
 				return new Response(0, null, List.of(), null, sent);
 			}
 
-			HttpClient client = (HttpClient) enterpriseMethod(INDEXER_CLASS, "getClient").invoke(null);
+			HttpClient client = Indexer.getClient();
 			PostMethod post = new PostMethod(indices + "/_search");
 			int status;
 			String answer;
@@ -166,57 +166,32 @@ public final class EnterpriseSearch {
 	}
 
 	/**
-	 * Check that the enterprise search is available
-	 * @param className name of the class that must exist
-	 * @param feature check of the feature
-	 * @return the class
-	 * @throws SearchUnavailableException if the class is missing or the feature is off
+	 * Check that the search feature is activated
+	 * @param activated whether the feature is activated
+	 * @throws SearchUnavailableException if not
 	 */
-	static Class<?> available(String className, BooleanSupplier feature) {
-		Class<?> clazz;
-		try {
-			clazz = Class.forName(className);
-		} catch (ClassNotFoundException | LinkageError e) {
-			throw new SearchUnavailableException("The search module is not installed in this CMS", e);
-		}
-		if (!feature.getAsBoolean()) {
+	static void requireActivated(boolean activated) {
+		if (!activated) {
 			throw new SearchUnavailableException("The CMS feature 'elasticsearch' is not activated", null);
 		}
-		return clazz;
 	}
 
 	/**
 	 * Add the CMS filters to the body with {@code SearchResourceImpl#addFilters}, and check that it did
-	 * @param resourceClass search resource class
 	 * @param body body
 	 * @param scope scope
 	 * @return filtered body
 	 * @throws Exception
 	 */
-	private static ObjectNode addFilters(Class<?> resourceClass, ObjectNode body, Scope scope) throws Exception {
+	private static ObjectNode addFilters(ObjectNode body, Scope scope) throws Exception {
 		SearchParameterBean bean = new SearchParameterBean();
 		bean.nodeId = scope.nodeId() != null ? scope.nodeId() : 0;
 		bean.folderId = scope.folderIds();
 		bean.recursive = scope.recursive();
 		bean.languages = scope.languages();
 
-		Method addFilters;
-		Object resource;
-		try {
-			addFilters = resourceClass.getDeclaredMethod("addFilters", String.class, SearchParameterBean.class);
-			addFilters.setAccessible(true);
-			resource = resourceClass.getDeclaredConstructor().newInstance();
-		} catch (ReflectiveOperationException | RuntimeException e) {
-			throw unavailable(e);
-		}
-		String filtered;
-		try {
-			filtered = (String) addFilters.invoke(resource, MAPPER.writeValueAsString(body), bean);
-		} catch (InvocationTargetException e) {
-			throw e.getCause() instanceof Exception cause ? cause : e;
-		}
-
-		ObjectNode sent = (ObjectNode) MAPPER.readTree(filtered);
+		ObjectNode sent = (ObjectNode) MAPPER.readTree(
+				new FilteringResource().filter(MAPPER.writeValueAsString(body), bean));
 		if (!hasPermissionFilter(sent)) {
 			// fail closed: the passthrough forwards a body it cannot filter unchanged
 			throw new IllegalStateException("The search body was not filtered by the CMS, it is not sent");
@@ -236,51 +211,6 @@ public final class EnterpriseSearch {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Get the enterprise index types
-	 * @param types type names
-	 * @return list of IndexType constants
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static List<Object> indexTypes(List<String> types) {
-		try {
-			Class<? extends Enum> indexType = (Class<? extends Enum>) Class.forName(INDEX_TYPE_CLASS);
-			List<Object> constants = new ArrayList<>();
-			for (String type : types) {
-				constants.add(Enum.valueOf(indexType, type));
-			}
-			return constants;
-		} catch (ReflectiveOperationException | RuntimeException e) {
-			throw unavailable(e);
-		}
-	}
-
-	/**
-	 * Get a public static method of an enterprise class
-	 * @param className class name
-	 * @param name method name
-	 * @param parameterTypes parameter types
-	 * @return method
-	 * @throws SearchUnavailableException if the method does not exist
-	 */
-	private static Method enterpriseMethod(String className, String name, Class<?>... parameterTypes) {
-		try {
-			return Class.forName(className).getMethod(name, parameterTypes);
-		} catch (ReflectiveOperationException | RuntimeException e) {
-			throw unavailable(e);
-		}
-	}
-
-	/**
-	 * Create the exception for an enterprise class that does not have the expected shape
-	 * @param cause cause
-	 * @return exception
-	 */
-	private static SearchUnavailableException unavailable(Exception cause) {
-		logger.error("The search module does not have the expected classes and methods", cause);
-		return new SearchUnavailableException("The search module of this CMS is not supported", cause);
 	}
 
 	/**

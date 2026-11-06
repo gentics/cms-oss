@@ -21,7 +21,7 @@ import com.gentics.contentnode.mcp.model.SearchHit;
 import com.gentics.contentnode.mcp.util.SearchArgs;
 
 /**
- * Unit tests for {@link SearchContentTool}. Searching needs the enterprise module and Elasticsearch and is covered by
+ * Unit tests for {@link SearchContentTool}. Searching needs Elasticsearch and is covered by
  * the live check; the search-unavailable answer by {@code EnterpriseSearchTest}.
  */
 public class SearchContentToolTest {

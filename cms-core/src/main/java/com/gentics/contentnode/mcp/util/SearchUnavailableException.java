@@ -1,8 +1,7 @@
 package com.gentics.contentnode.mcp.util;
 
 /**
- * Thrown when the enterprise search (module or {@code elasticsearch} feature) is not available. Tool calls failing
- * with it are answered with the problem type {@code search-unavailable}.
+ * Thrown when the search is not available. Tool calls failing with it are answered with the problem type {@code search-unavailable}.
  */
 public class SearchUnavailableException extends RuntimeException {
 	/**

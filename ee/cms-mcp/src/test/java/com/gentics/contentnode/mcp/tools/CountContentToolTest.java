@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.contentnode.mcp.util.SearchArgs;
 
 /**
- * Unit tests for {@link CountContentTool}. Counting needs the enterprise module and Elasticsearch and is covered by
+ * Unit tests for {@link CountContentTool}. Counting needs Elasticsearch and is covered by
  * the live check.
  */
 public class CountContentToolTest {

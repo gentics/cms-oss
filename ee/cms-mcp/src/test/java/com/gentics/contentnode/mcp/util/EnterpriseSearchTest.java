@@ -11,28 +11,20 @@ import com.gentics.contentnode.mcp.model.Problem;
 import com.gentics.contentnode.mcp.model.SearchHit;
 
 /**
- * Unit tests for {@link EnterpriseSearch}. The search itself needs the enterprise module and Elasticsearch and is
- * covered by the live check.
+ * Unit tests for {@link EnterpriseSearch}. The search itself needs Elasticsearch and is covered by the live check.
  */
 public class EnterpriseSearchTest {
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	@Test
-	public void testUnavailableWithoutModule() {
-		assertThatThrownBy(() -> EnterpriseSearch.available("com.gentics.contentnode.NoSuchSearch", () -> true))
-				.isInstanceOf(SearchUnavailableException.class).hasMessageContaining("not installed");
-		Problem problem = Problem.of("search_content", catchUnavailable(() -> EnterpriseSearch.available(
-				"com.gentics.contentnode.NoSuchSearch", () -> true)));
+	public void testUnavailableWithFeatureOff() {
+		assertThatThrownBy(() -> EnterpriseSearch.requireActivated(false))
+				.isInstanceOf(SearchUnavailableException.class).hasMessageContaining("elasticsearch");
+		Problem problem = Problem.of("search_content", catchUnavailable(() -> EnterpriseSearch.requireActivated(false)));
 		assertThat(problem.type()).endsWith("search-unavailable");
 		assertThat(problem.status()).isEqualTo(503);
 		assertThat(problem.retryable()).isFalse();
-	}
-
-	@Test
-	public void testUnavailableWithFeatureOff() {
-		assertThatThrownBy(() -> EnterpriseSearch.available(String.class.getName(), () -> false))
-				.isInstanceOf(SearchUnavailableException.class).hasMessageContaining("elasticsearch");
-		assertThat(EnterpriseSearch.available(String.class.getName(), () -> true)).isEqualTo(String.class);
+		EnterpriseSearch.requireActivated(true);
 	}
 
 	@Test

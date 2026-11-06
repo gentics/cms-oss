@@ -33,7 +33,7 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 /**
  * Counts objects in the CMS Elasticsearch indices, optionally grouped by language, template or online state, through
- * the enterprise passthrough ({@link EnterpriseSearch}). Counts are filtered by the CMS permission groups only.
+ * the cms-search passthrough ({@link EnterpriseSearch}). Counts are filtered by the CMS permission groups only.
  * Template groups get the template's name as label when the caller may view it ({@link TemplateResourceImpl#get}).
  */
 public class CountContentTool extends AbstractMcpTool {

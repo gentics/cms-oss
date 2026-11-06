@@ -30,8 +30,7 @@ import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 /**
- * Finds objects similar to an indexed object or to a text with a more-like-this query, through the enterprise
- * passthrough ({@link EnterpriseSearch}), filtered like {@link SearchContentTool}. For a ref, the object is first
+ * Finds objects similar to an indexed object or to a text with a more-like-this query, through the cms-search passthrough ({@link EnterpriseSearch}), filtered like {@link SearchContentTool}. For a ref, the object is first
  * looked up in the index (which also checks that the caller may view it), and it is not among the hits.
  */
 public class FindSimilarTool extends AbstractMcpTool {

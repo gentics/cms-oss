@@ -8,7 +8,6 @@ import com.gentics.contentnode.mcp.tools.AddConstructToPackageTool;
 import com.gentics.contentnode.mcp.tools.AddPageTagTool;
 import com.gentics.contentnode.mcp.tools.AssignConstructToNodesTool;
 import com.gentics.contentnode.mcp.tools.AssignUserToGroupTool;
-import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreateConstructTool;
 import com.gentics.contentnode.mcp.tools.CreateFolderTool;
 import com.gentics.contentnode.mcp.tools.CreateGuidelineTool;
@@ -17,7 +16,6 @@ import com.gentics.contentnode.mcp.tools.CreateUserTool;
 import com.gentics.contentnode.mcp.tools.DeleteGuidelineTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
 import com.gentics.contentnode.mcp.tools.EnsureConstructCategoryTool;
-import com.gentics.contentnode.mcp.tools.FindSimilarTool;
 import com.gentics.contentnode.mcp.tools.GetConstructTool;
 import com.gentics.contentnode.mcp.tools.GetDatasourceTool;
 import com.gentics.contentnode.mcp.tools.GetFileTool;
@@ -47,7 +45,6 @@ import com.gentics.contentnode.mcp.tools.PublishPageTool;
 import com.gentics.contentnode.mcp.tools.RemoveUserFromGroupTool;
 import com.gentics.contentnode.mcp.tools.RenderPreviewTool;
 import com.gentics.contentnode.mcp.tools.RestorePageVersionTool;
-import com.gentics.contentnode.mcp.tools.SearchContentTool;
 import com.gentics.contentnode.mcp.tools.TakeOfflineTool;
 import com.gentics.contentnode.mcp.tools.TranslatePageTool;
 import com.gentics.contentnode.mcp.tools.UpdateConstructTool;
@@ -78,8 +75,7 @@ public final class McpTools {
 			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(),
 			new GetImageTool(), new GetPageVersionsTool(), new GetPageTool(), new GetPageTagsTool(),
 			new ListFolderItemsTool(), new GetFolderTreeTool(), new ListTemplatesTool(), new GetTemplateTool(),
-			new RenderPreviewTool(), new GetRelatedTool(), new SearchContentTool(), new CountContentTool(),
-			new FindSimilarTool(), new CreatePageTool(), new RestorePageVersionTool(), new AddPageTagTool(),
+			new RenderPreviewTool(), new GetRelatedTool(), new CreatePageTool(), new RestorePageVersionTool(), new AddPageTagTool(),
 			new UpdatePageTagsTool(), new PublishPageTool(), new TakeOfflineTool(), new TranslatePageTool(),
 			new DeletePageTool(), new UploadFileTool(), new ListPartTypesTool(), new ListDatasourcesTool(),
 			new GetDatasourceTool(), new ListConstructCategoriesTool(), new ListConstructsTool(),

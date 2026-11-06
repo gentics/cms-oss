@@ -1,0 +1,13 @@
+{
+	"ui-schema": {
+		"pages": [
+			{
+				"pagename": {
+					"de-AT": "1. Seite",
+					"en-AT": "1st Page"
+				},
+				"elements": []
+			}
+		]
+	}
+}

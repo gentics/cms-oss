@@ -1,0 +1,64 @@
+{
+  "private": true,
+  "name": "andp-cpa",
+  "version": "1.0.0",
+  "engines": {
+    "npm": "^10.9.2",
+    "node": "^22.15.0"
+  },
+  "scripts": {
+    "start:mobile": "cd apps/andp-mobile && npm start",
+    "start:ma-messages": "cd apps/andp-ma-messages && expo start -c",
+    "start:ma-ts": "cd apps/andp-ma-tasks && expo start -c",
+    "start:ma-bc": "cd apps/andp-ma-business-cases && cross-env DEV_MODE=false expo start -c",
+    "start:dev:ma-bc": "cd apps/andp-ma-business-cases && cross-env DEV_MODE=true expo start -c",
+    "start:formgen": "cd apps/andp-ma-formgen && cross-env DEV_MODE=false MOCK_FORM=false expo start -c",
+    "start:dev:formgen": "cd apps/andp-ma-formgen && cross-env DEV_MODE=true expo start -c",
+    "start:mock:formgen": "cd apps/andp-ma-formgen && cross-env DEV_MODE=true MOCK_FORM=true expo start -c",
+    "start:dev:ma-ms": "cd apps/andp-ma-messages && cross-env DEV_MODE=true expo start -c",
+    "start:dev:ma-ts": "cd apps/andp-ma-tasks && cross-env DEV_MODE=true expo start -c",
+    "prestart:formgen": "npm run copy:pdfworker && npm run copy:mockfiles",
+    "prestart:dev:formgen": "npm run copy:pdfworker && npm run copy:mockfiles",
+    "prestart:mock:formgen": "npm run copy:pdfworker && npm run copy:mockfiles",
+    "test": "jest",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "postinstall": "patch-package",
+    "copy:pdfworker": "copyfiles -f ./node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./apps/andp-ma-formgen/public/",
+    "copy:mockfiles": "npm run copy-mock-files --workspace=andp-ma-formgen"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/plugin-transform-class-static-block": "^7.28.3",
+    "@types/lodash": "^4.17.24",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "cross-env": "^10.0.0",
+    "patch-package": "^8.0.0",
+    "prettier": "^3.6.2",
+    "react-native-web": "^0.21.0",
+    "sass": "^1.92.1",
+    "semver": "7.6.3",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "babel-plugin-transform-import-meta": "^2.3.3",
+    "copyfiles": "2.4.1"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "overrides": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "2.31.1",
+    "underscore": "1.13.8",
+    "uuid": "14.0.1",
+    "nanoid": "^3.3.18",
+    "@grpc/grpc-js": "^1.14.5"
+  }
+}

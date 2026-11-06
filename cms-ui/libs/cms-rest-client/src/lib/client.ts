@@ -22,7 +22,6 @@ import {
     GCMSInfoAPI,
     GCMSKeycloakAPI,
     GCMSLanguageAPI,
-    GCMSLicenseAPI,
     GCMSLinkCheckerAPI,
     GCMSMarkupLanguageAPI,
     GCMSMessagingAPI,
@@ -932,13 +931,6 @@ export class GCMSRestClient implements GCMSRootAPI {
     public translation: GCMSTranslationAPI = {
         translateText: (body) => this.executeMappedJsonRequest(POST, 'translation/text', body),
         translatePage: (pageId, params) => this.executeMappedJsonRequest(POST, `translation/page/${pageId}/`, null, params),
-    } as const;
-
-    public license: GCMSLicenseAPI = {
-        info: () => this.executeMappedJsonRequest(GET, 'license/info'),
-        update: (body) => this.executeMappedJsonRequest(POST, 'license/update', body),
-        contentRepositories: (options) => this.executeMappedJsonRequest(GET, 'license/contentRepositories', null, options),
-        push: (body) => this.executeMappedJsonRequest(POST, 'license/push', body),
     } as const;
 
     public keycloak: GCMSKeycloakAPI = {

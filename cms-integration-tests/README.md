@@ -10,7 +10,7 @@ To start the services for the OSS Tests, simply run:
 docker compose up -d --wait
 ```
 
-For Tests which require the Enterprise-Edition, you first need to aquire a valid Licensekey and add it either as ENV Variable (`CI_LICENSEKEY`),
+For Tests which require the Enterprise-Edition, you first need to aquire a valid Licensekey for Gentics Mesh and add it either as ENV Variable (`CI_LICENSEKEY`),
 or create a copy of `compose.ee.local.example.yml` -> `compose.ee.local.yml`, and add the Licensekey there.
 
 With the ENV Variable set, you can start it like this:

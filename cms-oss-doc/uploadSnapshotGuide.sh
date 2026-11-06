@@ -37,7 +37,8 @@ function uploadGuides() {
 
     echo -e "\n * Transfering and extracting guides"
       ssh $REMOTE_HOST mkdir -p $REMOTE_DEST/guides-history/$version
-      scp target/contentnode-doc*.zip  $REMOTE_HOST:$REMOTE_DEST/guides-history/$version
+      # only the guides package, not the -assets and -oss-content packages
+      scp `ls target/cms-oss-doc-*.zip | grep -vE -- '-(assets|oss-content)\.zip$'`  $REMOTE_HOST:$REMOTE_DEST/guides-history/$version
       handleError $? "Could not transfer guides $version"
       ssh $REMOTE_HOST "cd $REMOTE_DEST/guides-history/$version ; unzip -o *.zip"
       echo "Creating symlink from latest to $version"

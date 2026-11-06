@@ -1,0 +1,240 @@
+h2. Forms Migration Guide
+
+This guide explains the steps to migrate forms from older CMP Versions (<= CMP 8.4).
+It is recommended to carefully read this migration guide before starting with the update.
+The guide covers the following topics:
+
+* Executing the automatic conversion of the CMS configuration files (@form-editor.json@ and @form-poll-editor.json@)
+* Custom conversion steps of the CMS configuration files
+* Automatic conversion of all forms in the CMS
+
+endprologue.
+
+h3. Migrating the configuration
+
+CMP Versions <= 8.4 supported only two types of forms: @"generic"@ and  @"poll"@, which were configured in separate JSON files in the @ui-conf@ folder.
+
+Those configuration files can be converted automatically into the new format with one of the following methods.
+
+h4. Using the Enterprise Server Package
+
+After the Enterprise CMS Server Package has been downloaded following the "download instructions":admin_install.html#download-the-package, the migration can be done by executing the following command:
+
+<shell>
+java -cp cms-server-x.y.z.jar com.gentics.contentnode.forms.Migration \
+    -ui_conf path/to/ui-conf/ -out migrated.yml
+</shell>
+
+This will create the file @migrated.yml@ containing the migrated form type configurations.
+
+h4. Using a docker compose setup
+
+When a docker compose setup is used to run the CMS, the migration can be done with the following steps.
+
+Stop the cms service:
+
+<shell>
+docker compose stop <cms-service-name>
+</shell>
+
+Update the CMS version in the @docker-compose.yml@ file.
+
+Run the migration:
+
+<shell>
+docker compose run --rm <cms-service-name> java -cp cms-server.jar \
+    com.gentics.contentnode.forms.Migration -out path/to/migrated.yml
+</shell>
+
+The @path/to/migrated.yml@ must be the path to the file, which should be created with the migrated form type configurations.
+After the migration, the contents of the file must either be put into an existing configuration file, or the file must be made part of the configuration read by the CMS.
+
+Restart the cms service to finalize the migration:
+
+<shell>
+docker compose up -d <cms-service-name>
+</shell>
+
+The log output of the CMS should be closely watched in cases of errors.
+
+After successful migration, the files @form-editor.json@ and @form-poll-editor.json@ can be removed from the @ui-conf@ directory.
+
+h3. Conversion details
+
+h4. Distinction between controls and blocks
+
+The old configuration contained @elements@, while the new configuration distinguishes between @controls@ (elements which will accept user input) and @blocks@ (elements which do not accept user input).
+
+The mapping rules for to @controls@ vs. @blocks@ are:
+
+# An @element@ that has @is_container@ set to @true@ is converted to a @block@ (because @controls@ cannot be nested).
+# The following @types@ will also be converted to @blocks@
+** @sectionheadline@
+** @text@
+** @spacer@
+** @group@
+** @conditionalcontainer@
+# The following @types@ will not be converted to @blocks@ or @controls@, because their functionality is now implemented in a different manner:
+** @textarea@: The control @input@ has a setting @numberOfLines@ which can be used to create input fields with multiple lines
+** @buttons@: Every form will contain the necessary buttons automatically
+** @formpage@: Every form can have multiple pages
+** @formprogress@: The progress for forms containing multiple pages will always be shown
+** @recaptcha@: Captcha settings are now part of general the form properties
+** @friendlycaptcha@: See above
+
+h4. Input Validation
+
+Old input validation settings for the @input@ element will partly be converted to new validation settings for the @string@ control and partly to separate @controls@:
+
+* @number@ validation will be converted to the @number@ control
+* @telephone@ validation will be converted to a validation setting with a regular expression allowing digits, plus-sign, forward slash and whitespace
+* @socialsecurity@ validation will be converted to a validation setting with a regular expression allowing 10 digits (first digit must not be 0)
+* @date@ and @datepicker@ validation will be converted to the @datetime@ control
+* @time@ validation will be converted to the @time@ control
+* @email@ validation will be converted to a validation setting with a regular expression for emails
+
+NOTE: New validation settings need to contain the translated error messages (which are shown when the user input does not match the required validation).
+Since the old validation mechanism did not have translated messages as part of the element configuration, it is required that error messages are added in
+a custom migration script (see "Custom Type Migration":#custom-type-migration).
+
+h4. Conditions
+
+The old forms plugin allowed the conditional visibility of input fields only for specific elements (@conditionalcontainer@). The new forms plugin automatically supports such conditions
+for all @controls@ and @blocks@. Therefore the properties @element_to_check@ and @value_to_check@ will not be migrated to settings in the new configuration.
+
+h4. Selectgroup Element
+
+The old @selectgroup@ element is migrated to the new @catalog@ element. Available options will be migrated one to one. The old @select_type@ property will be dropped and replaced by the two boolean settings
+* @isList@ for configuring single-select vs. multi-select
+* @radio@ for configuring display of a dropdown field vs. a set of radio-buttons (this setting is only available when @isList@ is false).
+
+h4. Captcha Elements (recaptcha and friendlycaptcha)
+
+Inclusion of a captcha is no longer done by adding either a recaptcha or a friendlycaptcha element to the form, but by choosing a captcha setting in the form properties.
+The migrated configuration will therefore contain some predefined @captchaOptions@ for recaptcha (when the element @recaptcha@ was contained in the old configuration) and
+friendlycaptcha (when the element @friendlycaptcha@ was contained in the old configuration).
+
+h4. Other Unmigrated properties
+
+The following properties will not be migrated, because their functionality is now implemented in a different manner or is present by default:
+* @label@
+* @description@
+* @mandatory@
+* @validation@
+* @tooltip@
+* @placeholder@
+
+NOTE: The properties @tooltip@ and @placeholder@ are not migrated, because in FormGen, the shown "tooltip" is taken
+from the @description@ of the control, and the shown "placeholder" is the control's @label@. In cases where the tooltip and/or placeholder
+shall overwrite the description/label of the control in a form, a "Custom form migration":#custom-form-migration script like shown in the
+example below can be used.
+
+h4. Added configuration
+
+Some parts of the configuration will be filled with default settings:
+* @formGenTranslations@: Translations for information, which may be shown in FormGen
+* @blocks@: The new @image@ block will be added
+* @flows@: Some default flows will be added
+
+h3. Custom Type Migration
+
+The automatic conversion covers all default elements and settings of the Gentics Forms Plugin.
+
+In cases where custom elements or settings are used, it is possible to add a "Groovy":https://groovy-lang.org/ script for applying custom changes to the configuration.
+
+The script can be passed as command line parameter @-custom@ to the migation tool. So the command would be 
+
+<shell>
+java -cp cms-server-x.y.z.jar com.gentics.contentnode.forms.Migration \
+    -ui_conf path/to/ui-conf/ -out migrated.yml -custom path/to/type_migration.groovy
+</shell>
+
+The file @path/to/type_migration.groovy@ must be a valid Groovy file, which will get the following input variables:
+
+|_. Name    |_. Description                                                                   |
+| @element@ | The original element (as found in the form-editor.json) to be migrated          |
+| @verbose@ | True, when the migration is executed with the @-verbose@ command line parameter |
+
+The script can modify the variable @element@ and must return either @true@ (indicating that the element should be migrated) or @false@ (indicating that the element must not be migrated).
+
+See the following example, which will
+
+* Remove the property @columns@ from all elements
+* Add translated error messages to the validation options @telephone@, @socialsecurity@ and @email@
+
+<shell filename="path/to/type_migration.groovy">
+// Remove the "columns" setting, because it will be migrated to "numberOfColumns"
+element.get("properties").removeAll { it.name in ["columns"] }
+
+// add errorMessage to the validation options, that will be migrated to regexValidation
+element.get("properties").findAll { it.name == "validation" }.each { validation ->
+    // telephone
+    validation.options.findAll { it.key == "telephone" }.each { telephoneOption ->
+        telephoneOption.errorMessage = [
+            "de": "Ungültige Telefonnummer",
+            "en": "Invalid telephone number"
+        ]
+    }
+
+    // socialsecurity
+    validation.options.findAll { it.key == "socialsecurity" }.each { socialsecurityOption ->
+        socialsecurityOption.errorMessage = [
+            "de": "Ungültige Sozialversicherungsnummer",
+            "en": "Invalid social security number"
+        ]
+    }
+
+    // email
+    validation.options.findAll { it.key == "email" }.each { emailOption ->
+        emailOption.errorMessage = [
+            "de": "Ungültige eMail Adresse",
+            "en": "Invalid e-mail address"
+        ]
+    }
+}
+
+return true
+</shell>
+
+h3. Form migration
+
+When the CMS is started for the first time and the new configration is found, all forms will automatically be migrated to the new format.
+
+All properties of the form, elements contained in the form and their properties will be converted in the same manner as the configuration was migrated.
+
+Forms, which are published will be published after migration.
+
+NOTE: Depending on the number of forms in the CMS, the first publish process after the automatic form migration may take longer than usual. It is important
+to note that all forms need to be republished in order to property work with the new forms plugin and FormGen.
+
+h3. Custom form migration
+
+In cases where custom settings of form elements were used for functionality, which is now directly supported, a custom migration script for the form migration can be used.
+This "Groovy":https://groovy-lang.org/ script must be called @form_migration.groovy@ and must be placed and configured in the CMS configuration.
+
+The script will get the following input variables:
+
+|_. Name       |_. Description                                                                                                     |
+| @element@    | The original element (as found in the form) to be migrated                                                        |
+| @property@   | Optional schema property of the migrated element. Null for @blocks@, since they are only present in the ui-schema |
+| @uiProperty@ | ui-schema property of the migrated element.                                                                       |
+
+The script may modify the @property@ and @uiProperty@ variables as shown in the example below:
+
+<shell filename="path/to/form_migration.groovy">
+// Migrate the columns setting to numberOfColumns
+if (element && element.columns_i18n && element.columns_i18n.de) {
+    uiProperty.formGridOptions.numberOfColumns = element.columns_i18n.de as Integer
+}
+
+// Migrate the tooltip to the description
+if (element && element.tooltip_i18n) {
+    uiProperty.description = element.tooltip_i18n
+}
+
+// Migrate the placeholder to the label
+if (element && element.placeholder_i18n) {
+    uiProperty.label = element.placeholder_i18n
+}
+
+</shell>

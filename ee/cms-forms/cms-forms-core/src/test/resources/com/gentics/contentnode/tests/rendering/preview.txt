@@ -1,0 +1,24 @@
+
+<script>window.formPreviewData = {
+  "formId" : %d,
+  "formType" : "generic",
+  "uiSchema" : null,
+  "language" : "%s",
+  "pluginName" : "forms",
+  "flows" : [ {
+    "id" : "testFlow",
+    "labelI18n" : {
+      "de" : "Test Ablauf"
+    },
+    "nameTranslationKey" : "test.flow",
+    "steps" : [ {
+      "nameTranslationKey" : "test.flow.step",
+      "buttonLabelTranslationKey" : "test.flow.step.button",
+      "reactClass" : "test.flow.step.react.class",
+      "descriptionTranslationKey" : null,
+      "buttons" : null,
+      "variables" : null
+    } ]
+  } ]
+};
+</script>

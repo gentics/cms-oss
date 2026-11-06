@@ -218,6 +218,7 @@ Please sign the [CLA](https://cla-assistant.io/gentics/cms-oss) in order to cont
 # Copyright & License
 
 Copyright (c) 2014-2023 Gentics Software GmbH. Licensed under the
-Apache License, Version 2.0.
+Apache License, Version 2.0, except for the modules in `ee/`, which are licensed
+under the Business Source License 1.1. See [LICENSING.md](LICENSING.md) for details.
 
 Gentics is a registered trade mark of Gentics Software GmbH.

@@ -1,0 +1,831 @@
+diff --git a/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js b/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js
+index 9d16738..8c1a94b 100644
+--- a/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js
++++ b/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js
+@@ -3,27 +3,23 @@
+ Object.defineProperty(exports, "__esModule", {
+   value: true
+ });
+-exports.default = exports.tchildrenRendererDefaultProps = void 0;
++exports.default = void 0;
+ 
+ var _renderChildren = _interopRequireDefault(require("./renderChildren"));
+ 
+-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++function _interopRequireDefault(obj) {
++  return obj && obj.__esModule ? obj : { default: obj };
++}
+ 
+ /**
+  * A component to render collections of tnodes.
+  * Especially useful when used with {@link useTNodeChildrenProps}.
+  */
+-const TChildrenRenderer = _renderChildren.default.bind(null);
+-
+-const tchildrenRendererDefaultProps = {
+-  propsForChildren: {}
++const TChildrenRenderer = (props) => {
++  const { propsForChildren = {}, ...rest } = props; // Default Parameter gesetzt
++  return _renderChildren.default({ propsForChildren, ...rest });
+ };
+-/**
+- * @ignore
+- */
+ 
+-exports.tchildrenRendererDefaultProps = tchildrenRendererDefaultProps;
+-TChildrenRenderer.defaultProps = tchildrenRendererDefaultProps;
+ var _default = TChildrenRenderer;
+ exports.default = _default;
+ //# sourceMappingURL=TChildrenRenderer.js.map
+diff --git a/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js b/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js
+index 50b43ca..e1dc275 100644
+--- a/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js
++++ b/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js
+@@ -8,15 +8,16 @@ exports.default = void 0;
+ 
+ var _SharedPropsProvider = require("./context/SharedPropsProvider");
+ 
+-var _TChildrenRenderer = require("./TChildrenRenderer");
+-
+ var _renderChildren = _interopRequireDefault(require("./renderChildren"));
+ 
+-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++function _interopRequireDefault(obj) {
++  return obj && obj.__esModule ? obj : { default: obj };
++}
+ 
+ function isCollapsible(tnode) {
+-  return tnode.type === 'block' || tnode.type === 'phrasing';
++  return tnode.type === "block" || tnode.type === "phrasing";
+ }
++
+ /**
+  * A hook especially useful when one need to tamper with children in a custom
+  * renderer. Should be used with {@link TChildrenRenderer}.
+@@ -43,18 +44,18 @@ function isCollapsible(tnode) {
+  * };
+  * ```
+  */
+-
+-
+ function useTNodeChildrenProps({
+   tnode,
+   propsForChildren,
+   disableMarginCollapsing = false,
+   renderChild
+ }) {
+-  const {
+-    enableExperimentalMarginCollapsing
+-  } = (0, _SharedPropsProvider.useSharedProps)();
+-  const shouldCollapseChildren = enableExperimentalMarginCollapsing && !disableMarginCollapsing && isCollapsible(tnode);
++  const { enableExperimentalMarginCollapsing } =
++    (0, _SharedPropsProvider.useSharedProps)();
++  const shouldCollapseChildren =
++    enableExperimentalMarginCollapsing &&
++    !disableMarginCollapsing &&
++    isCollapsible(tnode);
+   return {
+     propsForChildren,
+     disableMarginCollapsing: !shouldCollapseChildren,
+@@ -62,28 +63,34 @@ function useTNodeChildrenProps({
+     renderChild
+   };
+ }
++
+ /**
+  * A component to render all children of a {@link TNode}.
+  */
+-
+-
+-function TNodeChildrenRenderer(props) {
+-  if (props.tnode.type === 'text') {
++function TNodeChildrenRenderer({
++  tnode,
++  propsForChildren = {}, // Default Parameter hier gesetzt
++  disableMarginCollapsing = false,
++  renderChild
++}) {
++  if (tnode.type === "text") {
+     // see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/20544
+-    return props.tnode.data;
+-  } // A tnode type will never change. We can safely
++    return tnode.data;
++  }
++
++  // A tnode type will never change. We can safely
+   // ignore the non-conditional rule of hooks.
+   // eslint-disable-next-line react-hooks/rules-of-hooks
+-
+-
+-  return (0, _renderChildren.default)(useTNodeChildrenProps(props));
++  return (0, _renderChildren.default)(
++    useTNodeChildrenProps({
++      tnode,
++      propsForChildren,
++      disableMarginCollapsing,
++      renderChild
++    })
++  );
+ }
+-/**
+- * @ignore
+- */
+-
+ 
+-TNodeChildrenRenderer.defaultProps = _TChildrenRenderer.tchildrenRendererDefaultProps;
+ var _default = TNodeChildrenRenderer;
+ exports.default = _default;
+ //# sourceMappingURL=TNodeChildrenRenderer.js.map
+diff --git a/node_modules/react-native-render-html/lib/commonjs/TNodeRenderer.js b/node_modules/react-native-render-html/lib/commonjs/TNodeRenderer.js
+index eafc942..8ae9b9d 100644
+--- a/node_modules/react-native-render-html/lib/commonjs/TNodeRenderer.js
++++ b/node_modules/react-native-render-html/lib/commonjs/TNodeRenderer.js
+@@ -5,117 +5,122 @@ Object.defineProperty(exports, "__esModule", {
+ });
+ exports.default = exports.TDefaultTextRenderer = exports.TDefaultPhrasingRenderer = exports.TDefaultBlockRenderer = void 0;
+ 
+-var _react = _interopRequireWildcard(require("react"));
++const React = require("react");
++const createElement = React.createElement || require("react").createElement;
+ 
+ var _SharedPropsProvider = require("./context/SharedPropsProvider");
+-
+ var _useAssembledCommonProps = _interopRequireDefault(require("./hooks/useAssembledCommonProps"));
+-
+ var _TChildrenRendererContext = require("./context/TChildrenRendererContext");
+-
+ var _renderTextualContent = _interopRequireDefault(require("./renderTextualContent"));
+-
+ var _RenderRegistryProvider = require("./context/RenderRegistryProvider");
+-
+ var _renderBlockContent = _interopRequireDefault(require("./renderBlockContent"));
+-
+ var _renderEmptyContent = _interopRequireDefault(require("./renderEmptyContent"));
+ 
+-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+-
+-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+-
+-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
++function _interopRequireDefault(obj) {
++  return obj && obj.__esModule ? obj : { default: obj };
++}
+ 
+ const TDefaultBlockRenderer = _renderBlockContent.default.bind(null);
+-
+ exports.TDefaultBlockRenderer = TDefaultBlockRenderer;
+-TDefaultBlockRenderer.displayName = 'TDefaultBlockRenderer';
++TDefaultBlockRenderer.displayName = "TDefaultBlockRenderer";
+ 
+ const TDefaultPhrasingRenderer = _renderTextualContent.default.bind(null);
+-
+ exports.TDefaultPhrasingRenderer = TDefaultPhrasingRenderer;
+-TDefaultPhrasingRenderer.displayName = 'TDefaultPhrasingRenderer';
++TDefaultPhrasingRenderer.displayName = "TDefaultPhrasingRenderer";
+ 
+ const TDefaultTextRenderer = _renderTextualContent.default.bind(null);
+-
+ exports.TDefaultTextRenderer = TDefaultTextRenderer;
+-TDefaultTextRenderer.displayName = 'TDefaultTextRenderer';
++TDefaultTextRenderer.displayName = "TDefaultTextRenderer";
+ 
+ function isGhostTNode(tnode) {
+-  return tnode.type === 'text' && (tnode.data === '' || tnode.data === ' ') || tnode.type === 'empty';
++  return (
++    (tnode.type === "text" && (tnode.data === "" || tnode.data === " ")) ||
++    tnode.type === "empty"
++  );
+ }
++
+ /**
+  * A component to render any {@link TNode}.
+  */
+-
+-
+-const TNodeRenderer = /*#__PURE__*/(0, _react.memo)(function MemoizedTNodeRenderer(props) {
+-  const {
+-    tnode
+-  } = props;
++const TNodeRenderer = /*#__PURE__*/ (0, React.memo)(function MemoizedTNodeRenderer({
++  tnode,
++  propsFromParent = { collapsedMarginTop: null } // Default Props hier setzen
++}) {
+   const sharedProps = (0, _SharedPropsProvider.useSharedProps)();
+   const renderRegistry = (0, _RenderRegistryProvider.useRendererRegistry)();
+   const TNodeChildrenRenderer = (0, _TChildrenRendererContext.useTNodeChildrenRenderer)();
+-  const tnodeProps = { ...props,
++  const tnodeProps = {
++    tnode,
++    propsFromParent,
+     TNodeChildrenRenderer,
+-    sharedProps
++    sharedProps,
+   };
+-  const renderer = tnode.type === 'block' || tnode.type === 'document' ? TDefaultBlockRenderer : tnode.type === 'text' ? TDefaultTextRenderer : tnode.type === 'phrasing' ? TDefaultPhrasingRenderer : _renderEmptyContent.default;
+-  const {
+-    assembledProps,
+-    Renderer
+-  } = (0, _useAssembledCommonProps.default)(tnodeProps, renderer);
++
++  const renderer =
++    tnode.type === "block" || tnode.type === "document"
++      ? TDefaultBlockRenderer
++      : tnode.type === "text"
++      ? TDefaultTextRenderer
++      : tnode.type === "phrasing"
++      ? TDefaultPhrasingRenderer
++      : _renderEmptyContent.default;
++
++  const { assembledProps, Renderer } = (0,
++  _useAssembledCommonProps.default)(tnodeProps, renderer);
+ 
+   switch (tnode.type) {
+-    case 'empty':
++    case "empty":
+       return (0, _renderEmptyContent.default)(assembledProps);
+ 
+-    case 'text':
+-      const InternalTextRenderer = renderRegistry.getInternalTextRenderer(props.tnode.tagName);
++    case "text":
++      const InternalTextRenderer = renderRegistry.getInternalTextRenderer(
++        tnode.tagName
++      );
+ 
+       if (InternalTextRenderer) {
+-        return /*#__PURE__*/_react.default.createElement(InternalTextRenderer, tnodeProps);
+-      } // If ghost line prevention is enabled and the text data is empty, render
+-      // nothing to avoid React Native painting a 20px height line.
+-      // See also https://git.io/JErwX
+-
++        return /*#__PURE__*/ createElement(
++          InternalTextRenderer,
++          tnodeProps
++        );
++      }
+ 
+-      if (tnodeProps.tnode.data === '' && tnodeProps.sharedProps.enableExperimentalGhostLinesPrevention) {
++      if (
++        tnodeProps.tnode.data === "" &&
++        tnodeProps.sharedProps.enableExperimentalGhostLinesPrevention
++      ) {
+         return null;
+       }
+-
+       break;
+ 
+-    case 'phrasing':
+-      // When a TPhrasing node is anonymous and has only one child, its
+-      // rendering amounts to rendering its only child.
+-      if (tnodeProps.sharedProps.bypassAnonymousTPhrasingNodes && tnodeProps.tnode.tagName == null && tnodeProps.tnode.children.length <= 1) {
+-        return /*#__PURE__*/_react.default.createElement(TNodeChildrenRenderer, {
+-          tnode: props.tnode
++    case "phrasing":
++      if (
++        tnodeProps.sharedProps.bypassAnonymousTPhrasingNodes &&
++        tnodeProps.tnode.tagName == null &&
++        tnodeProps.tnode.children.length <= 1
++      ) {
++        return /*#__PURE__*/ createElement(TNodeChildrenRenderer, {
++          tnode: tnodeProps.tnode,
+         });
+-      } // If ghost line prevention is enabled and the tnode is an anonymous empty
+-      // phrasing node, render nothing to avoid React Native painting a 20px
+-      // height line. See also https://git.io/JErwX
+-
++      }
+ 
+-      if (tnodeProps.sharedProps.enableExperimentalGhostLinesPrevention && tnodeProps.tnode.tagName == null && tnodeProps.tnode.children.every(isGhostTNode)) {
++      if (
++        tnodeProps.sharedProps.enableExperimentalGhostLinesPrevention &&
++        tnodeProps.tnode.tagName == null &&
++        tnodeProps.tnode.children.every(isGhostTNode)
++      ) {
+         return null;
+       }
+-
+       break;
+   }
+ 
+-  const renderFn = tnode.type === 'block' || tnode.type === 'document' ? _renderBlockContent.default : _renderTextualContent.default;
+-  return Renderer === null ? renderFn(assembledProps) : /*#__PURE__*/_react.default.createElement(Renderer, assembledProps);
++  const renderFn =
++    tnode.type === "block" || tnode.type === "document"
++      ? _renderBlockContent.default
++      : _renderTextualContent.default;
++
++  return Renderer === null
++    ? renderFn(assembledProps)
++    : /*#__PURE__*/ createElement(Renderer, assembledProps);
+ });
+-const defaultProps = {
+-  propsFromParent: {
+-    collapsedMarginTop: null
+-  }
+-}; // @ts-expect-error default props must be defined
+ 
+-TNodeRenderer.defaultProps = defaultProps;
+-var _default = TNodeRenderer;
+-exports.default = _default;
+-//# sourceMappingURL=TNodeRenderer.js.map
+\ No newline at end of file
++exports.default = TNodeRenderer;
+diff --git a/node_modules/react-native-render-html/lib/commonjs/TRenderEngineProvider.js b/node_modules/react-native-render-html/lib/commonjs/TRenderEngineProvider.js
+index 3a700b6..92bcb6a 100644
+--- a/node_modules/react-native-render-html/lib/commonjs/TRenderEngineProvider.js
++++ b/node_modules/react-native-render-html/lib/commonjs/TRenderEngineProvider.js
+@@ -8,77 +8,78 @@ exports.default = TRenderEngineProvider;
+ exports.defaultTRenderEngineProviderProps = exports.defaultFallbackFonts = exports.tRenderEngineProviderPropTypes = void 0;
+ 
+ var _react = _interopRequireDefault(require("react"));
+-
+ var _reactNative = require("react-native");
+-
+ var _propTypes = _interopRequireDefault(require("prop-types"));
+-
+ var _useTRenderEngine = _interopRequireDefault(require("./hooks/useTRenderEngine"));
+-
+ var _defaultSystemFonts = _interopRequireDefault(require("./defaultSystemFonts"));
+ 
+-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++function _interopRequireDefault(obj) {
++  return obj && obj.__esModule ? obj : { default: obj };
++}
+ 
+ const defaultTRenderEngine = {};
+ 
+-const TRenderEngineContext = /*#__PURE__*/_react.default.createContext(defaultTRenderEngine);
++const TRenderEngineContext = /*#__PURE__*/ _react.default.createContext(defaultTRenderEngine);
+ 
+ const tRenderEngineProviderPropTypes = {
+-  customHTMLElementModels: _propTypes.default.object.isRequired,
++  customHTMLElementModels: _propTypes.default.object,
+   enableCSSInlineProcessing: _propTypes.default.bool,
+   enableUserAgentStyles: _propTypes.default.bool,
+   idsStyles: _propTypes.default.object,
+   ignoredDomTags: _propTypes.default.array,
+   ignoreDomNode: _propTypes.default.func,
+   domVisitors: _propTypes.default.object,
+-  ignoredStyles: _propTypes.default.array.isRequired,
++  ignoredStyles: _propTypes.default.array,
+   allowedStyles: _propTypes.default.array,
+   htmlParserOptions: _propTypes.default.object,
+   tagsStyles: _propTypes.default.object,
+   classesStyles: _propTypes.default.object,
+-  emSize: _propTypes.default.number.isRequired,
++  emSize: _propTypes.default.number,
+   baseStyle: _propTypes.default.object,
+   systemFonts: _propTypes.default.arrayOf(_propTypes.default.string),
+   fallbackFonts: _propTypes.default.shape({
+     serif: _propTypes.default.string,
+-    'sans-serif': _propTypes.default.string,
+-    monospace: _propTypes.default.string
++    "sans-serif": _propTypes.default.string,
++    monospace: _propTypes.default.string,
+   }),
+   setMarkersForTNode: _propTypes.default.func,
+   dangerouslyDisableHoisting: _propTypes.default.bool,
+   dangerouslyDisableWhitespaceCollapsing: _propTypes.default.bool,
+-  selectDomRoot: _propTypes.default.func
++  selectDomRoot: _propTypes.default.func,
+ };
++
+ /**
+  * Default fallback font for special keys such as 'sans-serif', 'monospace',
+  * 'serif', based on current platform.
+  */
+-
+ exports.tRenderEngineProviderPropTypes = tRenderEngineProviderPropTypes;
++
+ const defaultFallbackFonts = {
+-  'sans-serif': _reactNative.Platform.select({
+-    ios: 'system',
+-    default: 'sans-serif'
++  "sans-serif": _reactNative.Platform.select({
++    ios: "system",
++    default: "sans-serif",
+   }),
+   monospace: _reactNative.Platform.select({
+-    ios: 'Menlo',
+-    default: 'monospace'
++    ios: "Menlo",
++    default: "monospace",
+   }),
+   serif: _reactNative.Platform.select({
+-    ios: 'Times New Roman',
+-    default: 'serif'
+-  })
++    ios: "Times New Roman",
++    default: "serif",
++  }),
+ };
++
+ exports.defaultFallbackFonts = defaultFallbackFonts;
++
+ const defaultTRenderEngineProviderProps = {
+   htmlParserOptions: {
+-    decodeEntities: true
++    decodeEntities: true,
+   },
+   emSize: 14,
+   ignoredDomTags: [],
+   ignoredStyles: [],
+   baseStyle: {
+-    fontSize: 14
++    fontSize: 14,
+   },
+   tagsStyles: {},
+   classesStyles: {},
+@@ -86,8 +87,11 @@ const defaultTRenderEngineProviderProps = {
+   enableCSSInlineProcessing: true,
+   customHTMLElementModels: {},
+   fallbackFonts: defaultFallbackFonts,
+-  systemFonts: _defaultSystemFonts.default
++  systemFonts: _defaultSystemFonts.default,
+ };
++
++exports.defaultTRenderEngineProviderProps = defaultTRenderEngineProviderProps;
++
+ /**
+  * Use the ambient transient render engine.
+  *
+@@ -95,18 +99,16 @@ const defaultTRenderEngineProviderProps = {
+  *
+  * @public
+  */
+-
+-exports.defaultTRenderEngineProviderProps = defaultTRenderEngineProviderProps;
+-
+ function useAmbientTRenderEngine() {
+   const engine = _react.default.useContext(TRenderEngineContext);
+ 
+-  if (typeof __DEV__ === 'boolean' && __DEV__ && engine === defaultTRenderEngine) {
+-    console.error('TRenderEngineProvider is missing in the render tree.');
++  if (typeof __DEV__ === "boolean" && __DEV__ && engine === defaultTRenderEngine) {
++    console.error("TRenderEngineProvider is missing in the render tree.");
+   }
+ 
+   return engine;
+ }
++
+ /**
+  * A react component to share a {@link TRenderEngine} instance across different
+  * rendered contents via {@link RenderHTMLSource}. This can significantly enhance
+@@ -115,26 +117,43 @@ function useAmbientTRenderEngine() {
+  *
+  * @param props - Pass engine config here.
+  */
+-
+-
+ function TRenderEngineProvider({
+   children,
++  htmlParserOptions = defaultTRenderEngineProviderProps.htmlParserOptions,
++  emSize = defaultTRenderEngineProviderProps.emSize,
++  ignoredDomTags = defaultTRenderEngineProviderProps.ignoredDomTags,
++  ignoredStyles = defaultTRenderEngineProviderProps.ignoredStyles,
++  baseStyle = defaultTRenderEngineProviderProps.baseStyle,
++  tagsStyles = defaultTRenderEngineProviderProps.tagsStyles,
++  classesStyles = defaultTRenderEngineProviderProps.classesStyles,
++  enableUserAgentStyles = defaultTRenderEngineProviderProps.enableUserAgentStyles,
++  enableCSSInlineProcessing = defaultTRenderEngineProviderProps.enableCSSInlineProcessing,
++  customHTMLElementModels = defaultTRenderEngineProviderProps.customHTMLElementModels,
++  fallbackFonts = defaultTRenderEngineProviderProps.fallbackFonts,
++  systemFonts = defaultTRenderEngineProviderProps.systemFonts,
+   ...config
+ }) {
+-  const engine = (0, _useTRenderEngine.default)(config);
+-  return /*#__PURE__*/_react.default.createElement(TRenderEngineContext.Provider, {
+-    value: engine
+-  }, children);
++  const engine = (0, _useTRenderEngine.default)({
++    htmlParserOptions,
++    emSize,
++    ignoredDomTags,
++    ignoredStyles,
++    baseStyle,
++    tagsStyles,
++    classesStyles,
++    enableUserAgentStyles,
++    enableCSSInlineProcessing,
++    customHTMLElementModels,
++    fallbackFonts,
++    systemFonts,
++    ...config,
++  });
++  return /*#__PURE__*/ _react.default.createElement(
++    TRenderEngineContext.Provider,
++    { value: engine },
++    children
++  );
+ }
+-/**
+- * @ignore
+- */
+-
+-
+-TRenderEngineProvider.defaultProps = defaultTRenderEngineProviderProps;
+-/**
+- * @ignore
+- */
+ 
+ TRenderEngineProvider.propTypes = tRenderEngineProviderPropTypes;
+ //# sourceMappingURL=TRenderEngineProvider.js.map
+diff --git a/node_modules/react-native-render-html/src/TChildrenRenderer.tsx b/node_modules/react-native-render-html/src/TChildrenRenderer.tsx
+index 618a592..d852e22 100644
+--- a/node_modules/react-native-render-html/src/TChildrenRenderer.tsx
++++ b/node_modules/react-native-render-html/src/TChildrenRenderer.tsx
+@@ -6,19 +6,11 @@ import renderChildren from './renderChildren';
+  * A component to render collections of tnodes.
+  * Especially useful when used with {@link useTNodeChildrenProps}.
+  */
+-const TChildrenRenderer: FunctionComponent<TChildrenRendererProps> =
+-  renderChildren.bind(null);
+-
+-export const tchildrenRendererDefaultProps: Pick<
+-  TChildrenRendererProps,
+-  'propsForChildren'
+-> = {
+-  propsForChildren: {}
++const TChildrenRenderer: FunctionComponent<TChildrenRendererProps> = ({
++  propsForChildren = {}, // Default Parameter hier gesetzt
++  ...rest
++}) => {
++  return renderChildren({ propsForChildren, ...rest });
+ };
+ 
+-/**
+- * @ignore
+- */
+-TChildrenRenderer.defaultProps = tchildrenRendererDefaultProps;
+-
+ export default TChildrenRenderer;
+diff --git a/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx b/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx
+index bf5aef6..f407265 100644
+--- a/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx
++++ b/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx
+@@ -1,7 +1,6 @@
+ import { ReactElement } from 'react';
+ import { TNode } from '@native-html/transient-render-engine';
+ import { useSharedProps } from './context/SharedPropsProvider';
+-import { tchildrenRendererDefaultProps } from './TChildrenRenderer';
+ import {
+   TChildrenRendererProps,
+   TNodeChildrenRendererProps
+@@ -60,22 +59,27 @@ export function useTNodeChildrenProps({
+ /**
+  * A component to render all children of a {@link TNode}.
+  */
+-function TNodeChildrenRenderer(
+-  props: TNodeChildrenRendererProps
+-): ReactElement {
+-  if (props.tnode.type === 'text') {
++function TNodeChildrenRenderer({
++  tnode,
++  propsForChildren = {}, // Default Parameter hier gesetzt
++  disableMarginCollapsing = false,
++  renderChild
++}: TNodeChildrenRendererProps): ReactElement {
++  if (tnode.type === 'text') {
+     // see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/20544
+-    return props.tnode.data as unknown as ReactElement;
++    return tnode.data as unknown as ReactElement;
+   }
+   // A tnode type will never change. We can safely
+   // ignore the non-conditional rule of hooks.
+   // eslint-disable-next-line react-hooks/rules-of-hooks
+-  return renderChildren(useTNodeChildrenProps(props));
++  return renderChildren(
++    useTNodeChildrenProps({
++      tnode,
++      propsForChildren,
++      disableMarginCollapsing,
++      renderChild
++    })
++  );
+ }
+ 
+-/**
+- * @ignore
+- */
+-TNodeChildrenRenderer.defaultProps = tchildrenRendererDefaultProps;
+-
+ export default TNodeChildrenRenderer;
+diff --git a/node_modules/react-native-render-html/src/TNodeRenderer.tsx b/node_modules/react-native-render-html/src/TNodeRenderer.tsx
+index d32140f..6ad2346 100644
+--- a/node_modules/react-native-render-html/src/TNodeRenderer.tsx
++++ b/node_modules/react-native-render-html/src/TNodeRenderer.tsx
+@@ -41,18 +41,22 @@ function isGhostTNode(tnode: TNode) {
+ /**
+  * A component to render any {@link TNode}.
+  */
+-const TNodeRenderer = memo(function MemoizedTNodeRenderer(
+-  props: TNodeRendererProps<any>
+-): ReactElement | null {
+-  const { tnode } = props;
++const TNodeRenderer = memo(function MemoizedTNodeRenderer({
++  tnode,
++  propsFromParent = { collapsedMarginTop: null }, // Default Parameter direkt hier
++  ...props
++}: TNodeRendererProps<any>): ReactElement | null {
+   const sharedProps = useSharedProps();
+   const renderRegistry = useRendererRegistry();
+   const TNodeChildrenRenderer = useTNodeChildrenRenderer();
+   const tnodeProps = {
++    tnode,
+     ...props,
++    propsFromParent, // Default Props hier bereits enthalten
+     TNodeChildrenRenderer,
+     sharedProps
+   };
++
+   const renderer =
+     tnode.type === 'block' || tnode.type === 'document'
+       ? TDefaultBlockRenderer
+@@ -66,20 +70,19 @@ const TNodeRenderer = memo(function MemoizedTNodeRenderer(
+     tnodeProps,
+     renderer as any
+   );
++
+   switch (tnode.type) {
+     case 'empty':
+       return renderEmptyContent(assembledProps);
+     case 'text':
+       const InternalTextRenderer = renderRegistry.getInternalTextRenderer(
+-        props.tnode.tagName
++        tnode.tagName
+       );
+ 
+       if (InternalTextRenderer) {
+         return React.createElement(InternalTextRenderer, tnodeProps);
+       }
+-      // If ghost line prevention is enabled and the text data is empty, render
+-      // nothing to avoid React Native painting a 20px height line.
+-      // See also https://git.io/JErwX
++
+       if (
+         tnodeProps.tnode.data === '' &&
+         tnodeProps.sharedProps.enableExperimentalGhostLinesPrevention
+@@ -88,20 +91,16 @@ const TNodeRenderer = memo(function MemoizedTNodeRenderer(
+       }
+       break;
+     case 'phrasing':
+-      // When a TPhrasing node is anonymous and has only one child, its
+-      // rendering amounts to rendering its only child.
+       if (
+         tnodeProps.sharedProps.bypassAnonymousTPhrasingNodes &&
+         tnodeProps.tnode.tagName == null &&
+         tnodeProps.tnode.children.length <= 1
+       ) {
+         return React.createElement(TNodeChildrenRenderer, {
+-          tnode: props.tnode
++          tnode
+         });
+       }
+-      // If ghost line prevention is enabled and the tnode is an anonymous empty
+-      // phrasing node, render nothing to avoid React Native painting a 20px
+-      // height line. See also https://git.io/JErwX
++
+       if (
+         tnodeProps.sharedProps.enableExperimentalGhostLinesPrevention &&
+         tnodeProps.tnode.tagName == null &&
+@@ -111,25 +110,17 @@ const TNodeRenderer = memo(function MemoizedTNodeRenderer(
+       }
+       break;
+   }
++
+   const renderFn =
+     tnode.type === 'block' || tnode.type === 'document'
+       ? renderBlockContent
+       : renderTextualContent;
++
+   return Renderer === null
+     ? renderFn(assembledProps)
+     : React.createElement(Renderer as any, assembledProps);
+ });
+ 
+-const defaultProps: Required<Pick<TNodeRendererProps<any>, 'propsFromParent'>> =
+-  {
+-    propsFromParent: {
+-      collapsedMarginTop: null
+-    }
+-  };
+-
+-// @ts-expect-error default props must be defined
+-TNodeRenderer.defaultProps = defaultProps;
+-
+ export {
+   TDefaultBlockRenderer,
+   TDefaultPhrasingRenderer,
+diff --git a/node_modules/react-native-render-html/src/TRenderEngineProvider.tsx b/node_modules/react-native-render-html/src/TRenderEngineProvider.tsx
+index 95b60df..0e38d4f 100644
+--- a/node_modules/react-native-render-html/src/TRenderEngineProvider.tsx
++++ b/node_modules/react-native-render-html/src/TRenderEngineProvider.tsx
+@@ -15,30 +15,30 @@ export const tRenderEngineProviderPropTypes: Record<
+   keyof TRenderEngineConfig,
+   any
+ > = {
+-  customHTMLElementModels: PropTypes.object.isRequired,
++  customHTMLElementModels: PropTypes.object,
+   enableCSSInlineProcessing: PropTypes.bool,
+   enableUserAgentStyles: PropTypes.bool,
+   idsStyles: PropTypes.object,
+   ignoredDomTags: PropTypes.array,
+   ignoreDomNode: PropTypes.func,
+   domVisitors: PropTypes.object,
+-  ignoredStyles: PropTypes.array.isRequired,
++  ignoredStyles: PropTypes.array,
+   allowedStyles: PropTypes.array,
+   htmlParserOptions: PropTypes.object,
+   tagsStyles: PropTypes.object,
+   classesStyles: PropTypes.object,
+-  emSize: PropTypes.number.isRequired,
++  emSize: PropTypes.number,
+   baseStyle: PropTypes.object,
+   systemFonts: PropTypes.arrayOf(PropTypes.string),
+   fallbackFonts: PropTypes.shape({
+     serif: PropTypes.string,
+     'sans-serif': PropTypes.string,
+-    monospace: PropTypes.string
++    monospace: PropTypes.string,
+   }),
+   setMarkersForTNode: PropTypes.func,
+   dangerouslyDisableHoisting: PropTypes.bool,
+   dangerouslyDisableWhitespaceCollapsing: PropTypes.bool,
+-  selectDomRoot: PropTypes.func
++  selectDomRoot: PropTypes.func,
+ };
+ 
+ /**
+@@ -48,12 +48,12 @@ export const tRenderEngineProviderPropTypes: Record<
+ export const defaultFallbackFonts = {
+   'sans-serif': Platform.select({ ios: 'system', default: 'sans-serif' }),
+   monospace: Platform.select({ ios: 'Menlo', default: 'monospace' }),
+-  serif: Platform.select({ ios: 'Times New Roman', default: 'serif' })
++  serif: Platform.select({ ios: 'Times New Roman', default: 'serif' }),
+ };
+ 
+ export const defaultTRenderEngineProviderProps: TRenderEngineConfig = {
+   htmlParserOptions: {
+-    decodeEntities: true
++    decodeEntities: true,
+   },
+   emSize: 14,
+   ignoredDomTags: [],
+@@ -65,7 +65,7 @@ export const defaultTRenderEngineProviderProps: TRenderEngineConfig = {
+   enableCSSInlineProcessing: true,
+   customHTMLElementModels: {},
+   fallbackFonts: defaultFallbackFonts,
+-  systemFonts: defaultSystemFonts
++  systemFonts: defaultSystemFonts,
+ };
+ 
+ /**
+@@ -97,9 +97,35 @@ export function useAmbientTRenderEngine() {
+  */
+ export default function TRenderEngineProvider({
+   children,
++  htmlParserOptions = defaultTRenderEngineProviderProps.htmlParserOptions,
++  emSize = defaultTRenderEngineProviderProps.emSize,
++  ignoredDomTags = defaultTRenderEngineProviderProps.ignoredDomTags,
++  ignoredStyles = defaultTRenderEngineProviderProps.ignoredStyles,
++  baseStyle = defaultTRenderEngineProviderProps.baseStyle,
++  tagsStyles = defaultTRenderEngineProviderProps.tagsStyles,
++  classesStyles = defaultTRenderEngineProviderProps.classesStyles,
++  enableUserAgentStyles = defaultTRenderEngineProviderProps.enableUserAgentStyles,
++  enableCSSInlineProcessing = defaultTRenderEngineProviderProps.enableCSSInlineProcessing,
++  customHTMLElementModels = defaultTRenderEngineProviderProps.customHTMLElementModels,
++  fallbackFonts = defaultTRenderEngineProviderProps.fallbackFonts,
++  systemFonts = defaultTRenderEngineProviderProps.systemFonts,
+   ...config
+ }: PropsWithChildren<TRenderEngineConfig>): ReactElement {
+-  const engine = useTRenderEngine(config);
++  const engine = useTRenderEngine({
++    htmlParserOptions,
++    emSize,
++    ignoredDomTags,
++    ignoredStyles,
++    baseStyle,
++    tagsStyles,
++    classesStyles,
++    enableUserAgentStyles,
++    enableCSSInlineProcessing,
++    customHTMLElementModels,
++    fallbackFonts,
++    systemFonts,
++    ...config,
++  });
+   return (
+     <TRenderEngineContext.Provider value={engine}>
+       {children}
+@@ -107,12 +133,4 @@ export default function TRenderEngineProvider({
+   );
+ }
+ 
+-/**
+- * @ignore
+- */
+-TRenderEngineProvider.defaultProps = defaultTRenderEngineProviderProps;
+-
+-/**
+- * @ignore
+- */
+ TRenderEngineProvider.propTypes = tRenderEngineProviderPropTypes;

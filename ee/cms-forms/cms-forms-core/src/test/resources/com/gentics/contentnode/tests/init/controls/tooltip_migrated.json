@@ -1,0 +1,77 @@
+{
+	"adminEmailAddress": "",
+	"adminEmailSubject": {},
+	"adminEmailPageId": 0,
+	"adminEmailNodeId": 0,
+	"adminEmailTemplate": "",
+	"successPageId": 4711,
+	"successNodeId": 42,
+	"successUrl": {},
+	"templateContext": "theme-red",
+	"schema": {
+		"properties": {
+			"input_no_tooltip": {
+				"type": "string",
+				"updateOnChange": false,
+				"mandatory": false,
+				"isList": false,
+				"name": "input_no_tooltip",
+				"validation": {}
+			},
+			"input_tooltip": {
+				"type": "string",
+				"updateOnChange": false,
+				"mandatory": false,
+				"isList": false,
+				"name": "input_tooltip",
+				"validation": {}
+			}
+		}
+	},
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+		"pages": [
+			{
+				"elements": [
+					{
+						"type": "property",
+						"id": "input_no_tooltip",
+						"label": {
+							"de": "Ohne Tooltip",
+							"en": "No tooltip"
+						},
+						"description": {
+							"de": "Das beschreibt das Element",
+							"en": "This describes the element"
+						},
+						"formGridOptions": {
+							"numberOfLines": 1
+						}
+					},
+					{
+						"type": "property",
+						"id": "input_tooltip",
+						"label": {
+							"de": "Mit Tooltip",
+							"en": "With tooltip"
+						},
+						"description": {
+							"de": "Das ist der Tooltip",
+							"en": "This comes from the tooltip"
+						},
+						"formGridOptions": {
+							"numberOfLines": 1
+						}
+					}
+				]
+			}
+		]
+	}
+}

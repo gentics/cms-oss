@@ -1,0 +1,30 @@
+{
+	"ui-schema": {
+		"pages": [
+			{
+				"pagename": {
+					"de-AT": "1. Seite",
+					"en-AT": "1st Page"
+				},
+				"elements": [
+					{
+						"type": "property",
+						"id": "first_element",
+						"label": {
+							"de-AT": "Erstes Element",
+							"en-AT": "First Element"
+						},
+						"description": {
+							"de-AT": "Erstes Element Beschreibung extern",
+							"en-AT": "First Element Description formgrid"
+						},
+						"formGridOptions": {
+							"numberOfColumns": "6"
+						},
+						"uiSchemaPage": 0
+					}
+				]
+			}
+		]
+	}
+}

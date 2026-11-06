@@ -1,1 +1,2 @@
 com.gentics.contentnode.etc.UsernamePasswordLoginService
+com.gentics.contentnode.etc.JwtLoginService

@@ -1,0 +1,1522 @@
+{
+    "schema": {
+        "key": "77D6F33C-F9E2-48F3-B3F2-F9235FCA9DF6_TenantID_209",
+        "version": "285",
+        "formType": "report",
+        "excelResultSupported": true,
+        "properties": {
+            "5B119442-3427-4C7C-9BEF-2BC21E1E6541": {
+                "properties": {
+                    "4455F0A8-239C-48DE-B4BB-311445CDCCD6": {
+                        "type": "string",
+                        "updateOnChange": false,
+                        "validation": {
+                            "maxLength": 255,
+                            "minLength": 0
+                        },
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Betriebsnummer"
+                    },
+                    "562BA60F-E032-4923-9301-12495E6D9BB6": {
+                        "type": "catalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Abafallanlagestatus"
+                    },
+                    "70A8C8A2-7987-470E-BDC7-515AD23B015A": {
+                        "type": "string",
+                        "updateOnChange": false,
+                        "validation": {
+                            "maxLength": 255,
+                            "minLength": 0
+                        },
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Name"
+                    },
+                    "9249680B-D37B-405C-9C70-C2F3ADED8A77": {
+                        "type": "string",
+                        "updateOnChange": false,
+                        "validation": {
+                            "maxLength": 255,
+                            "minLength": 0
+                        },
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Straße"
+                    },
+                    "A8C7CB98-BCC3-4C98-BB2C-E13FE172C76D": {
+                        "type": "string",
+                        "updateOnChange": false,
+                        "validation": {
+                            "maxLength": 255,
+                            "minLength": 0
+                        },
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Hausnummer"
+                    },
+                    "BE70AC19-B8B6-4391-BF4B-0BB6EED0ED91": {
+                        "type": "string",
+                        "updateOnChange": false,
+                        "validation": {
+                            "maxLength": 255,
+                            "minLength": 0
+                        },
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_PLZ"
+                    },
+                    "F81CAE13-D96D-4F63-954E-41F08491D830": {
+                        "type": "string",
+                        "updateOnChange": false,
+                        "validation": {
+                            "maxLength": 255,
+                            "minLength": 0
+                        },
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Ort"
+                    },
+                    "B0C1E4D8-61AE-462F-BC52-3E1E4BF21D3A": {
+                        "type": "reference",
+                        "searchReferenceValueMinLength": 3,
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Organisation_Gemeinde"
+                    },
+                    "9EF806FC-B73C-438E-896F-A9AFC992F834": {
+                        "type": "catalog",
+                        "searchReferenceValueMinLength": 3,
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Kanton"
+                    },
+                    "9252B3DD-D9B0-46DE-88C9-CAE8E6A597F3": {
+                        "type": "boolean",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Betriebsart_Abgeberbetrieb"
+                    },
+                    "0864D6F7-7747-482C-AF12-50532A64AB01": {
+                        "type": "boolean",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Betriebsart_Abfallanlage"
+                    },
+                    "7D552612-5057-400C-B1B4-A05C61697ED8": {
+                        "type": "boolean",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Betriebsart_Auslaendisches_Unternehmen"
+                    },
+                    "CA816E5A-0BBF-4B8D-BCF0-B7C96A4C574A": {
+                        "type": "boolean",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Betriebsart_Exporteur"
+                    },
+                    "5A5092B2-2552-4D92-A9A1-E2077284BAF1": {
+                        "type": "catalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Abfallanlagetyp"
+                    },
+                    "3D070E19-D8E7-4369-84F1-0B6764450B75": {
+                        "type": "catalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Wirtschaftsart"
+                    },
+                    "DF60501D-781A-460B-8F04-343E28C1AE34": {
+                        "type": "catalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_Entsorgungsverfahren"
+                    },
+                    "EB478697-486B-472B-ACF3-D6D95B95E68E": {
+                        "type": "lazyCatalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_LVACode"
+                    },
+                    "EC7563B2-D974-43D5-8C3B-2B451169A0A5": {
+                        "type": "lazyCatalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_EUCode"
+                    },
+                    "9BC117C6-38C1-40CF-AB1B-F69F43098F27": {
+                        "type": "lazyCatalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_VVEACode"
+                    },
+                    "DB1DE106-F3C2-4774-B5CA-D033AF71C43A": {
+                        "type": "lazyCatalog",
+                        "updateOnChange": false,
+                        "validation": {},
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort_OECDCode"
+                    }
+                },
+                "type": "aggregate",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Standort"
+            },
+            "386283B5-0BF8-4C56-A779-495507FCA33B": {
+                "properties": {
+                    "8BFD8AD4-B597-41AF-80F1-294E0EA8585E": {
+                        "type": "string",
+                        "updateOnChange": false,
+                        "validation": {
+                            "maxLength": 255,
+                            "minLength": 0
+                        },
+                        "mandatory": false,
+                        "isList": false,
+                        "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Organisation_Firmenname"
+                    }
+                },
+                "type": "aggregate",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "Rbn_AR_OrgStandortSuche_Expertensuche_Organisation"
+            },
+            "55D880EC-FFDE-4B4E-A140-23FD09A8E6F7": {
+                "type": "boolean",
+                "updateOnChange": true,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "Rbn_AR_OrgStandortSuche_Expertensuche_FelderLeeren"
+            }
+        }
+    },
+    "uiSchema": {
+        "key": "77D6F33C-F9E2-48F3-B3F2-F9235FCA9DF6_TenantID_209",
+        "version": "285",
+        "formname": {
+            "de-AT": "A&R - Organisationen und Standorte suchen",
+            "en-AT": "Search for an organisation and location",
+            "fr-AT": "Rechercher une organisation et un site",
+            "it-AT": "Cercare organizzazione e sito"
+        },
+        "formdescription": {
+            "de-AT": "A&R - Organisationen und Standorte suchen Expertensuche",
+            "en-AT": "Expert search – Search for organisations and sites",
+            "fr-AT": "Recherche avancée - rechercher des organisations et des sites",
+            "it-AT": "Ricerca avanzata: cercare organizzazioni e siti"
+        },
+        "pages": [
+            {
+                "pagename": {
+                    "de-AT": "Fachdaten",
+                    "en-AT": "Special data",
+                    "fr-AT": "Données spécialisées",
+                    "it-AT": "Dati specialistici"
+                },
+                "elements": [
+                    {
+                        "type": "aggregate",
+                        "id": "5B119442-3427-4C7C-9BEF-2BC21E1E6541",
+                        "label": {
+                            "de-AT": "Standort",
+                            "en-AT": "Site",
+                            "it-AT": "Sito",
+                            "fr-AT": "Site"
+                        },
+                        "description": {},
+                        "elements": [
+                            {
+                                "type": "property",
+                                "id": "4455F0A8-239C-48DE-B4BB-311445CDCCD6",
+                                "label": {
+                                    "de-AT": "Betriebsnummer",
+                                    "en-AT": "Company number",
+                                    "it-AT": "Numero d'esercizio",
+                                    "fr-AT": "Numéro d'identification"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie die 9-stellige Nummer (Bsp. 002598756) ein, oder verwenden Sie * als Platzhalter.",
+                                    "en-AT": "Enter the 9-digit number (e.g. 002598756) or use * as a placeholder.",
+                                    "it-AT": "Inserisci il numero di 9 cifre (ad esempio 002598756) o usa * come carattere libero.",
+                                    "fr-AT": "Saisissez le numéro à 9 chiffres (par exemple 002598756) ou utilisez * comme caractère générique."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "562BA60F-E032-4923-9301-12495E6D9BB6",
+                                "label": {
+                                    "de-AT": "Status",
+                                    "en-AT": "Status",
+                                    "it-AT": "Status",
+                                    "fr-AT": "Statut"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "70A8C8A2-7987-470E-BDC7-515AD23B015A",
+                                "label": {
+                                    "de-AT": "Standortname",
+                                    "en-AT": "Site name",
+                                    "it-AT": "Nome del sito",
+                                    "fr-AT": "Nom du site"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie den Namen des Standortes exakt ein, oder verwenden Sie * als Platzhalter.",
+                                    "en-AT": "Enter the site's name exactly, or use * as a placeholder.",
+                                    "it-AT": "Inserisci il nome esatto della località, o usa * come carattere libero.",
+                                    "fr-AT": "Saisissez le nom exact de l'emplacement, ou utilisez * comme caractère générique."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "9249680B-D37B-405C-9C70-C2F3ADED8A77",
+                                "label": {
+                                    "de-AT": "Strasse",
+                                    "en-AT": "Street",
+                                    "it-AT": "Via",
+                                    "fr-AT": "Rue"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie die Strasse des Standortes exakt ein, oder verwenden Sie * als Platzhalter.",
+                                    "en-AT": "Enter the street of the site exactly, or use * as a placeholder.",
+                                    "it-AT": "Inserisci esattamente la via del sito o usa * come carattere libero.",
+                                    "fr-AT": "Saisissez la rue du site exactement, ou utilisez * comme caractère générique."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "A8C7CB98-BCC3-4C98-BB2C-E13FE172C76D",
+                                "label": {
+                                    "de-AT": "Hausnummer",
+                                    "en-AT": "House number",
+                                    "it-AT": "Numero civico",
+                                    "fr-AT": "Numéro de rue"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie die Hausnummer des Standortes ein.",
+                                    "en-AT": "Enter the house number of the site.",
+                                    "it-AT": "Inserisci il numero civico del sito.",
+                                    "fr-AT": "Saisissez le numéro de maison du site."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "BE70AC19-B8B6-4391-BF4B-0BB6EED0ED91",
+                                "label": {
+                                    "de-AT": "PLZ",
+                                    "en-AT": "Postal code",
+                                    "it-AT": "NPA",
+                                    "fr-AT": "Code postal"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "F81CAE13-D96D-4F63-954E-41F08491D830",
+                                "label": {
+                                    "de-AT": "Ort",
+                                    "en-AT": "Town",
+                                    "it-AT": "Luogo",
+                                    "fr-AT": "Lieu"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie den Ort exakt ein, oder verwenden Sie * als Platzhalter.",
+                                    "en-AT": "Enter the location exactly, or use * as a placeholder.",
+                                    "it-AT": "Immettere la città precisa o utilizzare la ricerca generica con asterisco (*) come carattere jolly.",
+                                    "fr-AT": "Entrez le lieu exact ou utilisez l'étoile * comme caractère de remplacement."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "B0C1E4D8-61AE-462F-BC52-3E1E4BF21D3A",
+                                "label": {
+                                    "de-AT": "Zuständige Gemeinde",
+                                    "en-AT": "Responsible municipality",
+                                    "it-AT": "Comune competente",
+                                    "fr-AT": "Commune responsable"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie die zuständige Gemeinde ein und wählen Sie aus.",
+                                    "en-AT": "Enter the relevant municipality and select.",
+                                    "it-AT": "Inserisci il comune interessato e seleziona.",
+                                    "fr-AT": "Saisissez la municipalité concernée et sélectionnez."
+                                },
+                                "editMode": 4,
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "9EF806FC-B73C-438E-896F-A9AFC992F834",
+                                "label": {
+                                    "de-AT": "Zuständiger Kanton",
+                                    "en-AT": "Responsible canton",
+                                    "it-AT": "Cantone competente",
+                                    "fr-AT": "Canton responsable"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie mindestens die ersten vier Zeichen des Kantons ein.",
+                                    "en-AT": "Enter at least the first four letters of the canton.",
+                                    "it-AT": "Immettere almeno le prime quattro lettere del Cantone.",
+                                    "fr-AT": "Entrez au moins les quatres premiers signes du canton."
+                                },
+                                "editMode": 4,
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "9252B3DD-D9B0-46DE-88C9-CAE8E6A597F3",
+                                "label": {
+                                    "de-AT": "Abgeberbetrieb",
+                                    "en-AT": "Waste generating company",
+                                    "it-AT": "Azienda fornitrice",
+                                    "fr-AT": "Entreprise remettante"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "0864D6F7-7747-482C-AF12-50532A64AB01",
+                                "label": {
+                                    "de-AT": "Abfallanlage",
+                                    "en-AT": "Waste facility",
+                                    "it-AT": "Impianto per rifiuti",
+                                    "fr-AT": "Installation d'élimination des déchets."
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "7D552612-5057-400C-B1B4-A05C61697ED8",
+                                "label": {
+                                    "de-AT": "Ausländisches Unternehmen",
+                                    "en-AT": "Foreign company",
+                                    "it-AT": "Impresa estera",
+                                    "fr-AT": "Entreprise étrangère"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "CA816E5A-0BBF-4B8D-BCF0-B7C96A4C574A",
+                                "label": {
+                                    "de-AT": "Exporteur",
+                                    "en-AT": "Exporter",
+                                    "it-AT": "Esportatore",
+                                    "fr-AT": "Exportateur"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "5A5092B2-2552-4D92-A9A1-E2077284BAF1",
+                                "label": {
+                                    "de-AT": "Abfallanlagentyp",
+                                    "en-AT": "Type of waste facility",
+                                    "it-AT": "Tipo di impianto per i rifiuti",
+                                    "fr-AT": "Type d'installation d'élimination des déchets"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "3D070E19-D8E7-4369-84F1-0B6764450B75",
+                                "label": {
+                                    "de-AT": "Wirtschaftsart",
+                                    "en-AT": "Commercial type",
+                                    "it-AT": "Tipo di gestione",
+                                    "fr-AT": "Genre économique"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "DF60501D-781A-460B-8F04-343E28C1AE34",
+                                "label": {
+                                    "de-AT": "Entsorgungsverfahren",
+                                    "en-AT": "Disposal procedure",
+                                    "it-AT": "Procedura di smaltimento",
+                                    "fr-AT": "Procédé d'élimination"
+                                },
+                                "description": {},
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "EB478697-486B-472B-ACF3-D6D95B95E68E",
+                                "label": {
+                                    "de-AT": "LVA Code",
+                                    "en-AT": "LVA code",
+                                    "it-AT": "Codice OLTRif",
+                                    "fr-AT": "Code LMoD"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie den LVA Code mit Leerschlag (Format 18_02_03) oder ein Stichwort ein.",
+                                    "en-AT": "Enter the LVA code with a space (format 18_02_03) or a keyword.",
+                                    "it-AT": "Inserisci il codice OLTRif con uno spazio (formato 18_02_03) o una parola chiave.",
+                                    "fr-AT": "Entrez le code LMoD avec un espace (format 18_02_03) ou un mot clé."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "EC7563B2-D974-43D5-8C3B-2B451169A0A5",
+                                "label": {
+                                    "de-AT": "EU Abfallcodes",
+                                    "en-AT": "EU waste codes",
+                                    "it-AT": "Codici dei rifiuti UE",
+                                    "fr-AT": "Codes de déchet UE"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie den EU Abfallcode (Format 01_01_02) oder ein Stichwort ein.",
+                                    "en-AT": "Enter the EU waste code (format 01_01_02) or a keyword.",
+                                    "it-AT": "Inserire il codice dei rifiuti UE (formato 01_01_02) o una parola chiave.",
+                                    "fr-AT": "Saisissez le code de déchet de l'UE (format 01_01_02) ou un mot-clé."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "9BC117C6-38C1-40CF-AB1B-F69F43098F27",
+                                "label": {
+                                    "de-AT": "VVEA Code",
+                                    "en-AT": "ADWO code",
+                                    "it-AT": "Codice OPSR",
+                                    "fr-AT": "Code OLED"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie den VVEA Code (Format 2301) oder ein Stichwort ein.",
+                                    "en-AT": "Enter the ADWO code (format: 2301) or a keyword.",
+                                    "it-AT": "Immettere il codice OPSR  (formato 2301) o una parola chiave.",
+                                    "fr-AT": "Entrez le code OLED (format 2301) ou un mot clé."
+                                },
+                                "editModeDialogUsage": 0
+                            },
+                            {
+                                "type": "property",
+                                "id": "DB1DE106-F3C2-4774-B5CA-D033AF71C43A",
+                                "label": {
+                                    "de-AT": "OECD Code",
+                                    "en-AT": "OECD code",
+                                    "it-AT": "Codice OCSE",
+                                    "fr-AT": "Code OCDE"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie den OECD Code (Format A1010) oder ein Stichwort ein.",
+                                    "en-AT": "Immettere il codice OCSE  (formato A1010) o una parola chiave.",
+                                    "it-AT": "Inserisci il codice OCSE con uno spazio (formato 18_02_03) o una parola chiave.",
+                                    "fr-AT": "Entrez le code OCDE (format A1010 ) ou un mot clé."
+                                },
+                                "editModeDialogUsage": 0
+                            }
+                        ],
+                        "csvUploadEnabled": false,
+                        "editMode": 1
+                    },
+                    {
+                        "type": "aggregate",
+                        "id": "386283B5-0BF8-4C56-A779-495507FCA33B",
+                        "label": {
+                            "de-AT": "Organisation",
+                            "en-AT": "Organisation",
+                            "it-AT": "Organizzazione",
+                            "fr-AT": "Organisation"
+                        },
+                        "description": {},
+                        "elements": [
+                            {
+                                "type": "property",
+                                "id": "8BFD8AD4-B597-41AF-80F1-294E0EA8585E",
+                                "label": {
+                                    "de-AT": "Firmenname",
+                                    "en-AT": "Company name",
+                                    "it-AT": "Ragione sociale",
+                                    "fr-AT": "Nom de l'entreprise"
+                                },
+                                "description": {
+                                    "de-AT": "Geben Sie den exakten Firmennamen der Organisation ein (Bsp. \"Firmenname AG\") oder verwenden Sie den * als Platzhalter (Bsp. Firmenn* oder *name*).",
+                                    "en-AT": "Enter the exact company name of the organisation (e.g. \"Company name AG\") or use the * as a wildcard (e.g. Companyn* or *name*).",
+                                    "it-AT": "Inserisci il nome esatto dell'organizzazione (ad esempio \"nome della società AG\") o usa l'asterisco * come carattere jolly (ad esempio companyn* o *name*).",
+                                    "fr-AT": "Saisissez le nom exact de la société de l'organisation (par exemple, \"nom de la société AG\") ou utilisez l'astérisque (*) comme caractère de remplacement (par exemple, société* ou *nom*)."
+                                },
+                                "editModeDialogUsage": 0
+                            }
+                        ],
+                        "csvUploadEnabled": false,
+                        "editMode": 1
+                    },
+                    {
+                        "type": "property",
+                        "id": "55D880EC-FFDE-4B4E-A140-23FD09A8E6F7",
+                        "label": {
+                            "de-AT": "Suchfelder zurücksetzen",
+                            "en-AT": "Reset search fields",
+                            "it-AT": "Ripristinare campi di ricerca",
+                            "fr-AT": "Réinitialiser les champs de recherche"
+                        },
+                        "description": {}
+                    }
+                ]
+            }
+        ]
+    },
+    "data": {
+        "formID": "77D6F33C-F9E2-48F3-B3F2-F9235FCA9DF6_TenantID_209",
+        "DialogPortalFormHostObjectID": "DialogPortalFormHostObject|dadcbc78-ef2d-40fb-b275-9dad1d32b6d8",
+        "version": "285",
+        "hasErrors": false,
+        "possibleValueSets": [
+            {
+                "possibleValueSetID": "f4b91a01-6f5a-4cea-a580-607efc59a049",
+                "possibleValues": [
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|61027FEE-24B4-4C12-BF0E-081259498766_TenantID_209",
+                        "displayName": "Aktiv"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|739F7094-882B-403E-A67F-11F2817B37A3_TenantID_209",
+                        "displayName": "Inaktiv"
+                    }
+                ]
+            },
+            {
+                "possibleValueSetID": "63a8798f-4d60-488b-8c68-67947df704b4",
+                "possibleValues": [
+                    {
+                        "identifier": "RefID_Institution|Kanton[AG]:Institution_TenantID_209",
+                        "displayName": "Aargau"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[AR]:Institution_TenantID_209",
+                        "displayName": "Appenzell Ausserrhoden"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[AI]:Institution_TenantID_209",
+                        "displayName": "Appenzell Innerrhoden"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[BL]:Institution_TenantID_209",
+                        "displayName": "Basel-Landschaft"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[BS]:Institution_TenantID_209",
+                        "displayName": "Basel-Stadt"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[BE]:Institution_TenantID_209",
+                        "displayName": "Bern"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[FR]:Institution_TenantID_209",
+                        "displayName": "Fribourg"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[GE]:Institution_TenantID_209",
+                        "displayName": "Genève"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[GL]:Institution_TenantID_209",
+                        "displayName": "Glarus"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[GR]:Institution_TenantID_209",
+                        "displayName": "Graubünden"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[JU]:Institution_TenantID_209",
+                        "displayName": "Jura"
+                    },
+                    {
+                        "identifier": "RefID_Institution|C0B19000-0C7F-4145-8EFD-C2FC910C8CB4_TenantID_209",
+                        "displayName": "Liechtenstein"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[LI]:Institution_TenantID_212",
+                        "displayName": "Liechtenstein"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[LU]:Institution_TenantID_209",
+                        "displayName": "Luzern"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[NE]:Institution_TenantID_209",
+                        "displayName": "Neuchâtel"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[NW]:Institution_TenantID_209",
+                        "displayName": "Nidwalden"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[OW]:Institution_TenantID_209",
+                        "displayName": "Obwalden"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[SH]:Institution_TenantID_209",
+                        "displayName": "Schaffhausen"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[SZ]:Institution_TenantID_209",
+                        "displayName": "Schwyz"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[SO]:Institution_TenantID_209",
+                        "displayName": "Solothurn"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[SG]:Institution_TenantID_209",
+                        "displayName": "St. Gallen"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[TG]:Institution_TenantID_209",
+                        "displayName": "Thurgau"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[TI]:Institution_TenantID_209",
+                        "displayName": "Ticino"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[UR]:Institution_TenantID_209",
+                        "displayName": "Uri"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[VS]:Institution_TenantID_209",
+                        "displayName": "Valais"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[VD]:Institution_TenantID_209",
+                        "displayName": "Vaud"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[ZG]:Institution_TenantID_209",
+                        "displayName": "Zug"
+                    },
+                    {
+                        "identifier": "RefID_Institution|Kanton[ZH]:Institution_TenantID_209",
+                        "displayName": "Zürich (Teststrasse 12, 3005 Bern, CHE)"
+                    }
+                ]
+            },
+            {
+                "possibleValueSetID": "4699e0f5-1f05-477f-99d3-dd9620da9874",
+                "possibleValues": [
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|EE055E81-30C0-4029-8A34-FC02042CC486_TenantID_209",
+                        "displayName": "Abwasserreinigungsanlagen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|F50CD430-9BD4-4A3C-9C86-F289B72431D8_TenantID_209",
+                        "displayName": "Altholzfeuerungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|a02eaa69-1030-4624-b512-778ff2c99a62_TenantID_209",
+                        "displayName": "Anlagen für die chemisch oder physikalische und mechanische Bearbeitung von Abfällen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|cc776b9b-eadc-44c4-9c26-06c192bea164_TenantID_209",
+                        "displayName": "Aufbereitungsanlagen für Bausperrgut und Holzabfälle"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|E161B14A-99F1-4517-AD7E-AF0F158CFACD_TenantID_209",
+                        "displayName": "Bauschuttaufbereitungsanlagen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_08_01_TenantID_209",
+                        "displayName": "Deponietyp A"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_08_02_TenantID_209",
+                        "displayName": "Deponietyp B"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_08_03_TenantID_209",
+                        "displayName": "Deponietyp C"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_08_04_TenantID_209",
+                        "displayName": "Deponietyp D"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_08_05_TenantID_209",
+                        "displayName": "Deponietyp E"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|3dd510c2-8157-4bc3-8c44-69b91084464a_TenantID_209",
+                        "displayName": "Industriefeuerungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_03_03_TenantID_209",
+                        "displayName": "Industriell gewerbliche Vergärungsanlagen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|6D383269-A146-452A-BBDC-3C5CE22E4075_TenantID_209",
+                        "displayName": "Kehrichtverbrennungsanlagen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_03_02_TenantID_209",
+                        "displayName": "Kompostieranlagen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_03_04_TenantID_209",
+                        "displayName": "Landwirtschaftliche Co-Vergärungsanlagen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_09_TenantID_209",
+                        "displayName": "Materialentnahmestelle"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|0FA78839-9519-4DEF-B32D-106719E3E7DA_TenantID_209",
+                        "displayName": "Papierfabriken"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|AEAFAA62-8682-4378-86DC-F13FA639AB86_TenantID_209",
+                        "displayName": "Restholzfeuerungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|bba293b1-b9d5-4ed7-8b85-3702bf6e394a_TenantID_209",
+                        "displayName": "Sammelstellen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|1D5CEE29-11BA-4B35-900A-F81ECEFD75D9_TenantID_209",
+                        "displayName": "Soil washing plants"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_02_02_TenantID_209",
+                        "displayName": "Sonderabfallverbrennungsanlagen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|C83236E5-8772-4B9E-AF93-864792DD7DA1_TenantID_209",
+                        "displayName": "Stahlwerke"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|D871C87B-9D86-4C83-9176-1928420494FE_TenantID_209",
+                        "displayName": "Untertagedeponien"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|0fd0a2a5-fac0-4019-9e0c-b5d3460dce10_TenantID_209",
+                        "displayName": "Vergäranlagen inkl. der Nachkompostierung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|Rbn_AR_Basis_Standort_Abfallanlagentyp_04_10_TenantID_209",
+                        "displayName": "Zementwerke"
+                    }
+                ]
+            },
+            {
+                "possibleValueSetID": "0a622aac-7309-4fb6-a861-18e1316c3f0b",
+                "possibleValues": [
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|ce339a66-ff0d-44c9-a5a5-ee54792bee4a_TenantID_209",
+                        "displayName": "A 01 Landwirtschaft, Jagd und damit verbundene Tätigkeiten"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|fa205b59-bc48-44f1-bba3-f2c1aba7f616_TenantID_209",
+                        "displayName": "A 02 Forstwirtschaft und Holzeinschlag"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|3a38af6d-a7b8-486e-a7c8-9255080367e9_TenantID_209",
+                        "displayName": "A 03 Fischerei und Aquakultur"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|fb220354-0718-42d1-8d41-d1cbe5e5035f_TenantID_209",
+                        "displayName": "B 05 Kohlenbergbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|37e73943-d902-4b32-8d3b-bef51b5d914c_TenantID_209",
+                        "displayName": "B 06 Gewinnung von Erdöl und Erdgas"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|31f3e170-fefe-4f67-8564-e79a00e7cef3_TenantID_209",
+                        "displayName": "B 07 Erzbergbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|a3a009ac-a782-48c3-9945-92c386ca73b4_TenantID_209",
+                        "displayName": "B 08 Gewinnung von Steinen und Erden, sonstiger Bergbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|934d9a8f-c830-4deb-aefb-c9574e0a0d0d_TenantID_209",
+                        "displayName": "B 09 Erbringung von Dienstleistungen für den Bergbau und für die Gewinnung von Steinen und Erden"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|7e394efd-b47d-4afc-b6de-36f44915b593_TenantID_209",
+                        "displayName": "C 10 Herstellung von Nahrungs- und Futtermitteln"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|065557af-0792-4675-81c6-5d3cf9d97bdf_TenantID_209",
+                        "displayName": "C 11 Getränkeherstellung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|7e52afd1-2f8d-473b-a12c-18d48be4c34b_TenantID_209",
+                        "displayName": "C 12 Tabakverarbeitung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|037f2186-783d-4f4d-9aea-61ab50123a2a_TenantID_209",
+                        "displayName": "C 13 Herstellung von Textilien"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|1f23f1f3-909c-4ab4-9dbe-cee6b1f4ce74_TenantID_209",
+                        "displayName": "C 14 Herstellung von Bekleidung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|dfd626aa-6cb5-47cd-bbb2-fcbf0803ec8a_TenantID_209",
+                        "displayName": "C 15 Herstellung von Leder, Lederwaren und Schuhen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|319bfa73-26d5-4c25-9f8e-52c57918430b_TenantID_209",
+                        "displayName": "C 16 Herstellung von Holz-, Flecht-, Korb- und Korkwaren (ohne Möbel)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|74d73fe1-b775-4323-9de0-76438eabda31_TenantID_209",
+                        "displayName": "C 17 Herstellung von Papier, Pappe und Waren daraus"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|883da5e5-6a9a-4db6-b9bd-f9bb48b4ebd2_TenantID_209",
+                        "displayName": "C 18 Herstellung von Druckerzeugnissen; Vervielfältigung von bespielten Ton-, Bild- und Datenträgern"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|207fc526-30d7-465a-a8f9-8bcc99b28f9e_TenantID_209",
+                        "displayName": "C 19 Kokerei und Mineralölverarbeitung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|59e0dd6f-de40-4e1c-95f7-3fd28248571c_TenantID_209",
+                        "displayName": "C 20 Herstellung von chemischen Erzeugnissen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|3e4ad025-d99d-4783-b6c2-7b893727e2ba_TenantID_209",
+                        "displayName": "C 21 Herstellung von pharmazeutischen Erzeugnissen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|049ffa4e-44c2-44f8-819e-55f2c69d2e61_TenantID_209",
+                        "displayName": "C 22 Herstellung von Gummi- und Kunststoffwaren"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|c504df02-589c-4e8c-9732-a8d70e69e8f0_TenantID_209",
+                        "displayName": "C 23 Herstellung von Glas und Glaswaren, Keramik, Verarbeitung von Steinen und Erden"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|4b44e9b3-62f6-49a5-a435-619b162a777c_TenantID_209",
+                        "displayName": "C 24 Metallerzeugung und -bearbeitung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|faf6c3e0-272d-4243-bf46-da88140c1024_TenantID_209",
+                        "displayName": "C 25 Herstellung von Metallerzeugnissen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|e8a973cc-23fe-4060-8bce-fd29f3a8fa12_TenantID_209",
+                        "displayName": "C 26 Herstellung von Datenverarbeitungsgeräten, elektronischen und optischen Erzeugnissen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|c44c2b57-6dbe-48c9-9e68-ac17ae77573b_TenantID_209",
+                        "displayName": "C 27 Herstellung von elektrischen Ausrüstungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|16906522-5d92-40c8-92cb-900f49b16dbc_TenantID_209",
+                        "displayName": "C 28 Maschinenbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|9a1e7336-e0ca-47a7-bf50-803695b9d6f0_TenantID_209",
+                        "displayName": "C 29 Herstellung von Automobilen und Automobilteilen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|55026cb5-e915-48a5-be7d-a4ebfa551550_TenantID_209",
+                        "displayName": "C 30 Sonstiger Fahrzeugbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|affbcd6b-109f-41be-bb30-3af736763cfd_TenantID_209",
+                        "displayName": "C 31 Herstellung von Möbeln"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|b7baf648-ea03-4819-8190-05046d0bfbb4_TenantID_209",
+                        "displayName": "C 32 Herstellung von sonstigen Waren"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|310d7ae3-b7a7-4779-9352-83b672aea5f2_TenantID_209",
+                        "displayName": "C 33 Reparatur und Installation von Maschinen und Ausrüstungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|593920bb-64ab-40f5-ae14-34c3c3f60800_TenantID_209",
+                        "displayName": "D 35 Energieversorgung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|8b558b46-7b00-4560-8441-e3048eba901a_TenantID_209",
+                        "displayName": "E 36 Wasserversorgung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|9c78bbcd-5d22-4ec4-ae9d-67193f7677a4_TenantID_209",
+                        "displayName": "E 37 Abwasserentsorgung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|d8a7257a-1c56-4b74-8dc8-325ad85fe201_TenantID_209",
+                        "displayName": "E 38 Sammlung, Behandlung und Beseitigung von Abfällen, Rückgewinnung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|c026a88e-e66c-4d1d-8d25-d2bb69412710_TenantID_209",
+                        "displayName": "E 39 Beseitigung von Umweltverschmutzungen und sonstige Entsorgung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|8ea66f68-6886-4c6f-9b21-38f0ada77d42_TenantID_209",
+                        "displayName": "F 41 Hochbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|b5940d40-ce60-4923-b253-e2c11dd16b07_TenantID_209",
+                        "displayName": "F 42 Tiefbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|4d1ec4e4-1c70-4d77-8860-c12850a9bb4a_TenantID_209",
+                        "displayName": "F 43 Vorbereitende Baustellenarbeiten, Bauinstallation und sonstiges Ausbaugewerbe"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|a04cca62-b6d0-49a1-9731-bc4969171aa1_TenantID_209",
+                        "displayName": "G 45 Handel mit Motorfahrzeugen, Instandhaltung und Reparatur von Motorfahrzeugen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|08844706-7e39-428b-8a88-9e732f9bffaf_TenantID_209",
+                        "displayName": "G 46 Grosshandel (ohne Handel mit Motorfahrzeugen)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|2bdbf225-bee4-41d9-b0ae-14445c7b59b1_TenantID_209",
+                        "displayName": "G 47 Detailhandel (ohne Handel mit Motorfahrzeugen)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|98bf71fa-fbc7-446e-b443-58a3a2b30ac0_TenantID_209",
+                        "displayName": "H 49 Landverkehr und Transport in Rohrfernleitungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|1ef4b3d8-488d-44d9-911c-35903516b87b_TenantID_209",
+                        "displayName": "H 50 Schifffahrt"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|13dea37e-a74c-46a9-a87d-bd77ff0a9d5c_TenantID_209",
+                        "displayName": "H 51 Luftfahrt"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|8ac243c4-909a-4b76-a7ef-fe931953163d_TenantID_209",
+                        "displayName": "H 52 Lagerei sowie Erbringung von sonstigen Dienstleistungen für den Verkehr"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|6586b013-bdff-4e01-88e7-42ab732a49fc_TenantID_209",
+                        "displayName": "H 53 Post-, Kurier- und Expressdienste"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|0e3fc400-8471-4988-be9f-be9c2019c60b_TenantID_209",
+                        "displayName": "I 55 Beherbergung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|879645d5-2d7b-45df-af57-b8d9474d5116_TenantID_209",
+                        "displayName": "I 56 Gastronomie"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|bd345dc8-984d-41f6-ab7c-c2c60b6ff3a2_TenantID_209",
+                        "displayName": "J 58 Verlagswesen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|03f164f4-1dbc-436d-b83b-3ecd2ec6f75d_TenantID_209",
+                        "displayName": "J 59 Herstellung, Verleih und Vertrieb von Filmen und Fernsehprogrammen, Kinos, Tonstudios und Verlegen von Musik"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|0f1a6b61-bbaf-49af-a904-6fdf488710af_TenantID_209",
+                        "displayName": "J 60 Rundfunkveranstalter"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|a338aeae-69ab-4819-9a07-414b36dc7c29_TenantID_209",
+                        "displayName": "J 61 Telekommunikation"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|e12f63d6-0a44-4738-af09-cd1592dad273_TenantID_209",
+                        "displayName": "J 62 Erbringung von Dienstleistungen der Informationstechnologie"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|ba051a18-3a6c-48ed-9acf-2ac137f9d274_TenantID_209",
+                        "displayName": "J 63 Informationsdienstleistungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|a1e0d6d8-f7a1-4b46-bfe4-e0d81e06704e_TenantID_209",
+                        "displayName": "K 64 Erbringung von Finanzdienstleistungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|8b52bdff-96d4-4439-ae7f-c871cfab4e9b_TenantID_209",
+                        "displayName": "K 65 Versicherungen, Rückversicherungen und Pensionskassen (ohne Sozialversicherung)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|b8143911-f213-4eaa-a96d-e930014aea88_TenantID_209",
+                        "displayName": "K 66 Mit Finanz- und Versicherungsdienstleistungen verbundene Tätigkeiten"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|c70ef191-eb1a-4936-8d5a-640529e9ea23_TenantID_209",
+                        "displayName": "L 68 Grundstücks- und Wohnungswesen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|1b1d09f6-d6d4-4e91-8bf2-2ea1830469df_TenantID_209",
+                        "displayName": "M 69 Rechts- und Steuerberatung, Wirtschaftsprüfung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|1eff5848-b998-4062-ba3a-33cb1e3733a2_TenantID_209",
+                        "displayName": "M 70 Verwaltung und Führung von Unternehmen und Betrieben, Unternehmensberatung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|41eaf2e6-cac4-49c2-9fb6-902c576c470b_TenantID_209",
+                        "displayName": "M 71 Architektur- und Ingenieurbüros, technische, physikalische und chemische Untersuchung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|d56ce288-fa60-4c54-a2a2-65b0fddc583f_TenantID_209",
+                        "displayName": "M 72 Forschung und Entwicklung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|7e5b83af-24f4-411e-b97a-80417f892e46_TenantID_209",
+                        "displayName": "M 73 Werbung und Marktforschung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|f8227260-6b22-4fba-aa17-2f4482233d23_TenantID_209",
+                        "displayName": "M 74 Sonstige freiberufliche, wissenschaftliche und technische Tätigkeiten"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|c0e313c4-15d7-4346-b0b6-1d1d9a23f7dc_TenantID_209",
+                        "displayName": "M 75 Veterinärwesen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|bd5997f1-80a9-4814-a412-d66a66d1ed23_TenantID_209",
+                        "displayName": "N 77 Vermietung von beweglichen Sachen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|73fe872f-1dc4-4179-be5c-58dc86b0acd4_TenantID_209",
+                        "displayName": "N 78 Vermittlung und Überlassung von Arbeitskräften"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|624a3d1b-e878-4c97-b42c-04acfd10b5bf_TenantID_209",
+                        "displayName": "N 79 Reisebüros, Reiseveranstalter und Erbringung sonstiger Reservierungsdienstleistungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|b567eb95-2400-45e3-996d-476c0a4b851f_TenantID_209",
+                        "displayName": "N 80 Wach- und Sicherheitsdienste sowie Detekteien"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|b5fef64d-fd0b-403f-83a5-538b3d1916ed_TenantID_209",
+                        "displayName": "N 81 Gebäudebetreuung, Garten- und Landschaftsbau"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|a9d07cca-5882-4db5-bd3c-2d9238de64a1_TenantID_209",
+                        "displayName": "N 82 Erbringung von wirtschaftlichen Dienstleistungen für Unternehmen und Privatpersonen a. n. g."
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|f4286ef7-29a6-43d5-b9b1-e9cee5b9d82c_TenantID_209",
+                        "displayName": "O 84 Öffentliche Verwaltung, Verteidigung, Sozialversicherung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|073fe5c6-ffef-4a65-a988-ef986324688b_TenantID_209",
+                        "displayName": "P 85 Erziehung und Unterricht"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|1ae07917-46ae-4a6d-9115-c15bb565236c_TenantID_209",
+                        "displayName": "Q 86 Gesundheitswesen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|5b02564e-bfa7-460f-9550-24f017fb1794_TenantID_209",
+                        "displayName": "Q 87 Heime (ohne Erholungs- und Ferienheime)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|d9ce4d60-406d-4a54-bf80-82a5dbd99c90_TenantID_209",
+                        "displayName": "Q 88 Sozialwesen (ohne Heime)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|383999c3-4aa3-49e4-a632-35e935d322f0_TenantID_209",
+                        "displayName": "R 90 Kreative, künstlerische und unterhaltende Tätigkeiten"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|ebd30403-c9df-4160-9228-723b86be837e_TenantID_209",
+                        "displayName": "R 91 Bibliotheken, Archive, Museen, botanische und zoologische Gärten"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|6fc0f0a5-97d4-4a13-b7d1-32ad68449021_TenantID_209",
+                        "displayName": "R 92 Spiel-, Wett- und Lotteriewesen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|07faa9c6-5108-4a0d-b73c-366456b0c14e_TenantID_209",
+                        "displayName": "R 93 Erbringung von Dienstleistungen des Sports, der Unterhaltung und der Erholung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|7ba53a9f-e192-4a5b-8cd2-c3d3fd231d84_TenantID_209",
+                        "displayName": "S 94 Interessenvertretungen sowie kirchliche und sonstige religiöse Vereinigungen (ohne Sozialwesen und Sport)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|af6bceb0-6f92-4611-a816-dbf6b5189f46_TenantID_209",
+                        "displayName": "S 95 Reparatur von Datenverarbeitungsgeräten und Gebrauchsgütern"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|6207df68-197f-41cd-b99e-28551ae73002_TenantID_209",
+                        "displayName": "S 96 Erbringung von sonstigen überwiegend persönlichen Dienstleistungen"
+                    }
+                ]
+            },
+            {
+                "possibleValueSetID": "8b6c1a80-d81f-42b2-a571-598263d78469",
+                "possibleValues": [
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|BFE3E70E-D601-4F8F-BFF8-DDB7E453CBA1_TenantID_209",
+                        "displayName": "D1 Ablagerung in oder auf dem Boden (d.h. Deponien)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|0E1BA7C3-3F59-4430-AD19-DCA0EE877987_TenantID_209",
+                        "displayName": "D10 Verbrennung an Land"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|e2a7425f-6868-4b6b-92e9-2cf489f34e37_TenantID_209",
+                        "displayName": "D101 Verbrennung in einer Kehrichtverbrennungsanlage (KVA)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|44d333ee-665c-400e-a775-9beedffe3196_TenantID_209",
+                        "displayName": "D102 Verbrennung in einer Sonderabfallverbrennungsanlage (SAVA)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|f53cfd58-d9c1-476c-a52f-48f837313127_TenantID_209",
+                        "displayName": "D103 Verbrennung in einer Industriefeuerung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|e8624498-a3bf-4e91-bb68-9a9462bd1f6c_TenantID_209",
+                        "displayName": "D104 Verbrennung in einem Zementwerk"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|a89a8f9d-2a0e-4e7a-87c4-83ff495b2815_TenantID_209",
+                        "displayName": "D12 Dauerlagerung (z.B. Lagerung von Behältern in einem Bergwerk usw.)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|52C56A9A-532C-4BBB-BCF9-D36E9D1FAC4A_TenantID_209",
+                        "displayName": "D13 Mescolare o miscelare prima dell'applicazione di una qualsiasi delle procedure elencate in questa Parte A"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|537E23E6-9A62-4C24-A7D6-0E5B20492ED2_TenantID_209",
+                        "displayName": "D14 Rekonditionierung vor Anwendung eines der in diesem Teil A aufgeführten Verfahren"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|F28CB97E-A441-4D6C-9AFE-4617E2B1164E_TenantID_209",
+                        "displayName": "D15 Lagerung bis zur Anwendung eines der in diesem Teil A aufgeführten Verfahren"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|af9b0ec7-9a52-4e28-83c8-e28b9c5328b8_TenantID_209",
+                        "displayName": "D151 Zwischenlagern und weiterleiten der Abfälle, um sie einem der Verfahren D1 bis D160 zu unterziehen (Gebinde werden nicht entleert)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|92688d58-6127-43ae-9b60-eb10452aa174_TenantID_209",
+                        "displayName": "D152 Zusammenfügen, zwischenlagern und weiterleiten der Abfälle, um sie einem der Verfahren D1 bis D160 zu unterziehen (keine Aufbereitung, Gebinde werden entleert)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|f072cefa-f6c8-412a-8d73-db82b2bc7f3f_TenantID_209",
+                        "displayName": "D153 Sortieren, zusammenfügen, aufbereiten, zwischenlagern und weiterleiten der Abfälle, um sie einem der Verfahren D1 bis D160 zu unterziehen (der Abfall wird dabei verändert, es werden z.B. Teilmengen entfernt oder Eigenschaften des Abfalls verändert)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|fea51355-ec6a-46b0-90b3-a14a785de9a9_TenantID_209",
+                        "displayName": "D160 Behandlung mit einer mobilen Anlage (Beseitigungsverfahren)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|8655CAE8-5B35-4FDF-B6A9-55581A113494_TenantID_209",
+                        "displayName": "D2 Behandlung im Boden (z.B. biologischer Abbau von flüssigen oder schlammigen Abfällen)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|201c3c25-be08-412a-8dcd-f8d7022411d7_TenantID_209",
+                        "displayName": "D5 Speziell angelegte Deponien (z.B. Ablagerung in abgedichteten, getrennten Räumen, die verschlossen und gegeneinander und gegen die Umwelt isoliert werden, usw.)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|cbebb423-e1fa-4882-a77c-ebf032c01697_TenantID_209",
+                        "displayName": "D8 Biologische Behandlung, die nicht an anderer Stelle in dieser Liste aufgeführt ist und durch die Endverbindungen oder Gemische entstehen, die mit einem der Verfahren D1 bis D160 entsorgt werden"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|59ebedb5-a4a5-400d-b322-3dc3f097e7b5_TenantID_209",
+                        "displayName": "D9 Chemisch/physikalische Behandlung, die nicht an anderer Stelle in dieser Liste aufgeführt ist und durch die Endverbindungen oder Gemische entstehen, die mit einem der Verfahren D1 bis D160 entsorgt werden (z. B. Verdampfen, Trocknen, Kalzinieren, usw.)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|E909AD87-132C-41BD-A2C9-938E354AB0CD_TenantID_209",
+                        "displayName": "R1 Verwendung als Brennstoff (außer bei Direktverbrennung) oder andere Mittel der Energieerzeugung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|5a06cf19-53f6-4332-8d4f-4c42a0f4fea3_TenantID_209",
+                        "displayName": "R10 Aufbringung auf den Boden zum Nutzen der Landwirtschaft oder der Ökologie"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|148e4d68-7444-44ba-8f4a-aa58a82067a9_TenantID_209",
+                        "displayName": "R101 Verwertung in einer Kehrichtverbrennungsanlage (KVA)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|c9e2bae3-b0bd-4709-9dd4-f714b839ae27_TenantID_209",
+                        "displayName": "R103 Verwertung in einer Industriefeuerung"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|5703026b-f44d-4e00-ad58-a942778eda6f_TenantID_209",
+                        "displayName": "R104 Verwertung in einem Zementwerk"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|f09c9ace-aa45-436a-a333-779e3fe82181_TenantID_209",
+                        "displayName": "R11 Verwendung von Rückständen, die bei einem der unter R2 bis R10 aufgeführten Verfahren gewonnen werden"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|91298547-48e1-417b-afd6-bf4376261ef3_TenantID_209",
+                        "displayName": "R151 Zwischenlagern und weiterleiten der Abfälle, um sie einem der Verfahren R2 bis R160 zu unterziehen (Gebinde werden nicht entleert)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|161409ff-d28e-4709-a01a-f93c11689ca9_TenantID_209",
+                        "displayName": "R152 Zusammenfügen, zwischenlagern und weiterleiten der Abfälle, um sie einem der Verfahren R2 bis R160 zu unterziehen (keine Aufbereitung, Gebinde werden entleert)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|90601685-02cf-47f4-b904-789f6c7dd39a_TenantID_209",
+                        "displayName": "R153 Sortieren, zusammenfügen, aufbereiten, zwischenlagern und weiterleiten der Abfälle, um sie einem der Verfahren R2 bis R160 zu unterziehen (der Abfall wird dabei verändert, es werden z.B. Teilmengen entfernt oder Eigenschaften des Abfalls verändert)"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|fe6901c8-d86b-4912-a94e-e91d49dc4f25_TenantID_209",
+                        "displayName": "R160 Verwertung mit einer mobilen Anlage"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|5cf22285-48cf-4fe8-9f6f-4a98dccd4049_TenantID_209",
+                        "displayName": "R2 Rückgewinnung/Regenerierung von Lösungsmitteln"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|79d74e12-5367-4555-95fc-98c02c6b29de_TenantID_209",
+                        "displayName": "R3 Verwertung/Rückgewinnung organischer Stoffe, die nicht als Lösungsmittel verwendet werden"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|c319af7a-c4fa-4317-a7c1-611ea5b65b98_TenantID_209",
+                        "displayName": "R4 Verwertung/Rückgewinnung von Metallen und Metallverbindungen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|ee52726f-bca7-48a8-82d7-503693bcd24a_TenantID_209",
+                        "displayName": "R5 Verwertung/Rückgewinnung anderer anorganischer Stoffe"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|6b8bdaa5-a62c-44ad-8657-e2b09cdeb467_TenantID_209",
+                        "displayName": "R6 Regenerierung von Säuren oder Basen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|abb18b99-ab58-4bf5-9cd8-c3a21ecad295_TenantID_209",
+                        "displayName": "R7 Wiedergewinnung von Bestandteilen, die der Bekämpfung der Verunreinigung dienen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|85838800-433d-4501-9353-735375d875e4_TenantID_209",
+                        "displayName": "R8 Wiedergewinnung von Katalysatorenbestandteilen"
+                    },
+                    {
+                        "identifier": "RefID_SpecialdataCatalogValue|36f64775-2cd7-4523-ac4b-d8cca338f07e_TenantID_209",
+                        "displayName": "R9 Altölraffination oder andere Wiederverwendungsmöglichkeiten von Altöl"
+                    }
+                ]
+            }
+        ],
+        "properties": {
+            "5B119442-3427-4C7C-9BEF-2BC21E1E6541": {
+                "id": "7dbeecb5-2d98-41de-a99f-bcccc3c7c2f5",
+                "visible": true,
+                "editable": true,
+                "name": "Standort",
+                "value": {
+                    "4455F0A8-239C-48DE-B4BB-311445CDCCD6": {
+                        "id": "0116b1cf-c941-413b-ba29-d9be599f65ef",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Betriebsnummer"
+                    },
+                    "562BA60F-E032-4923-9301-12495E6D9BB6": {
+                        "possibleValueSetID": "f4b91a01-6f5a-4cea-a580-607efc59a049",
+                        "renderingType": "catalog",
+                        "id": "22b77c4a-e499-427d-b4ce-0eca21888853",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Status",
+                        "value": {
+                            "identifier": "RefID_SpecialdataCatalogValue|61027FEE-24B4-4C12-BF0E-081259498766_TenantID_209",
+                            "displayName": "Aktiv"
+                        }
+                    },
+                    "70A8C8A2-7987-470E-BDC7-515AD23B015A": {
+                        "id": "1b640234-7480-4b22-a593-29f54c8acd87",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Standortname"
+                    },
+                    "9249680B-D37B-405C-9C70-C2F3ADED8A77": {
+                        "id": "0f2c29f3-8a14-4d9f-a510-c78ae63682e8",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Strasse"
+                    },
+                    "A8C7CB98-BCC3-4C98-BB2C-E13FE172C76D": {
+                        "id": "2f898aec-dd13-4708-b956-47ac9b050f1b",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Hausnummer"
+                    },
+                    "BE70AC19-B8B6-4391-BF4B-0BB6EED0ED91": {
+                        "id": "d6545394-ffc9-4ec7-879d-a7b388e1981f",
+                        "visible": true,
+                        "editable": true,
+                        "name": "PLZ"
+                    },
+                    "F81CAE13-D96D-4F63-954E-41F08491D830": {
+                        "id": "371625c5-ade0-4bbf-9ebe-e0769dabe15b",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Ort"
+                    },
+                    "B0C1E4D8-61AE-462F-BC52-3E1E4BF21D3A": {
+                        "renderingType": "reference",
+                        "isTempValue": false,
+                        "id": "1198e376-d9b3-4266-8a2f-43aa6980e40e",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Zuständige Gemeinde"
+                    },
+                    "9EF806FC-B73C-438E-896F-A9AFC992F834": {
+                        "possibleValueSetID": "63a8798f-4d60-488b-8c68-67947df704b4",
+                        "renderingType": "catalog",
+                        "isTempValue": false,
+                        "id": "9bf94426-8d26-4347-97a5-ecfa5c62233a",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Zuständiger Kanton"
+                    },
+                    "9252B3DD-D9B0-46DE-88C9-CAE8E6A597F3": {
+                        "id": "ac5d9deb-1d41-4ad7-9763-2af30abd14c7",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Abgeberbetrieb"
+                    },
+                    "0864D6F7-7747-482C-AF12-50532A64AB01": {
+                        "id": "8fa81c17-c2eb-4777-a294-f9507e432f56",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Abfallanlage"
+                    },
+                    "7D552612-5057-400C-B1B4-A05C61697ED8": {
+                        "id": "a54b6df0-c409-4002-9cfc-26040ac29874",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Ausländisches Unternehmen"
+                    },
+                    "CA816E5A-0BBF-4B8D-BCF0-B7C96A4C574A": {
+                        "id": "c6c58ba4-0f86-4ba2-bf64-f4798be89564",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Exporteur"
+                    },
+                    "5A5092B2-2552-4D92-A9A1-E2077284BAF1": {
+                        "possibleValueSetID": "4699e0f5-1f05-477f-99d3-dd9620da9874",
+                        "renderingType": "catalog",
+                        "id": "9f43c32d-f5f1-464e-91b1-31d5f4573cb9",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Abfallanlagentyp"
+                    },
+                    "3D070E19-D8E7-4369-84F1-0B6764450B75": {
+                        "possibleValueSetID": "0a622aac-7309-4fb6-a861-18e1316c3f0b",
+                        "renderingType": "catalog",
+                        "id": "19763c40-cb8d-43fe-86fb-c9a75499f876",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Wirtschaftsart"
+                    },
+                    "DF60501D-781A-460B-8F04-343E28C1AE34": {
+                        "possibleValueSetID": "8b6c1a80-d81f-42b2-a571-598263d78469",
+                        "renderingType": "catalog",
+                        "id": "c96d7dbb-e992-4a9d-9b3b-968cddff4d2f",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Entsorgungsverfahren"
+                    },
+                    "EB478697-486B-472B-ACF3-D6D95B95E68E": {
+                        "renderingType": "reference",
+                        "id": "24fe9ecb-d122-46a7-97df-723797430159",
+                        "visible": true,
+                        "editable": true,
+                        "name": "LVA Code"
+                    },
+                    "EC7563B2-D974-43D5-8C3B-2B451169A0A5": {
+                        "renderingType": "reference",
+                        "id": "5dadb272-86ac-4ebc-b453-83d4e80feca8",
+                        "visible": true,
+                        "editable": true,
+                        "name": "EU Abfallcodes"
+                    },
+                    "9BC117C6-38C1-40CF-AB1B-F69F43098F27": {
+                        "renderingType": "reference",
+                        "id": "71c93b5b-3ca3-4a69-a4a1-6d10a3d33817",
+                        "visible": true,
+                        "editable": true,
+                        "name": "VVEA Code"
+                    },
+                    "DB1DE106-F3C2-4774-B5CA-D033AF71C43A": {
+                        "renderingType": "reference",
+                        "id": "fa9dc2ad-6d65-4c2d-b503-96a9d4c276ed",
+                        "visible": true,
+                        "editable": true,
+                        "name": "OECD Code"
+                    }
+                }
+            },
+            "386283B5-0BF8-4C56-A779-495507FCA33B": {
+                "id": "ebd0deec-ba8e-4685-a6bd-f0562712bd23",
+                "visible": true,
+                "editable": true,
+                "name": "Organisation",
+                "value": {
+                    "8BFD8AD4-B597-41AF-80F1-294E0EA8585E": {
+                        "id": "dc241d22-600c-47a0-8be8-9ab7b4c46a26",
+                        "visible": true,
+                        "editable": true,
+                        "name": "Firmenname"
+                    }
+                }
+            },
+            "55D880EC-FFDE-4B4E-A140-23FD09A8E6F7": {
+                "id": "8f9bbde4-446a-4373-900a-9abd3ac0984d",
+                "visible": true,
+                "editable": true,
+                "name": "Suchfelder zurücksetzen",
+                "value": "False"
+            }
+        }
+    },
+    "transactionId": ""
+}

@@ -1,0 +1,42 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubject": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplate": "",
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {}
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "id": "sectionheadline_d02b7702_9920_4459_b2ff_6e58f96e929d",
+                        "type": "property",
+                        "label": {},
+                        "description": {},
+                        "formGridOptions": {
+                            "type": "sectionheadline",
+                            "text": {
+                                "de": "Das ist eine Überschrift"
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

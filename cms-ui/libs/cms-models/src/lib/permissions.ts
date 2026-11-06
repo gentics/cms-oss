@@ -60,7 +60,6 @@ export enum AccessControlledType {
     FORM = 'form',
     TEMPLATE = 'template',
     CONTENT_STAGING_ADMIN = 'contentstagingadmin',
-    LICENSING = 'licensing',
 }
 
 /**

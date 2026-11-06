@@ -1,0 +1,16 @@
+{
+    "email": "admin@gentics.com",
+    "mailsubject_i18n": {
+        "de": "Es sind neue Daten da",
+        "en": "New data arrived"
+    },
+    "mailsource_pageid": 4712,
+    "mailsource_nodeid": 43,
+    "mailtemp_i18n": {
+        "de": "useremail",
+        "en": "useremail"
+    },
+    "templateContext": "theme-red",
+    "type": "GENERIC",
+    "elements": []
+}

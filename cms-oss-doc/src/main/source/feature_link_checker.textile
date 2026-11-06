@@ -1,0 +1,149 @@
+h2. Link Checker
+
+Feature Highlights of the Link Checker:
+
+* Regularly check external links contained in pages for validity
+* Create inbox messages to editors, if external links get invalid
+* Custom tool in the new Editor User Interface to show overview of pages containing invalid external links
+* Aloha Editor plugin for listing and marking invalid links in pages (preview and edit mode)
+* Live validity check for links edited with Aloha Editor
+* Feature can be activated per Gentics CMS Node
+
+!{width:696px}images/gcmsui/link-checker-custom-tool-genticscms.png!
+
+endprologue.
+
+h3. Activation steps
+
+# Activate and configure the feature in the respective configuration files
+# Configure a scheduler tasks for regularly checking external links in a background job
+# Configure the Link Checker Custom Tool for the Editor User Interface
+# Configure user group permissions for the Link Checker Custom Tool
+
+h3. Configuration
+
+h4. Feature activation
+
+<shell filename="conf/features.yml">
+feature:
+	link_checker: true
+</shell>
+
+Once the feature is generally activated, it can be turned on and off for each node using the Backend user interface by a user with edit permission on the node:
+
+# Choose _Features_ from the Context Menu of the Node in the tree.
+# Activate the checkbox next to _link_checker_
+# Click _OK_ to activate the feature
+
+h4. Additional configuration
+
+The Link Checker can be configured with the following configuration options:
+
+<shell filename="conf/*.yml">
+link_checker:
+  history_length: 5
+  notify: true
+  debounce: 3
+  read_buffer_size: 100
+  check_buffer_size: 10
+  update_buffer_size: 100
+  retry_after: 3600
+  call_timeout: 60
+  connect_timeout: 60
+  write_timeout: 60
+  read_timeout: 60
+</shell>
+
+|_. Parameter        |_. Description                                                                                                                    |_. Default |
+| history_length     | Number of check results, which are kept for each external link                                                                   | 5         |
+| notify             | Whether editors shall be notified if links turn invalid                                                                          | true      |
+| debounce           | Number of successive checks, that must be invalid, before the editor is notified (must be lower than history_length)             | 3         |
+| read_buffer_size   | Size of the buffer for external links while checking. Bigger buffer sizes increase performance at the cost of memory consumption | 100       |
+| check_buffer_size  | Number of external links checked in parallel. Bigger buffer sizes increase performance at the cost of network traffic            | 10        |
+| update_buffer_size | Size of the buffer for updating link check results                                                                               | 100       |
+| retry_after        | Number of seconds a specific host will not be checked again, if a request returns response code 429 (Too many requests) but the
+response does not contain a "Retry-After" header. See "Handling 429 (Too Many Requests) responses":#handling-429-too-many-requests-responses | 3600 |
+| call_timeout       | Timeout in seconds for the overall call for checking a link                                                                      | 60        |
+| connect_timeout    | Timeout in seconds to connect to the foreign host                                                                                | 60        |
+| write_timeout      | Timeout in seconds for writing the request to the foreign host                                                                   | 60        |
+| read_timeout       | Timeout in seconds for reading the response from the foreign host                                                                | 60        |
+
+The Aloha Editor plugin can be configured with the following options:
+
+<shell filename="conf/*.yml">
+aloha_settings:
+  plugins:
+    gcnlinkchecker:
+      livecheck: true
+      delay: 500
+      tagtypeWhitelist: []
+</shell>
+
+|_. Parameter      |_. Description                                        |_. Default |
+| livecheck        | Whether links shall be checked live (during editing) | true      |
+| delay            | Delay in milliseconds for checking an entered link   | 500       |
+| tagtypeWhitelist | Which tagtypes (keyword-list) should be allowed to be validated. Livecheck only - will not be used for the Custom-Tool or for the automatic checks. You may use @["*"]@ as wildcard to allow all tagtypes to be checked. | [] |
+
+h4. Scheduler Task
+
+For automatic execution of the Link Checker, it is necessary to create a schedule for the internal @linkcheker@ task.
+
+h4. Enabling the Link Checker Custom Tool in the new Editor User Interface
+
+!{width:696px}images/gcmsui/link-checker-custom-tool-genticscms.png!
+
+To enable the Link Checker Custom Tool in the new Editor User Interface you must add the following to your CMS configuration:
+<shell filename="conf/*.yml">
+custom_tools:
+  - id: 1 # or whatever ID you want this tool to have
+    key: "linkchecker" # this must be the key for this Custom Tool!
+    toolUrl: "/tools/link-checker/?sid=${SID}"
+    iconUrl: "link" # Material Symbol name or a URL
+    newtab: false
+    name:
+	  de: "Link Checker"
+      en: "Link Checker"
+</shell>
+
+For more information regarding Gentics CMS Custom Tools, please see "Custom Tools":https://www.gentics.com/Content.Node/cmp8/guides-oss/admin_custom_tools.html
+
+h4. User Group permissions
+
+In order to see the Link Checker Custom Tool in the Editor User Interface, you need to set the group permissions for the specific user groups accordingly. More details "here":https://www.gentics.com/Content.Node/cmp8/guides-oss/admin_custom_tools.html#permissions.
+
+h4. Alerts and Alert Center in the Editor User Interface
+
+!{width:696px}images/gcmsui/link-checker-alerts-genticscms.png!
+
+In case broken links are found, the Editor User Interface will display a red exclamation mark on the top-right icon bar. Clicking on this icon will show an overview of the alerts in the User Profile Sidebar and offer shortcuts for the details.
+
+!{width:696px}images/gcmsui/link-checker-alert-center-genticscms.png!
+
+
+
+h3. Checking the Links
+
+External links are checked by making a *HEAD* request to the URL.
+* The check will follow redirects (validity of the final response will be checked)
+* The following response codes will be considered valid: 200 - 299, 301 (Redirect), 401 (Unauthorized), 403 (Forbidden)
+* If the response has code 400 (Bad Request), 404 (Not Found), 405 (Method Not Allowed), 409 (Conflict), 503 (Service Unavailable), or 500 (Internal Server Error), the check will be repeated with a *GET* request
+* All (insecure) SSL Certificates will be accepted for https requests.
+* URLs starting with _mailto:_, _javascript:_, _file:_, _callto:_, _tel:_, _skype:_ or _#_ are not checked.
+
+NOTE: For the Link Checker to successfully check external URLs, the GCMS Server must be allowed to make http/https requests to all checked hosts. If a proxy is required,
+the JVM must be started with the parameters _-Dhttp.proxyHost=... -Dhttp.proxyPort=... -Dhttp.nonProxyHosts=..._.
+
+h3. Handling 429 (Too Many Requests) responses
+
+Some servers limit the number of allowed requests and might send a response with status 429 (Too Many Requests).
+Such responses will not be considered invalid, but the URL will remain in the previous status (which may be "unchecked").
+
+The host of the URL will be blocked for some time: Either the number of seconds returned in the *Retry-After* header, or the configuration value _retry_after_
+(which defaults to 3600 seconds = 1 hour).
+
+This means that both the live check of URLs and the full check triggered by the scheduler task might not be able to check all URLs.
+
+The full check will sort the URLs by their last status update time, so that URLs, which have never been checked or have not been checked for the longest time
+will be checked first.
+
+---

@@ -1,0 +1,38 @@
+{{- if .Values.cms.ingress.enabled -}}
+{{- $fullName := include "cms.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "cms.labels" . | nindent 4 }}
+  {{- with .Values.cms.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .Values.cms.ingress.tls }}
+  tls:
+    - hosts:
+      - {{ .Values.cms.ingress.host | quote }}
+  {{- if .Values.cms.ingress.secretName }}
+      secretName: {{ .Values.cms.ingress.secretName }}
+  {{- else }}
+      secretName: {{ $fullName }}-tls
+  {{- end }}
+{{- end }}
+{{- if .Values.cms.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.cms.ingress.ingressClassName }}
+{{- end }}
+  rules:
+    - host: {{ .Values.cms.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port: 
+                  name: http
+{{- end }}

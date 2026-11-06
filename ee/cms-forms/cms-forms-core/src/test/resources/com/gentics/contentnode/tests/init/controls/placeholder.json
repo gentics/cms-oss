@@ -1,0 +1,43 @@
+{
+	"elements": [
+		{
+			"name": "input_no_placeholder",
+			"type": "input",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Ohne Placeholder",
+				"en": "No placeholder"
+			},
+			"description_i18n": {
+				"de": "Das beschreibt das Element",
+				"en": "This describes the element"
+			}
+		},
+		{
+			"name": "input_placeholder",
+			"type": "input",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Mit Placeholder",
+				"en": "With placeholder"
+			},
+			"description_i18n": {
+				"de": "Das beschreibt das Element",
+				"en": "This describes the element"
+			},
+			"placeholder_i18n": {
+				"de": "Das ist der Placeholder",
+				"en": "This comes from the placeholder"
+			}
+		}
+	],
+	"email": "",
+	"mailsubject_i18n": {},
+	"mailsource_pageid": 0,
+	"mailsource_nodeid": 0,
+	"mailtemp_i18n": {},
+	"type": "GENERIC",
+	"templateContext": "theme-red"
+}

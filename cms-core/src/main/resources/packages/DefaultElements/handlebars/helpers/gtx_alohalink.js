@@ -9,7 +9,7 @@ function gtx_alohalink(tag, renderMode, options) {
             ctx['target'] += ' rel="noopener noreferrer"';
         }
     }
-    if (parts.language.text) {
+    if (parts.language && parts.language.text) {
         ctx['language'] = ' hreflang="' + parts.language.text + '"';
     }
     if (parts.title.text) {
@@ -37,7 +37,7 @@ function gtx_alohalink(tag, renderMode, options) {
 
     if (url.target && url.target.id) {
         // Set the language only then, if no language has been saved yet.
-        if (!parts.language.text && url.target.language && url.target.language.code) {
+        if (!(parts.language && parts.language.text) && url.target.language && url.target.language.code) {
             ctx['language'] = ' hreflang="' + url.target.language.code + '"';
         }
         ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.Page" data-gentics-aloha-object-id="10007.' + url.target.id + '" data-gentics-aloha-object-online="' + url.target.online + '"';

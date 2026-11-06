@@ -1,7 +1,9 @@
 package com.gentics.contentnode.mcp;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.mcp.tools.AddConstructToPackageTool;
 import com.gentics.contentnode.mcp.tools.AddPageTagTool;
 import com.gentics.contentnode.mcp.tools.AssignConstructToNodesTool;
@@ -60,7 +62,12 @@ public final class McpTools {
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(McpTools.class);
 
 	/**
-	 * Every tool, in registration order.
+	 * Service loader for the modules that add tools
+	 */
+	private static final ServiceLoaderUtil<McpToolService> SERVICES = ServiceLoaderUtil.load(McpToolService.class);
+
+	/**
+	 * Every tool of this module, in registration order.
 	 */
 	private static final List<AbstractMcpTool> TOOLS = List.of(new ListNodesTool(),
 			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(),
@@ -84,19 +91,21 @@ public final class McpTools {
 	}
 
 	/**
-	 * Get every tool, in registration order
+	 * Get every tool, those of this module first
 	 * @return tools
 	 */
 	static List<AbstractMcpTool> tools() {
-		return TOOLS;
+		List<AbstractMcpTool> tools = new ArrayList<>(TOOLS);
+		SERVICES.forEach(service -> tools.addAll(service.tools()));
+		return tools;
 	}
 
 	/**
-	 * Register every tool in {@link #TOOLS} on the given server.
+	 * Register every tool of {@link #tools()} on the given server.
 	 * @param server MCP server to register the tools on
 	 */
 	public static void registerAll(McpSyncServer server) {
-		for (AbstractMcpTool provider : TOOLS) {
+		for (AbstractMcpTool provider : tools()) {
 			server.addTool(provider.toSyncToolSpecification());
 			logger.info(String.format("Registered MCP tool '%s' (%s)", provider.tool().name(),
 					provider.getClass().getName()));

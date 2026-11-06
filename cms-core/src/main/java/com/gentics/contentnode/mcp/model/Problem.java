@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.mcp.util.ExternalFormException;
 import com.gentics.contentnode.mcp.util.SearchUnavailableException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
@@ -51,6 +52,11 @@ public record Problem(String type, String title, int status, String detail, Stri
 	 * @return problem
 	 */
 	public static Problem of(String tool, Throwable cause) {
+		ExternalFormException externalForm = find(cause, ExternalFormException.class);
+		if (externalForm != null) {
+			return create(Kind.EXTERNAL_FORM, tool, externalForm.getMessage(), null);
+		}
+
 		SearchUnavailableException unavailable = find(cause, SearchUnavailableException.class);
 		if (unavailable != null) {
 			return create(Kind.SEARCH_UNAVAILABLE, tool, unavailable.getMessage(), null);
@@ -174,6 +180,7 @@ public record Problem(String type, String title, int status, String detail, Stri
 		MAINTENANCE_MODE("maintenance-mode", "Maintenance mode", 503, true),
 		NOT_LICENSED("feature-not-licensed", "Feature not licensed", 403, false),
 		SEARCH_UNAVAILABLE("search-unavailable", "Search unavailable", 503, false),
+		EXTERNAL_FORM("external-form-read-only", "External form is read-only", 422, false),
 		FAILURE("cms-failure", "CMS failure", 500, true);
 
 		private final String slug;

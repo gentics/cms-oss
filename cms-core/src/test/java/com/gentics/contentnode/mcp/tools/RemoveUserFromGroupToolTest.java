@@ -6,12 +6,18 @@ import static com.gentics.contentnode.mcp.tools.ToolAssertions.assertRejected;
 import static com.gentics.contentnode.mcp.tools.ToolAssertions.assertRejectsWithoutCredentials;
 import static com.gentics.contentnode.mcp.tools.ToolAssertions.assertValidOutput;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
 
+import java.util.Optional;
+
 import org.junit.Test;
 
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
 import com.gentics.contentnode.mcp.tools.RemoveUserFromGroupTool.Result;
@@ -51,5 +57,15 @@ public class RemoveUserFromGroupToolTest {
 	public void testOutput() {
 		assertValidOutput(tool, new Result(ObjectRef.of(Type.USER, 35), ObjectRef.of(Type.GROUP, 7), List.of(),
 				RemoveUserFromGroupTool.warnings(List.of())));
+	}
+
+	@Test
+	public void testRefusesTheCaller() throws Exception {
+		Session session = mock(Session.class);
+		when(session.getUserId()).thenReturn(7);
+
+		assertThatThrownBy(() -> RemoveUserFromGroupTool.requireNotCaller(7, Optional.of(session)))
+				.hasMessageContaining("your own account");
+		RemoveUserFromGroupTool.requireNotCaller(8, Optional.of(session));
 	}
 }

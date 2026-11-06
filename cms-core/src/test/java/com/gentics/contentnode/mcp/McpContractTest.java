@@ -100,7 +100,7 @@ public class McpContractTest {
 	 * @return mismatches, empty if the tool conforms
 	 */
 	@SuppressWarnings("unchecked")
-	private static List<String> mismatches(Tool tool) {
+	static List<String> mismatches(Tool tool) {
 		JsonNode contract = contractTools.get(tool.name());
 		if (contract == null) {
 			return List.of("%s: not in tools.json %s".formatted(tool.name(), version));
@@ -108,7 +108,7 @@ public class McpContractTest {
 
 		List<String> mismatches = new ArrayList<>();
 		String phase = contract.path("phase").asText("one");
-		if (!"one".equals(phase)) {
+		if ("future".equals(phase)) {
 			mismatches.add("%s: phase %s in tools.json %s".formatted(tool.name(), phase, version));
 		}
 

@@ -11,12 +11,17 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
-import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
+import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.object.Form;
+import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.Template;
 import com.gentics.contentnode.rest.model.response.FileLoadResponse;
@@ -34,6 +39,7 @@ import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
+import com.gentics.contentnode.rest.util.MiscUtils;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
@@ -60,7 +66,7 @@ public class GetRelatedTool extends AbstractMcpTool {
 	 * Relations, as in the contract
 	 */
 	static final List<String> RELATIONS = List.of("links_to_page", "links_to_file", "links_to_image",
-			"uses_template", "uses_tag", "variants", "total");
+			"uses_template", "uses_form", "uses_tag", "variants", "total");
 
 	/**
 	 * Default page size per relation
@@ -112,7 +118,11 @@ public class GetRelatedTool extends AbstractMcpTool {
 		/**
 		 * Templates linking to the image
 		 */
-		TEMPLATES_LINKING_IMAGE
+		TEMPLATES_LINKING_IMAGE,
+		/**
+		 * Pages embedding the form
+		 */
+		PAGES_USING_FORM
 	}
 
 	/**
@@ -138,12 +148,12 @@ public class GetRelatedTool extends AbstractMcpTool {
 	 * Check that related objects can be looked up for the type
 	 * @param type type of the referenced object
 	 * @return type
-	 * @throws IllegalArgumentException for a type other than page, file or image
+	 * @throws IllegalArgumentException for a type other than page, file, image or form
 	 */
 	static Type supportedType(Type type) {
-		if (type != Type.PAGE && type != Type.FILE && type != Type.IMAGE) {
+		if (type != Type.PAGE && type != Type.FILE && type != Type.IMAGE && type != Type.FORM) {
 			throw new IllegalArgumentException(
-					"Related objects can only be looked up for a page, file or image, not for a %s".formatted(
+					"Related objects can only be looked up for a page, file, image or form, not for a %s".formatted(
 							type.value()));
 		}
 		return type;
@@ -169,6 +179,7 @@ public class GetRelatedTool extends AbstractMcpTool {
 			case "uses_template" -> Usage.TEMPLATES_LINKING_FILE;
 			default -> null;
 			};
+		case FORM -> "uses_form".equals(relation) ? Usage.PAGES_USING_FORM : null;
 		case IMAGE -> switch (relation) {
 			case "links_to_image" -> Usage.PAGES_LINKING_IMAGE;
 			case "uses_template" -> Usage.TEMPLATES_LINKING_IMAGE;
@@ -206,7 +217,7 @@ public class GetRelatedTool extends AbstractMcpTool {
 				.description("Reverse lookup: which objects reference this one. Use it to find pages to link to, and "
 						+ "to check whether an object is safe to take offline or delete. This is relational usage "
 						+ "data, not search, so it is exact rather than ranked. Do NOT use it to find textually "
-						+ "similar content, that is find_similar.")
+						+ "similar content, that is find_similar. For a form, uses_form lists the pages that embed it.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties).required(List.of(ARG_REF))
 						.additionalProperties(false).build())
 				.outputSchema(schema("object", null, "properties", output, "required", List.of("groups")))
@@ -246,6 +257,7 @@ public class GetRelatedTool extends AbstractMcpTool {
 			yield ObjectRef.forFile(response.getFile(),
 					nodeId != null ? nodeId : response.getFile().getInheritedFromId());
 		}
+		case FORM -> formRef(id);
 		default -> {
 			ImageLoadResponse response = imageResource.load(idString, false, false, nodeId, null);
 			requireOk(response, "The image %d could not be loaded".formatted(id));
@@ -258,6 +270,10 @@ public class GetRelatedTool extends AbstractMcpTool {
 		Integer total = null;
 		for (String relation : relations) {
 			if (relation.equals("total")) {
+				if (type == Type.FORM) {
+					total = formUsage(from, 0, ids, nodeId, new PageModelParameterBean()).getTotal();
+					continue;
+				}
 				TotalUsageResponse response = switch (type) {
 				case PAGE -> pageResource.getTotalPageUsage(ids, nodeId);
 				case FILE -> fileResource.getTotalUsageInfo(ids, nodeId);
@@ -292,12 +308,53 @@ public class GetRelatedTool extends AbstractMcpTool {
 					pageModel);
 			case TEMPLATES_LINKING_IMAGE -> imageResource.getTemplateUsageInfo(from, size, "name", "asc", ids,
 					nodeId, true);
+			case PAGES_USING_FORM -> formUsage(from, size, ids, nodeId, pageModel);
 			};
 			requireOk(response, "The usage '%s' of %s %d could not be loaded".formatted(relation, type.value(), id));
 			groups.add(group(relation, response, nodeId));
 		}
 
 		return new Result(ref, groups, total);
+	}
+
+	/**
+	 * Load a form, checking that the caller may view it. The usage lookup is in this module, the Forms API is not.
+	 * @param id form ID
+	 * @return reference to the form
+	 * @throws IllegalArgumentException if this server has no Forms
+	 * @throws Exception if the form cannot be loaded
+	 */
+	private static ObjectRef formRef(int id) throws Exception {
+		if (!Feature.FORMS.isAvailable()) {
+			throw new IllegalArgumentException("This server has no Forms.");
+		}
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Form form = MiscUtils.load(Form.class, Integer.toString(id), ObjectPermission.view);
+			ObjectRef ref = new ObjectRef(Type.FORM, id, form.getGlobalId() != null ? form.getGlobalId().toString() : null,
+					null, form.getName(), null, null, null, null);
+			trx.success();
+			return ref;
+		}
+	}
+
+	/**
+	 * Get the pages embedding a form
+	 * @param from offset
+	 * @param size page size
+	 * @param ids form IDs
+	 * @param nodeId node ID, may be null
+	 * @param pageModel page model
+	 * @return usage response
+	 * @throws Exception if the lookup fails
+	 */
+	private static PageUsageListResponse formUsage(int from, int size, List<Integer> ids, Integer nodeId,
+			PageModelParameterBean pageModel) throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PageUsageListResponse response = MiscUtils.getPageUsage(from, size, "name", "asc", Form.TYPE_FORM, ids,
+					MiscUtils.PageUsage.GENERAL, nodeId != null ? nodeId : 0, true, pageModel);
+			trx.success();
+			return response;
+		}
 	}
 
 	/**

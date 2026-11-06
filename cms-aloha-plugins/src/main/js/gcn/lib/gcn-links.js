@@ -160,6 +160,9 @@ define('gcn/gcn-links', [
 			if (formData.url && formData.url.anchor) {
 				// Add the anchor attribute immediatelly to make sure the information is available when reopening the dialog before saving the page (which replaces the link with an actual gtxalohalink tag).
 				link.setAttribute(ATTR_ANCHOR, formData.url.anchor);
+			} else {
+				// The anchor has been cleared (or never been set), so a previous value must not be kept.
+				link.removeAttribute(ATTR_ANCHOR);
 			}
 
 			return link;

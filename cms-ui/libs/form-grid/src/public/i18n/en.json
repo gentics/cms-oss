@@ -65,6 +65,9 @@
         "paste_element_success": "Element \"{{name}}\" inserted",
         "resize_element_width": "Resize width of the element",
         "fallback_element_title": "Unknown or unlabeled element",
+        "unknown_element_tag": "Unknown element",
+        "unknown_element_hint": "The element type \"{{type}}\" is not available in the configuration of the form type. The element cannot be edited, but it can be moved or deleted. Please contact your administrator.",
+        "unknown_element_hint_no_type": "No element type is defined for this element. The element cannot be edited, but it can be moved or deleted. Please contact your administrator.",
         "loading_preview": "Preview is loading ...",
         "preview_loading_error": "There has been an error while loading the Preview!"
     }

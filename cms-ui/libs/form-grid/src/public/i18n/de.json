@@ -65,6 +65,9 @@
         "paste_element_success": "Element \"{{name}}\" eingefügt",
         "resize_element_width": "Breite des Elements anpassen",
         "fallback_element_title": "Unbekanntes oder Unbenanntes element",
+        "unknown_element_tag": "Unbekanntes Element",
+        "unknown_element_hint": "Der Elementtyp \"{{type}}\" ist in der Konfiguration des Formulartyps nicht vorhanden. Das Element kann nicht bearbeitet, aber verschoben oder gelöscht werden. Bitte wenden Sie sich an Ihre Administration.",
+        "unknown_element_hint_no_type": "Für das Element ist kein Elementtyp angegeben. Das Element kann nicht bearbeitet, aber verschoben oder gelöscht werden. Bitte wenden Sie sich an Ihre Administration.",
         "loading_preview": "Lade vorschau ...",
         "preview_loading_error": "Es gab einen Fehler beim laden der Vorschau!"
     }

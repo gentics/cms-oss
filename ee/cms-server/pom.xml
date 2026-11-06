@@ -259,6 +259,10 @@
         </dependency>
         <dependency>
             <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-mcp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
             <artifactId>cms-multichannelling-core</artifactId>
         </dependency>
         <dependency>

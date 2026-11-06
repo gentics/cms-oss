@@ -14,6 +14,7 @@ The modules below `ee/` are:
 * `ee/cms-contentstaging`
 * `ee/cms-forms`
 * `ee/cms-keycloak`
+* `ee/cms-mcp`
 * `ee/cms-multichannelling`
 * `ee/cms-server`
 * `ee/formgen`

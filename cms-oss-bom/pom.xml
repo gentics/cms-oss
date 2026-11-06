@@ -308,6 +308,11 @@
 				<artifactId>cms-keycloak</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-mcp</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 
 			<!-- Clustering -->
 			<dependency>

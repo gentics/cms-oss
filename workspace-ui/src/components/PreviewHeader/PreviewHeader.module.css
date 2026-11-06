@@ -1,0 +1,68 @@
+.viewports {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+/* In a narrow column (below 1180 px the column is 42 % of the window, design.md §11) the buttons move to a
+   second line, on the right, instead of sliding over the title and the page select. */
+.head {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 8px;
+  /* With the padding at least 44 px high (design.md §7, "Panel-Kopf"). */
+  min-height: 32px;
+  padding: 6px 9px 6px 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* The title and the page select, on the left; the rest of the head sits on the right. The head wraps when
+   the title and the select at its smallest (`.pages`) no longer fit beside the buttons, instead of sliding
+   the buttons over them; on its line it takes the rest. */
+.lead {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+/* design.md §9 "Ansehen". */
+.titleIcon {
+  flex: none;
+  color: var(--interactive);
+}
+
+/* The page select, when the session wrote several pages: as wide as the page's name, at most 240 px,
+   which it cuts off. Counted at 160 px, the select's smallest width, when the head decides where to wrap. */
+.pages {
+  display: flex;
+  flex: 1 1 auto;
+  width: 160px;
+  min-width: 0;
+  max-width: 240px;
+}
+
+/* The selected part, named in the header, with a button to clear it. */
+.selection {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}

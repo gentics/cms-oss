@@ -29,9 +29,12 @@ const MARKED_CHANGES: ReadonlySet<Change> = new Set<Change>(['added', 'changed']
 const MAX_ITEMS = 200;
 
 // A status outside the contract's enum shows as pending (client rule: tolerate unknown enum values).
-// While a plan is drafted or proposed, a done item was carried out by an earlier version (rc.5): only
-// the next steps are shown. Done items are still sent on acceptance, as leaving one out is `422`.
-function hidesDone(status: PlanStatus): boolean {
+// While a plan is drafted or proposed, a done or failed item is from an earlier version (rc.5) and is not
+// run again (a run carries out only `pending` items): only the next steps are shown. Done items are still
+// sent on acceptance, as leaving one out is `422`.
+const FINISHED_ITEMS: ReadonlySet<string> = new Set(['done', 'failed']);
+
+function hidesFinished(status: PlanStatus): boolean {
     return status === 'drafting' || status === 'proposed';
 }
 
@@ -331,7 +334,7 @@ function PlanEditor({ rows, onChange: setRows, onDone, onCancel, invalid }: Plan
  */
 function GlanceTiles({ plan }: { plan: Plan }) {
     const { t } = useTranslation();
-    const entries = planGlance((plan.items ?? []).filter(({ status }) => !hidesDone(plan.status) || status !== 'done'));
+    const entries = planGlance((plan.items ?? []).filter(({ status }) => !hidesFinished(plan.status) || !FINISHED_ITEMS.has(status)));
     const withProgress = showsProgress(plan.status);
 
     if (!isWorthAGlance(entries)) {
@@ -479,7 +482,8 @@ export function PlanCard({ plan, sessionId, adjustment }: PlanCardProps) {
         );
     }
 
-    const shown = (adjusted ?? rowsOf(items)).filter(({ isDone }) => !hidesDone(plan.status) || !isDone);
+    const finishedIds = new Set(items.filter(({ status }) => FINISHED_ITEMS.has(status)).map(({ id }) => id));
+    const shown = (adjusted ?? rowsOf(items)).filter(({ key }) => !hidesFinished(plan.status) || !finishedIds.has(key));
     const shownBlocks = blocksOf(shown);
     // A plan of one item: it and its sub-steps on one level, numbered in order, with nothing to fold.
     const listedBlocks = shownBlocks.length === 1 ? shown.map((row) => [row]) : shownBlocks;

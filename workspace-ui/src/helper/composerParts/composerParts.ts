@@ -165,7 +165,7 @@ export function pageElementLabel({ tagName, constructName, textBlock, link }: Pa
 }
 
 // Translates the naming text of a part. The i18n key is `key`, plus `WithoutType` when the part has no
-// construct name, plus `Link` when a link is meant or `TextBlock` when a text block is (e.g. `replaceWithWithoutTypeTextBlock`).
+// construct name, plus `Link` when a link is meant or `TextBlock` when a text block is (e.g. `namingWithoutTypeTextBlock`).
 function nameElement(t: TFunction, key: string, { tagName, constructName, textBlock, link }: PageElementName): string {
     const name = `composer.pageElement.${key}${constructName ? '' : 'WithoutType'}${link ? 'Link' : (textBlock ? 'TextBlock' : '')}`;
 
@@ -196,31 +196,6 @@ export function pageElementParts({ page, text: naming }: PageElementAttrs, text:
 }
 
 /**
- * The text that names a part of a page and asks to replace its text, in the user's language: what
- * precedes the new text of a hand edit (`pageElementEditParts`). For a text block, also its position, kind
- * and the start of its text.
- */
-export function pageElementReplaceNaming(t: TFunction, element: PageElementName): string {
-    return nameElement(t, 'replaceWith', element);
-}
-
-/**
- * The parts of a hand edit of a part of a page (the preview's edit card): the page as a `reference`
- * part, the naming text (`pageElementReplaceNaming`) as a `text` part, then `text` as a `verbatim`
- * part the user wrote, unchanged, so that GenAIx writes it character-identical; its label names the part
- * as its token does (`pageElementLabel`, e.g. "Text · content_2"), for the check and the audit trail. The part is named
- * as for `PAGE_ELEMENT_NODE`; the request to replace its text is an interim wording, until GenAIx
- * defines how a hand edit is sent.
- */
-export function pageElementEditParts({ page, text: naming, ...element }: PageElementAttrs, text: string): UserMessagePart[] {
-    return [
-        { type: 'reference', ref: page },
-        { type: 'text', text: normalizeText(naming) },
-        { type: 'verbatim', text, source: 'user', label: pageElementLabel(element) },
-    ];
-}
-
-/**
  * The text that names a part of a page and asks to replace its image, in the user's language: what
  * precedes the chosen image (`pageElementImageParts`).
  */
@@ -242,46 +217,6 @@ export function pageElementImageParts({ page, text: naming }: PageElementAttrs, 
         { type: 'reference', ref: page },
         { type: 'text', text: normalizeText(naming) },
         ...(image ? [{ type: 'reference' as const, ref: image }] : []),
-    ];
-}
-
-/**
- * The text that names a link in a part of a page and asks to change it, in the user's language: what
- * precedes the changed text and target (`pageElementLinkParts`).
- */
-export function pageElementLinkNaming(t: TFunction, element: PageElementName): string {
-    return nameElement(t, 'changeLink', element);
-}
-
-/** A link's new text and target, each only when it changed; the target is a URL or a CMS page `reference`. */
-export interface PageElementLinkChange {
-    text?: string;
-    target?: string | ContextReference;
-}
-
-/**
- * The parts of a change of a link in a part of a page (the preview's link card): the page as a
- * `reference` part, the naming text (`pageElementLinkNaming`) as a `text` part, then per changed field
- * a text naming it followed by the new value, as a `verbatim` part the user wrote, unchanged and
- * labelled with the field, or as the `reference` part of a CMS page, as in `pageSettingsParts`. The
- * wording is interim, until GenAIx defines how a link change is sent.
- */
-export function pageElementLinkParts(t: TFunction, { page, text: naming }: PageElementAttrs, { text, target }: PageElementLinkChange): UserMessagePart[] {
-    const textLabel = t('composer.pageElement.linkText');
-    const targetLabel = t('composer.pageElement.linkTarget');
-
-    return [
-        { type: 'reference', ref: page },
-        { type: 'text', text: normalizeText(naming).trimEnd() },
-        ...(text !== undefined ? [{ type: 'text' as const, text: `\n${textLabel}: ` }, { type: 'verbatim' as const, text, source: 'user' as const, label: textLabel }] : []),
-        ...(target === undefined
-            ? []
-            : [
-                { type: 'text' as const, text: `\n${targetLabel}: ` },
-                typeof target === 'string'
-                    ? { type: 'verbatim' as const, text: target, source: 'user' as const, label: targetLabel }
-                    : { type: 'reference' as const, ref: target },
-            ]),
     ];
 }
 

@@ -96,6 +96,39 @@ function markedPage(withText = true): string {
         </div></body>`;
 }
 
+// The same text as an editable, as the CMS renders an editable text part with tagmarkers=true: the editable
+// carries the tag's markers and the id of its stored value (`GENTICS_EDITABLE_312`). `withLink` keeps the
+// link in the text.
+function editablePage(withLink = false): string {
+    const text = withLink ? 'Ab dem <a href="/elsewhere">1. Juli</a> gilt' : 'Ab dem 1. Juli gilt';
+
+    return `<!doctype html><body style="margin:0;font:16px sans-serif">
+        <header style="padding:20px">Kopfzeile</header>
+        <div data-gcn-pageid="9142" data-gcn-tagid="12" data-gcn-tagname="content_2" data-gcn-i18n-constructname="Text" id="GENTICS_EDITABLE_312" style="padding:30px"><p>${text}</p></div></body>`;
+}
+
+// Like `editablePage`, its editable holding `content` (HTML).
+function editablePageHolding(content: string): string {
+    return `<!doctype html><body style="margin:0;font:16px sans-serif">
+        <header style="padding:20px">Kopfzeile</header>
+        <div data-gcn-pageid="9142" data-gcn-tagid="12" data-gcn-tagname="content_2" data-gcn-i18n-constructname="Text" id="GENTICS_EDITABLE_312" style="padding:30px">${content}</div></body>`;
+}
+
+// The stored value of the editable in `editableListPage`: a paragraph, a list and a table, so each is a text block.
+const LIST_AND_TABLE = '<p>Ab dem 1. Juli gilt</p><ul><li>Erstens</li><li>Zweitens</li></ul><table><tbody><tr><td>Dienstag</td><td>Inhalt</td></tr></tbody></table>';
+
+// Like `editablePage`, its editable holding `LIST_AND_TABLE`.
+function editableListPage(): string {
+    return `<!doctype html><body style="margin:0;font:16px sans-serif">
+        <header style="padding:20px">Kopfzeile</header>
+        <div data-gcn-pageid="9142" data-gcn-tagid="12" data-gcn-tagname="content_2" data-gcn-i18n-constructname="Text" id="GENTICS_EDITABLE_312" style="padding:30px">${LIST_AND_TABLE}</div></body>`;
+}
+
+// The tag `content_2` of page 9142 as the CMS stores it, its text part being the editable above.
+function contentTag(text: string) {
+    return { id: 12, name: 'content_2', constructId: 1, active: true, properties: { text: { id: 312, type: 'RICHTEXT', stringValue: text } } };
+}
+
 test.describe('Selecting a part in the preview', () => {
     test.use({ viewport: { width: 1280, height: 800 } });
 
@@ -206,6 +239,23 @@ async function stubSending(page: Page) {
     });
 
     return posted;
+}
+
+// The CMS behind a direct save of page 9142: `GET /rest/page/load/9142` answers the page with `tags`,
+// `POST /rest/page/save/9142` with `saveCode`. Returns the bodies saved.
+async function stubCmsSave(page: Page, tags: Record<string, unknown>, saveCode = 'OK') {
+    const saved: unknown[] = [];
+
+    await page.route((url) => url.pathname === '/rest/page/load/9142', (route) => route.fulfill({
+        json: { responseInfo: { responseCode: 'OK' }, page: { id: 9142, name: 'Neue Nutzungsbedingungen', folderId: 7, cdate: 0, edate: 0, tags } },
+    }));
+    await page.route((url) => url.pathname === '/rest/page/save/9142', (route) => {
+        saved.push(route.request().postDataJSON());
+
+        return route.fulfill({ json: { responseInfo: { responseCode: saveCode } } });
+    });
+
+    return saved;
 }
 
 test.describe('Referencing a part of the preview in the chat', () => {
@@ -319,6 +369,41 @@ test.describe('Feedback on a part of the preview', () => {
         await expect(page.locator('[data-dim]')).toHaveCount(0);
     });
 
+    test('starts a new line on Shift+Enter, keeps card and text when sending fails, and starts empty when opened again', async ({ page }) => {
+        await stubS1Session(page, [markedPage()]);
+        await stubSending(page);
+        // Sending fails (registered later, so it answers first).
+        await page.route((url) => url.pathname === `/rest/proxy/genaix/sessions/${SESSION}/messages`, (route) => (
+            route.request().method() === 'POST' ? route.fulfill({ status: 500, json: {} }) : route.fallback()
+        ));
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Ab dem').click();
+        await page.getByRole('menuitem', { name: 'Give feedback' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Text' });
+        const field = card.getByRole('textbox', { name: 'What should happen to this spot?' });
+
+        await field.fill('   ');
+        await expect(card.getByRole('button', { name: 'Send' })).toBeDisabled();
+
+        await field.fill('erste Zeile');
+        await field.press('Shift+Enter');
+        await field.pressSequentially('zweite Zeile');
+        await expect(field).toHaveValue('erste Zeile\nzweite Zeile');
+
+        await field.press('Enter');
+        await expect(card).toBeVisible();
+        await expect(field).toHaveValue('erste Zeile\nzweite Zeile');
+        await expect(card.getByRole('button', { name: 'Send' })).toBeEnabled();
+
+        await card.getByRole('button', { name: 'Cancel' }).click();
+        await expect(card).toBeHidden();
+        await page.frameLocator(frameSelector).getByText('Ab dem').click();
+        await page.getByRole('menuitem', { name: 'Give feedback' }).click();
+        await expect(field).toHaveValue('');
+    });
+
     test('moves the part and the typed feedback into the chat instead', async ({ page }) => {
         await stubS1Session(page, [markedPage()]);
         await page.goto(`#/sessions/${SESSION}`);
@@ -376,104 +461,549 @@ test.describe('Feedback on a part of the preview', () => {
     });
 });
 
-test.describe('Writing a part yourself', () => {
+test.describe('Writing a part yourself, in place', () => {
     test.use({ viewport: { width: 1280, height: 800 } });
 
     const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
 
-    test('starts from the part\'s text and sends the new text verbatim, as the page plus the part named in the text', async ({ page }) => {
-        await stubS1Session(page, [markedPage()]);
-        const posted = await stubSending(page);
-
+    // Starts the editing in place of the text part of `editablePage` and returns its paragraph, editable now, and the bar.
+    async function startEditing(page: Page) {
         await page.goto(`#/sessions/${SESSION}`);
         await page.frameLocator(frameSelector).getByText('Ab dem').click();
         await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
 
-        const card = page.getByRole('dialog', { name: 'Text' });
-        const field = card.getByRole('textbox', { name: 'New text' });
+        return { text: page.frameLocator(frameSelector).locator('[contenteditable="true"]'), bar: page.getByRole('toolbar', { name: 'Text' }) };
+    }
 
-        await expect(card.getByText('Text · content_2')).toBeVisible();
-        await expect(field).toBeFocused();
-        await expect(field).toHaveValue('Ab dem 1. Juli gilt');
-
-        await field.fill('Ab dem 1. August\ngilt');
-        await field.press('Control+Enter');
-
-        await expect.poll(() => posted.length).toBe(1);
-        expect(posted[0]).toEqual({
-            parts: [
-                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
-                { type: 'text', text: ' – part "content_2" (Text), replace its text with: ' },
-                { type: 'verbatim', text: 'Ab dem 1. August\ngilt', source: 'user', label: 'Text · content_2' },
-            ],
-        });
-        await expect(card).toBeHidden();
-    });
-
-    test('closes the edit card and clears the selection with a click into the page outside the parts, without sending', async ({ page }) => {
-        await stubS1Session(page, [markedPage()]);
+    test('makes the text editable where it is and saves it directly in the CMS on Ctrl+Enter, then reloads the page', async ({ page }) => {
+        const { loadedUrls } = await stubS1Session(page, [editablePage()]);
         const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') });
+        const { text, bar } = await startEditing(page);
 
-        await page.goto(`#/sessions/${SESSION}`);
-        await page.frameLocator(frameSelector).getByText('Ab dem').click();
-        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await expect(text).toHaveText('Ab dem 1. Juli gilt');
+        await expect(text).toBeFocused();
+        await expect(bar.getByText('19 characters')).toBeVisible();
 
-        const card = page.getByRole('dialog', { name: 'Text' });
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Ab dem 1. August');
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('gilt');
+        await expect(bar.getByText('21 characters')).toBeVisible();
+        await page.keyboard.press('Control+Enter');
 
-        await card.getByRole('textbox', { name: 'New text' }).fill('Ab dem 1. August gilt');
-        await page.frameLocator(frameSelector).getByText('Kopfzeile').click();
-
-        await expect(card).toBeHidden();
-        await expect(page.getByText('Selected: Text')).toBeHidden();
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({ page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: '<p>Ab dem 1. August<br>gilt</p>' } } } } }, unlock: true });
+        await expect(page.getByText('Saved in the CMS.')).toBeVisible();
+        await expect(bar).toBeHidden();
+        // The frame shows the saved page: no `preview.updated` comes for a direct save.
+        await expect.poll(() => loadedUrls.length).toBe(2);
         expect(posted).toHaveLength(0);
     });
 
-    test('sends nothing for an unchanged text and says so', async ({ page }) => {
-        await stubS1Session(page, [markedPage()]);
-        const posted = await stubSending(page);
+    test('edits a text that holds a link, keeping the link', async ({ page }) => {
+        await stubS1Session(page, [editablePage(true)]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem <a href="/elsewhere">1. Juli</a> gilt</p>') });
 
         await page.goto(`#/sessions/${SESSION}`);
-        await page.frameLocator(frameSelector).getByText('Ab dem').click();
+        await page.frameLocator(frameSelector).getByText('gilt').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable="true"]')).toBeFocused();
+
+        await page.keyboard.type(' sofort');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: '<p>Ab dem <a href="/elsewhere">1. Juli</a> gilt sofort</p>' } } } } },
+            unlock: true,
+        });
+    });
+
+    test('formats a word bold from the bar and saves the text as HTML', async ({ page }) => {
+        await stubS1Session(page, [editablePage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') });
+        const { text, bar } = await startEditing(page);
+
+        await text.getByText('Ab dem 1. Juli gilt').dblclick({ position: { x: 100, y: 8 } });
+        await bar.getByRole('button', { name: 'Bold' }).click();
+        await expect(bar.getByRole('button', { name: 'Bold' })).toHaveAttribute('aria-pressed', 'true');
+        await expect(text.locator('b')).toHaveText('Juli');
+        await bar.getByRole('button', { name: 'Apply' }).click();
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: '<p>Ab dem 1. <b>Juli</b> gilt</p>' } } } } },
+            unlock: true,
+        });
+    });
+
+    test('changes the URL of a link in the text from the bar', async ({ page }) => {
+        await stubS1Session(page, [editablePage(true)]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem <a href="/elsewhere">1. Juli</a> gilt</p>') });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('gilt').click();
         await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
 
-        const card = page.getByRole('dialog', { name: 'Text' });
+        const bar = page.getByRole('toolbar', { name: 'Text' });
 
-        await card.getByRole('textbox', { name: 'New text' }).fill('Ab dem  1. Juli gilt ');
-        await card.getByRole('button', { name: 'Apply' }).click();
+        // A click on the link inside the text being edited places the caret there.
+        await page.frameLocator(frameSelector).getByText('1. Juli').click();
+        await bar.getByRole('button', { name: 'Link' }).click();
+        await expect(page.getByLabel('URL')).toHaveValue('/elsewhere');
+        await page.getByLabel('URL').fill('https://example.com/juli');
+        await page.getByLabel('URL').press('Enter');
+        await expect(page.frameLocator(frameSelector).getByRole('link', { name: '1. Juli' })).toHaveAttribute('href', 'https://example.com/juli');
+        await bar.getByRole('button', { name: 'Apply' }).click();
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: '<p>Ab dem <a href="https://example.com/juli">1. Juli</a> gilt</p>' } } } } },
+            unlock: true,
+        });
+    });
+
+    test('keeps a tag embedded in the text as it is and saves it back as such', async ({ page }) => {
+        const linkTag = '<a data-gcn-pageid="9142" data-gcn-tagid="13" data-gcn-tagname="link_1" data-gcn-i18n-constructname="Link" href="/kontakt">Kontakt</a>';
+
+        await stubS1Session(page, [editablePageHolding(`<p>Siehe ${linkTag} hier</p>`)]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Siehe <node link_1> hier</p>') });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('hier').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const linkInEditor = page.frameLocator(frameSelector).locator('[contenteditable="true"] [data-gcn-tagname="link_1"]');
+
+        await expect(linkInEditor).toHaveAttribute('contenteditable', 'false');
+        await page.keyboard.type(' bitte');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: '<p>Siehe <node link_1> hier bitte</p>' } } } } },
+            unlock: true,
+        });
+    });
+
+    test('selects and edits a paragraph that holds a tag, among other blocks of the text', async ({ page }) => {
+        const linkTag = '<a data-gcn-pageid="9142" data-gcn-tagid="13" data-gcn-tagname="link_1" data-gcn-i18n-constructname="Link" href="/kontakt">Kontakt</a>';
+        const content = `<p>Erstens</p><p>Siehe ${linkTag} hier</p><ul><li>Punkt</li></ul>`;
+
+        await stubS1Session(page, [editablePageHolding(content)]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Erstens</p><p>Siehe <node link_1> hier</p><ul><li>Punkt</li></ul>') });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('hier').click();
+        await expect(page.getByText('Selected: Paragraph · Text')).toBeVisible();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await page.keyboard.type(' bitte');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: '<p>Erstens</p><p>Siehe <node link_1> hier bitte</p><ul><li>Punkt</li></ul>' } } } } },
+            unlock: true,
+        });
+
+        // The tag itself stays a part of its own.
+        await page.frameLocator(frameSelector).getByRole('link', { name: 'Kontakt' }).click();
+        await expect(page.getByText('Selected: Link · Link')).toBeVisible();
+    });
+
+    test('does not follow a link in the text being edited, neither a plain link nor a tag', async ({ page }) => {
+        const linkTag = '<a data-gcn-pageid="9142" data-gcn-tagid="13" data-gcn-tagname="link_1" data-gcn-i18n-constructname="Link" href="/kontakt">Kontakt</a>';
+
+        await stubS1Session(page, [editablePageHolding(`<p>Siehe <a href="/elsewhere">dort</a> und ${linkTag} bitte</p>`)]);
+        await stubSending(page);
+        await stubCmsSave(page, { content_2: contentTag('<p>Siehe <a href="/elsewhere">dort</a> und <node link_1> bitte</p>') });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('bitte').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const bar = page.getByRole('toolbar', { name: 'Text' });
+        const editor = page.frameLocator(frameSelector).locator('[contenteditable="true"]');
+        const frame = page.frames().find((each) => each.url().includes('alohapage'))!;
+        const url = frame.url();
+
+        await editor.getByRole('link', { name: 'dort' }).click();
+        await editor.getByRole('link', { name: 'Kontakt' }).click();
+        await editor.getByRole('link', { name: 'Kontakt' }).click({ modifiers: ['Control'] });
+
+        // Still the same page, still editing: the links are followed once the editing has ended.
+        expect(frame.url()).toBe(url);
+        await expect(editor).toHaveText('Siehe dort und Kontakt bitte');
+        await expect(bar).toBeVisible();
+        expect(page.context().pages()).toHaveLength(1);
+    });
+
+    test('does not offer writing a text with content the editor cannot keep', async ({ page }) => {
+        await stubS1Session(page, [editablePageHolding('<p>Ab dem <span class="date">1. Juli</span> gilt</p>')]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem <span class="date">1. Juli</span> gilt</p>') });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('gilt').click();
+
+        await expect(page.getByRole('menuitem', { name: 'Reference in the chat' })).toBeVisible();
+        await expect(page.getByRole('menuitem', { name: 'Write it yourself' })).toHaveCount(0);
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable]')).toHaveCount(0);
+        expect(saved).toHaveLength(0);
+    });
+
+    test('selects a part that is no editable as a whole, offering to write only its own text', async ({ page }) => {
+        const block = '<div data-gcn-pageid="9142" data-gcn-tagid="14" data-gcn-tagname="facts_1" data-gcn-i18n-constructname="Key facts"><h3>Fakten</h3><ul><li>Drei Tage</li><li>Freier Eintritt</li></ul></div>';
+        const heading = '<div data-gcn-pageid="9142" data-gcn-tagid="15" data-gcn-tagname="subheading_1" data-gcn-i18n-constructname="Subheading"><h2>Programm</h2></div>';
+
+        await stubS1Session(page, [editablePageHolding(`<p>Intro</p>${block}${heading}`)]);
+        await stubSending(page);
+        await stubCmsSave(page, { content_2: contentTag('<p>Intro</p><node facts_1><node subheading_1>') });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        // Its heading and list are no selections of their own: nothing in it can be written directly.
+        await page.frameLocator(frameSelector).getByText('Freier Eintritt').click();
+        await expect(page.getByText('Selected: Key facts')).toBeVisible();
+        await expect(page.locator('[data-edit-target]')).toHaveCount(0);
+        await expect(page.getByRole('menuitem', { name: 'Reference in the chat' })).toBeVisible();
+        await expect(page.getByRole('menuitem', { name: 'Write it yourself' })).toHaveCount(0);
+
+        // A block whose only text is its own text part still offers it.
+        await page.keyboard.press('Escape');
+        await page.frameLocator(frameSelector).getByRole('heading', { name: 'Programm' }).click();
+        await expect(page.getByText('Selected: Subheading')).toBeVisible();
+        await expect(page.getByRole('menuitem', { name: 'Write it yourself' })).toBeVisible();
+    });
+
+    test('keeps editing and says why when the CMS refuses the save', async ({ page }) => {
+        await stubS1Session(page, [editablePage()]);
+        await stubSending(page);
+        await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') }, 'LOCKED');
+        const { text, bar } = await startEditing(page);
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Ab dem 1. August gilt');
+        await bar.getByRole('button', { name: 'Apply' }).click();
+
+        await expect(page.getByText('Saving in the CMS failed.')).toBeVisible();
+        await expect(page.getByText('The CMS object is locked by someone else.')).toBeVisible();
+        await expect(bar).toBeVisible();
+        await expect(text).toHaveText('Ab dem 1. August gilt');
+    });
+
+    test('cancels with Escape and gives the text back', async ({ page }) => {
+        await stubS1Session(page, [editablePage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') });
+        const { bar } = await startEditing(page);
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Etwas anderes');
+        await page.keyboard.press('Escape');
+
+        await expect(bar).toBeHidden();
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable]')).toHaveCount(0);
+        await expect(page.frameLocator(frameSelector).getByText('Ab dem 1. Juli gilt')).toBeVisible();
+        // Escape ends the editing, not the selection.
+        await expect(page.getByText('Selected: Text')).toBeVisible();
+        expect(saved).toHaveLength(0);
+    });
+
+    test('edits only the clicked item of a list, keeping the list, while the selection and the chat stay on the list', async ({ page }) => {
+        await stubS1Session(page, [editableListPage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag(LIST_AND_TABLE) });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Zweitens').click();
+        await expect(page.getByText('Selected: List · Text')).toBeVisible();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const text = page.frameLocator(frameSelector).locator('[contenteditable="true"]');
+
+        await expect(text).toHaveCount(1);
+        await expect(text).toHaveText('Zweitens');
+        await expect(text).toBeFocused();
+        await expect(page.getByRole('toolbar', { name: 'List · Text' })).toBeVisible();
+
+        await page.keyboard.type(' und Drittens');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: LIST_AND_TABLE.replace('>Zweitens<', '>Zweitens und Drittens<') } } } } },
+            unlock: true,
+        });
+        await expect(page.getByText('Saved in the CMS.')).toBeVisible();
+    });
+
+    // Whether two boxes (page coordinates) are the same, give or take rounding.
+    function sameBox(a: { x: number; y: number; width: number; height: number } | null, b: { x: number; y: number; width: number; height: number } | null) {
+        return Boolean(a && b) && ['x', 'y', 'width', 'height'].every((key) => Math.abs(a![key as 'x'] - b![key as 'x']) <= 2);
+    }
+
+    test('outlines the clicked item, not the list, in the menu and while editing it', async ({ page }) => {
+        await stubS1Session(page, [editableListPage()]);
+        await stubSending(page);
+        await stubCmsSave(page, { content_2: contentTag(LIST_AND_TABLE) });
+
+        await page.goto(`#/sessions/${SESSION}`);
+
+        const item = page.frameLocator(frameSelector).getByText('Zweitens');
+
+        await item.click();
+        await expect(page.getByText('Selected: List · Text')).toBeVisible();
+        await expect.poll(async () => sameBox(await page.locator('[data-edit-target]').boundingBox(), await item.boundingBox())).toBe(true);
+
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await expect(page.locator('[data-edit-target]')).toHaveCount(0);
+        await expect.poll(async () => sameBox(await page.locator('[data-editing]').boundingBox(), await item.boundingBox())).toBe(true);
+    });
+
+    test('moves the editing to another item of the list on a click, keeping the first one\'s text, and saves both at once', async ({ page }) => {
+        await stubS1Session(page, [editableListPage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag(LIST_AND_TABLE) });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Erstens').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await page.keyboard.type(' A');
+
+        const editor = page.frameLocator(frameSelector).locator('[contenteditable="true"]');
+
+        await page.frameLocator(frameSelector).getByText('Zweitens').click();
+        await expect(editor).toHaveText('Zweitens');
+        await expect(page.frameLocator(frameSelector).getByText('Erstens A')).toBeVisible();
+        await expect(page.getByRole('toolbar', { name: 'List · Text' })).toBeVisible();
+        await expect(page.getByText('Selected: List · Text')).toBeVisible();
+
+        await page.keyboard.press('End');
+        await page.keyboard.type(' B');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: LIST_AND_TABLE.replace('>Erstens<', '>Erstens A<').replace('>Zweitens<', '>Zweitens B<') } } } } },
+            unlock: true,
+        });
+    });
+
+    test('moves the editing between the cells of a table and saves both at once', async ({ page }) => {
+        await stubS1Session(page, [editableListPage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag(LIST_AND_TABLE) });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Dienstag').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Mittwoch');
+        await page.frameLocator(frameSelector).getByText('Inhalt').click();
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable="true"]')).toHaveText('Inhalt');
+        await page.keyboard.press('End');
+        await page.keyboard.type(' neu');
+        await page.getByRole('toolbar', { name: 'Table · Text' }).getByRole('button', { name: 'Apply' }).click();
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: LIST_AND_TABLE.replace('>Dienstag<', '>Mittwoch<').replace('>Inhalt<', '>Inhalt neu<') } } } } },
+            unlock: true,
+        });
+    });
+
+    test('gives the whole list back on Escape after the editing moved between its items', async ({ page }) => {
+        await stubS1Session(page, [editableListPage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag(LIST_AND_TABLE) });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Erstens').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await page.keyboard.type(' A');
+        await page.frameLocator(frameSelector).getByText('Zweitens').click();
+        await page.keyboard.press('End');
+        await page.keyboard.type(' B');
+        await page.keyboard.press('Escape');
+
+        await expect(page.getByRole('toolbar', { name: 'List · Text' })).toBeHidden();
+        await expect(page.frameLocator(frameSelector).locator('ul')).toHaveText('ErstensZweitens');
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable]')).toHaveCount(0);
+        await expect(page.getByText('Selected: List · Text')).toBeVisible();
+        expect(saved).toHaveLength(0);
+    });
+
+    test('ends the editing of the list on a click outside it, giving the whole list back and clearing the selection', async ({ page }) => {
+        await stubS1Session(page, [editableListPage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag(LIST_AND_TABLE) });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Erstens').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await page.keyboard.type(' A');
+        await page.frameLocator(frameSelector).getByText('Zweitens').click();
+        // The table: another block of the text, outside the list.
+        await page.frameLocator(frameSelector).getByText('Dienstag').click();
+
+        await expect(page.getByRole('toolbar', { name: 'List · Text' })).toBeHidden();
+        await expect(page.frameLocator(frameSelector).locator('ul')).toHaveText('ErstensZweitens');
+        await expect(page.getByText(/^Selected: /)).toBeHidden();
+        expect(saved).toHaveLength(0);
+    });
+
+    test('edits only the clicked cell of a table', async ({ page }) => {
+        await stubS1Session(page, [editableListPage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag(LIST_AND_TABLE) });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Dienstag').click();
+        await expect(page.getByText('Selected: Table · Text')).toBeVisible();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable="true"]')).toHaveText('Dienstag');
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Mittwoch');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: LIST_AND_TABLE.replace('>Dienstag<', '>Mittwoch<') } } } } },
+            unlock: true,
+        });
+    });
+
+    test('keeps editing and names the reason in the bar when the CMS cannot take the text', async ({ page }) => {
+        const heading = '<div data-gcn-pageid="9142" data-gcn-tagid="15" data-gcn-tagname="subheading_1" data-gcn-i18n-constructname="Subheading"><h2>Programm</h2></div>';
+        // The block shows one text, but its tag stores two text parts: which one to write is not clear.
+        const subheading = { id: 15, name: 'subheading_1', constructId: 16, active: true, properties: { title: { id: 151, type: 'STRING', stringValue: 'Programm' }, subtitle: { id: 152, type: 'STRING', stringValue: '' } } };
+
+        await stubS1Session(page, [editablePageHolding(`<p>Intro</p>${heading}`)]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Intro</p><node subheading_1>'), subheading_1: subheading });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('heading', { name: 'Programm' }).click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await page.keyboard.type(' 2026');
+
+        const bar = page.getByRole('toolbar', { name: 'Subheading' });
+
+        await bar.getByRole('button', { name: 'Apply' }).click();
+
+        await expect(bar.getByRole('alert')).toHaveText('It is not clear which of its parts to write. Reference it in the chat to have it changed there.');
+        await expect(bar).toBeVisible();
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable="true"]')).toHaveText('Programm 2026');
+        expect(saved).toHaveLength(0);
+    });
+
+    test('cancels with Escape after Apply took the focus out of the text', async ({ page }) => {
+        await stubS1Session(page, [editablePage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') }, 'LOCKED');
+        const { text, bar } = await startEditing(page);
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Etwas anderes');
+        await bar.getByRole('button', { name: 'Apply' }).click();
+        await expect(page.getByText('The CMS object is locked by someone else.')).toBeVisible();
+        await expect(text).not.toBeFocused();
+        await page.keyboard.press('Escape');
+
+        await expect(bar).toBeHidden();
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable]')).toHaveCount(0);
+        await expect(page.frameLocator(frameSelector).getByText('Ab dem 1. Juli gilt')).toBeVisible();
+        // As from the text itself: Escape ends the editing, not the selection.
+        await expect(page.getByText('Selected: Text')).toBeVisible();
+        expect(saved).toHaveLength(1);
+    });
+
+    test('cancels with a click into the page outside the text, and clears the selection, without saving', async ({ page }) => {
+        await stubS1Session(page, [editablePage()]);
+        const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') });
+        const { bar } = await startEditing(page);
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Ab dem 1. August gilt');
+        // At the header's right end: the edit bar above the text covers its middle.
+        await page.frameLocator(frameSelector).getByText('Kopfzeile').click({ position: { x: 560, y: 30 } });
+
+        await expect(bar).toBeHidden();
+        await expect(page.frameLocator(frameSelector).getByText('Ab dem 1. Juli gilt')).toBeVisible();
+        await expect(page.getByText('Selected: Text')).toBeHidden();
+        expect(saved).toHaveLength(0);
+        expect(posted).toHaveLength(0);
+    });
+
+    test('saves nothing for an unchanged text and says so', async ({ page }) => {
+        await stubS1Session(page, [editablePage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') });
+        const { bar } = await startEditing(page);
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Ab dem  1. Juli gilt ');
+        await bar.getByRole('button', { name: 'Apply' }).click();
 
         await expect(page.getByText('Nothing changed, so nothing was sent.')).toBeVisible();
-        await expect(card).toBeHidden();
-        expect(posted).toHaveLength(0);
+        await expect(bar).toBeHidden();
+        expect(saved).toHaveLength(0);
     });
 
-    test('cannot apply an empty text, and closes with its cancel button without sending', async ({ page }) => {
-        await stubS1Session(page, [markedPage()]);
-        const posted = await stubSending(page);
+    test('cannot apply an empty text, and cancels with its button, giving the text back', async ({ page }) => {
+        await stubS1Session(page, [editablePage()]);
+        await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') });
+        const { bar } = await startEditing(page);
 
-        await page.goto(`#/sessions/${SESSION}`);
-        await page.frameLocator(frameSelector).getByText('Ab dem').click();
-        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+        await page.keyboard.press('Control+A');
+        await page.keyboard.press('Delete');
+        await expect(bar.getByRole('button', { name: 'Apply' })).toBeDisabled();
 
-        const card = page.getByRole('dialog', { name: 'Text' });
+        await bar.getByRole('button', { name: 'Cancel' }).click();
 
-        await card.getByRole('textbox', { name: 'New text' }).fill(' ');
-        await expect(card.getByRole('button', { name: 'Apply' })).toBeDisabled();
+        await expect(bar).toBeHidden();
+        await expect(page.frameLocator(frameSelector).getByText('Ab dem 1. Juli gilt')).toBeVisible();
+        expect(saved).toHaveLength(0);
+    });
 
-        await card.getByRole('button', { name: 'Cancel' }).click();
+    test('does not reload the page for an update while editing, and reloads it once the editing ends', async ({ page }) => {
+        const { loadedUrls, sendNextUpdate } = await stubS1Session(page, [editablePage()], [[], ['content_2']]);
 
-        await expect(card).toBeHidden();
-        expect(posted).toHaveLength(0);
+        await stubSending(page);
+        const { text } = await startEditing(page);
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Halb geschrieben');
+        sendNextUpdate();
+
+        // The update has come (it tints the changed part), but the frame was not reloaded under the editing.
+        await expect(page.locator('[data-changed-part="content_2"]')).toHaveCount(1);
+        expect(loadedUrls).toHaveLength(1);
+        await expect(text).toHaveText('Halb geschrieben');
+
+        await page.keyboard.press('Escape');
+        await expect.poll(() => loadedUrls.length).toBe(2);
     });
 });
 
 // A page as GenAIx creates it: the headline and the paragraphs in one Aloha text, i.e. in one marked part
-// (`pagecontent`). `headline` sets the headline's text; `null` leaves it out, as if it had been removed.
+// (`pagecontent`), an editable (`GENTICS_EDITABLE_932`). `headline` sets the headline's text; `null` leaves it
+// out, as if it had been removed.
 function blockPage(headline: string | null = 'headline 1'): string {
     const heading = headline === null ? '' : `<h1>${headline}</h1>`;
 
     return `<!doctype html><body style="margin:0;font:16px sans-serif">
         <section class="docs-content">
-            <div data-gcn-pageid="9142" data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" style="padding:30px">${heading}
+            <div data-gcn-pageid="9142" data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" id="GENTICS_EDITABLE_932" style="padding:30px">${heading}
 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p><p>Second paragraph</p></div>
         </section></body>`;
 }
@@ -509,32 +1039,34 @@ test.describe('Selecting a block of a part', () => {
         await expect(label).toBeHidden();
     });
 
-    test('writes the headline alone and sends it verbatim, the block named by its place, kind and text', async ({ page }) => {
+    test('writes the headline alone and saves its editable directly in the CMS, the other blocks as they are', async ({ page }) => {
+        const rest = '\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p><p>Second paragraph</p>';
+        const pagecontent = { id: 932, name: 'pagecontent', constructId: 1, active: true, properties: { text: { id: 932, type: 'RICHTEXT', stringValue: `<h1>headline 1</h1>${rest}` } } };
+
         await stubS1Session(page, [blockPage()]);
         const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { pagecontent });
 
         await page.goto(`#/sessions/${SESSION}`);
         await page.frameLocator(frameSelector).getByRole('heading', { name: 'headline 1' }).click();
         await expect(page.getByText('Selected: Heading 1 · Aloha Text (lang)')).toBeVisible();
         await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
 
-        const card = page.getByRole('dialog', { name: 'Heading 1 · Aloha Text (lang)' });
-        const field = card.getByRole('textbox', { name: 'New text' });
+        const headline = page.frameLocator(frameSelector).locator('[contenteditable="true"]');
 
-        await expect(card.getByText('Aloha Text (lang) · pagecontent · Heading 1')).toBeVisible();
-        await expect(field).toHaveValue('headline 1');
+        await expect(page.getByRole('toolbar', { name: 'Heading 1 · Aloha Text (lang)' })).toBeVisible();
+        await expect(headline).toHaveText('headline 1');
 
-        await field.fill('A new headline');
-        await field.press('Control+Enter');
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('A new headline');
+        await page.keyboard.press('Control+Enter');
 
-        await expect.poll(() => posted.length).toBe(1);
-        expect(posted[0]).toEqual({
-            parts: [
-                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
-                { type: 'text', text: ' – part "pagecontent" (Aloha Text (lang)), block 1 of 3 (Heading 1 "headline 1"), replace its text with: ' },
-                { type: 'verbatim', text: 'A new headline', source: 'user', label: 'Aloha Text (lang) · pagecontent · Heading 1' },
-            ],
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { pagecontent: { ...pagecontent, properties: { text: { type: 'RICHTEXT', stringValue: `<h1>A new headline</h1>${rest}` } } } } },
+            unlock: true,
         });
+        expect(posted).toHaveLength(0);
     });
 
     test('references a paragraph in the chat as the block of its part', async ({ page }) => {
@@ -591,7 +1123,7 @@ test.describe('Selecting a block of a part', () => {
     test('selects a heading of a text that holds an image block, and the image block as a part of its own', async ({ page }) => {
         // As the CMS renders a new page: an image block between the paragraphs, with empty paragraphs around it.
         await stubS1Session(page, [`<!doctype html><body style="margin:0;font:16px sans-serif">
-            <div data-gcn-pageid="9142" data-gcn-tagid="967" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" style="padding:30px"><p>Die Gemeinde Bruchtal unterstützt Kleinbetriebe.</p><p></p><div data-gcn-pageid="9142" data-gcn-tagid="970" data-gcn-tagname="manimage_1" data-gcn-i18n-constructname="[Handbuch] Bild" class="aloha-block">
+            <div data-gcn-pageid="9142" data-gcn-tagid="967" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" id="GENTICS_EDITABLE_967" style="padding:30px"><p>Die Gemeinde Bruchtal unterstützt Kleinbetriebe.</p><p></p><div data-gcn-pageid="9142" data-gcn-tagid="970" data-gcn-tagname="manimage_1" data-gcn-i18n-constructname="[Handbuch] Bild" class="aloha-block">
                 <figure><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Infografik" width="200" height="80"></figure>
             </div><p></p><h2>Wer kann einen Antrag stellen?</h2><ul><li>Betriebe mit Sitz in Bruchtal</li></ul></div></body>`]);
         const posted = await stubSending(page);
@@ -600,7 +1132,7 @@ test.describe('Selecting a block of a part', () => {
         await page.frameLocator(frameSelector).getByRole('heading', { name: 'Wer kann einen Antrag stellen?' }).click();
         await expect(page.getByText('Selected: Heading 2 · Aloha Text (lang)')).toBeVisible();
         await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
-        await expect(page.getByRole('dialog', { name: 'Heading 2 · Aloha Text (lang)' }).getByRole('textbox', { name: 'New text' })).toHaveValue('Wer kann einen Antrag stellen?');
+        await expect(page.frameLocator(frameSelector).locator('[contenteditable="true"]')).toHaveText('Wer kann einen Antrag stellen?');
         await page.keyboard.press('Escape');
 
         await page.frameLocator(frameSelector).getByRole('img', { name: 'Infografik' }).click();
@@ -663,10 +1195,13 @@ test.describe('Swapping an image', () => {
         }));
     }
 
-    test('offers another image only for an image part, and sends the picked one as the page plus the part named in the text', async ({ page }) => {
+    test('offers another image only for an image part, and saves the picked CMS image directly in the CMS', async ({ page }) => {
+        const content1 = { id: 10, name: 'content_1', constructId: 7, active: true, properties: { src: { id: 110, type: 'IMAGE', imageId: 4400, nodeId: 3 } } };
+
         await stubS1Session(page, [imagePage()]);
         await stubCmsImages(page);
         const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { content_1: content1 });
 
         await page.goto(`#/sessions/${SESSION}`);
 
@@ -688,15 +1223,43 @@ test.describe('Swapping an image', () => {
         await card.getByRole('radio', { name: 'team-workshop-2026.jpg' }).click();
         await card.getByRole('button', { name: 'Use image' }).click();
 
-        await expect.poll(() => posted.length).toBe(1);
-        expect(posted[0]).toEqual({
-            parts: [
-                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
-                { type: 'text', text: ' – part "content_1" (Image), replace its image with: ' },
-                { type: 'reference', ref: { type: 'image', id: '4411', node_id: 3, label: 'team-workshop-2026.jpg' } },
-            ],
-        });
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({ page: { tags: { content_1: { ...content1, properties: { src: { type: 'IMAGE', imageId: 4411, nodeId: 3 } } } } }, unlock: true });
         await expect(card).toBeHidden();
+        expect(posted).toHaveLength(0);
+    });
+
+    test('keeps the image card open and names the reason when the image cannot be saved, and starts over when opened again', async ({ page }) => {
+        // An image tag whose stored parts hold no image part.
+        const content1 = { id: 10, name: 'content_1', constructId: 7, active: true, properties: { caption: { id: 111, type: 'STRING', stringValue: 'Hero' } } };
+
+        await stubS1Session(page, [imagePage()]);
+        await stubCmsImages(page);
+        const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { content_1: content1 });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByRole('img', { name: 'Hero' }).click();
+        await page.getByRole('menuitem', { name: 'Swap the image' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Image' });
+
+        await card.getByRole('radio', { name: 'team-workshop-2026.jpg' }).click();
+        await card.getByRole('button', { name: 'Use image' }).click();
+
+        await expect(card.getByRole('alert')).toHaveText('Its image part cannot be found. Reference it in the chat to have it changed there.');
+        await expect(card).toBeVisible();
+        expect(saved).toHaveLength(0);
+
+        await card.getByRole('button', { name: 'Cancel' }).click();
+        await expect(card).toBeHidden();
+        await page.frameLocator(frameSelector).getByRole('img', { name: 'Hero' }).click();
+        await page.getByRole('menuitem', { name: 'Swap the image' }).click();
+
+        await expect(card.getByRole('alert')).toHaveCount(0);
+        await expect(card.getByRole('radio', { name: 'team-workshop-2026.jpg' })).not.toBeChecked();
+        await expect(card.getByRole('button', { name: 'Use image' })).toBeDisabled();
+        expect(posted).toHaveLength(0);
     });
 
     test('uploads an image from the device into the session and sends it as the page, the part named in the text and the file', async ({ page }) => {
@@ -828,11 +1391,12 @@ test.describe('Editing a link', () => {
 
     const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
 
-    // A text part with a link to a CMS page, as the CMS renders it for the preview (`DynamicUrlFactory`), and a link to another site.
+    // A text part with a link tag to a CMS page, rendered as the marked `<a>` with the URL the CMS gives it for
+    // the preview (`DynamicUrlFactory`), and a plain link to another site.
     function linkPage(): string {
         return `<!doctype html><body style="margin:0;font:16px sans-serif">
             <p data-gcn-pageid="9142" data-gcn-tagid="12" data-gcn-tagname="content_2" data-gcn-i18n-constructname="Text" style="padding:30px">
-                Es gelten die <a href="/alohapage?nodeid=3&amp;language=1&amp;real=newview&amp;realid=9150">AGB</a> und die <a href="https://example.com/regeln">Regeln</a>.
+                Es gelten die <a data-gcn-pageid="9142" data-gcn-tagid="891" data-gcn-tagname="gtxalohapagelink_1" data-gcn-i18n-constructname="Aloha Link" href="/alohapage?nodeid=3&amp;language=1&amp;real=newview&amp;realid=9150">AGB</a> und die <a href="https://example.com/regeln">Regeln</a>.
             </p></body>`;
     }
 
@@ -854,9 +1418,10 @@ test.describe('Editing a link', () => {
         }));
     }
 
-    test('selects a link on its own and sends its new text and URL word for word, the link named by its place and text', async ({ page }) => {
-        await stubS1Session(page, [markedPage()]);
+    test('selects a link on its own and saves its new text and URL directly in the CMS, in its editable', async ({ page }) => {
+        await stubS1Session(page, [editablePage(true)]);
         const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { content_2: contentTag('<p>Ab dem <a href="/elsewhere">1. Juli</a> gilt</p>') });
 
         await page.goto(`#/sessions/${SESSION}`);
 
@@ -893,30 +1458,28 @@ test.describe('Editing a link', () => {
         await card.getByRole('textbox', { name: 'URL' }).fill('https://example.com/agb');
         await card.getByRole('button', { name: 'Apply' }).click();
 
-        await expect.poll(() => posted.length).toBe(1);
-        expect(posted[0]).toEqual({
-            parts: [
-                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
-                { type: 'text', text: ' – part "content_2" (Text), link 1 of 1 ("1. Juli"), change it:' },
-                { type: 'text', text: '\nLink text: ' },
-                { type: 'verbatim', text: '1. August', source: 'user', label: 'Link text' },
-                { type: 'text', text: '\nTarget: ' },
-                { type: 'verbatim', text: 'https://example.com/agb', source: 'user', label: 'Target' },
-            ],
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { content_2: { ...contentTag(''), properties: { text: { type: 'RICHTEXT', stringValue: '<p>Ab dem <a href="https://example.com/agb">1. August</a> gilt</p>' } } } } },
+            unlock: true,
         });
         await expect(card).toBeHidden();
+        expect(posted).toHaveLength(0);
     });
 
-    test('shows the CMS page a link leads to and sends another page picked as its reference', async ({ page }) => {
+    test('shows the CMS page a link tag leads to and saves another page picked as its target', async ({ page }) => {
+        const linkTag = { id: 891, name: 'gtxalohapagelink_1', constructId: 4, active: true, properties: { text: { id: 3098, type: 'STRING', stringValue: 'AGB' }, url: { id: 3099, type: 'PAGE', pageId: 9150 } } };
+
         await stubS1Session(page, [linkPage()]);
         await stubCmsPages(page);
         const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { gtxalohapagelink_1: linkTag });
 
         await page.goto(`#/sessions/${SESSION}`);
         await page.frameLocator(frameSelector).getByRole('link', { name: 'AGB' }).click();
         await page.getByRole('menuitem', { name: 'Edit link' }).click();
 
-        const card = page.getByRole('dialog', { name: 'Link · Text' });
+        const card = page.getByRole('dialog', { name: 'Link · Aloha Link' });
 
         await expect(card.getByRole('radio', { name: 'CMS page' })).toBeChecked();
         await expect(card.getByRole('radio', { name: 'AGB' })).toBeChecked();
@@ -927,15 +1490,32 @@ test.describe('Editing a link', () => {
         await card.getByRole('radio', { name: 'Impressum' }).click();
         await card.getByRole('button', { name: 'Apply' }).click();
 
-        await expect.poll(() => posted.length).toBe(1);
-        expect(posted[0]).toEqual({
-            parts: [
-                { type: 'reference', ref: { type: 'page', id: '9142', node_id: 3 } },
-                { type: 'text', text: ' – part "content_2" (Text), link 1 of 2 ("AGB"), change it:' },
-                { type: 'text', text: '\nTarget: ' },
-                { type: 'reference', ref: { type: 'page', id: '9151', node_id: 3, label: 'Impressum' } },
-            ],
-        });
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({ page: { tags: { gtxalohapagelink_1: { ...linkTag, properties: { url: { type: 'PAGE', pageId: 9151, nodeId: 3 } } } } }, unlock: true });
+        expect(posted).toHaveLength(0);
+    });
+
+    test('keeps the card open and names the reason when the link cannot be saved directly, and applies on Enter', async ({ page }) => {
+        await stubS1Session(page, [linkPage()]);
+        await stubCmsPages(page);
+        const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, {});
+
+        await page.goto(`#/sessions/${SESSION}`);
+        // A plain link in a text part that is no editable: it cannot be saved directly.
+        await page.frameLocator(frameSelector).getByRole('link', { name: 'Regeln' }).click();
+        await page.getByRole('menuitem', { name: 'Edit link' }).click();
+
+        const card = page.getByRole('dialog', { name: 'Link · Text' });
+
+        await card.getByRole('textbox', { name: 'Link text' }).fill('Hausordnung');
+        await card.getByRole('textbox', { name: 'Link text' }).press('Enter');
+
+        await expect(card.getByRole('alert')).toHaveText('This spot cannot be saved directly in the CMS. Reference it in the chat to have it changed there.');
+        await expect(card).toBeVisible();
+        await expect(card.getByRole('textbox', { name: 'Link text' })).toHaveValue('Hausordnung');
+        expect(saved).toHaveLength(0);
+        expect(posted).toHaveLength(0);
     });
 
     test('sends nothing for an unchanged link and says so', async ({ page }) => {
@@ -1112,4 +1692,77 @@ test.describe('The preview header in a narrow column', () => {
             expect(outsideOf(header, boxes)).toEqual([]);
         });
     }
+});
+
+test.describe('A tag with several editables in the preview', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
+
+    // As the CMS renders a tag with two editable parts with tagmarkers=true: both carry the tag's markers,
+    // each has the id of its own stored value.
+    function twoEditablesPage(): string {
+        return `<!doctype html><body style="margin:0;font:16px sans-serif">
+            <div data-gcn-pageid="9142" data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_101" style="padding:20px"><h2>Erste Überschrift</h2></div>
+            <div data-gcn-pageid="9142" data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_102" style="padding:20px"><p>Zweiter Teil, Absatz eins</p><p>Absatz zwei</p></div>
+        </body>`;
+    }
+
+    test('selects a paragraph in the second editable and keeps it across a reload', async ({ page }) => {
+        const { loadedUrls, sendNextUpdate } = await stubS1Session(page, [twoEditablesPage()]);
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Absatz zwei').click();
+
+        await expect(page.getByText('Selected: Paragraph · Teaser')).toBeVisible();
+        await expect(page.getByText('The selected part is no longer on the page')).toHaveCount(0);
+
+        sendNextUpdate();
+        await expect.poll(() => loadedUrls.length).toBe(2);
+        await expect(page.frameLocator(frameSelector).getByText('Absatz zwei')).toBeVisible();
+        await expect(page.getByText('Selected: Paragraph · Teaser')).toBeVisible();
+        await expect(page.getByText('The selected part is no longer on the page')).toHaveCount(0);
+    });
+
+    test('tints every editable of a changed tag', async ({ page }) => {
+        await stubS1Session(page, [twoEditablesPage()], [['teaser']]);
+        await page.goto(`#/sessions/${SESSION}`);
+
+        await expect(page.frameLocator(frameSelector).getByText('Absatz zwei')).toBeVisible();
+        await expect(page.locator('[data-changed-part="teaser"]')).toHaveCount(2);
+    });
+
+    test('writes a paragraph of the second editable and saves only that editable directly in the CMS', async ({ page }) => {
+        const teaser = {
+            id: 20, name: 'teaser', constructId: 2, active: true,
+            properties: {
+                title: { id: 101, type: 'RICHTEXT', stringValue: '<h2>Erste Überschrift</h2>' },
+                text: { id: 102, type: 'RICHTEXT', stringValue: '<p>Zweiter Teil, Absatz eins</p><p>Absatz zwei</p>' },
+            },
+        };
+
+        await stubS1Session(page, [twoEditablesPage()]);
+        const posted = await stubSending(page);
+        const saved = await stubCmsSave(page, { teaser });
+
+        await page.goto(`#/sessions/${SESSION}`);
+        await page.frameLocator(frameSelector).getByText('Absatz zwei').click();
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const paragraph = page.frameLocator(frameSelector).locator('[contenteditable="true"]');
+
+        await expect(page.getByRole('toolbar', { name: 'Paragraph · Teaser' })).toBeVisible();
+        await expect(paragraph).toHaveText('Absatz zwei');
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Absatz drei');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => saved.length).toBe(1);
+        expect(saved[0]).toEqual({
+            page: { tags: { teaser: { ...teaser, properties: { text: { type: 'RICHTEXT', stringValue: '<p>Zweiter Teil, Absatz eins</p><p>Absatz drei</p>' } } } } },
+            unlock: true,
+        });
+        expect(posted).toHaveLength(0);
+    });
 });

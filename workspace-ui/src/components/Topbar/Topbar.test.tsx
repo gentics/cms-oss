@@ -21,6 +21,7 @@ describe('Topbar', () => {
     });
 
     afterEach(async () => {
+        vi.unstubAllGlobals();
         delete document.documentElement.dataset.theme;
         document.documentElement.lang = 'en';
         await i18n.changeLanguage('en');
@@ -123,6 +124,19 @@ describe('Topbar', () => {
 
         expect(await screen.findByRole('button', { name: 'Switch to Deutsch' })).toBeInTheDocument();
         expect(document.documentElement).toHaveAttribute('lang', 'en');
+    });
+
+    it('switches only the Workspace\'s language, without telling the CMS', async () => {
+        const user = userEvent.setup();
+        const fetchMock = vi.fn<typeof fetch>();
+
+        vi.stubGlobal('fetch', fetchMock);
+        renderWithProviders(<Topbar />);
+
+        await user.click(await screen.findByRole('button', { name: 'Switch to Deutsch' }));
+
+        expect(await screen.findByRole('button', { name: 'Zu English wechseln' })).toBeInTheDocument();
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('switches between light and dark', async () => {

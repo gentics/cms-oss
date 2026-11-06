@@ -1,5 +1,7 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
+import { EDITABLE, editLeafOf } from '@/helper/cmsEditable/cmsEditable';
+
 /** The selector of the parts of a CMS page: the CMS marks them with `tagmarkers=true` (edit mode without Aloha Editor, `AlohaPageServlet`). */
 const MARKED = '[data-gcn-tagid]';
 
@@ -45,6 +47,11 @@ export interface PreviewElement {
     tagName: string;
     /** The name of its type (construct), e.g. "Text" (`data-gcn-i18n-constructname`); empty when missing. */
     constructName: string;
+    /**
+     * The marked element's own `id`, when it has one (an editable: `GENTICS_EDITABLE_<id>`). A tag with several
+     * editables marks each of them with the same tag name; the id says which of them is meant.
+     */
+    elementId?: string;
     /** Set when one text block of the part is meant instead of the whole part (see `textBlocksOf`). */
     textBlock?: PreviewTextBlock;
     /** Set when one link of the part is meant (see `linksOf`); never together with `textBlock`. */
@@ -76,6 +83,7 @@ export function previewElementOf(element: Element, textBlock?: Element | null, l
     const annotations = {
         tagName: element.getAttribute('data-gcn-tagname') ?? '',
         constructName: element.getAttribute('data-gcn-i18n-constructname') ?? '',
+        ...(element.id ? { elementId: element.id } : {}),
     };
 
     if (link) {
@@ -144,18 +152,21 @@ function excerptOf(textBlock: Element): string {
  *
  * Skipped: empty elements (like the `<p></p>` the editor leaves around an image), and elements that
  * are or contain another marked part (like an image block). Those are selected as parts of their own.
+ * A link tag in the text (a marked `<a>`, inline) does not count: its paragraph is a text block, the link
+ * tag a part of its own inside it.
  *
- * Returns `[]`, so the part is selected as a whole, if fewer than two text blocks remain or the part
- * itself shows an image (`isImagePart`).
+ * Returns `[]`, so the part is selected as a whole, if fewer than two text blocks remain, the part
+ * itself shows an image (`isImagePart`), or it is no editable (`EDITABLE`): only an editable's text blocks can be
+ * written directly, so only an editable is split; any other part is selected, and referenced in the chat, as a whole.
  */
 export function textBlocksOf(part: Element): Element[] {
-    if (isImagePart(part)) {
+    if (isImagePart(part) || !part.matches(EDITABLE)) {
         return [];
     }
 
     const textBlocks = Array.from(part.children).filter((child) => textBlockKindOf(child) !== undefined
         && !child.matches(MARKED)
-        && !child.querySelector(MARKED)
+        && !child.querySelector(`${MARKED}:not(a)`)
         && partTextOf(child) !== '');
 
     return textBlocks.length >= 2 ? textBlocks : [];
@@ -237,15 +248,24 @@ function boxOf(element: Element): ElementBox {
     return { top, left, width, height };
 }
 
-function findPart(doc: Document, tagName: string): Element | null {
-    return doc.querySelector(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`);
+// The part `element` is in: the marked element with its `elementId` (`null` if that one is gone, not another
+// element of the tag), else the tag's first marked element.
+function findPart(doc: Document, { tagName, elementId }: PreviewElement): Element | null {
+    if (elementId === undefined) {
+        return doc.querySelector(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`);
+    }
+
+    const element = doc.getElementById(elementId);
+
+    return element?.matches(MARKED) && element.getAttribute('data-gcn-tagname') === tagName ? element : null;
 }
 
 // Finds `element` on the current page: its part, the link at `link.index` or the text block at `textBlock.index`
 // in it. `null` if the part is gone, if after a reload the part has no link at that position any more,
 // or if that position no longer holds a text block of the same kind (e.g. the headline was removed).
-function findTarget(doc: Document, { tagName, textBlock, link }: PreviewElement): Element | null {
-    const part = findPart(doc, tagName);
+export function findTarget(doc: Document, element: PreviewElement): Element | null {
+    const { textBlock, link } = element;
+    const part = findPart(doc, element);
 
     if (part && link) {
         return linksOf(part)[link.index] ?? null;
@@ -269,13 +289,18 @@ function findTarget(doc: Document, { tagName, textBlock, link }: PreviewElement)
  * following a link in it; a click into the page outside the parts and Escape in the frame clear the
  * selection. The boxes follow scrolling,
  * resizing and changes to the page. `changed` (tag names, from `changed_elements`) gives the boxes of
- * the parts the last CMS write changed; a name not on the page has none. `textOf` reads the current
+ * the parts the last CMS write changed, one per marked element of each tag; a name not on the page has none. `textOf` reads the current
  * text of a part, text block or link (`partTextOf`), `hasImage` whether it shows an image (`isImagePart`; a
- * text block or link never does), `currentOf` returns a part, text block or link as it is on the page now (see there).
+ * text block or link never does), `currentOf` returns a part, text block or link as it is on the page now (see there),
+ * `nodesOf` its elements on the page, for a direct edit, with the node of the click that selected it.
+ * `editingBox` is the box of the element being edited (`editing`), `targetBox` the one of the item or cell of the
+ * selection the last click was in (`editLeafOf`; none when that is the selection itself).
  *
  * Reading the frame needs the page to come from the Workspace's own origin; for any other page there
  * is no document to read, and nothing is hovered or selected. `onSelectedGone` is called when a loaded
- * page lacks the selected part, or no longer has the selected text block or link (`findTarget`). New callbacks on
+ * page lacks the selected part, or no longer has the selected text block or link (`findTarget`). `editing` is the
+ * element being edited in place, if any (see the listeners); a click outside it goes to `onClickWhileEditing` first,
+ * which returns whether it handled it (e.g. by moving the editing there). New callbacks on
  * each render do not re-attach anything.
  */
 export function usePreviewElements(
@@ -284,17 +309,27 @@ export function usePreviewElements(
     onSelect: (element: PreviewElement | null) => void,
     onSelectedGone: () => void,
     changed: readonly string[] = [],
+    editing: Element | null = null,
+    onClickWhileEditing: (target: Node) => boolean = () => false,
 ) {
-    const callbacks = useRef({ onSelect, onSelectedGone });
+    const callbacks = useRef({ onSelect, onSelectedGone, onClickWhileEditing });
+    // The element being edited in place, read by the frame's listeners without attaching them again.
+    const editingRef = useRef(editing);
+    // The node of the click that made the last selection, for `nodesOf`.
+    const clickedRef = useRef<Node | null>(null);
 
     useEffect(() => {
-        callbacks.current = { onSelect, onSelectedGone };
+        callbacks.current = { onSelect, onSelectedGone, onClickWhileEditing };
+        editingRef.current = editing;
     });
 
     const [doc, setDoc] = useState<Document | null>(null);
     const [hovered, setHovered] = useState<{ element: PreviewElement; box: ElementBox } | null>(null);
     const [selectedBox, setSelectedBox] = useState<ElementBox | null>(null);
-    const [changedBoxes, setChangedBoxes] = useState<{ tagName: string; box: ElementBox }[]>([]);
+    // The element being edited, and the item or cell of the selection the last click was in (`editLeafOf`).
+    const [editingBox, setEditingBox] = useState<ElementBox | null>(null);
+    const [targetBox, setTargetBox] = useState<ElementBox | null>(null);
+    const [changedBoxes, setChangedBoxes] = useState<{ key: string; tagName: string; box: ElementBox }[]>([]);
     // One string, so a new array with the same names does not measure again.
     const changedKey = changed.join('\n');
     const [hoveredTarget, setHoveredTarget] = useState<{ node: Element; element: PreviewElement } | null>(null);
@@ -313,13 +348,21 @@ export function usePreviewElements(
         setDoc(loaded);
     }, [frameRef]);
 
-    // Listens in the frame's document: hover, click to select, Escape to clear.
+    // Listens in the frame's document: hover, click to select, Escape to clear. While an element is edited in
+    // place (`editing`), nothing is outlined, a click in it places the caret, a click elsewhere in the page
+    // clears the selection, and Escape is left to the editing.
     useEffect(() => {
         if (!doc) {
             return;
         }
 
         function handleMouseOver(event: MouseEvent) {
+            if (editingRef.current) {
+                setHoveredTarget(null);
+
+                return;
+            }
+
             const target = targetOf(event.target);
 
             // Same part or text block as before: keep the old state, so a mouse move inside it doesn't re-render and re-measure.
@@ -331,7 +374,32 @@ export function usePreviewElements(
         }
 
         function handleClick(event: MouseEvent) {
+            const editingNode = editingRef.current;
+
+            if (editingNode?.contains(event.target as Node | null)) {
+                return;
+            }
+
+            if (editingNode) {
+                event.preventDefault();
+
+                // The caller may move the editing there (e.g. another item of the same list); else it ends.
+                const target = event.target as Node | null;
+
+                if (target && callbacks.current.onClickWhileEditing(target)) {
+                    clickedRef.current = target;
+
+                    return;
+                }
+
+                callbacks.current.onSelect(null);
+
+                return;
+            }
+
             const target = targetOf(event.target);
+
+            clickedRef.current = target ? event.target as Node | null : null;
 
             if (target) {
                 event.preventDefault();
@@ -342,7 +410,7 @@ export function usePreviewElements(
         }
 
         function handleKeyDown(event: KeyboardEvent) {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' && !editingRef.current) {
                 callbacks.current.onSelect(null);
             }
         }
@@ -368,6 +436,8 @@ export function usePreviewElements(
         if (!doc || !frame || !view) {
             setHovered(null);
             setSelectedBox(null);
+            setEditingBox(null);
+            setTargetBox(null);
             setChangedBoxes([]);
 
             return;
@@ -380,11 +450,18 @@ export function usePreviewElements(
 
             setHovered(hoveredTarget?.node.isConnected ? { element: hoveredTarget.element, box: boxOf(hoveredTarget.node) } : null);
             setSelectedBox(selectedNode ? boxOf(selectedNode) : null);
-            setChangedBoxes(changedKey.split('\n').flatMap((tagName) => {
-                const node = tagName ? findPart(doc!, tagName) : null;
+            setEditingBox(editing?.isConnected ? boxOf(editing) : null);
 
-                return node ? [{ tagName, box: boxOf(node) }] : [];
-            }));
+            // Only an item or cell inside the selection, not the selection itself.
+            // Only inside an editable, the one place an item or cell can be written on its own.
+            const clicked = clickedRef.current;
+            const isInEditable = selected ? findPart(doc!, selected)?.matches(EDITABLE) ?? false : false;
+            const target = isInEditable && selectedNode && clicked && selectedNode.contains(clicked) ? editLeafOf(selectedNode, clicked) : null;
+
+            setTargetBox(target && target !== selectedNode ? boxOf(target) : null);
+            // `changed_elements` names tags: every marked element of a changed tag (one per editable) is tinted.
+            setChangedBoxes(changedKey.split('\n').flatMap((tagName) => (tagName ? Array.from(doc!.querySelectorAll(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`)) : [])
+                .map((node, index) => ({ key: `${tagName}#${index}`, tagName, box: boxOf(node) }))));
 
             if (selected && !selectedNode) {
                 callbacks.current.onSelectedGone();
@@ -413,7 +490,7 @@ export function usePreviewElements(
             mutations.disconnect();
             sizes.disconnect();
         };
-    }, [doc, frameRef, hoveredTarget, selected, changedKey]);
+    }, [doc, frameRef, hoveredTarget, selected, changedKey, editing]);
 
     // The current text of a part, text block or link, read from the page; empty if the page no longer has it.
     const textOf = useCallback((element: PreviewElement) => {
@@ -425,7 +502,7 @@ export function usePreviewElements(
     // Whether a part shows an image (`isImagePart`). Always false for a text block (`textBlocksOf` never splits a
     // part that shows an image) and for a link, which is edited as a link.
     const hasImage = useCallback((element: PreviewElement) => {
-        const node = doc && !element.textBlock && !element.link ? findPart(doc, element.tagName) : null;
+        const node = doc && !element.textBlock && !element.link ? findPart(doc, element) : null;
 
         return node ? isImagePart(node) : false;
     }, [doc]);
@@ -434,7 +511,7 @@ export function usePreviewElements(
     // and after a reload a text block's or link's text (or a link's target) may have changed, so it is re-read
     // before a message is sent. Returns `element` unchanged if the page no longer has it.
     const currentOf = useCallback((element: PreviewElement) => {
-        const part = doc && (element.textBlock || element.link) ? findPart(doc, element.tagName) : null;
+        const part = doc && (element.textBlock || element.link) ? findPart(doc, element) : null;
         const node = part ? findTarget(doc!, element) : null;
 
         if (!part || !node) {
@@ -444,5 +521,16 @@ export function usePreviewElements(
         return element.link ? previewElementOf(part, null, node) : previewElementOf(part, node);
     }, [doc]);
 
-    return { onFrameLoad, isFrameReadable: Boolean(doc), hovered, selectedBox, changedBoxes, textOf, hasImage, currentOf };
+    // The selected part and the element meant in it (the part, a text block or a link) as they are on the
+    // page now, for an edit that is saved directly in the CMS; `null` if the page no longer has them.
+    // `clicked` is the node of the click that selected it, while it is still in `target` (else `null`).
+    const nodesOf = useCallback((element: PreviewElement) => {
+        const part = doc ? findPart(doc, element) : null;
+        const target = part ? findTarget(doc!, element) : null;
+        const clicked = clickedRef.current;
+
+        return part && target ? { part, target, clicked: clicked && target.contains(clicked) ? clicked : null } : null;
+    }, [doc]);
+
+    return { onFrameLoad, isFrameReadable: Boolean(doc), hovered, selectedBox, editingBox, targetBox, changedBoxes, textOf, hasImage, currentOf, nodesOf };
 }

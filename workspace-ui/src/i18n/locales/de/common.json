@@ -67,7 +67,8 @@
         },
         "edit": {
             "write": "Selbst schreiben",
-            "label": "Neuer Text",
+            "characters_one": "{{count}} Zeichen",
+            "characters_other": "{{count}} Zeichen",
             "cancel": "Abbrechen",
             "apply": "Übernehmen",
             "unchanged": "Nichts geändert, daher nichts gesendet."
@@ -98,6 +99,20 @@
             "empty": "Keine Seiten gefunden.",
             "failed": "Die Seiten konnten nicht geladen werden."
         },
+        "save": {
+            "saved": "Im CMS gespeichert.",
+            "failed": "Speichern im CMS ist fehlgeschlagen.",
+            "hint": "Verweisen Sie im Chat darauf, um es dort ändern zu lassen.",
+            "refused": {
+                "noEditable": "Diese Stelle lässt sich nicht direkt im CMS speichern.",
+                "formatting": "Sie enthält Formatierungen, Links oder eingebettete Elemente, die reiner Text verlieren würde.",
+                "unsupportedContent": "Sie enthält Elemente oder Formatierungen, die der Editor nicht erhalten kann.",
+                "unclearPart": "Es ist nicht klar, welcher ihrer Teile geschrieben werden soll.",
+                "pageTarget": "Nur ein Link-Tag kann auf eine CMS-Seite zeigen.",
+                "noImagePart": "Ihr Bildteil lässt sich nicht finden.",
+                "notFound": "Das CMS hat diesen Teil nicht mehr."
+            }
+        },
         "settings": {
             "open": "Seiteneinstellungen",
             "title": "Seiteneinstellungen",
@@ -115,6 +130,19 @@
             "created": "Erstellt",
             "edited": "Zuletzt bearbeitet"
         }
+    },
+    "inlineEditor": {
+        "formatting": "Formatierung",
+        "bold": "Fett",
+        "italic": "Kursiv",
+        "underline": "Unterstrichen",
+        "strike": "Durchgestrichen",
+        "subscript": "Tiefgestellt",
+        "superscript": "Hochgestellt",
+        "link": "Link",
+        "url": "URL",
+        "applyLink": "Übernehmen",
+        "removeLink": "Link entfernen"
     },
     "workspace": {
         "resizeLeft": "Breite der linken Spalte",
@@ -137,6 +165,7 @@
         "startFailed": "Die Session konnte nicht gestartet werden"
     },
     "composer": {
+        "sideQuestion": "Nebenfrage",
         "file": "Datei",
         "verbatim": "Verbatim",
         "typeInstead": "Stattdessen tippen",
@@ -189,20 +218,12 @@
         "pageElement": {
             "naming": " – Teil \"{{tagName}}\" ({{constructName}}): ",
             "namingWithoutType": " – Teil \"{{tagName}}\": ",
-            "replaceWith": " – Teil \"{{tagName}}\" ({{constructName}}), ersetze seinen Text durch: ",
-            "replaceWithWithoutType": " – Teil \"{{tagName}}\", ersetze seinen Text durch: ",
             "replaceImageWith": " – Teil \"{{tagName}}\" ({{constructName}}), ersetze sein Bild durch: ",
             "replaceImageWithWithoutType": " – Teil \"{{tagName}}\", ersetze sein Bild durch: ",
             "namingTextBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
             "namingWithoutTypeTextBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“): ",
-            "replaceWithTextBlock": " – Teil \"{{tagName}}\" ({{constructName}}), Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: ",
-            "replaceWithWithoutTypeTextBlock": " – Teil \"{{tagName}}\", Block {{position}} von {{count}} ({{kind}} „{{excerpt}}“), ersetze seinen Text durch: ",
             "namingLink": " – Teil \"{{tagName}}\" ({{constructName}}), Link {{position}} von {{count}} („{{excerpt}}“): ",
-            "namingWithoutTypeLink": " – Teil \"{{tagName}}\", Link {{position}} von {{count}} („{{excerpt}}“): ",
-            "changeLinkLink": " – Teil \"{{tagName}}\" ({{constructName}}), Link {{position}} von {{count}} („{{excerpt}}“), ändere ihn:",
-            "changeLinkWithoutTypeLink": " – Teil \"{{tagName}}\", Link {{position}} von {{count}} („{{excerpt}}“), ändere ihn:",
-            "linkText": "Linktext",
-            "linkTarget": "Ziel"
+            "namingWithoutTypeLink": " – Teil \"{{tagName}}\", Link {{position}} von {{count}} („{{excerpt}}“): "
         },
         "pageSettings": {
             "change": " – ändere seine Seiteneinstellungen:",
@@ -743,6 +764,15 @@
             "heading": "Feedback zu dieser Stelle",
             "close": "Fertig"
         },
+        "cardLayout": {
+            "title": "Kartenlayout",
+            "open": "Link ändern",
+            "heading": "Link",
+            "cancel": "Abbrechen",
+            "label": "Linktext",
+            "value": "Nutzungsbedingungen",
+            "apply": "Übernehmen"
+        },
         "dialog": {
             "title": "Dialog",
             "open": "Dialog öffnen",
@@ -849,7 +879,8 @@
             "rate_limited": "Zu viele Anfragen. Bitte versuchen Sie es gleich noch einmal.",
             "service_unavailable": "Der KI-Dienst ist derzeit nicht verfügbar.",
             "plan_not_revisable": "Dieser Plan ist endgültig abgeschlossen und kann nicht mehr geändert werden.",
-            "dependency_order": "Ein Schritt steht vor einem Schritt, von dem er abhängt."
+            "dependency_order": "Ein Schritt steht vor einem Schritt, von dem er abhängt.",
+            "revise_plan_missing": "Es gibt keinen Plan zum Überarbeiten."
         },
         "cms": {
             "AUTHREQUIRED": "Bitte melden Sie sich im CMS an.",

@@ -482,7 +482,9 @@ public class MigrateForms extends InitJob {
 		migrated.put("adminEmailPageId", toMigrate.data().optional("mailsource_pageid").map(n -> n.asInt()).orElse(0));
 		migrated.put("adminEmailNodeId", toMigrate.data().optional("mailsource_nodeid").map(n -> n.asInt()).orElse(0));
 		migrated.set("adminEmailSubject", toMigrate.data().optional("mailsubject_i18n").orElseGet(() -> mapper.createObjectNode()));
-		migrated.set("adminEmailTemplate", toMigrate.data().optional("mailtemp_i18n").orElseGet(() -> mapper.createObjectNode()));
+		if (toMigrate.data() instanceof ObjectNode dataObject) {
+			migrated.put("adminEmailTemplate", getStringFromI18n(dataObject, "mailtemp_i18n").orElse(""));
+		}
 		migrated.put("templateContext", toMigrate.data().optional("templateContext").map(n -> n.asText()).orElse(""));
 		migrated.put("successPageId", toMigrate.successPageId());
 		migrated.put("successNodeId", toMigrate.successNodeId());

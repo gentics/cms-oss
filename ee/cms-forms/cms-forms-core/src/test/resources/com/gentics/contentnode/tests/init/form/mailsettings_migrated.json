@@ -1,15 +1,12 @@
 {
-    "adminEmailAddress": "",
+    "adminEmailAddress": "admin@gentics.com",
     "adminEmailSubject": {
         "de": "Es sind neue Daten da",
         "en": "New data arrived"
     },
-    "adminEmailPageId": 0,
-    "adminEmailNodeId": 0,
-    "adminEmailTemplate": {
-        "de": "useremail",
-        "en": "useremail"
-    },
+    "adminEmailPageId": 4712,
+    "adminEmailNodeId": 43,
+    "adminEmailTemplate": "useremail",
     "successPageId": 4711,
     "successNodeId": 42,
     "successUrl": {},

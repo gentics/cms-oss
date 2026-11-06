@@ -1,1 +1,2 @@
 com.gentics.contentnode.init.MigrateForms
+com.gentics.contentnode.init.FixMigratedAdminEmailTemplate

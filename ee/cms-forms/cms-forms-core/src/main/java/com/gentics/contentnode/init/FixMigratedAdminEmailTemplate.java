@@ -28,12 +28,12 @@ public class FixMigratedAdminEmailTemplate extends InitJob {
 	/**
 	 * Pattern to find incorrectly migrated adminMailTemplate attributes (migrated as objects, but should be strings)
 	 */
-	protected final static String INCORRECT_ADMINMAIL_TEMPLATE_PATTERN = "%\"adminEmailTemplate\":{%";
+	protected final static String INCORRECT_ADMINMAIL_TEMPLATE_PATTERN = "\"adminEmailTemplate\":\\s*\\{";
 
 	/**
 	 * SQL Statement to get up to 100 incorrectly migrated forms
 	 */
-	protected final static String SQL_INCORRECTLY_MIGRATED_FORMS = "SELECT id, data FROM form WHERE data LIKE ? LIMIT 100";
+	protected final static String SQL_INCORRECTLY_MIGRATED_FORMS = "SELECT id, data FROM form WHERE data REGEXP ? LIMIT 100";
 
 	/**
 	 * SQL Statement to update form data
@@ -43,7 +43,7 @@ public class FixMigratedAdminEmailTemplate extends InitJob {
 	/**
 	 * SQL Statement to get up to 100 incorrectly migrated form versions
 	 */
-	protected final static String SQL_INCORRECTLY_MIGRATED_FORM_VERSIONS = "SELECT auto_id, id, data FROM form_nodeversion WHERE data LIKE ? LIMIT 100";
+	protected final static String SQL_INCORRECTLY_MIGRATED_FORM_VERSIONS = "SELECT auto_id, id, data FROM form_nodeversion WHERE data REGEXP ? LIMIT 100";
 
 	/**
 	 * SQL Statement to update form version data

@@ -6,7 +6,10 @@
     },
     "adminEmailPageId": 4712,
     "adminEmailNodeId": 43,
-    "adminEmailTemplate": "useremail",
+    "adminEmailTemplate": {
+        "de": "useremail",
+        "en": "useremail"
+    },
     "successPageId": 4711,
     "successNodeId": 42,
     "successUrl": {},

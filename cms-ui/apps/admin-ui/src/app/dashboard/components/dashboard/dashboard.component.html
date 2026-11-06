@@ -74,15 +74,6 @@
                 [class.disabled]="!meshBrowserModuleEnabled"
                 [disabled]="!meshBrowserModuleEnabled"
             ></gtx-dashboard-item>
-
-            <gtx-dashboard-item
-                [routerLink]="'/' + AdminUIModuleRoutes.LICENSE_MANAGEMENT"
-                icon="license"
-                [attr.data-id]="AdminUIModuleRoutes.LICENSE_MANAGEMENT"
-                [title]="'dashboard.license_management' | gtxI18n"
-                [class.disabled]="!licenseModuleEnabled"
-                [disabled]="!licenseModuleEnabled"
-            ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 
         <gtx-dashboard-item-group [title]="'dashboard.group_operations' | gtxI18n">

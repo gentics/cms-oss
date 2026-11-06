@@ -1,0 +1,63 @@
+{
+	"elements": [
+		{
+			"globalId": "e6729f2b-5e93-4e15-8670-c401fe9581a2",
+			"name": "input_e6729f2b_5e93_4e15_8670_c401fe9581a2",
+			"type": "input",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Verpflichtend",
+				"en": "Mandatory"
+			},
+			"mandatory_i18n": {
+				"de": true,
+				"en": true
+			},
+			"validation_i18n": null,
+			"value_i18n": null,
+			"minVal_i18n": null,
+			"maxVal_i18n": null,
+			"maxCharCount_i18n": {
+				"de": 20,
+				"en": 20
+			}
+		},
+		{
+			"globalId": "3af7e246-e2cd-48fd-a9e2-bf968497fc1a",
+			"name": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a",
+			"type": "input",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Nicht verpflichtend",
+				"en": "Not mandatory"
+			},
+			"mandatory_i18n": null,
+			"validation_i18n": null,
+			"value_i18n": null,
+			"minVal_i18n": null,
+			"maxVal_i18n": null,
+			"maxCharCount_i18n": {
+				"de": 10,
+				"en": 10
+			}
+		},
+		{
+			"name": "input_inactive",
+			"type": "input",
+			"active": false,
+			"label_i18n": {
+				"de": "Inaktiv",
+				"en": "Inactive"
+			}
+		}
+	],
+	"email": "",
+	"mailsubject_i18n": {},
+	"mailsource_pageid": 0,
+	"mailsource_nodeid": 0,
+	"mailtemp_i18n": {},
+	"type": "GENERIC",
+	"templateContext": "theme-red"
+}

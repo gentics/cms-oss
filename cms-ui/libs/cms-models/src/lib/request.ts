@@ -2511,20 +2511,6 @@ export interface TranslationRequestOptions {
     channelId?: number;
 }
 
-// LICENSE /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export interface LicenseUpdateRequest {
-    licenseKey: string;
-    pushToContentRepositories?: boolean;
-}
-
-export interface LicenseContentRepositoryInfoOptions extends BaseListOptionsWithPaging<'name' | 'url'> {}
-
-export interface PushLicenseRequest {
-    crIds?: number[];
-    all?: boolean;
-}
-
 // API TOKENS /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export interface ApiTokenListOptions extends BaseListOptionsWithPaging<ApiToken> {}

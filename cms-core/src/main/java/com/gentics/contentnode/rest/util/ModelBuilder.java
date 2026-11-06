@@ -32,6 +32,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
@@ -50,6 +51,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.LocalizableNodeObject;
@@ -100,6 +102,7 @@ import com.gentics.contentnode.rest.model.Overview.SelectType;
 import com.gentics.contentnode.rest.model.Privilege;
 import com.gentics.contentnode.rest.model.PrivilegeMap;
 import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.rest.model.PublishableContentItem;
 import com.gentics.contentnode.rest.model.QueuedTimeManagement;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.RegexModel;
@@ -139,6 +142,22 @@ public class ModelBuilder {
 	 * logger
 	 */
 	protected static NodeLogger logger = NodeLogger.getNodeLogger(ModelBuilder.class);
+
+	/**
+	 * Service loader for the implementation of {@link FormModelService}
+	 */
+	private final static ServiceLoaderUtil<FormModelService> formModelServiceLoader = ServiceLoaderUtil.load(FormModelService.class);
+
+	/**
+	 * Transform the given Form (Node Object) into the REST Model
+	 *
+	 * @param nodeForm Node Object
+	 * @return REST Model of the Form or null, if no implementation of {@link FormModelService} is available
+	 * @throws NodeException
+	 */
+	public static PublishableContentItem getForm(Form nodeForm) throws NodeException {
+		return formModelServiceLoader.execForFirst(service -> service.getForm(nodeForm)).orElse(null);
+	}
 
 	/**
 	 * Transform the given File (Node Object) into the REST Model

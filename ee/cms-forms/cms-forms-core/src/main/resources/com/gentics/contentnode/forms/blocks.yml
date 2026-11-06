@@ -1,0 +1,102 @@
+image:
+  labelI18n:
+    de: "Formgrid Image"
+    en: "Formgrid Image"
+  settings:
+  - type: "string"
+    id: "url"
+    labelI18n:
+      de: "Bild-URL (absolut oder relativ)"
+      en: "Image-URL (absolute or relative)"
+    required: true
+    backend: false
+    richContent: false
+    propertyPath: "formGridOptions.image.url"
+  - type: "select"
+    id: "align"
+    labelI18n:
+      de: "Ausrichtung"
+      en: "Alignment"
+    options: 
+    - labelI18n:
+        de: "Links"
+        en: "Left"
+      value: "start"
+    - labelI18n:
+        de: "Zentriert"
+        en: "Centered"
+      value: "center"
+    - labelI18n:
+        de: "Rechts"
+        en: "Right"
+      value: "end"
+    - labelI18n:
+        de: "Gestreckt"
+        en: "Stretched"
+      value: "stretch"
+    required: false
+    backend: false
+    propertyPath: "formGridOptions.image.align"
+  - type: "select"
+    id: "objectFit"
+    labelI18n:
+      de: "Bildskalierung"
+      en: "Image Fit"
+    options: 
+    - labelI18n:
+        de: "Passend"
+        en: "Contain"
+      value: "contain"
+    - labelI18n:
+        de: "Abdecken"
+        en: "Covered"
+      value: "cover"
+    - labelI18n:
+        de: "Ausfüllen"
+        en: "Fill"
+      value: "fill"
+    - labelI18n:
+        de: "Keine"
+        en: "None"
+      value: "none"
+    - labelI18n:
+        de: "Verkleinern"
+        en: "Scale-Down"
+      value: "scale-down"
+    required: false
+    backend: false
+    propertyPath: "formGridOptions.image.objectFit"
+  - type: "translation"
+    id: "alt"
+    labelI18n:
+      de: "ALT-Text"
+      en: "ALT-Text"
+    required: false
+    backend: false
+    richContent: false
+    propertyPath: "formGridOptions.image.alt"
+  - type: "translation"
+    id: "caption"
+    labelI18n:
+      de: "Bildunterschrift"
+      en: "Caption"
+    required: false
+    backend: false
+    richContent: false
+    propertyPath: "formGridOptions.image.caption"
+  - type: "number"
+    id: "width"
+    labelI18n:
+      de: "Breite (px, optional)"
+      en: "Width (px, optional)"
+    required: false
+    backend: false
+    propertyPath: "formGridOptions.image.width"
+  - type: "number"
+    id: "height"
+    labelI18n:
+      de: "Höhe (px, optional)"
+      en: "Length (px, optional)"
+    required: false
+    backend: false
+    propertyPath: "formGridOptions.image.height"

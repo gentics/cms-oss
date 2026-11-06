@@ -1,0 +1,18 @@
+apiVersion: v2
+name: cms
+description: Gentics CMS
+type: application
+
+version: 0.0.0
+appVersion: 0.0.0
+
+# Minimum supported Kubernetes version ("-0" suffix: accept pre-release-style cluster versions)
+kubeVersion: ">=1.23.0-0"
+
+home: https://www.gentics.com/Content.Node/cmp8/guides/
+icon: https://www.gentics.com/genticscms/assets/images/gentics/gentics_logo.png
+
+dependencies:
+  - name: gentics-common
+    version: 0.1.0
+    repository: "https://repo.gentics.com/repository/helm/"

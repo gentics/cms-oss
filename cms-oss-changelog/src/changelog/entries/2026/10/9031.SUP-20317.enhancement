@@ -1,0 +1,2 @@
+REST API: The request to load a list of content packages now has a new
+query parameter @stats@ (defaults to @true@) to include or exclude package statistics (number of contained elements per type).

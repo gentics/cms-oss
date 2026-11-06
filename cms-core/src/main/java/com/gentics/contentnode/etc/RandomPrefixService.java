@@ -5,7 +5,7 @@ import java.util.Random;
 /**
  * Service that generates a random HEX prefix
  */
-public class RandomPrefixService implements PrefixService  {
+public class RandomPrefixService {
 	private static final int PREFIX_LENGTH = 4;
 
 	/**

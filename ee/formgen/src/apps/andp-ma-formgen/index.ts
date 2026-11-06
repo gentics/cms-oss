@@ -1,0 +1,63 @@
+import { registerRootComponent } from "expo";
+import { createRoot } from "react-dom/client";
+import { createElement } from "react";
+import { Platform } from "react-native";
+import App from "./App";
+import { fontFamilies as commonFontFamilies } from "@andp/core/src/styles/common/font-config";
+import { fontFamilies as customFontFamilies } from "@andp/core/src/styles/custom/font-config";
+import { detectFormgridPreview } from "@andp/feature-formgen/src/types/preview";
+import Constants from "expo-constants";
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+// to fix the warning => react 18
+
+const isDevMode = Constants.manifest.extra.devMode;
+const isMockForm = Constants.manifest.extra.mockForm;
+
+if (Platform.OS === "web") {
+  const isFormgridPreview = detectFormgridPreview();
+
+  const ensureFonts = (rootTag: HTMLElement) => {
+    if (isDevMode || isMockForm) return;
+    if (document.getElementById("formgen-fonts")) return;
+
+    let basePath = isFormgridPreview
+      ? "/formgen"
+      : (rootTag.getAttribute("data-static-serve-path") ?? "/static/cpa");
+
+    if (!basePath.endsWith("/")) {
+        basePath += "/";
+    }
+
+    const style = document.createElement("style");
+    style.id = "formgen-fonts";
+    const useCustomFonts =
+      customFontFamilies && Object.keys(customFontFamilies).length > 0;
+    const fontFamilies = useCustomFonts ? customFontFamilies : commonFontFamilies;
+    const fontFolder = useCustomFonts ? "custom" : "common";
+
+    Object.entries(fontFamilies).forEach(([fontName, fontPath]) => {
+      const fullName = (fontPath as string).split("/").pop() || "";
+      const ext = fullName.split(".").pop();
+      const filename = fullName.substring(0, fullName.lastIndexOf("."));
+      const fontFace = `@font-face {
+        font-family: '${fontName}';
+        src: url('${basePath}assets/__packages/core/src/styles/${fontFolder}/fonts/${filename}.${ext}') format('truetype');
+        font-display: auto;
+      }`;
+      style.appendChild(document.createTextNode(fontFace));
+    });
+    document.head.appendChild(style);
+  };
+
+  const rootTag =
+    document.getElementById("root") ?? document.getElementById("main");
+
+  if (rootTag) {
+    ensureFonts(rootTag);
+    createRoot(rootTag).render(createElement(App));
+  }
+} else {
+  registerRootComponent(App);
+}

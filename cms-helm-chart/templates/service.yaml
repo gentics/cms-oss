@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cms.fullname" . }}
+  labels:
+    {{- include "cms.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.cms.service.type }}
+  ports:
+    - port: {{ .Values.cms.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if .Values.cms.service.useHttp2 }}
+      appProtocol: h2c
+      {{- end }}
+  selector:
+    {{- include "cms.selectorLabels" . | nindent 4 }}

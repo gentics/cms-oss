@@ -1,0 +1,40 @@
+{{- if and .Values.cms.persistence.enabled (not .Values.cms.persistence.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "cms.fullname" . }}-data
+
+  {{- $keepAnnotations := include "gentics-common.pvcKeepAnnotations" (dict "root" . "local" (.Values.cms.persistence).keepOnUninstall) }}
+  {{- if or $keepAnnotations .Values.cms.persistence.annotations }}
+  annotations:
+    {{- with $keepAnnotations }}
+    {{- . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.cms.persistence.annotations }}
+    {{ toYaml . }}
+  {{- end }}
+  {{- end }}
+
+  labels:
+    app: "{{ template "cms.name" . }}"
+    chart: {{ template "cms.chart" . }}
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+    app.kubernetes.io/name: {{ include "cms.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  accessModes:
+  {{- range .Values.cms.persistence.accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.cms.persistence.size | quote }}
+{{- if .Values.cms.persistence.storageClass }}
+{{- if (eq "-" .Values.cms.persistence.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: {{ .Values.cms.persistence.storageClass | quote }}
+{{- end }}
+{{- end }}
+{{- end }}

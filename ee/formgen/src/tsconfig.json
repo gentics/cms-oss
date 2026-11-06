@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "typeRoots": ["./types", "./node_modules/@types"],
+    "moduleSuffixes": [".native", ".web", ""]
+  }
+}

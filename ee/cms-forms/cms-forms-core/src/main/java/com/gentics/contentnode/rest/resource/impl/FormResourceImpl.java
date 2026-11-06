@@ -1,0 +1,1622 @@
+package com.gentics.contentnode.rest.resource.impl;
+
+import static com.gentics.contentnode.rest.util.MiscUtils.NEW_FIELD_CHECKER;
+import static com.gentics.contentnode.rest.util.MiscUtils.checkBodyWithFunction;
+import static com.gentics.contentnode.rest.util.MiscUtils.load;
+import static com.gentics.contentnode.rest.util.MiscUtils.loadAllFormsWithExternalId;
+import static com.gentics.contentnode.rest.util.MiscUtils.loadForm;
+import static com.gentics.contentnode.rest.util.MiscUtils.loadFormWithoutPermissionCheck;
+import static com.gentics.contentnode.rest.util.MiscUtils.require;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.BiFunction;
+import com.gentics.contentnode.etc.Consumer;
+import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.FormDataUtils;
+import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.etc.TriFunction;
+import com.gentics.contentnode.events.Events;
+import com.gentics.contentnode.events.TransactionalTriggerEvent;
+import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.AnyChannelTrx;
+import com.gentics.contentnode.factory.InstantPublishingTrx;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.UniquifyHelper;
+import com.gentics.contentnode.factory.Wastebin;
+import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.FormFactory;
+import com.gentics.contentnode.forms.FormTransformer;
+import com.gentics.contentnode.forms.FormTransformer.TransformationTarget;
+import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.object.ContentLanguage;
+import com.gentics.contentnode.object.ContentRepository;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Folder.FormSearch;
+import com.gentics.contentnode.object.Form;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObjectVersion;
+import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.filters.RequiredFeature;
+import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
+import com.gentics.contentnode.rest.model.FormTimeManagement;
+import com.gentics.contentnode.rest.model.form.FormListResponse;
+import com.gentics.contentnode.rest.model.form.FormModel;
+import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsForLanguage;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
+import com.gentics.contentnode.rest.model.perm.PermType;
+import com.gentics.contentnode.rest.model.request.WastebinSearch;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
+import com.gentics.contentnode.rest.model.response.LanguageList;
+import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.model.response.ResponseInfo;
+import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
+import com.gentics.contentnode.rest.model.response.TotalUsageInfo;
+import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
+import com.gentics.contentnode.rest.model.response.admin.CustomTool;
+import com.gentics.contentnode.rest.resource.FormResource;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+import com.gentics.contentnode.rest.util.AndFilter;
+import com.gentics.contentnode.rest.util.ListBuilder;
+import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.rest.util.MiscUtils.PageUsage;
+import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.rest.util.NodeFeatureFilter;
+import com.gentics.contentnode.rest.util.PermFilter;
+import com.gentics.contentnode.rest.util.PermissionFilter;
+import com.gentics.contentnode.rest.util.ResolvableComparator;
+import com.gentics.contentnode.rest.util.ResolvableFilter;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.staging.StagingUtil;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriBuilder;
+
+/**
+ * Resource implementation for forms
+ */
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
+@Authenticated
+@Path("form")
+@RequiredFeature(Feature.FORMS)
+public class FormResourceImpl extends AbstractContentNodeResource implements FormResource {
+	/**
+	 * Transform the node object into its REST model.
+	 */
+	public static final BiFunction<Form, FormModel, FormModel> NODE2REST = (form, model) -> {
+		model.setId(form.getId());
+		model.setGlobalId(form.getGlobalId().toString());
+		model.setExternalId(form.getExternalId());
+		model.setName(form.getName());
+		model.setDescription(form.getDescription());
+		model.setFormType(form.getFormType());
+		FormTypeConfiguration formTypeConfiguration = FormConfigProvider.getConfig().get(form.getFormType());
+		if (formTypeConfiguration != null) {
+			model.setFormTypeName(I18NHelper.get(formTypeConfiguration.nameI18n));
+		}
+
+		model.setFolderId(form.getFolderId());
+
+		model.setLanguages(form.getLanguages());
+		ObjectNode formData = form.getData().deepCopy();
+		model.setData(formData.without(FormDataUtils.OLD_UI_SCHEMA));
+
+		model.setCdate(form.getCDate().getIntTimestamp());
+		model.setCreator(ModelBuilder.getUser(form.getCreator()));
+
+		model.setEdate(form.getEDate().getIntTimestamp());
+		model.setEditor(ModelBuilder.getUser(form.getEditor()));
+
+		model.setPdate(form.getPDate().getIntTimestamp());
+		SystemUser publisher = form.getPublisher();
+		if (publisher != null) {
+			model.setPublisher(ModelBuilder.getUser(publisher));
+		}
+		SystemUser unpublisher = form.getUnpublisher();
+		if (unpublisher != null) {
+			model.setUnpublisher(ModelBuilder.getUser(unpublisher));
+		}
+
+		model.setUnpublishedDate(form.getUnpublishedDate().getIntTimestamp());
+		model.setDeleted(ModelBuilder.getDeleteInfo(form));
+		model.setModified(form.isModified());
+		model.setOnline(form.isOnline());
+
+		model.setLocked(form.isLocked());
+		SystemUser lockedBy = form.getLockedBy();
+		if (lockedBy != null) {
+			model.setLockedBy(ModelBuilder.getUser(lockedBy));
+		}
+		ContentNodeDate lockedSince = form.getLockedSince();
+		if (lockedSince != null) {
+			model.setLockedSince(lockedSince.getIntTimestamp());
+		}
+		model.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getVersion()));
+
+		SystemUser futurePublisher = form.getFutureUnpublisher();
+		SystemUser futureUnpublisher = form.getFutureUnpublisher();
+
+		model.setTimeManagement(
+				new FormTimeManagement()
+						.setAt(form.getTimePub().getTimestamp())
+						.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getTimePubVersion()))
+						.setOfflineAt(form.getTimeOff().getTimestamp())
+						.setFuturePublisher(ModelBuilder.getUser(futurePublisher))
+						.setFutureUnpublisher(ModelBuilder.getUser(futureUnpublisher))
+		);
+		model.setPlanned(form.isPlanned());
+
+		return model;
+	};
+
+	/**
+	 * Transform the node object into its rest model
+	 */
+	public final static Function<Form, FormModel> TRANSFORM2REST = form -> {
+		return NODE2REST.apply(form, new FormModel());
+	};
+
+	/**
+	 * Function that transforms the base data of the rest model into the given node model.
+	 * This will set everything but the formType and data
+	 */
+	public final static BiFunction<FormModel, Form, Form> REST2NODE_BASEDATA = (restModel, form) -> {
+		if (StringUtils.isNotBlank(restModel.getExternalId())) {
+			form.setExternalId(restModel.getExternalId());
+		}
+		if (!StringUtils.isBlank(restModel.getName())) {
+			form.setName(restModel.getName());
+		}
+		if (!StringUtils.isBlank(restModel.getDescription())) {
+			form.setDescription(restModel.getDescription());
+		}
+
+		if (restModel.getLanguages() != null) {
+			form.setLanguages(restModel.getLanguages());
+		}
+		return form;
+	};
+
+	/**
+	 * Function that transforms the rest model into the given node model
+	 */
+	public final static BiFunction<FormModel, Form, Form> REST2NODE = (restModel, form) -> {
+		REST2NODE_BASEDATA.apply(restModel, form);
+
+		if (restModel.getFormType() != null) {
+			form.setFormType(restModel.getFormType());
+		}
+		if (restModel.getData() != null) {
+			FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+			form.updateData(FormTransformer.transformToInternalLanguageCodes(config, restModel.getData().deepCopy()));
+		}
+
+		return form;
+	};
+
+	/**
+	 * Required key of the translations custom tool
+	 */
+	public final static String TRANSLATIONS_CUSTOM_TOOL_KEY = "form_translations";
+
+	@Override
+	@GET
+	public FormListResponse list(@BeanParam InFolderParameterBean inFolder, @BeanParam FilterFormParameterBean filter,
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
+			@BeanParam WastebinParameterBean wastebin, @BeanParam PublishableParameterBean publishable)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+			checkBodyWithFunction(inFolder, NEW_FIELD_CHECKER, f -> Pair.of(I18NHelper.get("folder"), f.folderId));
+
+			Folder folder = null;
+			if (NodeConfigRuntimeConfiguration.isFeature(Feature.WASTEBIN)
+					&& (wastebin.wastebinSearch == WastebinSearch.include
+							|| wastebin.wastebinSearch == WastebinSearch.only)) {
+				try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
+					folder = load(Folder.class, inFolder.folderId);
+				}
+			} else {
+				folder = load(Folder.class, inFolder.folderId);
+			}
+			require(Feature.FORMS, folder.getOwningNode());
+
+			// switch to the master folder
+			folder = folder.getMaster();
+
+			Set<String> formTypes = new HashSet<>(FormFactory.getFormTypeAssignment(folder.getOwningNode().getId()));
+			if (!StringUtils.isBlank(filter.formType)) {
+				formTypes.retainAll(Collections.singleton(filter.formType));
+			}
+			if (filter.external != null) {
+				Set<String> matchingFormTypes = Optional.ofNullable(FormConfigProvider.getConfig()).map(configMap -> {
+					return configMap.entrySet().stream().filter(entry -> entry.getValue().external == filter.external)
+							.map(Entry::getKey).collect(Collectors.toSet());
+				}).orElse(Collections.emptySet());
+				formTypes.retainAll(matchingFormTypes);
+			}
+
+			List<Form> forms;
+			if (formTypes.isEmpty()) {
+				forms = Collections.emptyList();
+			} else {
+				FormSearch search = FormSearch.create().setRecursive(inFolder.recursive).setFormTypes(formTypes).setSearchString(filter.query)
+						.set(publishable);
+
+				if (NodeConfigRuntimeConfiguration.isFeature(Feature.WASTEBIN)
+						&& t.getPermHandler().canWastebin(folder.getOwningNode())) {
+					search.setWastebin(wastebin.wastebinSearch);
+				}
+				forms = folder.getForms(search);
+			}
+
+			FormListResponse response = ListBuilder.from(forms, TRANSFORM2REST)
+				.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
+				.sort(ResolvableComparator.get(sorting, "id", "name", "description", "cdate", "edate", "pdate", "formType"))
+				.page(paging)
+				.to(new FormListResponse());
+			response.setStagingStatus(StagingUtil.checkStagingStatus(forms, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
+			trx.success();
+
+			return response;
+		}
+	}
+
+	@Override
+	@POST
+	public FormResponse create(FormModel form, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+
+			checkBodyWithFunction(form, NEW_FIELD_CHECKER, fm -> Pair.of(I18NHelper.get("name"), fm.getName()),
+					fm -> Pair.of(I18NHelper.get("language"), fm.getLanguages()),
+					fm -> Pair.of(I18NHelper.get("formType"), fm.getFormType()));
+
+			Folder folder = null;
+			Folder defaultFormFolder = null;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				defaultFormFolder = node.getDefaultFormFolder();
+			}
+
+			// when there is no default form folder in the node (or no nodeId was given), we require the folder field in the form
+			if (defaultFormFolder == null) {
+				checkBodyWithFunction(form, NEW_FIELD_CHECKER, fm -> Pair.of(I18NHelper.get("folder"), fm.getFolderId()));
+				folder = load(Folder.class, Integer.toString(form.getFolderId())).getMaster();
+			} else if (ObjectTransformer.getInt(form.getFolderId(), 0) > 0) {
+				folder = load(Folder.class, Integer.toString(form.getFolderId())).getMaster();
+			} else {
+				folder = defaultFormFolder.getMaster();
+			}
+
+			Node node = folder.getOwningNode();
+			require(Feature.FORMS, node);
+			nodeId = Integer.toString(node.getId());
+
+			// when an external ID is give, we will try to find the form with the external ID
+			Form toUpdate = null;
+			if (StringUtils.isNotBlank(form.getExternalId())) {
+				toUpdate = MiscUtils.loadFormWithoutPermissionCheck(form.getExternalId(), nodeId, false);
+			}
+
+			if (toUpdate != null) {
+				// when we found the form with external ID, we do an update instead of create
+				Form addressedForm = load(Form.class, Integer.toString(toUpdate.getId()), ObjectPermission.edit);
+
+				List<Form> allFormsToUpdate = loadAllFormsWithExternalId(form.getExternalId());
+
+				for (Form update : allFormsToUpdate) {
+					if (form.getLanguages() != null) {
+						// check whether the languages are all activated for the node
+						checkLanguages(node, update.getFormType(), form.getLanguages());
+					}
+
+					update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
+					FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+					handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
+					update.save();
+				}
+
+				FormResponse response = new FormResponse(TRANSFORM2REST.apply(addressedForm.reload()),
+						ResponseInfo.ok("Successfully updated form"));
+
+				trx.success();
+				return response;
+			} else {
+				// try to create the form
+				if (!t.getPermHandler().canCreate(folder, Form.class, null)) {
+					throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission"), null, null,
+							Form.TYPE_FORM, 0, PermType.create);
+				}
+
+				// check whether the folder belongs to a channel
+				if (folder.getChannel() != null) {
+					throw new RestMappedException(I18NHelper.get("form.create.channel", I18NHelper.getPath(folder)))
+							.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+				}
+
+				// check whether the node has languages
+				if (node.getLanguages().isEmpty()) {
+					throw new RestMappedException(
+							I18NHelper.get("form.create.nolanguages", I18NHelper.getName(node.getFolder())))
+									.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+				}
+
+				// check whether the requested formtype is assigned to the node
+				checkFormType(node, form.getFormType());
+
+				// check whether the languages are all activated for the node
+				checkLanguages(node, form.getFormType(),form.getLanguages());
+
+				// update all other forms with the same external ID
+				if (StringUtils.isNotBlank(form.getExternalId())) {
+					List<Form> allFormsToUpdate = loadAllFormsWithExternalId(form.getExternalId());
+					for (Form update : allFormsToUpdate) {
+						if (form.getLanguages() != null) {
+							// check whether the languages are all activated for the node
+							checkLanguages(update.getOwningNode(), update.getFormType(), form.getLanguages());
+						}
+
+						update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
+						FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+						handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
+						update.save();
+						update.unlock();
+					}
+				}
+
+				// copy the ui-schema over to the old-ui-schema
+				JsonNode data = form.getData();
+				if (data instanceof ObjectNode dataObject) {
+					dataObject.set(FormDataUtils.OLD_UI_SCHEMA, dataObject.path(FormDataUtils.UI_SCHEMA));
+				}
+
+				Form nodeForm = REST2NODE.apply(form, t.createObject(Form.class));
+				nodeForm.setFolderId(folder.getId());
+
+				if (StringUtils.isNotBlank(nodeForm.getExternalId())) {
+					JsonNode uiSchema = nodeForm.getData().path(FormDataUtils.UI_SCHEMA);
+					JsonNode schema = nodeForm.getData().path(FormDataUtils.SCHEMA);
+
+					String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));
+					nodeForm.setExternalHash(currentExternalHash);
+				}
+
+				nodeForm.save();
+
+				FormResponse response = new FormResponse(TRANSFORM2REST.apply(nodeForm.reload()),
+						ResponseInfo.ok("Successfully created form"));
+
+				trx.success();
+				return response;
+			}
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}")
+	public FormResponse get(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("package") String stagingPackageName) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = loadForm(formId, nodeId);
+			require(Feature.FORMS, form.getFolder().getOwningNode());
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(form),
+					ResponseInfo.ok("Successfully loaded form"));
+			response.setStagingStatus(StagingUtil.checkStagingStatus(form, stagingPackageName));
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("{id}")
+	public FormResponse update(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, FormModel form) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+			Form update = loadForm(formId, nodeId, ObjectPermission.edit);
+			Node node = update.getFolder().getOwningNode();
+			require(Feature.FORMS, node);
+
+			if (form.getLanguages() != null) {
+				// check whether the languages are all activated for the node
+				checkLanguages(node, update.getFormType(), form.getLanguages());
+			}
+
+			form.setFormType(null);
+			update = REST2NODE.apply(form, t.getObject(update, true));
+			update.save();
+
+			// load other forms with the same external ID
+			if (StringUtils.isNotBlank(update.getExternalId())) {
+				List<Form> allFormsToUpdate = loadAllFormsWithExternalId(update.getExternalId());
+				for (Form otherFormToUpdate : allFormsToUpdate) {
+					if (otherFormToUpdate.equals(update)) {
+						continue;
+					}
+
+					otherFormToUpdate = REST2NODE.apply(form, t.getObject(otherFormToUpdate, true));
+					otherFormToUpdate.save();
+					otherFormToUpdate.unlock();
+				}
+			}
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
+					ResponseInfo.ok("Successfully updated form"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("{id}")
+	public GenericResponse delete(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) throws NodeException {
+		boolean syncCr = Optional.ofNullable(disableInstantDelete).map(BooleanUtils::negate).orElse(true);
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx(); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
+			Transaction t = trx.getTransaction();
+			Form toDelete = loadForm(formId, nodeId, ObjectPermission.delete);
+			require(Feature.FORMS, toDelete.getFolder().getOwningNode());
+
+			t.getObject(toDelete, true).delete();
+
+			trx.success();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully deleted form"));
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("{id}/online")
+	public FormResponse publish(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId,
+			@QueryParam("at") @DefaultValue("0") int at, @QueryParam("keepVersion") @DefaultValue("false") boolean keepVersion) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+			Form toPublish = loadForm(formId, nodeId, ObjectPermission.publish);
+			require(Feature.FORMS, toPublish.getFolder().getOwningNode());
+
+			if (StringUtils.isNotBlank(toPublish.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(toPublish.getExternalId())) {
+					t.getObject(f, true).publish(at, keepVersion);
+				}
+			} else {
+				t.getObject(toPublish, true).publish(at, keepVersion);
+			}
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toPublish.reload()),
+					ResponseInfo.ok("Successfully published form"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("{id}/online")
+	public FormResponse takeOffline(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("at") @DefaultValue("0") int at)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+			Form toTakeOffline = loadForm(formId, nodeId, ObjectPermission.publish);
+			require(Feature.FORMS, toTakeOffline.getFolder().getOwningNode());
+
+			if (StringUtils.isNotBlank(toTakeOffline.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(formId)) {
+					t.getObject(f, true).takeOffline(at);
+				}
+			} else {
+				t.getObject(toTakeOffline, true).takeOffline(at);
+			}
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toTakeOffline.reload()),
+					ResponseInfo.ok("Successfully taken form offline"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("{id}/publish/at")
+	public FormResponse removePublishAt(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
+			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
+
+			if (StringUtils.isNotBlank(toChangeTimemanagement.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(formId)) {
+					f.clearTimePub();
+				}
+			} else {
+				toChangeTimemanagement.clearTimePub();
+			}
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toChangeTimemanagement.reload()),
+					ResponseInfo.ok("Successfully taken form offline"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("{id}/offline/at")
+	public FormResponse removeOfflineAt(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
+			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
+
+			if (StringUtils.isNotBlank(toChangeTimemanagement.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(formId)) {
+					f.clearTimeOff();
+				}
+			} else {
+				toChangeTimemanagement.clearTimeOff();
+			}
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toChangeTimemanagement.reload()),
+					ResponseInfo.ok("Successfully taken form offline"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("{id}/lock")
+	public FormResponse lock(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+			Form toLock = loadForm(formId, nodeId, ObjectPermission.edit);
+			require(Feature.FORMS, toLock.getFolder().getOwningNode());
+
+			// get an editable copy, which will lock the form (if possible)
+			t.getObject(toLock, true);
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toLock.reload()),
+					ResponseInfo.ok("Successfully locked form"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("{id}/lock")
+	public FormResponse unlock(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form toUnlock = loadForm(formId, nodeId, ObjectPermission.edit);
+			require(Feature.FORMS, toUnlock.getFolder().getOwningNode());
+
+			toUnlock.unlock();
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toUnlock.reload()),
+					ResponseInfo.ok("Successfully unlocked form"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/version")
+	public ItemVersionListResponse listVersions(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = loadForm(formId, nodeId);
+			require(Feature.FORMS, form.getFolder().getOwningNode());
+
+			ItemVersionListResponse response = ListBuilder
+					.from(Arrays.asList(form.getVersions()), NodeObjectVersion.TRANSFORM2REST)
+					.to(new ItemVersionListResponse());
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/version/{version}")
+	public FormResponse getVersion(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @PathParam("version") String version)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = loadForm(formId, nodeId);
+			require(Feature.FORMS, form.getFolder().getOwningNode());
+
+			NodeObjectVersion requestedVersion = form.getVersion(version);
+			if (requestedVersion == null) {
+				throw new EntityNotFoundException(I18NHelper.get("form.version.notfound", formId, version));
+			}
+
+			Form versionedForm = trx.getTransaction().getObject(Form.class, form.getId(),
+					requestedVersion.getDate().getIntTimestamp());
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(versionedForm),
+					ResponseInfo.ok("Successfully loaded form version"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@POST
+	@Path("{id}/version/{version}/restore")
+	public FormResponse restoreVersion(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @PathParam("version") String version)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+			Form form = loadForm(formId, nodeId, ObjectPermission.edit);
+			require(Feature.FORMS, form.getFolder().getOwningNode());
+
+			NodeObjectVersion requestedVersion = form.getVersion(version);
+			if (requestedVersion == null) {
+				throw new EntityNotFoundException(I18NHelper.get("form.version.notfound", formId, version));
+			}
+
+			Form editable = t.getObject(form, true);
+			editable.restoreVersion(requestedVersion);
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(editable.reload()),
+					ResponseInfo.ok("Successfully restored form version"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("wastebin/{id}")
+	public GenericResponse removeFromWastebin(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx(); WastebinFilter filter = Wastebin.INCLUDE.set()) {
+			Form form = loadForm(formId, nodeId, ObjectPermission.wastebin);
+			require(Feature.FORMS, form.getFolder().getOwningNode());
+
+			if (!form.isDeleted()) {
+				throw new EntityNotFoundException(I18NHelper.get("form.notfound", formId));
+			}
+
+			trx.getTransaction().getObject(form, true).delete(true);
+			trx.success();
+
+			return new GenericResponse(null, ResponseInfo.ok("Successfully removed form from wastebin"));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("wastebin/{id}/restore")
+	public FormResponse restoreFromWastebin(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx(); WastebinFilter filter = Wastebin.INCLUDE.set()) {
+			Form form = loadForm(formId, nodeId, ObjectPermission.wastebin);
+			require(Feature.FORMS, form.getFolder().getOwningNode());
+
+			if (!form.isDeleted()) {
+				throw new EntityNotFoundException(I18NHelper.get("form.notfound", formId));
+			}
+
+			trx.getTransaction().getObject(form, true).restore();
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(trx.getTransaction().getObject(form)),
+					ResponseInfo.ok("Successfully restored form from wastebin"));
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("{id}/folder/{pathFolderId}")
+	public FormResponse move(@PathParam("id") String formId, @PathParam("pathFolderId") String folderId, @QueryParam("nodeId") String nodeId)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Transaction t = trx.getTransaction();
+			Form form = loadForm(formId, nodeId,
+					NodeConfigRuntimeConfiguration.isFeature(Feature.MOVE_PERM_WITH_EDIT) ? ObjectPermission.edit
+							: ObjectPermission.delete);
+			Node sourceNode = form.getFolder().getOwningNode();
+			require(Feature.FORMS, sourceNode);
+
+			Folder targetFolder = load(Folder.class, folderId);
+			Node targetNode = targetFolder.getOwningNode();
+			require(Feature.FORMS, targetNode);
+			if (!t.getPermHandler().canCreate(targetFolder, Form.class, null)) {
+				throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission"), null, null,
+						Form.TYPE_FORM, 0, PermType.create);
+			}
+
+			// check whether the targetFolder belongs to a channel
+			if (targetFolder.getChannel() != null) {
+				throw new RestMappedException(
+						I18NHelper.get("form.move.channel", I18NHelper.getName(form), I18NHelper.getPath(targetFolder)))
+								.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			}
+
+			// check whether the targetNode has the required languages and formtype
+			if (!Objects.equals(sourceNode, targetNode)) {
+				if (targetNode.getLanguages().isEmpty()) {
+					throw new RestMappedException(I18NHelper.get("form.move.nolanguages", I18NHelper.getName(form),
+							I18NHelper.getName(targetNode.getFolder()))).setResponseCode(ResponseCode.INVALIDDATA)
+									.setStatus(Status.CONFLICT);
+				}
+
+				// check whether the languages are all activated for the node
+				checkLanguages(targetNode, form.getFormType(),form.getLanguages());
+
+				// check whether the form type is activated for the node
+				checkFormType(targetNode, form.getFormType());
+
+				// check whether the target node already contains a form with the same external ID
+				if (StringUtils.isNotBlank(form.getExternalId())) {
+					Form conflictingform = loadFormWithoutPermissionCheck(form.getExternalId(), Integer.toString(targetNode.getId()), false);
+					if (conflictingform != null) {
+						throw new RestMappedException(I18NHelper.get("form.move.externalId", I18NHelper.getName(form),
+								I18NHelper.getPath(targetFolder))).setResponseCode(ResponseCode.INVALIDDATA)
+								.setStatus(Status.CONFLICT);
+					}
+				}
+			}
+
+			// check for uniqueness of form names in the target folder
+			if (UniquifyHelper.findConflictingValues(form.getName(),
+					"SELECT name FROM form WHERE id != ? AND folder_id = ? AND deleted = ? AND name = ?", form.getId(),
+					targetFolder.getId(), 0)) {
+				throw new RestMappedException(
+						I18NHelper.get("form.move.name", I18NHelper.getName(form), I18NHelper.getPath(targetFolder)))
+								.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+			}
+
+			Form update = t.getObject(form, true);
+			update.setFolderId(targetFolder.getId());
+			update.save();
+			update.unlock();
+
+			FormResponse response = new FormResponse(TRANSFORM2REST.apply(form.reload()),
+					ResponseInfo.ok("Successfully moved form"));
+
+			if (!Objects.equals(sourceNode, targetNode)) {
+				String[] oldNodeProps = new String[] {Integer.toString(sourceNode.getId())};
+				t.addTransactional(new TransactionalTriggerEvent(Form.class, form.getId(), oldNodeProps, Events.MOVE));
+			}
+
+			trx.success();
+			return response;
+		}
+	}
+
+	// TODO: DEBUG ONLY
+	@GET
+	@Path("{id}/transform")
+	public ObjectNode transform(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = loadForm(formId, nodeId);
+			return new FormTransformer().withTransformationTarget(TransformationTarget.publish).transform(form);
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/data")
+	public Response listData(@PathParam("id") String formId, @BeanParam FilterFormDataParameterBean filter, @BeanParam PagingParameterBean paging)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return mp.get(uriBuilder -> {
+					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data");
+					if (paging != null) {
+						uriBuilder.queryParam("perPage", paging.pageSize);
+						uriBuilder.queryParam("page", paging.page);
+					}
+
+					Optional<FilterFormDataParameterBean> filterParam = Optional.ofNullable(filter);
+
+					filterParam.map(f -> f.query).ifPresent(q -> uriBuilder.queryParam("q", filter.query));
+
+					// By default, only list published (i.e. completed) form data.
+					uriBuilder.queryParam(
+						"publishedOnly",
+						filterParam.map(f -> f.publishedOnly).orElse(true));
+				});
+			}
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/data/{dataId}")
+	public Response getData(@PathParam("id") String formId, @PathParam("dataId") String dataId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return mp.get(uriBuilder -> {
+					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId);
+				});
+			}
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("{id}/data/{dataId}")
+	public Response deleteData(@PathParam("id") String formId, @PathParam("dataId") String dataId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return mp.delete(uriBuilder -> {
+					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId);
+				});
+			}
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/data/{dataId}/binary/{field}")
+	@Produces({ "*/*" })
+	public Response downloadDataBinaryField(@PathParam("id") String formId, @PathParam("dataId") String dataId, @PathParam("field") String field) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return mp.get(uriBuilder -> {
+					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId, "binary", field);
+				});
+			}
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/data/{dataId}/binary/{field}/{index}")
+	@Produces({ "*/*" })
+	public Response downloadDataMultivalueBinaryField(@PathParam("id") String formId, @PathParam("dataId") String dataId,
+			@PathParam("field") String field, @PathParam("index") int index) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return mp.get(uriBuilder -> {
+					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId, "binary", field, Integer.toString(index));
+				});
+			}
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/export")
+	public Response exportData(@PathParam("id") String formId, @BeanParam FormDataExportParameterBean exportFormat, @BeanParam FilterFormDataParameterBean filter) throws NodeException {
+		return performPluginRequest(
+			formId,
+			(mp, projectName, uuid) -> mp.get(getPluginUriBuilder(projectName, uuid, exportFormat, filter, "export")));
+	}
+
+	@Override
+	@GET
+	@Path("{id}/export/status")
+	public Response exportStatus(@PathParam("id") String formId, @BeanParam FormDataExportParameterBean exportFormat, @BeanParam FilterFormDataParameterBean filter) throws NodeException {
+		return performPluginRequest(
+			formId,
+			(mp, projectName, uuid) ->
+				mp.get(getPluginUriBuilder(projectName, uuid, exportFormat, filter, "download", "export", "status")));
+	}
+
+	@Override
+	@POST
+	@Path("{id}/export")
+	public Response requestExport(@PathParam("id") String formId, @BeanParam FormDataExportParameterBean exportFormat, @BeanParam FilterFormDataParameterBean filter) throws Exception {
+		return performPluginRequest(
+			formId,
+			(mp, projectName, uuid) -> mp.post(getPluginUriBuilder(projectName, uuid, exportFormat, filter, "export")));
+	}
+
+	@Override
+	@GET
+	@Path("{id}/binaries")
+	@Produces({ "application/zip", MediaType.APPLICATION_JSON })
+	public Response downloadDataBinaries(@PathParam("id") String formId) throws NodeException {
+		return performPluginRequest(
+			formId,
+			(mp, projectName, uuid) -> mp.get(
+				uriBuilder -> uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "binaries"),
+				requestBuilder -> requestBuilder.addHeader("Accept", "application/zip")));
+	}
+
+	@Override
+	@GET
+	@Path("{id}/binaries/status")
+	public Response dataBinariesStatus(@PathParam("id") String formId) throws Exception {
+		return performPluginRequest(
+			formId,
+			(mp, projectName, uuid) -> mp.get(getPluginUriBuilder(projectName, uuid, "download", "binaries", "status")));
+	}
+
+	@Override
+	@POST
+	@Path("{id}/binaries")
+	public Response requestDataBinaries(@PathParam("id") String formId) throws Exception {
+		return performPluginRequest(
+			formId,
+			(mp, projectName, uuid) -> mp.post(getPluginUriBuilder(projectName, uuid, "binaries")));
+	}
+
+	@Override
+	@GET
+	@Path("{id}/download/{exportUuid}")
+	public Response downloadFile(@PathParam("id") String formId, @PathParam("exportUuid") String downloadUuid) throws Exception {
+		return performPluginRequest(
+			formId,
+			(mp, projectName, uuid) -> mp.get(getPluginUriBuilder(projectName, uuid,  "download", downloadUuid)));
+	}
+
+	@Override
+	@GET
+	@Path("/usage/total")
+	public TotalUsageResponse getTotalUsage(@QueryParam("id") List<Integer> formId,
+			@QueryParam("nodeId") String nodeId) throws NodeException {
+		if (ObjectTransformer.isEmpty(formId)) {
+			return new TotalUsageResponse(null,
+					new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information using 0 forms"));
+		}
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			TotalUsageResponse response = new TotalUsageResponse();
+
+			int iNodeId = 0;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				iNodeId = node.getId();
+			}
+
+			for (Integer id : formId) {
+				TotalUsageInfo info = new TotalUsageInfo();
+				Set<Integer> referencingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(id), Form.TYPE_FORM,
+						MiscUtils.PageUsage.GENERAL, iNodeId);
+				Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(id), Form.TYPE_FORM,
+						iNodeId);
+				info.setTotal(referencingPageIds.size() + usingTemplateIds.size());
+				info.setPages(referencingPageIds.size());
+				info.setTemplates(usingTemplateIds.size());
+				response.getInfos().put(id, info);
+			}
+			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information"));
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/usage/page")
+	public PageUsageListResponse getPageUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
+			@QueryParam("sortby") @DefaultValue("name") String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> formId,
+			@QueryParam("nodeId") String nodeId, @QueryParam("pages") @DefaultValue("true") boolean returnPages,
+			@BeanParam PageModelParameterBean pageModel) throws NodeException {
+		if (ObjectTransformer.isEmpty(formId)) {
+			return new PageUsageListResponse(null,
+					new ResponseInfo(ResponseCode.OK, "Successfully fetched pages using 0 forms"), null, 0, 0);
+		}
+
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			int iNodeId = 0;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				iNodeId = node.getId();
+			}
+
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder,
+					Form.TYPE_FORM, formId, PageUsage.GENERAL, iNodeId, returnPages, pageModel);
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/usage/template")
+	public TemplateUsageListResponse getTemplateUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
+			@QueryParam("sortby") @DefaultValue("name") String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> formId,
+			@QueryParam("nodeId") String nodeId,
+			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws NodeException {
+		if (ObjectTransformer.isEmpty(formId)) {
+			return new TemplateUsageListResponse(null,
+					new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 forms"), null, 0, 0);
+		}
+
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			int iNodeId = 0;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				iNodeId = node.getId();
+			}
+
+			TemplateUsageListResponse response = MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder,
+					Form.TYPE_FORM, formId, iNodeId, returnTemplates);
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types")
+	public FormTypeConfigurationListResponse listFormTypeConfigurations(
+			@BeanParam FilterFormTypeConfigurationsParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+
+		try (Trx trx = ContentNodeHelper.trx()) {
+			ListBuilder<Entry<String, FormTypeConfiguration>, FormTypeConfigurationModel> listBuilder = ListBuilder
+					.from(FormConfigProvider.getConfig().entrySet(), FormConfigProvider.TRANSFORM2REST);
+
+			// Add optional nodeId filter
+			if (filter != null) {
+				if (!StringUtils.isBlank(filter.nodeId)) {
+					Node node = MiscUtils.load(Node.class, filter.nodeId);
+					Set<String> formTypesForNode = FormFactory.getFormTypeAssignment(node.getId());
+					listBuilder.filter(entry -> formTypesForNode.contains(entry.getKey()));
+				}
+
+				// Add optional external flag filter
+				if (filter.external != null) {
+					listBuilder.filter(entry -> entry.getValue().external == filter.external);
+				}
+
+				// Add optional submitOnce flag filter
+				if (filter.submitOnce != null) {
+					listBuilder.filter(entry -> entry.getValue().submitOnce == filter.submitOnce);
+				}
+
+				listBuilder.filter(MiscUtils.filter(filter, FormConfigProvider.RESOLVER, "type", "name", "description"));
+			}
+
+			listBuilder.sort(MiscUtils.comparator(sorting, FormConfigProvider.RESOLVER, "type", "name", "description", "external", "submitOnce"));
+			listBuilder.page(paging);
+
+			return listBuilder.to(new FormTypeConfigurationListResponse());
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}")
+	public FormTypeConfigurationResponse getFormTypeconfiguration(@PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			FormTypeConfiguration config = getFormTypeConfiguration(type);
+
+			return new FormTypeConfigurationResponse(FormConfigProvider.TRANSFORM2REST.apply(Map.entry(type, config)),
+					ResponseInfo.ok("Successfully loaded form type configuration"));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/translations")
+	public FormGenTranslationsResponse getGlobalTranslations() throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(translations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/translations")
+	public FormGenTranslationsResponse saveGlobalTranslations(FormGenTranslations translations) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			FormGenTranslations diff = FormConfigProvider.diff(FormConfigProvider.getFormGenTranslations(false), translations);
+			FormConfigProvider.storeFormGenTranslations(diff);
+
+			FormGenTranslations newTranslations = FormConfigProvider.getFormGenTranslations(true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(newTranslations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}/translations")
+	public FormGenTranslationsResponse getFormTypeTranslations(@PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+			getFormTypeConfiguration(type);
+
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(translations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/types/{type}/translations")
+	public FormGenTranslationsResponse saveFormTypeTranslations(@PathParam("type") String type,
+			FormGenTranslations translations) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+			getFormTypeConfiguration(type);
+
+			FormGenTranslations diff = FormConfigProvider.diff(FormConfigProvider.getFormGenTranslations(type, false), translations);
+			FormConfigProvider.storeFormGenTranslations(type, diff);
+
+			FormGenTranslations newTranslations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(newTranslations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}/translations/{code}")
+	public FormGenTranslationsForLanguage getFormTypeTranslationsForLanguage(@PathParam("type") String type, @PathParam("code") String code) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			FormTypeConfiguration config = getFormTypeConfiguration(type);
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			// if a language mapping exists, make sure to transform the language code to the internal version
+			if (MapUtils.isNotEmpty(config.languageMapping)) {
+				code = config.languageMapping.getOrDefault(code, code);
+				translations = FormTransformer.transformToInternalLanguageCodes(config, translations.clone());
+			}
+
+			final String finalCode = code;
+			FormGenTranslationsForLanguage response = new FormGenTranslationsForLanguage();
+			response.putAll(translations.entrySet().stream()
+					.map(entry -> Pair.of(entry.getKey(), entry.getValue().get(finalCode)))
+					.filter(pair -> StringUtils.isNotBlank(pair.getValue()))
+					.collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/translations/languages")
+	public LanguageList getTranslationLanguages(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			// get all nodes with the FORMS feature active the user can see 
+			List<Node> nodes = new ArrayList<>(trx.getTransaction().getObjects(Node.class, DBUtils.select("SELECT id FROM node", DBUtils.IDS)));
+			AndFilter nodeFilter = new AndFilter();
+			nodeFilter.addFilter(PermissionFilter.get(ObjectPermission.view));
+			nodeFilter.addFilter(NodeFeatureFilter.get(Feature.FORMS));
+			nodeFilter.filter(nodes);
+
+			// collect all languages of the remaining nodes
+			Set<ContentLanguage> languages = new HashSet<>();
+			for (Node node : nodes) {
+				languages.addAll(node.getLanguages());
+			}
+
+			LanguageList response = ListBuilder.from(languages, ContentLanguage.TRANSFORM2REST)
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "code"))
+					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "code"))
+					.page(paging).to(new LanguageList());
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("/nodes/{nodeId}/types/{type}")
+	public GenericResponse removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
+			FormTypeConfiguration formTypeConfiguration = getFormTypeConfiguration(type);
+
+			if (FormFactory.getFormTypeUsage(node.getId()).contains(type)) {
+				throw new RestMappedException(I18NHelper.get("form.form_type_configuration.used",
+						I18NHelper.get(formTypeConfiguration.nameI18n), I18NHelper.getName(node)))
+						.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+			}
+
+			FormFactory.removeFormTypeFromNode(type, node.getId());
+
+			trx.success();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully removed form type from node"));
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("/nodes/{nodeId}/types/{type}")
+	public GenericResponse addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
+			getFormTypeConfiguration(type);
+
+			FormFactory.addFormTypeToNode(type, node.getId());
+			trx.success();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully added form type to node"));
+		}
+	}
+
+	/**
+	 * Check whether the requested form type exists and is assigned to the node
+	 * @param node node
+	 * @param formType form type
+	 * @throws NodeException
+	 */
+	protected void checkFormType(Node node, String formType) throws NodeException {
+		if (!FormConfigProvider.getConfig().containsKey(formType)) {
+			throw new RestMappedException(I18NHelper.get("form.form_type_configuration.notfound", formType))
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+		}
+		if (!FormFactory.getFormTypeAssignment(node.getId()).contains(formType)) {
+			throw new RestMappedException(I18NHelper.get("form.form_type_configuration.notactive", formType, I18NHelper.getName(node)))
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+		}
+	}
+
+	/**
+	 * Check whether the requested languages exist and are assigned to the node
+	 *
+	 * @param node      node
+	 * @param formType form type
+	 * @param languages requested languages
+	 * @throws NodeException
+	 */
+	protected void checkLanguages(Node node, String formType, List<String> languages) throws NodeException {
+		FormTypeConfiguration config = getFormTypeConfiguration(formType);
+		FormTransformer.transformToInternalLanguageCodes(config, languages);
+
+		Transaction t = TransactionManager.getCurrentTransaction();
+		List<ContentLanguage> all = t.getObjects(ContentLanguage.class,
+				DBUtils.select("SELECT id FROM contentgroup", DBUtils.IDS));
+		Map<String, ContentLanguage> allMap = all.stream().collect(Collectors.toMap(ContentLanguage::getCode, f -> f));
+		List<ContentLanguage> nodeLanguages = node.getLanguages();
+		for (String code : languages) {
+			if (!allMap.containsKey(code)) {
+				throw new RestMappedException(I18NHelper.get("form.language.notfound", code))
+						.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+			}
+
+			ContentLanguage language = allMap.get(code);
+			if (!nodeLanguages.contains(language)) {
+				throw new RestMappedException(I18NHelper.get("form.language.notactive", language.getName(),
+						I18NHelper.getName(node.getFolder()))).setResponseCode(ResponseCode.INVALIDDATA)
+								.setStatus(Status.CONFLICT);
+			}
+		}
+	}
+
+	/**
+	 * Get the Mesh CR to be used for preview of the form. This will also check,
+	 * whether the feature is enabled for the node and whether an appropriate CR is
+	 * assigned to the node.
+	 *
+	 * @param form form to be previewed
+	 * @return Mesh Content.Repository (never null)
+	 * @throws NodeException
+	 */
+	protected ContentRepository getMeshCrForPreview(Form form) throws NodeException {
+		Node owningNode = form.getFolder().getOwningNode();
+		require(Feature.FORMS, owningNode);
+
+		ContentRepository cr = owningNode.getContentRepository();
+		if (cr == null || cr.getCrType() != Type.mesh) {
+			String message = cr == null
+					? I18NHelper.get("form.preview.nocr", I18NHelper.getName(form),
+							I18NHelper.getName(owningNode.getFolder()))
+					: I18NHelper.get("form.preview.nomeshcr", I18NHelper.getName(form), I18NHelper.getName(cr));
+			throw new RestMappedException(message).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+		}
+
+		return cr;
+	}
+
+	/**
+	 * Check whether the current user has permission to view reports for the given
+	 * form
+	 *
+	 * @param form form to check
+	 * @throws InsufficientPrivilegesException if the user does not have permission
+	 * @throws NodeException                   in case of other errors
+	 */
+	protected void checkReportingPermission(Form form) throws InsufficientPrivilegesException, NodeException {
+		if (!TransactionManager.getCurrentTransaction().getPermHandler().checkPermissionBit(Folder.TYPE_FOLDER,
+				form.getFolderId(), PermType.formreport.getBit())) {
+			throw new InsufficientPrivilegesException(
+					I18NHelper.get("form.nopermission", Integer.toString(form.getId())), form, PermType.formreport);
+		}
+	}
+
+	/**
+	 * Get the custom tool for handling the translations as optional
+	 * @return optional custom tool
+	 */
+	protected Optional<CustomTool> getCustomFormTranslationsTool() {
+		Collection<?> customTools = ObjectTransformer.getCollection(
+				NodeConfigRuntimeConfiguration.getPreferences().getPropertyObject("custom_tools"),
+				Collections.emptyList());
+		return customTools.stream().map(o -> {
+			if (o instanceof Map) {
+				return ModelBuilder.getCustomTool((Map<?, ?>) o);
+			} else {
+				return null;
+			}
+		}).filter(tool -> tool != null).filter(tool -> Strings.CI.equals(tool.getKey(), TRANSLATIONS_CUSTOM_TOOL_KEY))
+				.findFirst();
+	}
+
+	/**
+	 * Check whether the custom tool for handling translations is configured and if the user has permission on it
+	 * @throws EntityNotFoundException if the custom tool is not configured
+	 * @throws InsufficientPrivilegesException if the user has no permission on the custom tool
+	 * @throws NodeException
+	 */
+	protected void checkTranslationsPermission() throws EntityNotFoundException, InsufficientPrivilegesException, NodeException {
+		CustomTool customTool = getCustomFormTranslationsTool().orElseThrow(() -> new EntityNotFoundException(
+				I18NHelper.get("custom_tool.notfound", TRANSLATIONS_CUSTOM_TOOL_KEY)));
+
+		PermHandler permHandler = TransactionManager.getCurrentTransaction().getPermHandler();
+
+		boolean admin = permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOLS, null, PermHandler.PERM_VIEW)
+				&& permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOLS, null, PermHandler.PERM_CHANGE_PERM);
+
+		if (!admin && !permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOL, customTool.getId(),
+				PermHandler.PERM_VIEW)) {
+			throw new InsufficientPrivilegesException(
+					I18NHelper.get("custom_tool.nopermission", I18NHelper.get(customTool.getName())), null,
+					PermType.read);
+		}
+	}
+
+	/**
+	 * Convenience override for calling {@link #getPluginUriBuilder(String, String, FormDataExportParameterBean, FilterFormDataParameterBean, String...)}
+	 * without parameter beans.
+	 *
+	 * @param projectName The Mesh project name.
+	 * @param uuid The Mesh form UUID.
+	 * @param extraSegments
+	 * @param extraSegments Extra segments to append after the base path.
+	 * @return  URI builder for a request to the Mesh forms plugin.
+	 */
+	private Consumer<UriBuilder> getPluginUriBuilder(String projectName, String uuid, String ...extraSegments) {
+		return getPluginUriBuilder(projectName, uuid, null, null, extraSegments);
+	}
+
+	/**
+	 * Creates a builder for a forms plugin URL using the given parameters.
+	 *
+	 * <p>
+	 *     The path will be created up to {@code /api/v1/:projectName/plugins/forms/forms/:formUuid and then the}
+	 *     {@code extraSegments} will be added.
+	 * </p>
+	 *
+	 * <p>
+	 *     Query parameters for export options (e.g. language, export format, only published data, ...) will be
+	 *     extracted form the parameter beans.
+	 * </p>
+	 *
+	 * @param projectName The Mesh project name.
+	 * @param uuid The Mesh form UUID.
+	 * @param exportFormat The form export options.
+	 * @param filter The form filter options.
+	 * @param extraSegments Extra segments to append after the base path.
+	 * @return  URI builder for a request to the Mesh forms plugin.
+	 */
+	private Consumer<UriBuilder> getPluginUriBuilder(String projectName, String uuid, FormDataExportParameterBean exportFormat, FilterFormDataParameterBean filter, String ...extraSegments) {
+		return uriBuilder -> {
+			uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid)
+				.segment(extraSegments);
+
+			if (exportFormat != null) {
+				if (exportFormat.format != null) {
+					uriBuilder.queryParam("format", exportFormat.format);
+				}
+				if (exportFormat.options != null) {
+					uriBuilder.queryParam("options", exportFormat.options);
+				}
+				if (StringUtils.isNotBlank(exportFormat.language)) {
+					uriBuilder.queryParam("lang", exportFormat.language);
+				}
+			}
+
+			// By default export only published (i.e. completed) form data nodes.
+			uriBuilder.queryParam(
+				"publishedOnly",
+				Optional.ofNullable(filter).map(f -> f.publishedOnly).orElse(true));
+		};
+	}
+
+	/**
+	 * Perform a request to the Mesh forms plugin for the given form.
+	 *
+	 * <p>
+	 *     This method will setup a transaction and create a {@link MeshPublisher}
+	 *     which can be used for the actual request.
+	 * </p>
+	 *
+	 * <p>
+	 *     The actual request must be supplied via the {@code request} function,
+	 *     which accepts a {@code MeshPublisher}, the {@code projectName} and
+	 *     {@code uuid} of the form and must return the response from the
+	 *     Mesh forms plugin.
+	 * </p>
+	 *
+	 * @param formId The forms ID.
+	 * @param request The actual request to make.
+	 * @return The response from the Mesh forms plugin.
+	 */
+	private Response performPluginRequest(String formId, TriFunction<MeshPublisher, String, String, Response> request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return request.apply(mp, projectName, uuid);
+			}
+		}
+	}
+
+	/**
+	 * Get the form type configuration with given type or throw an {@link EntityNotFoundException} if is does not exist
+	 * @param type type
+	 * @return configuration
+	 * @throws EntityNotFoundException
+	 */
+	protected static FormTypeConfiguration getFormTypeConfiguration(String type) throws EntityNotFoundException {
+		FormTypeConfiguration config = FormConfigProvider.getConfig().get(type);
+
+		if (config == null) {
+			throw new EntityNotFoundException(I18NHelper.get("form_type_configuration.notfound", type));
+		}
+
+		return config;
+	}
+
+	/**
+	 * Generate and set the external hash
+	 * @param form form
+	 * @param newData new data
+	 * @throws NodeException
+	 */
+	protected void handleUiSchemaMerge(Form form, JsonNode newData) throws NodeException {
+		if (Optional.ofNullable(newData).map(JsonNode::isNull).orElse(true)) {
+			return;
+		}
+		JsonNode copy = newData.deepCopy();
+		ObjectNode uiSchema = copy.withObjectProperty(FormDataUtils.UI_SCHEMA);
+		ObjectNode schema = copy.withObjectProperty(FormDataUtils.SCHEMA);
+		ObjectNode oldData = form.getData().deepCopy();
+
+		String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));
+		String previousExternalHash = form.getExternalHash();
+
+		if (!Strings.CI.equals(currentExternalHash, previousExternalHash)) {
+			ObjectNode merged = new FormTransformer().mergeUiSchemaAndFormGrid(
+					getFormTypeConfiguration(form.getFormType()), oldData.withObjectProperty(FormDataUtils.OLD_UI_SCHEMA), uiSchema,
+					oldData.withObjectProperty(FormDataUtils.UI_SCHEMA));
+
+			oldData.set(FormDataUtils.SCHEMA, schema);
+			oldData.set(FormDataUtils.UI_SCHEMA, merged);
+			oldData.set(FormDataUtils.OLD_UI_SCHEMA, uiSchema);
+			form.setExternalHash(currentExternalHash);
+			form.setData(oldData);
+		}
+	}
+}

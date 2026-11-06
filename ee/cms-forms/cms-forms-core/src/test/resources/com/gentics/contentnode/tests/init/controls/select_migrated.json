@@ -1,0 +1,199 @@
+{
+	"adminEmailAddress": "",
+	"adminEmailSubject": {},
+	"adminEmailPageId": 0,
+	"adminEmailNodeId": 0,
+	"adminEmailTemplate": {},
+	"successPageId": 4711,
+	"successNodeId": 42,
+	"successUrl": {},
+	"templateContext": "theme-red",
+	"schema": {
+		"properties": {
+			"selectgroup_radiobuttons": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "selectgroup_radiobuttons",
+				"formGridOptions": {
+					"customOption": false,
+					"selectOptions": [
+						{
+							"value": "one",
+							"label": {
+								"de": "Eins"
+							}
+						},
+						{
+							"value": "two",
+							"label": {
+								"de": "Zwei"
+							}
+						},
+						{
+							"value": "three",
+							"label": {
+								"de": "Drei"
+							}
+						}
+					]
+				}
+			},
+			"selectgroup_singleselect": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "selectgroup_singleselect",
+				"formGridOptions": {
+					"customOption": false,
+					"selectOptions": [
+						{
+							"value": "four",
+							"label": {
+								"de": "Vier"
+							}
+						},
+						{
+							"value": "five",
+							"label": {
+								"de": "Fünf"
+							}
+						},
+						{
+							"value": "six",
+							"label": {
+								"de": "Sechs"
+							}
+						}
+					]
+				}
+			},
+			"selectgroup_multiselect": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": true,
+				"name": "selectgroup_multiselect",
+				"formGridOptions": {
+					"customOption": false,
+					"selectOptions": [
+						{
+							"value": "seven",
+							"label": {
+								"de": "Sieben"
+							}
+						},
+						{
+							"value": "eight",
+							"label": {
+								"de": "Acht"
+							}
+						},
+						{
+							"value": "nine",
+							"label": {
+								"de": "Neun"
+							}
+						}
+					]
+				}
+			},
+			"selectgroup_additional": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": true,
+				"name": "selectgroup_additional",
+				"formGridOptions": {
+					"customOption": true,
+					"selectOptions": [
+						{
+							"value": "ten",
+							"label": {
+								"de": "Zehn"
+							}
+						},
+						{
+							"value": "eleven",
+							"label": {
+								"de": "Elf"
+							}
+						},
+						{
+							"value": "twelve",
+							"label": {
+								"de": "Zwölf"
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+		"pages": [
+			{
+				"elements": [
+					{
+						"type": "property",
+						"id": "selectgroup_radiobuttons",
+						"label": {
+							"de": "Als Radiobuttons"
+						},
+						"description": {},
+						"formGridOptions": {
+							"radio": true
+						}
+					},
+					{
+						"type": "property",
+						"id": "selectgroup_singleselect",
+						"label": {
+							"de": "Also single dropdown"
+						},
+						"description": {},
+						"formGridOptions": {
+							"radio": false
+						}
+					},
+					{
+						"type": "property",
+						"id": "selectgroup_multiselect",
+						"label": {
+							"de": "Also multi dropdown"
+						},
+						"description": {},
+						"formGridOptions": {
+							"radio": false
+						}
+					},
+					{
+						"type": "property",
+						"id": "selectgroup_additional",
+						"label": {
+							"de": "Mit zusätzlichem Element"
+						},
+						"description": {},
+						"formGridOptions": {
+							"radio": false
+						}
+					}
+				]
+			}
+		]
+	}
+}

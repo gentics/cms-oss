@@ -1,0 +1,7 @@
+Formsection:
+active: {{ active }}
+{{#each elements ~}}
+{{> error ~}}
+{{> (formsElementTemplate type) }}
+{{/each ~}}
+/Formsection

@@ -18,7 +18,6 @@ services:
     image: docker.gentics.com/gentics/cms:${CI_CMS_VERSION:-hotfix-6.6.x}
 
     environment:
-      LICENSEKEY: "${CI_LICENSEKEY:-}"
       KEYCLOAK_ACTIVE: true
       ELASTICSEARCH_ACTIVE: true
       ELASTICSEARCH_URL: "http://elasticsearch:9200"

@@ -1,0 +1,22 @@
+{
+	"ui-schema": {
+		"pages": [
+			{
+				"pagename": {
+					"de-AT": "1. Seite",
+					"en-AT": "1st Page"
+				},
+				"elements": [
+					{
+						"type": "property",
+						"id": "second_element",
+						"label": {
+							"de-AT": "Zweites Element",
+							"en-AT": "Second Element"
+						}
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,341 @@
+h2. Indexing with Elasticsearch
+
+This feature allows indexing of backend data (pages, files, images and folders) in an instance of the 3rd party product
+"Elasticsearch":https://www.elastic.co/products/elasticsearch to provide full-text search.
+
+endprologue.
+
+h3. Requirements
+
+This feature requires an existing installation of Elasticsearch 8.
+
+NOTE: Due to incompatible changes in the REST API and the mappings, the CMS is _not_ compatible older Elasticsearch version.
+
+Please consult the "Elasticsearch documentation":https://www.elastic.co/products/elasticsearch for details on installation, configuration
+and maintenance of Elasticsearch.
+
+NOTE: The API of the elasticsearch instance must be available from the CMS Server, but should not be available from clients directly.
+
+For indexing file contents, the "Ingest Attachment Plugin":https://www.elastic.co/guide/en/elasticsearch/plugins/current/ingest-attachment.html is also required.
+
+NOTE: Please use matching versions of Elasticsearch and the Ingest Attachment Plugin. When installing e.g. Elasticsearch v6.2.3,
+you must install the Ingest Attachment Plugin v6.2.3.
+
+h3. Installation and Configuration of Elasticsearch
+
+The "Elasticsearch setup documentation":https://www.elastic.co/guide/en/elasticsearch/reference/current/setup.html includes information on how to setup Elasticsearch and get it running.
+
+NOTE: Please consult the documentation for the exact version of Elasticsearch you are using.
+
+h3. Configuration of the CMS
+
+Indexing and searching must be activated and configured in the CMS:
+
+<shell filename="conf/*.yml">
+# activate indexing with elasticsearch
+feature:
+  elasticsearch: true
+
+elasticsearch:
+  # url for connecting to elasticsearch instance
+  url: "http://localhost:9200/"
+  # prefix for indices in elasticsearch
+  index: "genticscms"
+  # number of threads for indexing
+  threads: 10
+  certPath: "conf/http.pem"
+  caPath: "conf/elastic-stack-ca.pem"
+  username: "elastic"
+  password: "pass"
+</shell>
+
+h4. HTTPS connections
+
+Elasticsearch 8 has HTTPS enabled by default. If the used certificate is self signed, the CMS must be configured to accept the certificate. The configuration items @elasticsearch.certPath@ and @elasticsearch.caPath@ must be paths to PEM files containing the certificate and the certificate authority used to create the certificate respectively.
+
+The configured certificate will automatically be used when Elasticsearch is accessed via HTTPS.
+
+h4. Basic Auth
+
+Elasticsearch 8 has basic auth enabled by default. The default username is @elastic@ and the generated password is output during the first start of Elasticsearch. The username and password must be configured via the settings @elasticsearch.username@ and @elasticsearch.password@ respectively.
+
+h4. Indexing file contents
+
+For files (but not images), the CMS will also put the content into the Elasticsearch Index to make it searchable. This does not make sense for some files and
+can lead to resource exhaustion in the Elasticsearch (like Out Of Memory Errors), and can therefore be controlled with black- and whitelists for the mimetypes. It is
+also possible to further restrict the number of indexed characters (the default limit in Elasticsearch is 100000 characters).
+
+<shell filename="conf/*.yml">
+elasticsearch:
+  content:
+    blacklist:
+      - "application/zip"
+      - "audio/.*"
+      - "video/.*"
+    whitelist:
+      - ".*"
+    # restrict indexed characters
+    indexedChars: 10000
+</shell>
+
+* @blacklist@ and @whitelist@ can be single regular expressions or array of regular expressions
+* the default @blacklist@ contains @application/zip@, @audio/.*@ and @video/.*@ (like in the example shown above), the default @whitelist@ is empty (allowing all mimetypes, which are not blacklisted).
+* @blacklist@ is stronger than @whitelist@, if a mimetype matches one of the @blacklist@ patterns, the contents will not be indexed, even if it also matches one of the @whitelist@ patterns.
+* @indexedChars@ is per default empty and the default limit in ElasticSearch is 100000 characters.
+
+h4. Configuring word decompounder for German
+
+For a better search experience, it is advisable to use a word decompounder for analysis of german contents, e.g. the
+"Hyphenation decompounder token filter":https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-hyp-decomp-tokenfilter.html
+
+The following steps are necessary to accomplish this:
+
+h5. Step 1 - Hyphenations pattern file
+
+The hyphenations pattern file can be downloaded from the "OFFO Sourceforge project":https://sourceforge.net/projects/offo/files/offo-hyphenation/1.2/offo-hyphenation_v1.2.zip/download
+
+From the zip, only the file @offo-hyphenation/hyph/de_DR.xml@ is used and should be placed under @analysis/de_DR.xml@ in the @config@ directory of
+the Elasticsearch installation.
+
+h5. Step 2 - German dictionary file
+
+The german dictionary file "german-dictionary.txt":./gcn_files/german-dictionary.txt was generated from the "igerman98":https://www.j3e.de/ispell/igerman98/ project.
+
+The wordlist must be placed under @analysis/german-dictionary.txt@ in the @config@ directory of the Elasticsearch installation.
+
+h5. Step 3 - Configuration of index settings
+
+The index settings for the index @genticscms_page_de@ can be changed like this:
+
+<shell filename="conf/*.yml">
+# change index setting of pages in german to use a word decompounder
+elasticsearch:
+  settings:
+    page_de:
+      analysis:
+        analyser:
+          content_analyser:
+            type: "custom"
+            char_filter: ["html_strip"]
+            tokenizer: "standard"
+            filter: ["lowercase", "german_stop", "german_decompounder", "german_snowball"]
+          search_analyser:
+            type: "custom"
+            char_filter: ["html_strip"]
+            tokenizer: "standard"
+            filter: ["lowercase", "german_stop", "german_decompounder", "german_snowball"]
+        filter:
+          german_stop:
+            type: "stop"
+            stopword: "_german_"
+          german_decompounder:
+            type: "hyphenation_decompounder"
+            word_list_path: "analysis/german-dictionary.txt"
+            hyphenation_patterns_path: "analysis/de_DR.xml"
+            min_subword_size: 4
+          german_snowball:
+            type: "snowball"
+            language: "German"
+</shell>
+
+The index setting contains two analyzers, named @content_analyzer@ and the @search_analyzer@. Both analyzers can be configured identically,
+or differently depending on the desired indexing and search behaviour.
+
+NOTE: When the configuration for an already existing index was modified, the index must be dropped and rebuilt using the
+"Search Index Maintenance":#search-index-maintenance
+
+h5. @content_analyzer@
+
+The @content_analyzer@ will be used for analysis of the indexed content.
+
+h5. @search_analyzer@
+
+The @search_analyzer@ will be used for analysis of the search terms.
+
+h3. Usage
+
+When the CMS is started (or when the configuration is reloaded), the CMS will check for existence of the required indices and will create missing indices:
+
+|_. Type                          |_. Index name       |
+| Page (no language)              | genticscms_page    |
+| Page (language with code "xx" ) | genticscms_page_xx |
+| Folder                          | genticscms_folder  |
+| Image                           | genticscms_image   |
+| File                            | genticscms_file    |
+
+NOTE: For every language, which is activated for at least one Node, the matching index @genticscms_page_[code]@ will be created.
+If additional languages are activated for Nodes, the missing indices will automatically be created and if languages are deactivated,
+superfluous indices will be dropped.
+
+Also the pipeline for ingesting attachments will be created, if necessary.
+
+If at least one index is created, an automatic full reindex run is triggered.
+
+h3. Search Index Maintenance
+
+The Content.Admin in the old UI contains a new entry @Search Index Maintenance@ which provides an overview over
+required indices and their status.
+
+The list will indicate indices, which are not fully functional, either because they do not exist, have incorrect settings or
+mapping, or do not contain the expected number of documents.
+
+The action @Rebuild index@ will update an incorrect mapping, will remove superfluous documents from the index and will reindex every object.
+
+The action @Drop and rebuild index@ will drop, recreate and fill the index.
+
+h3. REST API
+
+POST requests to the REST endpoint @/rest/elastic@ will be forwarded to the search API endpoint of Elasticsearch for all applicable indices:
+
+E.g. the request
+<shell>
+POST http://[cmshost]/rest/elastic/_search?sid=[SID]
+{
+	"_source": false,
+	"query": {
+		"query_string": {
+			"query": "Test*"
+		}
+	}
+}
+</shell>
+
+will be forwarded to
+
+<shell>
+POST http://localhost:9200/genticscms_page,genticscms_page_de,genticscms_page_en,genticscms_file,genticscms_image,genticscms_folder/_search?sid=[SID]
+{
+	"_source": false,
+	"query": {
+		"query_string": {
+			"query": "Test*"
+		}
+	}
+}
+</shell>
+
+The response will be extended to contain the CMS objects as attribute @_object@ of the returned @hits@.
+
+h3. Mapping
+
+h4. Page
+
+|_. CMS property                         |_. Index attribute  |_. Index type        |
+| page.id                                | id                 | integer             |
+| page.folder.node.id                    | nodeId             | integer             |
+| page.folder.id                         | folderId           | integer             |
+| page.name                              | name               | text                |
+| page.description                       | description        | text                |
+| content                                | content            | text                |
+| page.creationdate.timestamp            | created            | date (epoch_second) |
+| page.creator.id                        | creatorId          | integer             |
+| page.editdate.timestamp                | edited             | date (epoch_second) |
+| page.editor.id                         | editorId           | integer             |
+| page.publishdate.timestamp             | published          | date (epoch_second) |
+| page.publisher.id                      | publisherId        | integer             |
+| page.template.id                       | templateId         | integer             |
+| page.language.code                     | languageCode       | keyword             |
+| page.nice_url                          | niceUrl            | text                |
+| page.alternate_urls                    | alternateUrls      | text                |
+| Node/Channel IDs, where oage is online | online             | integer             |
+| Modification status                    | modified           | boolean             |
+| Queue status                           | queued             | boolean             |
+| Planned status                         | planned            | boolean             |
+| Planned publish date                   | publishAt          | date (epoch_second) |
+| Planned offline date                   | offlineAt          | date (epoch_second) |
+| Queued publish date                    | queuedPublishAt    | date (epoch_second) |
+| Queued offline date                    | queuedOfflineAt    | date (epoch_second) |
+| System creation date                   | systemCreationDate | date (epoch_second) |
+| Custom creation date                   | customCreationDate | date (epoch_second) |
+| System edit date                       | systemEditDate     | date (epoch_second) |
+| Custom edit date                       | customEditDate     | date (epoch_second) |
+| Deleted status                         | deleted            | boolean             |
+
+NOTE: The attributes @edited@ and @created@ will contain custom dates, if set and fall back to the system dates. The properties
+@systemCreationDate@ and @systemEditDate@ will always contain the system (real) dates, while @customCreationDate@ and @customEditDate@
+will contain the customly set dates (and will be empty, if not set).
+
+h4. Folder
+
+|_. CMS property                |_. Index attribute  |_. Index type        |
+| folder.id                     | id                 | integer             |
+| folder.node.id                | nodeId             | integer             |
+| folder.mother                 | folderId           | integer             |
+| folder.name                   | name               | text                |
+| folder.description            | description        | text                |
+| folder.creationdate.timestamp | created            | date (epoch_second) |
+| folder.creator.id             | creatorId          | integer             |
+| folder.editdate.timestamp     | edited             | date (epoch_second) |
+| folder.editor.id              | editorId           | integer             |
+| folder.creationdate.timestamp | systemCreationDate | date (epoch_second) |
+| folder.editdate.timestamp     | systemEditDate     | date (epoch_second) |
+| Deleted status                | deleted            | boolean             |
+
+h4. Image
+
+|_. CMS property                          |_. Index attribute  |_. Index type        |
+| image.id                                | id                 | integer             |
+| image.folder.node.id                    | nodeId             | integer             |
+| Node/Channel IDs, where image is online | online             | integer             |
+| image.folder.id                         | folderId           | integer             |
+| image.name                              | name               | text                |
+| image.description                       | description        | text                |
+| image.nice_url                          | niceUrl            | text                |
+| image.alternate_urls                    | alternateUrls      | text                |
+| image.createdate.timestamp              | created            | date (epoch_second) |
+| image.creator.id                        | creatorId          | integer             |
+| image.editdate.timestamp                | edited             | date (epoch_second) |
+| image.editor.id                         | editorId           | integer             |
+| image.type                              | mimetype           | text                |
+| image.createdate.timestamp              | systemCreationDate | date (epoch_second) |
+| image.editdate.timestamp                | systemEditDate     | date (epoch_second) |
+| Deleted status                          | deleted            | boolean             |
+
+h4. File
+
+|_. CMS property                         |_. Index attribute  |_. Index type        |
+| file.id                                | id                 | integer             |
+| file.folder.node.id                    | nodeId             | integer             |
+| Node/Channel IDs, where file is online | online             | integer             |
+| file.folder.id                         | folderId           | integer             |
+| file.name                              | name               | text                |
+| file.description                       | description        | text                |
+| file.nice_url                          | niceUrl            | text                |
+| file.alternate_urls                    | alternateUrls      | text                |
+| file.createdate.timestamp              | created            | date (epoch_second) |
+| file.creator.id                        | creatorId          | integer             |
+| file.editdate.timestamp                | edited             | date (epoch_second) |
+| file.editor.id                         | editorId           | integer             |
+| file.type                              | mimetype           | text                |
+| binarycontent                          | content            | text                |
+| file.createdate.timestamp              | systemCreationDate | date (epoch_second) |
+| file.editdate.timestamp                | systemEditDate     | date (epoch_second) |
+| Deleted status                         | deleted            | boolean             |
+
+h3. New UI
+
+If the feature is activated, the new UI will automatically use the search index for searching objects. Additionally, there will be
+an "advanced search" panel below the main search bar, which allows further filtering of results by various parameters.
+
+h3. Differences between regular and advanced search
+
+While the regular search just finds contents that contain the exact characters entered by the editor (anywhere in the text, even mid word),
+search with Elasticsearch works completely different.
+
+When content is indexed in Elasticsearch, it is analyzed with the configured @content_analyzer@. The analyzer will transform the content into a
+set of **tokens** which are put into the index.
+
+While searching, the search term entered by the user is analyzed with the configured @search_analyzer@ (which is by default identical to the
+@content_analyzer@). The analyzer will also transform the search term into a set of **tokens** and Elasticsearch will find matching documents by
+comparing the search tokens with the tokens in the index.
+
+This approach has many advantages over the simple database search used by the regular search:
+
+* Scoring of documents determine "how well" search hits match the terms. Documents with better scoring are sorted first
+* Analyzers can use language specific "stemming" when generating the tokens. (E.g. the german words "Häuser", "Hauses" and "Haus" will all generate the token "haus").
+  This improves the search experience, because searching for "Haus" will also find documents containing "Häuser" or "Hauses".
+* The german analyzer can be configured with a decompounder, which will create tokens for valid "subwords". E.g. the german word "Weißkopfseeadler"
+  will create the tokens "weiss", "kopf", "see" and "adler". So when searching for "Adler", documents containing "Weißkopfseeadler" will be found.
+* In general, token based search in Elasticsearch works much faster than searching with wildcards in a database.
+
+---

@@ -1,0 +1,61 @@
+{{- if .Values.cms.preUpgrade.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cms.fullname" . }}-pre-upgrade
+  labels:
+    {{- include "cms.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "cms.fullname" . }}-pre-upgrade
+    spec:
+      restartPolicy: Never
+      {{- /* Three-state, matching the chart-wide pull secret logic: set -> use it;
+           set to "" -> no pull secret; absent -> fall back to the CMS chain
+           (image.pullSecret -> global.imagePullSecrets -> defaultImagePullSecret). */}}
+      {{- if not (kindIs "invalid" ((.Values.cms.preUpgrade.image).pullSecret)) }}
+      {{- if .Values.cms.preUpgrade.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.cms.preUpgrade.image.pullSecret }}
+      {{- end }}
+      {{- else }}
+      {{- include "cms.imagePullSecrets" . | nindent 6 }}
+      {{- end }}
+      containers:
+        - name: pre-upgrade
+          {{- if .Values.cms.preUpgrade.image }}
+          image: "{{ include "gentics-common.image" (dict "root" . "image" .Values.cms.preUpgrade.image) }}"
+          {{- else }}
+          image: "{{ include "cms.image" . }}"
+          {{- end }}
+          imagePullPolicy: {{ ((.Values.cms.preUpgrade.image).pullPolicy) | default .Values.image.pullPolicy }}
+          env:
+            - name: NODE_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  {{- if $.Values.cms.nodeUserPasswordSecret }}
+                  name: {{ $.Values.cms.nodeUserPasswordSecret }}
+                  key: password
+                  {{- else }}
+                  name: {{ include "cms.fullname" . }}
+                  key: node-user-password
+                  {{- end }}
+          command:
+            - /bin/sh
+            - /preUpgrade.sh
+          volumeMounts:
+            - mountPath: /preUpgrade.sh
+              name: config-cms
+              subPath: preUpgrade.sh
+      volumes:
+        - name: config-cms
+          configMap:
+            name: {{ include "cms.fullname" . }}-pre-upgrade-config
+{{- end }}

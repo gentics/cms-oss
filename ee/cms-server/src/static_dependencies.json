@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "name": "CMS EE",
+      "modules": [
+        {
+          "name": "External",
+          "dependencies": [
+            {
+              "name": "Java Runtime",
+              "description": "Version included in the container images.",
+              "current": "17",
+              "latest": "25"
+            },
+            {
+              "name": "Elasticsearch",
+              "current": "9.1.7",
+              "latest": "9.2.2"
+            },
+            {
+              "name": "Keycloak",
+              "current": "26.1.2",
+              "latest": "26.2.5"
+            },
+            {
+              "name": "MariaDB",
+              "description": "Version used by automated tests.",
+              "current": "10.3",
+              "latest": "12.1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

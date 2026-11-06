@@ -170,11 +170,6 @@ import {
     LanguageListResponse,
     LanguageResponse,
     LanguageUpdateRequest,
-    LicenseContentRepositoryInfoOptions,
-    LicenseContentRepositoryInfoResponse,
-    LicenseInfoResponse,
-    LicenseUpdateRequest,
-    LicenseUpdateResponse,
     LinkCheckerCheckRequest,
     LinkCheckerCheckResponse,
     LinkCheckerExternalLinkList,
@@ -296,7 +291,6 @@ import {
     PublishQueue,
     PublishQueueOptions,
     PublishType,
-    PushLicenseRequest,
     PushToMasterRequest,
     Raw,
     Response,
@@ -1143,13 +1137,6 @@ export interface AbstractPublishProtocolAPI extends BasicAPI {
     list: (options?: PublishLogListOption) => ListResponse<PublishLogEntry>;
 }
 
-export interface AbstractLicenseAPI extends BasicAPI {
-    info: () => LicenseInfoResponse;
-    update: (data: LicenseUpdateRequest) => LicenseUpdateResponse;
-    contentRepositories: (options?: LicenseContentRepositoryInfoOptions) => LicenseContentRepositoryInfoResponse;
-    push: (data: PushLicenseRequest) => Response;
-}
-
 export interface AbstractKeycloakAPI extends BasicAPI {
     configuration: () => KeycloakConfiguration;
 }
@@ -1195,6 +1182,5 @@ export interface AbstractRootAPI {
     user: AbstractUserAPI;
     usersnap: AbstractUsersnapAPI;
     validation: AbstractValidationAPI;
-    license: AbstractLicenseAPI;
     keycloak: AbstractKeycloakAPI;
 }

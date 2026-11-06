@@ -1,0 +1,756 @@
+{
+	"schema": {
+		"key": "626218D9-E978-42CC-8C39-817EAD7DE0B6_TenantID_212_123",
+		"version": "162",
+		"properties": {
+			"57188E4F-5E23-457E-ADA7-74D3027200A9": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": true,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Anrede"
+			},
+			"799c8e2c-8d03-4b0d-a663-3488fb5f21cc": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 255,
+					"minLength": 0
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Vorname"
+			},
+			"68DA8725-9D6D-49EA-8460-1C16DE25CB2A": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 255,
+					"minLength": 0
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Nachname"
+			},
+			"A31C4733-7B1C-4FEF-A9AD-473F2352CE23": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Geschlecht"
+			},
+			"C78F7F55-3047-499A-AE47-195DCE509147": {
+				"dateOnly": true,
+				"type": "datetime",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Geburtsdatum"
+			},
+			"EB4D6110-9A1B-4E06-917B-7707C3D5D756": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": true,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Korrespondenzsprache"
+			},
+			"a5b76b18-be67-44e2-8cb3-f79d73f9303c": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 255,
+					"minLength": 0
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Email"
+			},
+			"28D0EEE7-1C00-4124-9F8B-8C8DE47C5BCD": {
+				"type": "catalog",
+				"searchReferenceValueMinLength": 3,
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Telefonnummer_Land"
+			},
+			"91c18233-3a5e-4afb-bd9e-3033f478c351": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"regexValidation": {
+						"regex": "^[1-9]{1}[0-9\\s]*$",
+						"errorMessage": {
+							"de-CH": "Bitte geben sie die Telefonnummer nur mit Ziffern und ohne führende 0, 0041 oder +41 ein.",
+							"en-CH": "Please enter the telephone number without the leading 0, 0041 or +41.",
+							"it-CH": "Si prega di inserire il numero di telefono senza lo zero iniziale, il 0041 o il +41.",
+							"fr-CH": "Veuillez saisir le numéro de téléphone sans le 0 initial ni le 0041 ni le +41."
+						}
+					},
+					"maxLength": 255,
+					"minLength": 0
+				},
+				"mandatory": true,
+				"isList": false,
+				"name": "Rbn_Base_GP_Person_Telefonnummer"
+			},
+			"FBA12E23-B6BE-497A-BE0D-72D4B7E11ABE": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 34,
+					"minLength": 1
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_IBAN"
+			},
+			"CFA8F7E0-D838-4AFD-B366-01EDC8E9AACD": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 34,
+					"minLength": 0
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_IBAN_Hidden"
+			},
+			"1DDECEC2-82B7-40CB-AF10-42CB435FD3EF": {
+				"type": "boolean",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": true,
+				"isList": false,
+				"name": "Rbn_Base_GP_FO_Email_Versand_aktiviert"
+			},
+			"4A6EA88B-EE93-4236-B09D-55F5F639F334": {
+				"type": "boolean",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Backoffice"
+			},
+			"2B37F775-0687-47E4-9D3D-D0F2B63F2450": {
+				"type": "catalog",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Versandart"
+			},
+			"1C6478E1-FBED-4465-986D-87E4FD828EF7": {
+				"type": "string",
+				"unit": {},
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_IBAN_formatiert"
+			},
+			"D6700908-FC9F-46AF-A59A-8E651AA3322E": {
+				"type": "boolean",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": true,
+				"isList": false,
+				"name": "Rbn_Base_GP_Amtlich_verifiziert"
+			},
+			"832C0DFF-D5B6-4C80-9BCA-2BDD16BD932F": {
+				"type": "boolean",
+				"updateOnChange": true,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_Add_Korrespondenzadresse"
+			},
+			"22FF1978-7204-4B8E-A417-317B6A8714BC": {
+				"properties": {
+					"044BBE2E-6AF6-4A53-ADC4-937D0671E180": {
+						"type": "string",
+						"updateOnChange": false,
+						"validation": {
+							"regexValidation": {
+								"regex": "^[\\s\\S]{0,80}$",
+								"errorMessage": {
+									"de-CH": "Der Wert darf höchstens 80 Zeichen lang sein.",
+									"en-CH": "The value may be a maximum of 80 characters long.",
+									"it-CH": "Il valore non deve superare 80 caratteri.",
+									"fr-CH": "La valeur ne peut pas dépasser 80 caractères."
+								}
+							},
+							"maxLength": 255,
+							"minLength": 0
+						},
+						"mandatory": false,
+						"isList": false,
+						"name": "Rbn_Base_GP_Zusatzzeile1"
+					},
+					"44019234-0EF2-4BE5-A579-C1CC6D70C8D9": {
+						"type": "autocomplete",
+						"autoCompleteMinLength": 3,
+						"updateOnChange": false,
+						"validation": {
+							"regexValidation": {
+								"regex": "^[\\s\\S]{0,80}$",
+								"errorMessage": {
+									"de-CH": "Der Wert darf höchstens 80 Zeichen lang sein.",
+									"en-CH": "The value may be a maximum of 80 characters long.",
+									"it-CH": "Il valore non deve superare 80 caratteri.",
+									"fr-CH": "La valeur ne peut pas dépasser 80 caractères."
+								}
+							},
+							"maxLength": 255,
+							"minLength": 0
+						},
+						"mandatory": false,
+						"isList": false,
+						"name": "Rbn_Base_GP_Strasse"
+					},
+					"A76B30A3-7ED5-4E5E-B601-0FA73DDF4616": {
+						"type": "autocomplete",
+						"autoCompleteMinLength": 1,
+						"updateOnChange": true,
+						"validation": {
+							"regexValidation": {
+								"regex": "^[\\s\\S]{0,20}$",
+								"errorMessage": {
+									"de-CH": "Der Wert darf höchstens 20 Zeichen lang sein.",
+									"en-CH": "The value may be a maximum of 20 characters long.",
+									"it-CH": "Il valore non deve superare 20 caratteri.",
+									"fr-CH": "La valeur ne peut pas dépasser 20 caractères."
+								}
+							},
+							"maxLength": 255,
+							"minLength": 0
+						},
+						"mandatory": false,
+						"isList": false,
+						"name": "Rbn_Base_GP_Hausnummer"
+					},
+					"3A672EAC-8DCB-4302-9C1C-790980878B1E": {
+						"type": "string",
+						"updateOnChange": false,
+						"validation": {
+							"regexValidation": {
+								"regex": "^[\\s\\S]{0,80}$",
+								"errorMessage": {
+									"de-CH": "Der Wert darf höchstens 80 Zeichen lang sein.",
+									"en-CH": "The value may be a maximum of 80 characters long.",
+									"it-CH": "Il valore non deve superare 80 caratteri.",
+									"fr-CH": "La valeur ne peut pas dépasser 80 caractères."
+								}
+							},
+							"maxLength": 255,
+							"minLength": 0
+						},
+						"mandatory": false,
+						"isList": false,
+						"name": "Rbn_Base_GP_Zusatzzeile2"
+					},
+					"88644C2A-EBEE-4AC1-AA4F-B36FE47A3AA6": {
+						"type": "boolean",
+						"updateOnChange": true,
+						"validation": {},
+						"mandatory": false,
+						"isList": false,
+						"name": "Rbn_Base_GP_PostfachErfassen"
+					},
+					"1176D0BB-298A-45EB-A618-8842FDEE0046": {
+						"type": "string",
+						"updateOnChange": true,
+						"validation": {
+							"regexValidation": {
+								"regex": "^[\\s\\S]{0,20}$",
+								"errorMessage": {
+									"de-CH": "Der Wert darf höchstens 20 Zeichen lang sein.",
+									"en-CH": "The value may be a maximum of 20 characters long.",
+									"it-CH": "Il valore non deve superare 20 caratteri.",
+									"fr-CH": "La valeur ne peut pas dépasser 20 caractères."
+								}
+							},
+							"maxLength": 255,
+							"minLength": 0
+						},
+						"mandatory": false,
+						"isList": false,
+						"name": "Rbn_Base_GP_Postfach"
+					},
+					"BA584684-7A7B-48D6-87E9-1DA890D733A1": {
+						"type": "autocomplete",
+						"autoCompleteMinLength": 1,
+						"updateOnChange": false,
+						"validation": {
+							"regexValidation": {
+								"regex": "^[\\s\\S]{0,20}$",
+								"errorMessage": {
+									"de-CH": "Der Wert darf höchstens 20 Zeichen lang sein.",
+									"en-CH": "The value may be a maximum of 20 characters long.",
+									"it-CH": "Il valore non deve superare 20 caratteri.",
+									"fr-CH": "La valeur ne peut pas dépasser 20 caractères."
+								}
+							},
+							"maxLength": 255,
+							"minLength": 0
+						},
+						"mandatory": true,
+						"isList": false,
+						"name": "Rbn_Base_GP_PLZ"
+					},
+					"B4AB1065-BFD5-4507-A5B5-F741C89EC7D5": {
+						"type": "autocomplete",
+						"autoCompleteMinLength": 3,
+						"updateOnChange": false,
+						"validation": {
+							"regexValidation": {
+								"regex": "^[\\s\\S]{0,80}$",
+								"errorMessage": {
+									"de-CH": "Der Wert darf höchstens 80 Zeichen lang sein.",
+									"en-CH": "The value may be a maximum of 80 characters long.",
+									"it-CH": "Il valore non deve superare 80 caratteri.",
+									"fr-CH": "La valeur ne peut pas dépasser 80 caractères."
+								}
+							},
+							"maxLength": 255,
+							"minLength": 0
+						},
+						"mandatory": true,
+						"isList": false,
+						"name": "Rbn_Base_GP_Ort"
+					},
+					"3F4C7803-2690-4236-A969-D4343E809209": {
+						"type": "catalog",
+						"updateOnChange": true,
+						"validation": {},
+						"mandatory": false,
+						"isList": false,
+						"name": "Rbn_Base_GP_Kanton"
+					},
+					"7432BCE2-7AF5-43A3-A927-586CC0122414": {
+						"type": "catalog",
+						"updateOnChange": true,
+						"validation": {},
+						"mandatory": true,
+						"isList": false,
+						"name": "Rbn_Base_GP_Land"
+					}
+				},
+				"type": "aggregate",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "Rbn_Base_GP_PostadresseKorrespondenz"
+			},
+			"3B4307ED-DC8C-4048-9211-10F16260B54C": {
+				"type": "boolean",
+				"updateOnChange": true,
+				"validation": {},
+				"mandatory": true,
+				"isList": false,
+				"name": "Rbn_Base_GP_EingabeAdresseOhneAdressChecker"
+			}
+		}
+	},
+	"ui-schema": {
+		"key": "626218D9-E978-42CC-8C39-817EAD7DE0B6_TenantID_212_123",
+		"version": "162",
+		"formname": {
+			"de-CH": "STD - Meine persönlichen Daten ändern",
+			"en-CH": "Manage data regarding a natural person",
+			"fr-CH": "Gérer les données concernant la personne physique",
+			"it-CH": "Gestire i dati concernenti la persona fisica"
+		},
+		"formdescription": {
+			"de-CH": "Person bearbeiten - Dossier",
+			"en-CH": "Manage data regarding a natural person",
+			"fr-CH": "Gérer les données concernant la personne physique",
+			"it-CH": "Gestire i dati concernenti la persona fisica"
+		},
+		"pages": [
+			{
+				"pagename": {
+					"de-CH": "Persönliche Daten",
+					"en-CH": "Personal details",
+					"fr-CH": "Données personnelles",
+					"it-CH": "Dati personali"
+				},
+				"elements": [
+					{
+						"type": "property",
+						"id": "57188E4F-5E23-457E-ADA7-74D3027200A9",
+						"label": {
+							"de-CH": "Anrede",
+							"en-CH": "Title",
+							"it-CH": "Titolo",
+							"fr-CH": "Titre"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "799c8e2c-8d03-4b0d-a663-3488fb5f21cc",
+						"label": {
+							"de-CH": "Vorname",
+							"en-CH": "First name",
+							"it-CH": "Nome di battesimo",
+							"fr-CH": "Prénom"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "68DA8725-9D6D-49EA-8460-1C16DE25CB2A",
+						"label": {
+							"de-CH": "Nachname",
+							"en-CH": "Surname",
+							"it-CH": "Cognome",
+							"fr-CH": "Nom de famille"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "A31C4733-7B1C-4FEF-A9AD-473F2352CE23",
+						"label": {
+							"de-CH": "Geschlecht",
+							"en-CH": "Sex",
+							"it-CH": "Genere",
+							"fr-CH": "Genre"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "C78F7F55-3047-499A-AE47-195DCE509147",
+						"label": {
+							"de-CH": "Geburtsdatum",
+							"en-CH": "Date of birth",
+							"it-CH": "Data di nascita",
+							"fr-CH": "Date de naissance"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "EB4D6110-9A1B-4E06-917B-7707C3D5D756",
+						"label": {
+							"de-CH": "Korrespondenzsprache",
+							"en-CH": "Correspondence language",
+							"it-CH": "Lingua di corrispondenza",
+							"fr-CH": "Langue de correspondance"
+						},
+						"description": {
+							"de-CH": "Wählen Sie Ihre Korrespondenzsprache aus. Die Korrespondenzsprache Englisch ist aus rechtlichen Gründen nur begrenzt verfügbar. Die Amtssprachen sind Deutsch, Französisch und Italienisch.",
+							"en-CH": "Select the correspondence language of your organisation. English as a correspondence language is only available to a limited extent for legal reasons. The official languages are German, French and Italian.",
+							"it-CH": "Selezionate la lingua per la corrispondenza della vostra organizzazione. Per motivi di legge l’inglese come lingua per la corrispondenza è disponibile solo limitatamente. Le lingue ufficiali sono italiano, tedesco e francese.",
+							"fr-CH": "Veuillez indiquer la langue de correspondance souhaitée. Pour des raisons juridiques, l’anglais n’est disponible que de façon restreinte. Les langues officielles sont le français, l’allemand et l’italien."
+						}
+					},
+					{
+						"type": "property",
+						"id": "a5b76b18-be67-44e2-8cb3-f79d73f9303c",
+						"label": {
+							"de-CH": "E-Mail-Adresse",
+							"en-CH": "Email address",
+							"it-CH": "Indirizzo elettronico",
+							"fr-CH": "Adresse électronique"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "28D0EEE7-1C00-4124-9F8B-8C8DE47C5BCD",
+						"label": {
+							"de-CH": "Landesvorwahl",
+							"en-CH": "International dialling code",
+							"it-CH": "Prefisso del Paese",
+							"fr-CH": "Indicatif du pays"
+						},
+						"description": {},
+						"editMode": 4
+					},
+					{
+						"type": "property",
+						"id": "91c18233-3a5e-4afb-bd9e-3033f478c351",
+						"label": {
+							"de-CH": "Telefonnummer",
+							"en-CH": "Telephone number",
+							"it-CH": "Numero di telefono",
+							"fr-CH": "Numéro de téléphone"
+						},
+						"description": {
+							"de-CH": "Bitte erfassen Sie die Telefonnummer ohne führende Null im Format (31 123 45 56).",
+							"en-CH": "Please enter the telephone number without leading zero in the format (31 123 45 56).",
+							"it-CH": "Si prega di inserire il numero di telefono senza lo zero iniziale (31 123 45 56).",
+							"fr-CH": "Merci d’insérer le numéro de téléphone sans le premier zéro, au format (31 123 45 56)."
+						}
+					},
+					{
+						"type": "property",
+						"id": "FBA12E23-B6BE-497A-BE0D-72D4B7E11ABE",
+						"label": {
+							"de-CH": "IBAN für Rückerstattungen",
+							"en-CH": "IBAN for refunds",
+							"it-CH": "Codici IBAN per rimborsi",
+							"fr-CH": "IBAN pour les remboursements"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "CFA8F7E0-D838-4AFD-B366-01EDC8E9AACD",
+						"label": {
+							"de-CH": "IBAN Zuletzt (Hidden)",
+							"en-CH": "IBAN old (hidden)",
+							"it-CH": "IBAN alt (Hidden)",
+							"fr-CH": "IBAN ancien (Hidden)"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "1DDECEC2-82B7-40CB-AF10-42CB435FD3EF",
+						"label": {
+							"de-CH": "Automatische E-Mailbenachrichtigung",
+							"en-CH": "Automatic email notification",
+							"it-CH": "Notifica automatica via e-mail",
+							"fr-CH": "Notification automatique par message électronique"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "4A6EA88B-EE93-4236-B09D-55F5F639F334",
+						"label": {
+							"de-CH": "Im Backoffice erzeugt (Hidden)",
+							"en-CH": "Generated in the back office",
+							"it-CH": "Generato in backoffice",
+							"fr-CH": "Créé dans le back office"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "2B37F775-0687-47E4-9D3D-D0F2B63F2450",
+						"label": {
+							"de-CH": "Versandart Organisation",
+							"fr-CH": "Mode d'envoi",
+							"en-CH": "Shipment type",
+							"it-CH": "Modalità d'invio"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "1C6478E1-FBED-4465-986D-87E4FD828EF7",
+						"label": {
+							"de-CH": "IBAN formatiert"
+						},
+						"description": {}
+					}
+				]
+			},
+			{
+				"pagename": {
+					"de-CH": "Korrespondenzadresse",
+					"en-CH": "Correspondence address",
+					"fr-CH": "Adresse de correspondance",
+					"it-CH": "indirizzo di corrispondenza"
+				},
+				"elements": [
+					{
+						"type": "property",
+						"id": "D6700908-FC9F-46AF-A59A-8E651AA3322E",
+						"label": {
+							"de-CH": "Amtlich verifiziert",
+							"en-CH": "Officially verified",
+							"it-CH": "Verificato ufficialmente",
+							"fr-CH": "Vérifié officiellement"
+						},
+						"description": {}
+					},
+					{
+						"type": "property",
+						"id": "832C0DFF-D5B6-4C80-9BCA-2BDD16BD932F",
+						"label": {
+							"de-CH": "Zusätzliche Korrespondenzadresse erfassen",
+							"en-CH": "Enter additional correspondence address",
+							"it-CH": "Registrare un indirizzo di corrispondenza supplementare?",
+							"fr-CH": "Saisir une adresse de correspondance supplémentaire"
+						},
+						"description": {}
+					},
+					{
+						"type": "aggregate",
+						"id": "22FF1978-7204-4B8E-A417-317B6A8714BC",
+						"label": {
+							"de-CH": "Korrespondenzadresse",
+							"en-CH": "Correspondence address",
+							"it-CH": "indirizzo di corrispondenza",
+							"fr-CH": "Adresse de correspondance"
+						},
+						"description": {},
+						"elements": [
+							{
+								"type": "property",
+								"id": "044BBE2E-6AF6-4A53-ADC4-937D0671E180",
+								"label": {
+									"de-CH": "Zusatzzeile 1",
+									"en-CH": "Additional line 1",
+									"it-CH": "Riga supplementare 1",
+									"fr-CH": "Ligne supplémentaire 1"
+								},
+								"description": {
+									"de-CH": "Die Zusatzzeile 1 wird oberhalb der Strasse angedruckt. Sie wird für personifizierte Adressangaben verwendet (z. B. c/o Adresse).",
+									"en-CH": "Additional line 1 is displayed above the street. It is used for personalised address information (e.g. c/o address).",
+									"it-CH": "La linea supplementare 1, che figura sopra l'indicazione della via, viene utilizzata per gli indirizzi personalizzati (ad es. indirizzo \"c/o\").",
+									"fr-CH": "La ligne supplémentaire 1, qui figure au-dessus du nom de la rue, est utilisée pour les éléments personnalisés (p. ex. adresse c/o)."
+								},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "44019234-0EF2-4BE5-A579-C1CC6D70C8D9",
+								"label": {
+									"de-CH": "Strasse",
+									"en-CH": "Street",
+									"it-CH": "Via",
+									"fr-CH": "Rue"
+								},
+								"description": {},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "A76B30A3-7ED5-4E5E-B601-0FA73DDF4616",
+								"label": {
+									"de-CH": "Hausnummer",
+									"en-CH": "House number",
+									"it-CH": "Numero civico",
+									"fr-CH": "Numéro de rue"
+								},
+								"description": {},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "3A672EAC-8DCB-4302-9C1C-790980878B1E",
+								"label": {
+									"de-CH": "Zusatzzeile 2",
+									"en-CH": "Additional line 2",
+									"it-CH": "Riga supplementare 2",
+									"fr-CH": "Ligne supplémentaire 2"
+								},
+								"description": {
+									"de-CH": "Die Zusatzzeile 2 wird oberhalb der Ortsangaben angedruckt. Sie wird für nicht personifizierte Adressangaben verwendet (z.B. Zusatzangaben zur Lokalisation, beispielsweise \"Chalet Edelweiss\").\"",
+									"en-CH": "Additional line 2 is displayed above the location information. It is used for non-personalised address information (e.g. additional information on the localisation, for example \"Chalet Edelweiss\").",
+									"it-CH": "La linea supplementare 2, che figura sopra l'indicazione del luogo, viene utilizzata per gli indirizzi non personalizzati (dati complementari utili per la localizzazione, come ad es.\"Chalet Edelweiss\").",
+									"fr-CH": "La ligne supplémentaire 2, qui figure au-dessus des indications de lieu, est utilisée pour les éléments non personnalisés (p. ex. indications complémentaires sur la localisation; exemple: «Chalet Edelweiss»)."
+								},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "88644C2A-EBEE-4AC1-AA4F-B36FE47A3AA6",
+								"label": {
+									"de-CH": "Postfach erfassen",
+									"en-CH": "Enter P.O. Box",
+									"it-CH": "Inserire casella postale",
+									"fr-CH": "Saisir case postale"
+								},
+								"description": {},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "1176D0BB-298A-45EB-A618-8842FDEE0046",
+								"label": {
+									"de-CH": "Postfach",
+									"en-CH": "P.O. box",
+									"it-CH": "Casella postale",
+									"fr-CH": "Case postale"
+								},
+								"description": {
+									"de-CH": "Geben Sie zwingend den Zusatz \"Postfach\" an. Optional können Sie eine Postfachnummer hinterlegen (z.B. \"Postfach 1\")",
+									"en-CH": "You must enter the additional information 'P.O. box'. If you wish, you may also specify a P.O. box number (e.g. 'P.O. box 1').",
+									"it-CH": "È imperativo aggiungere la menzione \"Casella postale\". Opzione: aggiungere un numero di casella postale (es.: \"Casella postale 1\")",
+									"fr-CH": "Vous devez impérativement indiquer le complément \"case postale\". Ajouter un numéro de case postale (p. ex. \"case postale 1\") est facultatif."
+								},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "BA584684-7A7B-48D6-87E9-1DA890D733A1",
+								"label": {
+									"de-CH": "Postleitzahl",
+									"en-CH": "Postal code",
+									"it-CH": "NPA",
+									"fr-CH": "NPA"
+								},
+								"description": {},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "B4AB1065-BFD5-4507-A5B5-F741C89EC7D5",
+								"label": {
+									"de-CH": "Ort",
+									"en-CH": "Town",
+									"it-CH": "Località",
+									"fr-CH": "Localité"
+								},
+								"description": {},
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "3F4C7803-2690-4236-A969-D4343E809209",
+								"label": {
+									"de-CH": "Kanton",
+									"en-CH": "Canton",
+									"it-CH": "Cantone",
+									"fr-CH": "Canton"
+								},
+								"description": {},
+								"editMode": 4,
+								"editModeDialogUsage": 0
+							},
+							{
+								"type": "property",
+								"id": "7432BCE2-7AF5-43A3-A927-586CC0122414",
+								"label": {
+									"de-CH": "Land",
+									"en-CH": "Country",
+									"it-CH": "Paese",
+									"fr-CH": "Pays"
+								},
+								"description": {},
+								"editMode": 4,
+								"editModeDialogUsage": 0
+							}
+						],
+						"csvUploadEnabled": false,
+						"editMode": 1
+					},
+					{
+						"type": "property",
+						"id": "3B4307ED-DC8C-4048-9211-10F16260B54C",
+						"label": {
+							"de-CH": "Adressvalidierung deaktivieren",
+							"en-CH": "Deactivate address validations",
+							"it-CH": "Disattivare la validazione degli indirizzi",
+							"fr-CH": "Désactiver les validations d'adresse"
+						},
+						"description": {}
+					}
+				]
+			}
+		]
+	}
+}

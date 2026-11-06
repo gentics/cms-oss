@@ -343,6 +343,31 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     background-color: $gtx-color-primary;
 }
 
+.tag-unknown {
+    gap: 4px;
+    background-color: $gtx-color-warning;
+
+    .tag-icon {
+        font-size: 14px;
+    }
+}
+
+// Elements which could not be resolved against the form-type configuration
+gtx-sortable-item.form-item.unknown-element {
+    border: 1px dashed $gtx-color-warning;
+    background: #fff8ec;
+
+    &:hover {
+        cursor: default;
+    }
+
+    .unknown-element-hint {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #6b4a12;
+    }
+}
+
 .tag-text {
     vertical-align: middle;
 }

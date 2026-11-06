@@ -7,8 +7,10 @@ import {
 } from '@gentics/cms-models';
 import { cloneWithSymbols } from '@gentics/common';
 import {
+    clickModalAction,
     EntityImporter,
     EXT_FORM_ONE,
+    FORM_FOUR,
     FORM_ONE,
     FORM_THREE,
     GroupImportData,
@@ -507,6 +509,101 @@ test.describe('Form Editing', () => {
             const aggEl = req.data['ui-schema']?.pages?.[0]?.elements?.find((el) => el.id === 'agg2');
             const firstNameEl = aggEl?.elements?.find((el) => el.id === 'firstName');
             expect(Object.values(firstNameEl?.label || {})).toContain(LABEL_TEXT);
+        });
+    });
+
+    test('should display unknown elements and resolve actions to the correct element', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20365',
+        }],
+    }, async ({ page }) => {
+        await test.step('Import form with unknown element', async () => {
+            await IMPORTER.importData([FORM_FOUR]);
+        });
+
+        const EDITING_FORM = IMPORTER.get(FORM_FOUR);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                ],
+            },
+        ]);
+
+        await test.step('Open Editor', async () => {
+            const list = findList(page, ITEM_TYPE_FORM);
+            const item = findItem(list, EDITING_FORM.id);
+            await itemAction(item, 'edit');
+        });
+
+        const grid = page.locator('content-frame gtx-form-grid');
+        const root = fgFindDropContainer(grid);
+
+        await test.step('Should display the unknown element as placeholder', async () => {
+            await expect(root.locator('> .form-item')).toHaveCount(4);
+
+            const unknown = root.locator('> .form-item.unknown-element');
+            await expect(unknown).toHaveCount(1);
+            await expect(unknown.locator('.unknown-element-hint')).toBeVisible();
+            await expect(unknown.locator('.visibility-button')).toHaveCount(0);
+        });
+
+        await test.step('Should resize the dragged element and not another one', async () => {
+            const elB = fgFindElement(grid, 'inputB');
+            const elC = fgFindElement(grid, 'inputC');
+            await expect(elB).toContainClass('small-6');
+            await expect(elC).toContainClass('small-6');
+
+            await elC.hover();
+            const handleBox = await elC.locator('> .grid-resize-handle').boundingBox();
+            const rootBox = await root.boundingBox();
+            const colWidth = rootBox.width / 12;
+            const startX = handleBox.x + (handleBox.width / 2);
+            const y = handleBox.y + (handleBox.height / 2);
+
+            await page.mouse.move(startX, y);
+            await page.mouse.down();
+            await page.mouse.move(startX - (colWidth * 3), y, { steps: 10 });
+            await page.mouse.up();
+
+            await expect(elC).toContainClass('small-3');
+            await expect(elB).toContainClass('small-6');
+        });
+
+        await test.step('Should delete the clicked element and not another one', async () => {
+            const elC = fgFindElement(grid, 'inputC');
+            await elC.hover();
+            await elC.locator('.delete-button').click();
+            await clickModalAction(page.locator('gtx-modal-dialog'), 'confirm');
+
+            await expect(root.locator('> .form-item')).toHaveCount(3);
+            await expect(fgFindElement(grid, 'inputC')).toHaveCount(0);
+            await expect(fgFindElement(grid, 'inputA')).toHaveCount(1);
+            await expect(fgFindElement(grid, 'inputB')).toHaveCount(1);
+            await expect(root.locator('> .form-item.unknown-element')).toHaveCount(1);
+        });
+
+        await test.step('Save and Validate', async () => {
+            const saveReq = page.waitForResponse(matchRequest('PUT', '/rest/form/*'));
+            await editorAction(page, 'save');
+            const res = await saveReq;
+            const req: FormSaveRequest = res.request().postDataJSON();
+
+            const elements = req.data['ui-schema']?.pages?.[0]?.elements || [];
+            expect(elements.map((el) => el.id)).toEqual(['inputA', undefined, 'inputB']);
+            // The unknown element has to be kept as-is
+            expect(elements[1]?.formGridOptions?.type).toBe('unknownblock');
+            expect(Number(elements[2]?.formGridOptions?.numberOfColumns)).toBe(6);
+
+            const props = req.data.schema?.properties || {};
+            expect(Object.keys(props).sort()).toEqual(['inputA', 'inputB']);
         });
     });
 

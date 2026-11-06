@@ -11,8 +11,10 @@ import com.gentics.contentnode.mcp.tools.AssignUserToGroupTool;
 import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreateConstructTool;
 import com.gentics.contentnode.mcp.tools.CreateFolderTool;
+import com.gentics.contentnode.mcp.tools.CreateGuidelineTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
 import com.gentics.contentnode.mcp.tools.CreateUserTool;
+import com.gentics.contentnode.mcp.tools.DeleteGuidelineTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
 import com.gentics.contentnode.mcp.tools.EnsureConstructCategoryTool;
 import com.gentics.contentnode.mcp.tools.FindSimilarTool;
@@ -21,6 +23,7 @@ import com.gentics.contentnode.mcp.tools.GetDatasourceTool;
 import com.gentics.contentnode.mcp.tools.GetFileTool;
 import com.gentics.contentnode.mcp.tools.GetFolderTreeTool;
 import com.gentics.contentnode.mcp.tools.GetGroupPermissionsTool;
+import com.gentics.contentnode.mcp.tools.GetGuidelineTool;
 import com.gentics.contentnode.mcp.tools.GetImageTool;
 import com.gentics.contentnode.mcp.tools.GetPageTagsTool;
 import com.gentics.contentnode.mcp.tools.GetPageTool;
@@ -33,6 +36,7 @@ import com.gentics.contentnode.mcp.tools.ListConstructsTool;
 import com.gentics.contentnode.mcp.tools.ListDatasourcesTool;
 import com.gentics.contentnode.mcp.tools.ListFolderItemsTool;
 import com.gentics.contentnode.mcp.tools.ListGroupsTool;
+import com.gentics.contentnode.mcp.tools.ListGuidelinesTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.ListPackagesTool;
 import com.gentics.contentnode.mcp.tools.ListPartTypesTool;
@@ -47,6 +51,7 @@ import com.gentics.contentnode.mcp.tools.SearchContentTool;
 import com.gentics.contentnode.mcp.tools.TakeOfflineTool;
 import com.gentics.contentnode.mcp.tools.TranslatePageTool;
 import com.gentics.contentnode.mcp.tools.UpdateConstructTool;
+import com.gentics.contentnode.mcp.tools.UpdateGuidelineTool;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool;
 import com.gentics.contentnode.mcp.tools.UploadFileTool;
@@ -82,7 +87,9 @@ public final class McpTools {
 			new UpdateConstructTool(), new AssignConstructToNodesTool(), new ListPackagesTool(),
 			new AddConstructToPackageTool(), new ListUsersTool(), new ListGroupsTool(),
 			new GetGroupPermissionsTool(), new CreateUserTool(), new AssignUserToGroupTool(),
-			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool(), new CreateFolderTool());
+			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool(), new CreateFolderTool(),
+			new ListGuidelinesTool(), new GetGuidelineTool(), new CreateGuidelineTool(), new UpdateGuidelineTool(),
+			new DeleteGuidelineTool());
 
 	/**
 	 * Static class, no instances

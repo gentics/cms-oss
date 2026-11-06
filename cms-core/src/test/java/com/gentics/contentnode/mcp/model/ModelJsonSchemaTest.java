@@ -77,11 +77,6 @@ public class ModelJsonSchemaTest {
 	}
 
 	@Test
-	public void testSearchHit() {
-		assertMatches(SearchHit.class, SearchHit.jsonSchema());
-	}
-
-	@Test
 	public void testFolderItem() {
 		assertMatches(FolderItem.class, FolderItem.jsonSchema());
 	}
@@ -258,7 +253,7 @@ public class ModelJsonSchemaTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static void assertMatches(Class<? extends Record> recordClass, Map<String, Object> schema) {
+	static void assertMatches(Class<? extends Record> recordClass, Map<String, Object> schema) {
 		String[] components = Arrays.stream(recordClass.getRecordComponents()).map(RecordComponent::getName)
 				.toArray(String[]::new);
 

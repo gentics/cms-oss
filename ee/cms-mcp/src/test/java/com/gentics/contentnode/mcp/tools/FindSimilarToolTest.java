@@ -21,7 +21,7 @@ import com.gentics.contentnode.mcp.model.SearchHit;
 import com.gentics.contentnode.mcp.util.EnterpriseSearch;
 
 /**
- * Unit tests for {@link FindSimilarTool}. Searching needs the enterprise module and Elasticsearch and is covered by
+ * Unit tests for {@link FindSimilarTool}. Searching needs Elasticsearch and is covered by
  * the live check.
  */
 public class FindSimilarToolTest {

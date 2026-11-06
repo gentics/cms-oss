@@ -100,4 +100,11 @@ public class GetRelatedToolTest {
 		assertValidOutput(tool, new GetRelatedTool.Result(ObjectRef.of(Type.PAGE, 4711),
 				List.of(pageGroup, templateGroup, new GetRelatedTool.RelatedGroup("links_to_file", 0, List.of())), 4));
 	}
+
+	@Test
+	public void testFormUsage() {
+		assertThat(GetRelatedTool.supportedType(Type.FORM)).isEqualTo(Type.FORM);
+		assertThat(GetRelatedTool.usage(Type.FORM, "uses_form")).isEqualTo(GetRelatedTool.Usage.PAGES_USING_FORM);
+		assertThat(GetRelatedTool.usage(Type.FORM, "links_to_page")).isNull();
+	}
 }

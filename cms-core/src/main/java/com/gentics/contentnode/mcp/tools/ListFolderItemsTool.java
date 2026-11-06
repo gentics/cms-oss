@@ -44,7 +44,7 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
  * Lists the pages, files, images and subfolders of a folder. Pages, files and images come unpaged from
  * {@link FolderResourceImpl#getItems}, folders from {@link FolderResourceImpl#getFolders}; both filter by
  * {@code ObjectPermission.view}. The tool sorts and slices the merged list itself, because {@code getItems} pages
- * every type before merging and cannot sort the merged list by publish date or filename. Forms are not supported.
+ * every type before merging and cannot sort the merged list by publish date or filename. Forms are found with search_content.
  */
 public class ListFolderItemsTool extends AbstractMcpTool {
 	static final String ARG_FOLDER_ID = "folderId";
@@ -64,7 +64,7 @@ public class ListFolderItemsTool extends AbstractMcpTool {
 	/**
 	 * Item types, as in the contract
 	 */
-	static final List<String> TYPES = List.of("page", "file", "image", "folder", "form");
+	static final List<String> TYPES = List.of("page", "file", "image", "folder");
 
 	/**
 	 * Sort fields, as in the contract
@@ -116,10 +116,6 @@ public class ListFolderItemsTool extends AbstractMcpTool {
 			List<String> types = Args.enumList(arguments, ARG_TYPES, TYPES, List.of("page"));
 			if (types.isEmpty()) {
 				throw new IllegalArgumentException("Argument '%s' must not be empty".formatted(ARG_TYPES));
-			}
-			if (types.contains("form")) {
-				throw new IllegalArgumentException(
-						"Listing forms is not supported, omit 'form' from '%s'".formatted(ARG_TYPES));
 			}
 			boolean recursive = booleanArg(arguments, ARG_RECURSIVE, false);
 			String language = nullIfBlank(stringArg(arguments, ARG_LANGUAGE, 0, 10));
@@ -207,8 +203,8 @@ public class ListFolderItemsTool extends AbstractMcpTool {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_FOLDER_ID, schema("integer", "ID of the folder.", "minimum", 1));
 		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to list the folder in.", "minimum", 1));
-		properties.put(ARG_TYPES, schema("array", "Item types to list. Forms are not supported.", "minItems", 1,
-				"maxItems", 6, "uniqueItems", true, "items", schema("string", null, "enum", TYPES), "default",
+		properties.put(ARG_TYPES, schema("array", "Item types to list.", "minItems", 1,
+				"maxItems", TYPES.size(), "uniqueItems", true, "items", schema("string", null, "enum", TYPES), "default",
 				List.of("page")));
 		properties.put(ARG_RECURSIVE, schema("boolean", "Include the items of all subfolders.", "default", false));
 		properties.put(ARG_LANGUAGE, schema("string", "Language code of the pages.", "maxLength", 10));
@@ -223,10 +219,10 @@ public class ListFolderItemsTool extends AbstractMcpTool {
 				List.of("field")));
 
 		return Tool.builder().name("list_folder_items").title("List folder items")
-				.description("Lists the pages, files, images, folders and forms in one folder, with edit and publish "
-						+ "state. This is the exact inventory of a folder, unlike search_content which is ranked "
-						+ "retrieval. Use it when the user names a folder, and to check whether a page already exists "
-						+ "there before creating one.")
+				.description("Lists the pages, files, images and folders in one folder, with edit and publish state. "
+						+ "This is the exact inventory of a folder, unlike search_content which is ranked retrieval. "
+						+ "Use it when the user names a folder, and to check whether a page already exists there "
+						+ "before creating one. To find forms, use search_content with types [form].")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties)
 						.required(List.of(ARG_FOLDER_ID)).additionalProperties(false).build())
 				.outputSchema(ListResult.jsonSchema(FolderItem.jsonSchema(), "items"))

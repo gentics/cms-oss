@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.ObjectRef;
@@ -14,6 +15,7 @@ import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.RestPermissions;
 import com.gentics.contentnode.mcp.util.UserGroups;
 import com.gentics.contentnode.mcp.util.Writes;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.GroupResource;
 import com.gentics.contentnode.rest.resource.UserResource;
 import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
@@ -62,7 +64,8 @@ public class RemoveUserFromGroupTool extends AbstractMcpTool {
 				.description("Removes a user from a group, revoking the rights that group carried. Show "
 						+ "preview_permission_impact first: the person may lose access to work in progress. The CMS "
 						+ "refuses to remove a user's last group. You can only remove users from subgroups of your "
-						+ "own groups.")
+						+ "own groups, and you cannot remove your own account from a group here: that is refused with "
+						+ "permission-denied, so you cannot lose the rights that allow these changes.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties)
 						.required(List.of(ARG_USER_ID, ARG_GROUP_ID)).additionalProperties(false).build())
 				.outputSchema(schema("object", null, "properties", output, "required", List.of("userRef", "groupRef")))
@@ -74,6 +77,7 @@ public class RemoveUserFromGroupTool extends AbstractMcpTool {
 		int userId = Args.id(arguments, ARG_USER_ID);
 		int groupId = Args.id(arguments, ARG_GROUP_ID);
 		Writes.logIdempotencyKey("remove_user_from_group", userId, arguments);
+		requireNotCaller(userId, session);
 
 		UserResource userResource = RestPermissions.guard(UserResource.class, new UserResourceImpl());
 		GroupResource groupResource = RestPermissions.guard(GroupResource.class, new GroupResourceImpl());
@@ -84,6 +88,19 @@ public class RemoveUserFromGroupTool extends AbstractMcpTool {
 
 		List<ObjectRef> groups = UserGroups.refs(userResource, userId);
 		return new Result(userRef, groupRef, groups, warnings(groups));
+	}
+
+	/**
+	 * Refuse a removal of the caller's own account
+	 * @param userId ID of the user to remove
+	 * @param session session of the caller
+	 * @throws RestMappedException if the user is the caller
+	 */
+	static void requireNotCaller(int userId, Optional<Session> session) throws RestMappedException {
+		if (session.isPresent() && session.get().getUserId() == userId) {
+			throw new RestMappedException("You cannot remove your own account from a group through this server. "
+					+ "Use the CMS instead.").setResponseCode(ResponseCode.PERMISSION);
+		}
 	}
 
 	/**

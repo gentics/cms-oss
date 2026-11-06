@@ -54,7 +54,8 @@ public class GetPermissionsTool extends AbstractMcpTool {
 	 */
 	static final List<String> PERMISSIONS = List.of("view", "read", "create", "edit", "update", "delete", "publish",
 			"translatepages", "publishpages", "updateconstructs", "readtemplates", "createtemplates",
-			"updatetemplates", "deletetemplates", "linktemplates", "wastebin", "setperm", "userassignment");
+			"updatetemplates", "deletetemplates", "linktemplates", "createform", "wastebin", "setperm",
+			"userassignment");
 
 	/**
 	 * Maximum number of requested permissions

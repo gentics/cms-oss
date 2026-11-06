@@ -27,7 +27,10 @@
     },
     "preview": {
         "title": "Vorschau",
-        "open": "Öffnen",
+        "draft": "Vorschau",
+        "draftTitle": "Vorschau im CMS öffnen",
+        "live": "Live",
+        "liveTitle": "Veröffentlichte Seite öffnen",
         "frameTitle": "Vorschau der Seite im CMS",
         "viewport": "Breite der Vorschau",
         "desktop": "Desktop",
@@ -232,6 +235,7 @@
     },
     "chat": {
         "placeholder": "Was soll passieren?",
+        "placeholderWhileRunning": "Warten auf Antwort – nächsten Schritt eingeben",
         "send": "Senden",
         "sendFailed": "Die Nachricht konnte nicht gesendet werden",
         "sender": {
@@ -527,7 +531,7 @@
         "noMatch": "Keine Sitzung passt zu „{{query}}“.",
         "untitled": "Sitzung ohne Titel",
         "delete": "„{{title}}“ löschen",
-        "deleted": "„{{title}}“ gelöscht",
+        "deleted": "„<name/>“ gelöscht",
         "undo": "Rückgängig",
         "archiveFailed": "Die Sitzung konnte nicht gelöscht werden",
         "restoreFailed": "Die Sitzung konnte nicht wiederhergestellt werden"
@@ -540,6 +544,7 @@
         "manyInReview_one": "{{count}} Seite zur Prüfung gesendet",
         "manyInReview_other": "{{count}} Seiten zur Prüfung gesendet",
         "openPage": "Seite öffnen",
+        "openPreview": "Vorschau öffnen",
         "openSession": "Diese Sitzung öffnen",
         "newSession": "Neue Sitzung starten",
         "placeholder": "Was kommt als Nächstes?",
@@ -551,6 +556,7 @@
         "title": "Prüfung",
         "pageTitle": "Prüfen & freigeben",
         "back": "Zurück zum Chat",
+        "openPublished": "„{{name}}“ auf der Website öffnen",
         "open": "Prüfen & freigeben",
         "loading": "Der Plan wird geladen…",
         "noPlan": "Diese Sitzung hat noch keinen Plan zum Prüfen.",

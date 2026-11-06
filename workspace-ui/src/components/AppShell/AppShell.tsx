@@ -19,6 +19,8 @@ interface AppShellProps {
     right: ReactNode;
     /** `false` while there is nothing to preview: no right column and no toggle for it. Default `true`. */
     isRightColumnVisible?: boolean;
+    /** Columns shown or hidden slide (`WorkspaceLayout`), e.g. while GenAIx is at work. Default `false`. */
+    animatesColumns?: boolean;
 }
 
 /**
@@ -28,7 +30,7 @@ interface AppShellProps {
  * `WorkspaceLayout`) show a side column instead of the center: there both start hidden, only one is
  * shown at a time, and following a link, e.g. a session in the left column, shows the center again.
  */
-export function AppShell({ left, center, right, isRightColumnVisible = true }: AppShellProps) {
+export function AppShell({ left, center, right, isRightColumnVisible = true, animatesColumns = false }: AppShellProps) {
     const [isLeftColumnHidden, setIsLeftColumnHidden] = useState(isPhone);
     const [isRightColumnHidden, setIsRightColumnHidden] = useState(isPhone);
     const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -75,6 +77,7 @@ export function AppShell({ left, center, right, isRightColumnVisible = true }: A
                 right={right}
                 isLeftColumnVisible={!isLeftColumnHidden}
                 isRightColumnVisible={isRightColumnVisible && !isRightColumnHidden}
+                animatesColumns={animatesColumns}
             />
         </div>
     );

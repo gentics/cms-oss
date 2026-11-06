@@ -79,6 +79,22 @@
   font-size: var(--font-size-base);
 }
 
+/* A published page's name among several: a link to it on the website (design.md §4.1, links in `--interactive`,
+   underlined on hover and focus). */
+.pageLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--interactive);
+  text-decoration: none;
+  text-underline-offset: 2px;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -103,6 +119,18 @@
       text-decoration: underline;
       text-underline-offset: 2px;
     }
+  }
+}
+
+/* The plan could not be read: why, and a button to try again below it. */
+.failed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  & p {
+    margin: 0;
   }
 }
 

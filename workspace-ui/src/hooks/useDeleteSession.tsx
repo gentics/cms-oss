@@ -2,6 +2,7 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DeletedSessionTitle } from '@/components/DeletedSessionTitle/DeletedSessionTitle';
 import { useToast } from '@/components/ui/use-toast';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { sessionTitle } from '@/helper/sessionDisplay/sessionDisplay';
@@ -37,7 +38,7 @@ export function useDeleteSession() {
         }
 
         const toastId = toast.add({
-            title: t('sessions.deleted', { title: sessionTitle(session, t) }),
+            title: <DeletedSessionTitle title={sessionTitle(session, t)} />,
             actionProps: {
                 children: t('sessions.undo'),
                 onClick: () => {

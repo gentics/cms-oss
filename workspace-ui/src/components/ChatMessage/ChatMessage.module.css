@@ -132,26 +132,6 @@
   white-space: pre-wrap;
 }
 
-.token {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  max-width: 270px;
-  margin: 0 2px;
-  padding: 0 5px;
-  border-radius: var(--corner-sm);
-  background: rgba(var(--fg-on-solid-rgb), 0.2);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  vertical-align: baseline;
-}
-
-.tokenText {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .error {
   margin-top: 4px;
   color: var(--error);

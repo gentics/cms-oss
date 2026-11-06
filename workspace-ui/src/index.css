@@ -73,6 +73,10 @@
   --duration-state: 130ms;
   --duration-popover: 160ms;
   --duration-card: 250ms;
+  /* §10: the preview column slides in and out. */
+  --duration-column: 420ms;
+  /* §12 "Geändert": the tint of a changed part fades out, from the update on. */
+  --duration-changed-fade: 5s;
   /* §8: the attention pulse; the blink of the voice input's recording dot. */
   --duration-attention: 1s;
   --duration-cursor-blink: 1s;

@@ -18,46 +18,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { EDITABLE, editLeafOf, type EditPlan, MARKED, planHtmlEdit, planImageEdit, planLinkEdit, planTextEdit, type RefusalReason, textContainerOf } from '@/helper/cmsEditable/cmsEditable';
 import type { PageSettingsChange } from '@/helper/composerParts/composerParts';
 import { elementLabel, elementLink, elementName, elementTextBlock } from '@/helper/previewElement/previewElement';
+import { readOnlyPreviewUrl } from '@/helper/previewUrl/previewUrl';
 import { refusalText } from '@/helper/refusalText/refusalText';
 import { useSaveCmsEdit } from '@/hooks/useCmsQueries';
 import { linkTargetOf, type PreviewElement, usePreviewElements } from '@/hooks/usePreviewElements';
-import type { ContextReference } from '@/services/apiService/genaix/types';
+import { usePublishedUrls } from '@/hooks/usePublishedUrls';
+import type { ContextReference, Publication } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
 import { type LivePreview, previewKey } from '@/store/useWorkspaceEventStore';
 
 import styles from './PreviewColumn.module.css';
-
-// The query parameters of a read-only CMS preview, each with the value it must have.
-const READ_ONLY_PARAMS = { mode: 'view', real: 'view', tagmarkers: 'true' } as const;
-
-// `url` (`preview_url` of `preview.updated`) as a read-only preview: `mode=view` as in the contract
-// example, and `real=view`, which is what the CMS's `/alohapage` reads (`AlohaPageServlet`; without
-// it, it renders for editing and locks the page). `tagmarkers=true` renders it like for editing, but
-// without Aloha Editor and without locking the page, with the page's tags marked (`data-gcn-*`), which
-// the part selection needs (`usePreviewElements`); a CMS that does not know it ignores it, and the page
-// has no markers then.
-// A parameter that is missing or has another value is set; everything else stays. A URL that already
-// has all of them is returned unchanged.
-// On the dev server (`npm run dev`, `npm run dev:debug`; `DEV`, but not Vitest's mode `test`) the URL is
-// loaded from the dev server's own origin, which forwards
-// `/alohapage` to the CMS (`vite.config.ts`): the CMS authenticates it only by its session cookie
-// (`SessionToken`), which the /rest login left on the dev server's host, so `preview_url` pointing at
-// the CMS host would answer "Invalid session ID".
-function readOnlyPreviewUrl(url: string): string {
-    const parsed = new URL(url, window.location.href);
-    const entries = Object.entries(READ_ONLY_PARAMS);
-    const viaDevServer = import.meta.env.DEV && import.meta.env.MODE !== 'test' && parsed.origin !== window.location.origin;
-
-    if (!viaDevServer && entries.every(([key, value]) => parsed.searchParams.get(key) === value)) {
-        return url;
-    }
-
-    entries.forEach(([key, value]) => parsed.searchParams.set(key, value));
-
-    return viaDevServer
-        ? new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, window.location.origin).toString()
-        : parsed.toString();
-}
 
 // Whether `a` and `b` are the same part (the same element of its tag) and the same text block or link of it (or both the whole part).
 function isSameElement(a: PreviewElement | null, b: PreviewElement | null): boolean {
@@ -91,8 +61,11 @@ export interface PreviewActions {
 /**
  * The preview, with all of `PreviewActions` (the session's chat) or none of them (only showing the page, as on the review page).
  * `preview` is the latest one (the last `preview.updated`); `previews` the latest of each page, when there may be several.
+ * `publications` are the session's, of all its plans: once the page shown is published, its header offers it on the
+ * website ("Live", `usePublishedUrls`) beside its preview ("Preview"). `isBuilding`: GenAIx is still at work, so more of
+ * the page may come; a skeleton strip along the page's bottom edge says so.
  */
-export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[] } & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
+export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[]; publications?: Publication[]; isBuilding?: boolean } & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
 
 /**
  * The right column: the CMS preview of the page the session produced, framed on the preview stage
@@ -122,7 +95,8 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  * or a page of the node (`LinkTargetPicker`); Apply or Enter saves what changed, an unchanged link saves
  * nothing.
  *
- * The parts the last CMS write changed (`changed_elements`) are tinted until the next update.
+ * The parts the last CMS write changed (`changed_elements`), or the part a direct save just changed, appear anew and
+ * are tinted a moment (`PreviewOverlay`).
  *
  * Clicking a part also opens its element menu at the part (final_draft.html "ELEMENT MENU"): "Give
  * feedback" opens the feedback card there (final_draft.html "FEEDBACK CARD AT THE ELEMENT"), which
@@ -158,7 +132,7 @@ export type PreviewColumnProps = { preview: LivePreview; previews?: LivePreview[
  * selection and closes the menu, the cards and the page settings, which were for the page before.
  */
 export function PreviewColumn(props: PreviewColumnProps) {
-    const { preview: latest, previews = [] } = props;
+    const { preview: latest, previews = [], publications = [], isBuilding = false } = props;
     // The page picked, and the latest preview when it was picked: a newer one shows its own page again.
     const [picked, setPicked] = useState<{ key: string; seq: number } | null>(null);
     const preview = (picked?.seq === latest.seq && previews.find((page) => previewKey(page) === picked.key)) || latest;
@@ -173,6 +147,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
     ]));
     const titleId = useId();
     const url = readOnlyPreviewUrl(preview.preview_url);
+    const publishedUrl = usePublishedUrls(publications, [preview.cms_ref])[0]?.href;
     const [isMobile, setIsMobile] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const toast = useToast();
@@ -221,6 +196,10 @@ export function PreviewColumn(props: PreviewColumnProps) {
     const saveEdit = useSaveCmsEdit();
     // Counts the direct saves: each one reloads the frame, as no `preview.updated` comes for it.
     const [savedCount, setSavedCount] = useState(0);
+    // The part the last direct save changed, while no newer `preview.updated` came: shown as changed like GenAIx's.
+    const [savedChange, setSavedChange] = useState<{ seq: number; tagName: string } | null>(null);
+    const isSavedChange = savedChange?.seq === preview.seq;
+    const changedParts = isSavedChange ? [savedChange.tagName] : preview.changed_elements;
     // What the frame shows: the latest page (each direct save reloading it), but held while an element is edited in
     // place, so that a `preview.updated` does not reload the page under the editing; it follows once editing ends.
     const latestFrame = { key: `${pageKey}@${preview.seq}#${savedCount}`, url };
@@ -231,6 +210,15 @@ export function PreviewColumn(props: PreviewColumnProps) {
     }
 
     const frame = editing ? heldFrame : latestFrame;
+    // The frame last loaded. While a new one loads, this one stays visible under it, so the page never goes blank,
+    // and the new one fades in once it has loaded (design.md §10): an update reads as the page growing, not reloading.
+    const [shownFrame, setShownFrame] = useState<{ key: string; url: string } | null>(null);
+    const isFrameShown = shownFrame?.key === frame.key;
+
+    function handleFrameLoad() {
+        onFrameLoad();
+        setShownFrame(frame);
+    }
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const settingsRef = useRef<HTMLElement>(null);
     const settingsButtonRef = useRef<HTMLButtonElement>(null);
@@ -270,7 +258,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         setIsImageOpen(false);
         setIsLinkOpen(false);
         toast.add({ title: t('preview.selection.removed') });
-    }, preview.changed_elements, editing?.node ?? null, switchEdit);
+    }, changedParts, editing?.node ?? null, switchEdit);
     // Where the editing bar sits: above the edited element, or above the list or table whose item or cell it is.
     const barBox = editing?.structure ? selectedBox : editingBox;
 
@@ -472,10 +460,10 @@ export function PreviewColumn(props: PreviewColumnProps) {
     }
 
     // Saves an edit planned from the page directly in the CMS (`useSaveCmsEdit`). Saved: the card closes
-    // (`close`), a toast says so, and the frame reloads. Unchanged in the CMS: the card closes with the
+    // (`close`), a toast says so, and the frame reloads, showing the part `tagName` as changed. Unchanged in the CMS: the card closes with the
     // unchanged note. Refused: the card stays and names the reason. A failed request leaves the card open;
     // the hook shows the error.
-    async function saveDirectly(plan: EditPlan, close: () => void) {
+    async function saveDirectly(plan: EditPlan, close: () => void, tagName: string) {
         setIsSending(true);
         setRefusal(null);
 
@@ -485,6 +473,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
             if (result === 'saved') {
                 close();
                 toast.add({ title: t('preview.save.saved') });
+                setSavedChange({ seq: preview.seq, tagName });
                 setSavedCount((count) => count + 1);
             } else if (result === 'unchanged') {
                 close();
@@ -516,7 +505,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
             return;
         }
 
-        await saveDirectly(planFor(element, ({ part, target }) => planLinkEdit(part, target, change)), () => setIsLinkOpen(false));
+        await saveDirectly(planFor(element, ({ part, target }) => planLinkEdit(part, target, change)), () => setIsLinkOpen(false), element.tagName);
     }
 
     // "Use image" in the image card, with the picked image (`ImageCard`).
@@ -529,7 +518,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
         if (!(picked instanceof File)) {
             const image = { imageId: picked.id, nodeId };
 
-            await saveDirectly(planFor(element, ({ part }) => planImageEdit(part, image)), () => setIsImageOpen(false));
+            await saveDirectly(planFor(element, ({ part }) => planImageEdit(part, image)), () => setIsImageOpen(false), element.tagName);
 
             return;
         }
@@ -576,6 +565,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
                 return isRich ? planHtmlEdit(part, target, html, inlineEditor.attributes) : planTextEdit(part, target, text);
             }),
             stopEditing,
+            element.tagName,
         );
     }
 
@@ -665,6 +655,7 @@ export function PreviewColumn(props: PreviewColumnProps) {
             <PreviewHeader
                 titleId={titleId}
                 url={url}
+                publishedUrl={publishedUrl}
                 pages={previews.length > 1 ? { names: pageNames, current: pageKey, onPick: (key) => setPicked({ key, seq: latest.seq }) } : null}
                 selection={selected && { name: elementName(t, selected), onClear: () => { stopEditing(); setSelected(null); setIsMenuOpen(false); } }}
                 settings={actions && preview.cms_ref.type === 'page' ? { open: isSettingsOpen, onToggle: () => setIsSettingsOpen((open) => !open) } : null}
@@ -686,16 +677,29 @@ export function PreviewColumn(props: PreviewColumnProps) {
                     />
                 )}
                 <div className={styles.page}>
-                    <iframe key={frame.key} ref={frameRef} className={styles.frame} src={frame.url} title={t('preview.frameTitle')} onLoad={onFrameLoad} />
+                    {/* The page before, until the new one has loaded: shown only, never read or used. */}
+                    {shownFrame && !isFrameShown && (
+                        <iframe key={shownFrame.key} className={styles.frame} src={shownFrame.url} aria-hidden="true" tabIndex={-1} inert />
+                    )}
+                    <iframe
+                        key={frame.key}
+                        ref={frameRef}
+                        className={`${styles.frame} ${isFrameShown ? styles.frameShown : styles.frameLoading}`}
+                        src={frame.url}
+                        title={t('preview.frameTitle')}
+                        onLoad={handleFrameLoad}
+                    />
                     <PreviewOverlay
                         dimmed={isFeedbackOpen ? selectedBox : null}
                         changed={changedBoxes}
+                        changedRound={frame.key}
                         selected={selectedBox && { box: selectedBox, mode: editing ? 'anchor' : (isImageOpen || isLinkOpen ? 'card' : 'outline') }}
                         selectedRef={selectedBoxRef}
                         target={editing ? null : targetBox}
                         editing={editing ? editingBox : null}
                         hovered={actions && hovered && !isSameElement(hovered.element, selected) ? { box: hovered.box, label: elementName(t, hovered.element) } : null}
                     />
+                    {isBuilding && <div className={styles.building} aria-hidden="true" data-building="" />}
                     {/* The bar of the editing in place: for an item or cell above its list or table, so that it never covers the other items. */}
                     {editing && barBox && (
                         <EditBar

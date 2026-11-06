@@ -11,12 +11,12 @@ import { ComposerTextInput } from './ComposerTextInput';
 
 import '@/i18n';
 
-function Field({ onEditor }: { onEditor: (editor: Editor) => void }) {
+function Field({ onEditor, isRunning }: { onEditor: (editor: Editor) => void; isRunning?: boolean }) {
     const editor = useEditor({ extensions: composerExtensions });
 
     onEditor(editor);
 
-    return <ComposerTextInput editor={editor} label="What should happen?" isEmpty size="base" onKeyDown={() => {}} onFocus={() => {}} onBlur={() => {}} />;
+    return <ComposerTextInput editor={editor} label="What should happen?" isEmpty isRunning={isRunning} size="base" onKeyDown={() => {}} onFocus={() => {}} onBlur={() => {}} />;
 }
 
 describe('ComposerTextInput', () => {
@@ -31,6 +31,14 @@ describe('ComposerTextInput', () => {
         expect(field).toHaveAttribute('contenteditable', 'true');
         expect(field).toHaveAttribute('aria-multiline', 'true');
         expect(field).toHaveAttribute('data-placeholder', 'What should happen?');
+    });
+
+    it('says to wait for the reply while a run is working, keeping its name', () => {
+        render(<Field onEditor={() => {}} isRunning />);
+
+        const field = screen.getByRole('textbox', { name: 'What should happen?' });
+
+        expect(field).toHaveAttribute('data-placeholder', 'Waiting for reply – type your next step');
     });
 
     it('shows a token as a chip with its label, and its remove button takes it out', async () => {

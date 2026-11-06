@@ -705,11 +705,11 @@ describe('Composer', () => {
         });
     });
     describe('while a run is working (chat)', () => {
-        function renderChat(props: { isRunning: boolean; isStopping?: boolean }) {
+        function renderChat(props: { isRunning: boolean; isRunningBeside?: boolean; isSubmitting?: boolean; isStopping?: boolean }) {
             const onSubmit = vi.fn();
             const onStop = vi.fn();
 
-            render(<Composer variant="chat" onSubmit={onSubmit} isSubmitting={false} onStop={onStop} {...props} />, { wrapper: UiProvider });
+            render(<Composer variant="chat" onSubmit={onSubmit} onStop={onStop} {...props} isSubmitting={props.isSubmitting ?? false} />, { wrapper: UiProvider });
 
             return { onSubmit, onStop, field: screen.getByRole('textbox', { name: 'What should happen?' }) };
         }
@@ -732,6 +732,61 @@ describe('Composer', () => {
             renderChat({ isRunning: true, isStopping: true });
 
             expect(screen.getByRole('button', { name: 'Stop' })).toBeDisabled();
+        });
+
+        it('beside a run a message may go beside, shows Stop while the field is empty and send once there is text', async () => {
+            const user = userEvent.setup();
+            const { onSubmit, onStop, field } = renderChat({ isRunning: false, isRunningBeside: true });
+
+            expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument();
+            await user.click(screen.getByRole('button', { name: 'Stop' }));
+            expect(onStop).toHaveBeenCalledTimes(1);
+
+            await user.click(field);
+            await user.keyboard('Use red');
+
+            expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument();
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+            expect(onSubmit).toHaveBeenCalledTimes(1);
+        });
+
+        it('shows Stop, not a disabled send, while sending; disabled while there is nothing to stop yet', () => {
+            renderChat({ isRunning: false, isSubmitting: true, isStopping: true });
+
+            expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeDisabled();
+        });
+
+        it('lets Stop cancel the sent message\'s run while sending, once there is one to stop', async () => {
+            const user = userEvent.setup();
+            const { onStop } = renderChat({ isRunning: false, isSubmitting: true });
+
+            await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+            expect(onStop).toHaveBeenCalledTimes(1);
+        });
+
+        it('keeps send on the dashboard while sending, which has no Stop', () => {
+            render(<Composer variant="start" onSubmit={vi.fn()} isSubmitting />, { wrapper: UiProvider });
+
+            expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument();
+        });
+
+        it('says to wait for the reply while a run is working and while sending, not beside a plan\'s run', () => {
+            const waiting = 'Waiting for reply – type your next step';
+            const { unmount } = render(<Composer variant="chat" onSubmit={vi.fn()} isSubmitting={false} isRunning onStop={vi.fn()} />, { wrapper: UiProvider });
+
+            expect(screen.getByRole('textbox', { name: 'What should happen?' })).toHaveAttribute('data-placeholder', waiting);
+            unmount();
+
+            const sending = render(<Composer variant="chat" onSubmit={vi.fn()} isSubmitting onStop={vi.fn()} />, { wrapper: UiProvider });
+
+            expect(screen.getByRole('textbox', { name: 'What should happen?' })).toHaveAttribute('data-placeholder', waiting);
+            sending.unmount();
+
+            render(<Composer variant="chat" onSubmit={vi.fn()} isSubmitting={false} isRunningBeside onStop={vi.fn()} />, { wrapper: UiProvider });
+
+            expect(screen.getByRole('textbox', { name: 'What should happen?' })).toHaveAttribute('data-placeholder', 'What should happen?');
         });
 
         it('shows send again once no run is working', () => {

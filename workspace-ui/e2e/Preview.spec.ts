@@ -307,7 +307,7 @@ test.describe('Changed parts in the preview', () => {
 
     const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
 
-    test('tints the parts the last update changed, until the next update', async ({ page }) => {
+    test('tints the parts the last update changed for a moment, covering each, and drops them with the next update', async ({ page }) => {
         const { loadedUrls, sendNextUpdate } = await stubS1Session(page, [markedPage()], [['content_2', 'not_on_the_page'], []]);
 
         await page.goto(`#/sessions/${SESSION}`);
@@ -331,6 +331,25 @@ test.describe('Changed parts in the preview', () => {
         await expect.poll(() => loadedUrls.length).toBe(2);
         await expect(text).toBeVisible();
         await expect(tint).toHaveCount(0);
+    });
+
+    test('keeps the tint of a changed part, without fading, for reduced motion', async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await stubS1Session(page, [markedPage()], [['content_2']]);
+
+        await page.goto(`#/sessions/${SESSION}`);
+
+        const tint = page.locator('[data-changed-part="content_2"]');
+
+        await expect(tint).toHaveCount(1);
+        // Once its animations are over (shortened to nothing for reduced motion): still tinted (design.md §12 "Geändert").
+        const background = await tint.evaluate(async (element) => {
+            await Promise.all(element.getAnimations().map((animation) => animation.finished));
+
+            return getComputedStyle(element).backgroundColor;
+        });
+
+        expect(background).not.toMatch(/, 0\)$/);
     });
 });
 
@@ -499,6 +518,25 @@ test.describe('Writing a part yourself, in place', () => {
         // The frame shows the saved page: no `preview.updated` comes for a direct save.
         await expect.poll(() => loadedUrls.length).toBe(2);
         expect(posted).toHaveLength(0);
+    });
+
+    test('shows the part it saved as changed once the page has reloaded, appearing like a part GenAIx changed', async ({ page }) => {
+        const { loadedUrls } = await stubS1Session(page, [editablePage()]);
+
+        await stubSending(page);
+        await stubCmsSave(page, { content_2: contentTag('<p>Ab dem 1. Juli gilt</p>') });
+
+        const { text } = await startEditing(page);
+
+        await expect(text).toBeFocused();
+        await expect(page.locator('[data-changed-part]')).toHaveCount(0);
+
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('Ab dem 1. August gilt');
+        await page.keyboard.press('Control+Enter');
+
+        await expect.poll(() => loadedUrls.length).toBe(2);
+        await expect(page.locator('[data-changed-part="content_2"]')).toHaveCount(1);
     });
 
     test('edits a text that holds a link, keeping the link', async ({ page }) => {
@@ -1680,7 +1718,7 @@ test.describe('The preview header in a narrow column', () => {
             const controls = {
                 Title: region.getByRole('heading', { name: 'Preview' }),
                 Pages: region.getByRole('combobox', { name: 'Pages' }),
-                Open: region.getByRole('link', { name: 'Open' }),
+                'Preview link': region.getByRole('link', { name: 'Preview', exact: true }),
                 'Page settings': region.getByRole('button', { name: 'Page settings' }),
                 Desktop: region.getByRole('button', { name: 'Desktop' }),
                 Mobile: region.getByRole('button', { name: 'Mobile · 390 px' }),
@@ -1764,5 +1802,97 @@ test.describe('A tag with several editables in the preview', () => {
             unlock: true,
         });
         expect(posted).toHaveLength(0);
+    });
+});
+
+test.describe('The preview in a narrow window', () => {
+    const frameSelector = 'iframe[title="Preview of the page in the CMS"]';
+
+    // A page whose editable starts at the page's top: its paragraph is about 46 px below it.
+    function topEditablePage(constructName = 'Text'): string {
+        return `<!doctype html><body style="margin:0;font:16px sans-serif">
+            <div data-gcn-pageid="9142" data-gcn-tagid="12" data-gcn-tagname="content_2" data-gcn-i18n-constructname="${constructName}" id="GENTICS_EDITABLE_312" style="padding:30px"><p>Ab dem 1. Juli gilt</p></div></body>`;
+    }
+
+    async function openSession(page: Page, html: string, width: number) {
+        await page.setViewportSize({ width, height: 800 });
+        await stubS1Session(page, [html]);
+        await stubSending(page);
+        await page.goto(`#/sessions/${SESSION}`);
+        await expect(page.frameLocator(frameSelector).getByText('Ab dem')).toBeVisible();
+    }
+
+    test('shows the whole edit bar above an element near the page\'s top, also when the bar wraps', async ({ page }) => {
+        await openSession(page, topEditablePage(), 900);
+        await page.frameLocator(frameSelector).getByText('Ab dem').click({ position: { x: 5, y: 5 } });
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const bold = page.getByRole('toolbar', { name: 'Text' }).getByRole('button', { name: 'Bold' });
+
+        await expect(bold).toBeVisible();
+
+        const frameBox = (await page.locator(frameSelector).boundingBox())!;
+        const boldBox = (await bold.boundingBox())!;
+
+        expect(boldBox.y).toBeGreaterThanOrEqual(frameBox.y);
+    });
+
+    test('keeps the edit bar inside the page when it is wider than the room right of the element', async ({ page }) => {
+        await openSession(page, topEditablePage(), 641);
+        await page.getByRole('button', { name: 'Hide the left column' }).click();
+        await page.frameLocator(frameSelector).getByText('Ab dem').click({ position: { x: 5, y: 5 } });
+        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
+
+        const bar = page.getByRole('toolbar', { name: 'Text' });
+
+        await expect(bar.getByRole('button', { name: 'Bold' })).toBeVisible();
+
+        const frameBox = (await page.locator(frameSelector).boundingBox())!;
+        const barBox = (await bar.boundingBox())!;
+
+        expect(barBox.x).toBeGreaterThanOrEqual(frameBox.x);
+        expect(barBox.x + barBox.width).toBeLessThanOrEqual(frameBox.x + frameBox.width);
+    });
+
+    test('cuts a long name of the selected part off inside the header', async ({ page }) => {
+        const name = 'Teaser mit einem sehr langen Konstruktnamen für Produktneuheiten und Aktionen';
+
+        await openSession(page, topEditablePage(name), 1024);
+        await page.frameLocator(frameSelector).getByText('Ab dem').click({ position: { x: 5, y: 5 } });
+
+        const header = page.locator(`section:has(${frameSelector}) header`).first();
+        const selected = header.getByText(`Selected: ${name}`);
+
+        await expect(selected).toBeVisible();
+
+        const headerBox = (await header.boundingBox())!;
+        const selectedBox = (await selected.boundingBox())!;
+
+        expect(selectedBox.x).toBeGreaterThanOrEqual(headerBox.x);
+        expect(selectedBox.x + selectedBox.width).toBeLessThanOrEqual(headerBox.x + headerBox.width);
+        // Cut off, the full name stays readable as the text's title.
+        await expect(selected).toHaveAttribute('title', `Selected: ${name}`);
+    });
+
+    test('keeps the preview column inside the window when the columns do not fit, the left one giving way', async ({ page }) => {
+        await openSession(page, topEditablePage(), 680);
+
+        const previewBox = (await page.locator(`section:has(${frameSelector})`).boundingBox())!;
+
+        // The column reaches 4 px under its splitter and as far beyond the window's edge (WorkspaceLayout.module.css).
+        expect(previewBox.x + previewBox.width).toBeLessThanOrEqual(680 + 4);
+    });
+
+    test('keeps the send button of the chat inside the chat column', async ({ page }) => {
+        await openSession(page, topEditablePage(), 760);
+
+        const send = page.getByRole('button', { name: 'Send', exact: true });
+        const previewBox = (await page.locator(`section:has(${frameSelector})`).boundingBox())!;
+
+        await expect(send).toBeVisible();
+
+        const sendBox = (await send.boundingBox())!;
+
+        expect(sendBox.x + sendBox.width).toBeLessThanOrEqual(previewBox.x);
     });
 });

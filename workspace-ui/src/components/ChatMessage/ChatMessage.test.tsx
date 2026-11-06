@@ -51,6 +51,39 @@ describe('ChatMessage', () => {
         expect(message).toHaveTextContent('template: Kampagnen-Landingpage');
     });
 
+    it('shows a file sent word for word as a verbatim token, a file sent as a source as a plain one', () => {
+        const { container } = render(
+            <ChatMessage
+                role="user"
+                sessionId="s-1"
+                parts={[
+                    { type: 'file_ref', file_id: 'f-1', mode: 'verbatim' },
+                    { type: 'file_ref', file_id: 'f-2', mode: 'source' },
+                ]}
+            />,
+            { wrapper: UiProvider },
+        );
+
+        const tokens = container.querySelectorAll('[data-tone="onSolid"]');
+
+        expect(tokens).toHaveLength(2);
+        expect(tokens[0]).toHaveAttribute('data-verbatim-token');
+        expect(tokens[0]).toHaveTextContent('File, word for word');
+        expect(tokens[1]).not.toHaveAttribute('data-verbatim-token');
+    });
+
+    it('shows a setting with the composer\'s settings icon (design.md §9 "Einstellungen")', () => {
+        const { container } = render(
+            <ChatMessage role="user" sessionId="s-1" parts={[{ type: 'setting', key: 'template', value: '17', label: 'Kampagnen-Landingpage' }]} />,
+            { wrapper: UiProvider },
+        );
+
+        const token = container.querySelector('[data-tone="onSolid"]');
+
+        expect(token).toHaveTextContent('template: Kampagnen-Landingpage');
+        expect(token?.querySelector('svg')).toHaveClass('lucide-sliders-horizontal');
+    });
+
     it('marks a streaming message as busy, without a cursor in its text', () => {
         const { container } = render(
             <ChatMessage

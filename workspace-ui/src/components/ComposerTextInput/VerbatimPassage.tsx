@@ -3,6 +3,7 @@ import { LockIcon, PaperclipIcon, UserIcon, XIcon } from 'lucide-react';
 import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ReferenceToken } from '@/components/ReferenceToken/ReferenceToken';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { sourceAttachmentId, textContent } from '@/helper/composerParts/composerParts';
@@ -31,7 +32,8 @@ function SessionUploadItems({ sessionId, onChoose }: { sessionId: string; onChoo
 
 /**
  * A locked passage in the field: lock icon, its text, where it was quoted from (typed, or an
- * attached or uploaded file; `VerbatimSourcesContext`), and the × that turns it back into text.
+ * attached or uploaded file; `VerbatimSourcesContext`), and the × that turns it back into text. Drawn as a verbatim
+ * `ReferenceToken` (dashed) that shows its text whole (`passage`).
  */
 export function VerbatimPassage({ node, editor, getPos, updateAttributes }: ReactNodeViewProps) {
     const { t } = useTranslation();
@@ -60,23 +62,32 @@ export function VerbatimPassage({ node, editor, getPos, updateAttributes }: Reac
 
     return (
         <NodeViewWrapper as="span" data-verbatim="" contentEditable={false}>
-            <LockIcon size={13} aria-hidden />
-            <span data-verbatim-text="">{text}</span>
-            <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" aria-label={sourceLabel} title={sourceLabel} />}>
-                    {isTyped ? <UserIcon size={12} aria-hidden /> : <PaperclipIcon size={12} aria-hidden />}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent finalFocus={() => editor.view.dom}>
-                    <DropdownMenuRadioGroup value={current}>
-                        <SourceItem option={{ value: 'user', label: t('composer.verbatimSource.user') }} onChoose={choose} />
-                        {attachments.map((option) => <SourceItem key={option.value} option={option} onChoose={choose} />)}
-                        {sessionId && <SessionUploadItems sessionId={sessionId} onChoose={choose} />}
-                    </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="ghost" size="icon-xs" aria-label={removeLabel} title={removeLabel} onClick={unmark}>
-                <XIcon size={12} aria-hidden />
-            </Button>
+            <ReferenceToken
+                icon={LockIcon}
+                verbatim
+                passage
+                action={(
+                    <>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" aria-label={sourceLabel} title={sourceLabel} />}>
+                                {isTyped ? <UserIcon size={12} aria-hidden /> : <PaperclipIcon size={12} aria-hidden />}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent finalFocus={() => editor.view.dom}>
+                                <DropdownMenuRadioGroup value={current}>
+                                    <SourceItem option={{ value: 'user', label: t('composer.verbatimSource.user') }} onChoose={choose} />
+                                    {attachments.map((option) => <SourceItem key={option.value} option={option} onChoose={choose} />)}
+                                    {sessionId && <SessionUploadItems sessionId={sessionId} onChoose={choose} />}
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button variant="ghost" size="icon-xs" aria-label={removeLabel} title={removeLabel} onClick={unmark}>
+                            <XIcon size={12} aria-hidden />
+                        </Button>
+                    </>
+                )}
+            >
+                <span data-verbatim-text="">{text}</span>
+            </ReferenceToken>
         </NodeViewWrapper>
     );
 }

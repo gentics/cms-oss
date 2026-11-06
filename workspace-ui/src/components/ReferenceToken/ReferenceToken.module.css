@@ -1,22 +1,66 @@
-/* The `@` token naming a part of the page (design.md §12 "`@`-Token / Referenz"). */
+/* The token naming an object (design.md §12 "`@`-Token / Referenz"): the one look of the cards', the composer's and the
+   messages' tokens. Inline in text it sits on the text's line (`vertical-align`). */
 .token {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   max-width: 270px;
-  padding: 1px 6px;
-  overflow: hidden;
+  padding: 0 6px;
   border: 1px solid rgba(var(--interactive-rgb), 0.3);
   border-radius: var(--corner-sm);
   background: rgba(var(--interactive-rgb), 0.13);
   color: var(--fg-primary);
   font-size: var(--font-size-sm);
   font-weight: 500;
+  line-height: 1.6;
   white-space: nowrap;
-  text-overflow: ellipsis;
+  vertical-align: -2px;
 
-  & svg {
+  & > svg {
     flex: none;
     color: var(--interactive);
+  }
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* With a trailing control (the composer's ×): less room after it, the control brings its own. */
+.withAction {
+  padding-right: 2px;
+}
+
+/* Verbatim: the same token with a dashed border (design.md §12). */
+.verbatim {
+  border-style: dashed;
+}
+
+/* A passage (the composer's locked verbatim text): its words are the content, so it is shown whole and wraps; otherwise
+   the token as it is. */
+.passage {
+  max-width: none;
+  white-space: normal;
+
+  & > .label {
+    overflow: visible;
+    white-space: pre-wrap;
+  }
+}
+
+/* In the user's own message, on `--bg-solid` (design.md §12 "Chat-Blasen": tokens `rgba(255,255,255,.20)`). */
+.onSolid {
+  border-color: transparent;
+  background: rgba(var(--fg-on-solid-rgb), 0.2);
+  color: inherit;
+
+  & > svg {
+    color: inherit;
+  }
+
+  &.verbatim {
+    border-color: rgba(var(--fg-on-solid-rgb), 0.45);
   }
 }

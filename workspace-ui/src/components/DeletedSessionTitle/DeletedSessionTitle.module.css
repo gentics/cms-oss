@@ -1,0 +1,12 @@
+/* One line: the quotes and "deleted" keep their width, the name takes the rest and is cut off. */
+.title {
+  display: flex;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

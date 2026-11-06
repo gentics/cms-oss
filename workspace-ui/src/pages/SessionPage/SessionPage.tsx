@@ -25,7 +25,7 @@ import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { isEventLogEnabled, useEventLogStore } from '@/store/useEventLogStore';
 import { useHandOffStore } from '@/store/useHandOffStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
-import { type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { isSessionWorking, type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './SessionPage.module.css';
 
@@ -41,8 +41,11 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
  * field is emptied, on failure an error is shown and the input stays. `SessionPage` keys it by the
  * session, so going on to another session from the left column starts with an empty composer.
  * While a run of the session agent or a side run is working, it holds the composer and Stop cancels it
- * (`POST …/runs/{run_id}/cancel`). A plan's own run is stopped from the plan's head (`PlanHead`), so
- * there is one Stop for it; beside it a turn is a read-only side run (rc.4), so send stays. While a run
+ * (`POST …/runs/{run_id}/cancel`). A plan's own run does not hold it: beside it a turn is a read-only side
+ * run (rc.4), so the composer offers Stop for the plan's run while its field is empty and send once there
+ * is input; the plan's head has its Stop too (`PlanHead`). While the message is being sent, a disabled Stop
+ * shows; once GenAIx accepted it, Stop cancels its run by the id the `202` named, also before the stream
+ * reports it (`awaitedRunIds`), so the composer never stays held by a run that is not reported. While a run
  * waits for an answer, a turn answers the pending interaction (`reply_to_interaction`) with what its
  * card holds, or for `ask_user` with the turn's text; with nothing to answer, it asks for the card
  * first. Once the interaction is answered, from the card or here, or has expired
@@ -62,8 +65,12 @@ function SessionComposer({ sessionId, plan, composerRef }: { sessionId: string; 
     const sendTurn = useSendTurn(sessionId);
     const cancelRun = useCancelRun(sessionId);
     // The latest run without a plan (the session agent's, or a side run beside a plan's run), which holds
-    // the composer; a plan's run does not, and is stopped from the plan's head (`PlanHead`).
+    // the composer; a plan's run does not, and is stopped from the plan's head (`PlanHead`) and from here.
     const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => !live.planId));
+    // The latest plan's run, stopped from here too while the field is empty.
+    const planRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => live.planId));
+    // The run of a sent message, accepted (its id from the `202`) but not reported yet: still sending, for the composer.
+    const awaitedRunId = useWorkspaceEventStore((state) => selectSession(sessionId)(state).awaitedRunIds?.at(-1));
     const pending = useWorkspaceEventStore((state) => selectSession(sessionId)(state).interactions?.at(-1));
     const pendingRunStatus = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.find((live) => live.id === pending?.run_id)?.status);
     // What "Edit these" handed over, until it is in the field.
@@ -143,12 +150,20 @@ function SessionComposer({ sessionId, plan, composerRef }: { sessionId: string; 
         );
     }
 
+    // What Stop cancels: the run that holds the composer, else the sent message's run not reported yet, else the
+    // plan's run beside which the field is empty. Nothing while a message is being sent: its run has no id yet, and
+    // the plan's run is not what Stop would mean then (its head has its own Stop).
+    const isRunning = Boolean(run) && !isWaiting;
+    const fallbackRunId = sendTurn.isPending ? undefined : awaitedRunId ?? planRun?.id;
+    const stoppableId = isRunning ? run?.id : fallbackRunId;
+    const stoppableStatus = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.find((live) => live.id === stoppableId)?.status);
+
     function handleStop() {
-        if (!run) {
+        if (!stoppableId) {
             return;
         }
 
-        cancelRun.mutate(run.id, {
+        cancelRun.mutate(stoppableId, {
             onError: (error) => {
                 useErrorNotificationStore.getState().addError({ messageKey: 'chat.stopFailed', detailKey: errorMessageKey(error) });
             },
@@ -160,11 +175,12 @@ function SessionComposer({ sessionId, plan, composerRef }: { sessionId: string; 
             ref={composerRef}
             variant="chat"
             onSubmit={handleSubmit}
-            isSubmitting={sendTurn.isPending}
+            isSubmitting={sendTurn.isPending || Boolean(awaitedRunId)}
             uploadProgress={uploadProgress}
             sessionId={sessionId}
-            isRunning={Boolean(run) && !isWaiting}
-            isStopping={run?.status === 'cancelling' || cancelRun.isPending}
+            isRunning={isRunning}
+            isRunningBeside={Boolean(planRun) && planRun?.status !== 'waiting_for_input'}
+            isStopping={!stoppableId || stoppableStatus === 'cancelling' || cancelRun.isPending}
             onStop={handleStop}
             extraAction={
                 <Button disabled={!revise} variant="ghost" size="sm" aria-pressed={isSideQuestion} onClick={() => setIsSideQuestion(!isSideQuestion)}>
@@ -191,6 +207,10 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
     const sendTurn = useSendTurn(sessionId);
     const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
     const previews = useWorkspaceEventStore((state) => selectSession(sessionId)(state).previews);
+    // By plan; the stored object itself, so that the selector stays stable.
+    const publications = useWorkspaceEventStore((state) => selectSession(sessionId)(state).publications);
+    // GenAIx still at work (also a plan's run): the page may grow.
+    const isBuilding = useWorkspaceEventStore((state) => isSessionWorking(selectSession(sessionId)(state)));
 
     async function send(parts: UserMessagePart[], files: StartFile[] = []) {
         try {
@@ -206,6 +226,8 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
         <PreviewColumn
             preview={preview}
             previews={previews}
+            publications={Object.values(publications ?? {}).flat()}
+            isBuilding={isBuilding}
             onReferenceInChat={(element, text) => composerRef.current?.insertPageElement(element, text)}
             onSendFeedback={(element, text) => send(pageElementParts({ ...element, text: pageElementNaming(t, element) }, text))}
             // An uploaded image goes into the session with the turn, as a source (`useSendTurn`).
@@ -232,6 +254,8 @@ export function SessionPage() {
     // The chat composer, for the preview to add a part of the page to it.
     const composerRef = useRef<ComposerHandle>(null);
     const preview = useWorkspaceEventStore((state) => (id ? selectSession(id)(state).preview : undefined));
+    // While GenAIx is at work, a preview that arrives slides in; one there on opening the session is simply there.
+    const isWorking = useWorkspaceEventStore((state) => (id ? isSessionWorking(selectSession(id)(state)) : false));
     // The plan the bar above the composer is for, if any; the stream keeps room for the bar meanwhile,
     // as high as it is, expanded or not. None for a plan with nothing left to show (`planPresence`).
     // The plan the user picked from several open ones (`PlanSwitcher`), while GenAIx names the same open
@@ -287,6 +311,7 @@ export function SessionPage() {
                 : chat}
             right={id && preview && <SessionPreview key={id} sessionId={id} preview={preview} composerRef={composerRef} />}
             isRightColumnVisible={Boolean(preview)}
+            animatesColumns={isWorking}
         />
     );
 }

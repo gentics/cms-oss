@@ -24,6 +24,7 @@ The modules below `ee/` are:
 * `ee/cms-contentstaging` – Content staging
 * `ee/cms-forms` – Forms
 * `ee/cms-keycloak` – Keycloak integration
+* `ee/cms-mcp` – MCP tools for GenAIx
 * `ee/cms-multichannelling` – Multichannelling
 * `ee/cms-server` – Enterprise server distribution
 * `ee/formgen` – Form generator

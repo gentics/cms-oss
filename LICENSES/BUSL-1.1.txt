@@ -1,23 +1,5 @@
 Business Source License 1.1
 
-Parameters
-
-Licensor:             Gentics Software GmbH
-Licensed Work:        Everything under the folder ee/ of Gentics CMS
-Additional Use Grant: None
-Change Date:          <<CHANGE_DATE>>
-Change License:       Apache-2.0
-
-Notice
-
-The Business Source License (this document, or the “License”) is not an Open
-Source license. However, the Licensed Work will eventually be made available
-under an Open Source License, as stated in this License.
-
------------------------------------------------------------------------------
-
-Business Source License 1.1
-
 License text copyright © 2017 MariaDB Corporation Ab, All Rights Reserved.
 "Business Source License" is a trademark of MariaDB Corporation Ab.
 

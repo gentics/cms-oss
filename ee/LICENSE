@@ -3,14 +3,38 @@ Business Source License 1.1
 Parameters
 
 Licensor:             Gentics Software GmbH
-Licensed Work:        Everything under the folder ee/ of Gentics CMS
-Additional Use Grant: None
-Change Date:          <<CHANGE_DATE>>
-Change License:       Apache-2.0
+Licensed Work:        Gentics CMS Enterprise Modules, i.e. everything under
+                      the folder ee/ of this repository.
+                      The Licensed Work is (c) 2026 Gentics Software GmbH.
+Additional Use Grant: You may use the Licensed Work for development, testing,
+                      evaluation and demonstration purposes. Any production
+                      use requires a commercial license from the Licensor.
+Change Date:          Three years after the release date of the respective
+                      module, as listed in the table below. For modules first
+                      released with version 9.0 the Change Date is 2030-01-01.
+Change License:       Apache License, Version 2.0
+
+Release dates and Change Dates per module
+
+  Module                             Release date   Change Date
+  ee/cms-contentstaging              2027-01-01     2030-01-01
+  ee/cms-forms                       2027-01-01     2030-01-01
+  ee/cms-keycloak                    2027-01-01     2030-01-01
+  ee/cms-multichannelling            2027-01-01     2030-01-01
+  ee/cms-server                      2027-01-01     2030-01-01
+  ee/formgen                         2027-01-01     2030-01-01
+
+A module that is added to ee/ in a later release is appended to this table
+with its own release date and Change Date. Patch releases of a module keep the
+Change Date of the release they belong to. Release dates in this table are the
+dates on which the respective version counts as released for the purpose of
+this License.
+
+For information about commercial licensing, contact sales@gentics.com.
 
 Notice
 
-The Business Source License (this document, or the “License”) is not an Open
+The Business Source License (this document, or the "License") is not an Open
 Source license. However, the Licensed Work will eventually be made available
 under an Open Source License, as stated in this License.
 

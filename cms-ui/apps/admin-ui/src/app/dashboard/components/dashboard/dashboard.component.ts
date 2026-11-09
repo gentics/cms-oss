@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, Feature, GcmsPermission, PublishInfo, SchedulerStatus, Variant } from '@gentics/cms-models';
+import { AccessControlledType, Feature, GcmsPermission, PublishInfo, SchedulerStatus } from '@gentics/cms-models';
 import { NEVER, Observable, Subscription, combineLatest, forkJoin, interval, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { AdminUIModuleRoutes } from '../../../common';
@@ -40,7 +40,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     public objectPropertiesModuleEnabled = false;
     public constructsModuleEnabled = false;
     public meshBrowserModuleEnabled = false;
-    public licenseModuleEnabled = false;
 
     private subscriptions: Subscription[] = [];
 
@@ -252,19 +251,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
         ).subscribe((enabled) => {
             this.meshBrowserModuleEnabled = enabled;
-            this.changeDetector.markForCheck();
-        }));
-
-        this.subscriptions.push(combineLatest([
-            this.appState.select((state) => state.ui.cmpVersion),
-            this.permissions.checkPermissions({
-                type: AccessControlledType.LICENSING,
-                permissions: GcmsPermission.READ,
-            }),
-        ]).pipe(
-            map(([version, hasPermission]) => version?.variant === Variant.ENTERPRISE && hasPermission),
-        ).subscribe((enabled) => {
-            this.licenseModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
 

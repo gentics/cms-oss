@@ -287,6 +287,9 @@ public class PropertyNodeConfig implements NodeConfig {
 						// enable foreign key checks
 						DB.update(handle, "SET FOREIGN_KEY_CHECKS = 1");
 					}
+
+					// the dump contains a fixed globalprefix, every new installation gets its own random globalprefix
+					DB.update(handle, "UPDATE globalprefix SET globalprefix = ?", new Object[] { new RandomPrefixService().getGlobalPrefix() });
 				} catch (IOException e) {
 					throw new NodeException("Error while reading db dump file", e);
 				} catch (SQLException e) {

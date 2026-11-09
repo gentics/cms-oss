@@ -1,0 +1,15 @@
+Form:
+{{#if form ~}}
+{{#with form ~}}
+id: {{ id }}
+mailsource: {{ mailsource }}
+{{#each elements ~}}
+{{> (formsElementTemplate type) }}
+{{/each ~}}
+{{/with ~}}
+{{else ~}}
+{{#each elements ~}}
+{{> (formsElementTemplate type) }}
+{{/each ~}}
+{{/if ~}}
+/Form

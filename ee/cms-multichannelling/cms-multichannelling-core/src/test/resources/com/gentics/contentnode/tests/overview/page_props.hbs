@@ -1,0 +1,48 @@
+{{#each cms.tag.parts.ds.items}}
+id:							{{gtx_render id}}
+url:						{{gtx_render url}}
+template.id:				{{gtx_render template.id}}
+name:						{{gtx_render name}}
+filename:					{{gtx_render filename}}
+description:				{{gtx_render description}}
+priority:					{{gtx_render priority}}
+publishtimestamp:			{{gtx_render publishtimestamp}}
+publishdate:				{{gtx_render publishdate}}
+creationtimestamp:			{{gtx_render creationtimestamp}}
+creationdate:				{{gtx_render creationdate}}
+edittimestamp:				{{gtx_render edittimestamp}}
+editdate:					{{gtx_render editdate}}
+folder:						{{gtx_render folder.name}}
+folder.isfolder:			{{gtx_render folder.isfolder}}
+creator:					{{gtx_render creator}}
+editor:						{{gtx_render editor}}
+publisher:					{{gtx_render publisher}}
+language:					{{gtx_render language.code}}
+languageset.id				{{gtx_render languageset.id}}
+online:						{{gtx_render online}}
+ispage:						{{gtx_render ispage}}
+isfolder:					{{gtx_render isfolder}}
+isfile:						{{gtx_render isfile}}
+isimage:					{{gtx_render isimage}}
+istag:						{{gtx_render istag}}
+version.number:				{{gtx_render version.number}}
+version.date:				{{gtx_render version.date}}
+version.editor:				{{gtx_render version.editor}}
+version.major:				{{gtx_render version.major}}
+ismaster:					{{gtx_render ismaster}}
+inherited:					{{gtx_render inherited}}
+template.id:				{{gtx_render template.id}}
+template.name:				{{gtx_render template.name}}
+template.ml.name:			{{gtx_render template.ml.name}}
+template.ml.extension:		{{gtx_render template.ml.extension}}
+template.ml.contenttype:	{{gtx_render template.ml.contenttype}}
+ttype:						{{gtx_render ttype}}
+versions:
+{{#each versions}}
+	{{number}}
+{{/each}}
+pagevariants:
+{{#each pagevariants}}
+	{{id}}
+{{/each}}
+{{/each}}

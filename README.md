@@ -1,223 +1,153 @@
-<h1 align="center">
-  <a href="https://www.gentics.com/infoportal/">
-    <img src="https://getmesh.io/blog/JPGs/Gentics_CMS_Logo.jpg" alt="Gentics CMS" style="max-width: 80%" />
-  </a>
-</h1>
-
-<h3 align="center">Gentics CMS is your friendly, enterprise-grade, open-source CMS</h3>
+<h1 align="center">Gentics CMS</h1>
+<h3 align="center">The friendly, enterprise-grade, open-source CMS – and the editing heart of Gentics CMP</h3>
 
 <p align="center">
-To be honest, it’s more than that: it’s your application development platform
-to create your websites, your IoT applications, your mobile apps, your smart
-devices and your digital signage solutions. With its complete feature list and great documentation, you’ll get your projects done
-successfully in less time, no matter which technology you prefer.
+  <a href="LICENSING.md"><img src="https://img.shields.io/badge/core-Apache--2.0-brightgreen.svg" alt="Core: Apache-2.0" /></a>
+  <a href="LICENSING.md"><img src="https://img.shields.io/badge/ee-BUSL--1.1-blue.svg" alt="Enterprise Modules: BUSL-1.1" /></a>
+  <a href="https://hub.docker.com/r/gentics/cms-oss"><img src="https://img.shields.io/badge/docker-gentics%2Fcms--oss-blue.svg" alt="Docker" /></a>
+  <a href="https://cla-assistant.io/gentics/cms-oss"><img src="https://cla-assistant.io/readme/badge/gentics/cms-oss" alt="CLA assistant" /></a>
 </p>
 
-<br />
+Gentics CMS is where content gets made. Editors write in a real WYSIWYG editor, admins manage users, roles
+and workflows, and the CMS publishes everything into [Gentics Mesh](https://github.com/gentics/mesh), from
+where portals, apps and AI agents consume it. It has been in production at public administrations,
+chambers and enterprises for more than two decades, and since Gentics CMP 9 the complete code is public.
 
-<p align="center">
+## Where it sits in Gentics CMP
 
- <img src="https://img.shields.io/badge/status-stable-brightgreen.svg" alt="stable" />
- 
- <a href="https://www.apache.org/licenses/LICENSE-2.0">
-  <img src="https://img.shields.io/:license-apache-brightgreen.svg" alt="License" />
- </a>
-</a>
- <a href="https://cla-assistant.io/gentics/cms-oss">
-  <img src="https://cla-assistant.io/readme/badge/gentics/cms-oss" alt="CLA assistant" />
- </a>
-</p>
+| Repository | Component |
+| --- | --- |
+| [gentics/cms-oss](https://github.com/gentics/cms-oss) | **This repo.** Gentics CMS – editing, publishing, Workspace, MCP tools |
+| [gentics/mesh](https://github.com/gentics/mesh) | Gentics Mesh – headless content repository, search, Content RAG, MCP server |
+| [gentics/cmp-portals](https://github.com/gentics/cmp-portals) | Portal \| php and Portal \| java – render content from Mesh |
+| [gentics/cmp](https://github.com/gentics/cmp) | Umbrella: platform changelog, guides, Helm chart, licensing overview |
 
-<br />
+Content flows from Gentics CMS into Gentics Mesh and from there into the portals or your own applications.
+The [cmp README](https://github.com/gentics/cmp#readme) has the big picture and the cross-repository
+getting-started guide.
 
-# Table of Contents
+## What you get
 
-<!-- re-generate with https://github.com/ekalinin/github-markdown-toc -->
+* **Editing that editors like.** Content trees as websites think of them, a WYSIWYG editor based on
+  [Aloha Editor](cms-aloha-bundle), in-place editing, multi-language content, automatic navigation and
+  clean URLs.
+* **Publishing into Mesh.** Pages, files, images and structured objects are published into Gentics Mesh and
+  are available there through REST and GraphQL.
+* **Workspace.** The AI co-pilot for editors ([`workspace-ui`](workspace-ui)): a chat-based assistant
+  that works on the content of the CMS, with every action bound to the user's CMS permissions. AI calls go
+  through GenAIx, the Gentics-hosted AI service, via the CMS proxy, so no key ever reaches the browser.
+* **MCP tools.** The CMS exposes its content operations through the Model Context Protocol
+  ([`cms-core/.../mcp`](cms-core/src/main/java/com/gentics/contentnode/mcp)), so agents work with the same
+  permission model as humans.
+* **A complete REST API** ([`cms-restapi`](cms-restapi)) with [OpenAPI documentation](https://www.gentics.com/Content.Node/guides/),
+  a Java client and TypeScript models for the UIs.
+* **Built to run for years.** Link checker, search, translation, clustering, and a Keycloak integration,
+  content staging, forms and multichannelling as Enterprise Modules.
 
-   * [Table of Contents](#table-of-contents)
-   * [Introduction](#introduction)
-      * [Gentics CMP](#gentics-cmp)
-      * [Why pick Gentics CMS?](#why-pick-gentics-cms)
-   * [Status](#status)
-   * [Documentation, Changelog, Download Links and System Requirements
-](#documentation-changelog-download-links-and-system-requirements)
-   * [Getting Help](#getting-help)
-   * [Professional Services](#professional-services)
-      * [Product Development](#product-development)
-      * [Consulting](#consulting)
-      * [Maintenance](#maintenance)
-      * [Support](#support)
-   * [Contributing to Gentics CMS](#contributing-to-gentics-cms)
-   * [Copyright &amp; License](#copyright--license)
+## Repository map
 
-# Introduction
+```
+cms-oss/
+├── base-api, base-lib        shared foundations
+├── cms-api, cms-restapi      public API and REST models (OpenAPI)
+├── cms-core                  the server: publishing, permissions, rendering, MCP tools
+├── cms-oss-server            server distribution (Docker image gentics/cms-oss)
+├── cms-ui                    editor and admin UI, NX monorepo (Angular)
+├── workspace-ui              Workspace, the AI co-pilot for editors (React/Vite)
+├── cms-aloha-*               Aloha Editor bundle and plugins
+├── cms-cache, cms-cluster, cms-search, cms-linkchecker, cms-translation
+├── cms-oss-doc, cms-oss-changelog
+├── cms-integration-tests
+└── ee/                       Enterprise Modules (BUSL-1.1)
+    ├── cms-contentstaging    content staging between environments
+    ├── cms-forms, formgen    forms and the form generator
+    ├── cms-keycloak          SSO with Keycloak
+    ├── cms-multichannelling  one content base, many channels
+    └── cms-server            enterprise server distribution
+```
 
-## Gentics CMP
+## Getting started
 
-Gentics CMP (Content Management Platform) is composed of the following components: Gentics CMS, Gentics Mesh, and Gentics Portal. Gentics CMS and Mesh are available as both open-source software (OSS) and Enterprise Edition (EE). Gentics Portal Java and PHP can only be acquired with the Enterprise Edition. You can find the EE features here: [Open-Source and Enterprise Edition](https://www.gentics.com/infoportal/cmp/ossandee/). For more information about the EE, please contact [sales@gentics.com](mailto:sales@gentics.com).
+### Run it
 
-Here are the links to our open-source projects:
+The quickest way to a running CMS is the Docker image
+[gentics/cms-oss](https://hub.docker.com/r/gentics/cms-oss). The
+[installation guide](https://www.gentics.com/Content.Node/guides/) walks you through the setup with
+MariaDB, the configuration files and the first login. For Kubernetes, use the Helm chart of the
+[Gentics CMP umbrella chart](https://github.com/gentics/cmp/tree/master/ee/cmp-chart).
 
-- Gentics CMS OSS: https://github.com/gentics/cms-oss
-- Gentics CMS OSS on dockerhub: https://hub.docker.com/r/gentics/cms-oss
-- Gentics Mesh OSS: https://github.com/gentics/mesh
-- Gentics Mesh OSS on dockerhub: https://hub.docker.com/r/gentics/mesh
+### Build it
 
-## Why pick Gentics CMS?
+Requirements: Java 17, Maven 3.9+, Node.js (for the UIs), Docker (for the integration tests).
 
-Gentics CMS is an integral part of the Gentics CMP and neccessary in order to create a functioning CMP. 
-It is also the platform which provides a real WYSIWYG Editor, through which content can be easily edited.
-You can use its modern user interface that makes content editing and administration enjoyable. You decide whether you want to
-host it locally or in the cloud. We don’t care if you’re a Windows, Linux or
-Mac guy or girl. Also, with its Apache 2.0 license, you are free to use it, modify
-it and improve it.
+```bash
+git clone https://github.com/gentics/cms-oss.git
+cd cms-oss
+mvn clean install -DskipTests
+```
 
-What makes Gentics CMS special over other CMSes is:
+The reactor builds the core and the `ee/` modules. The UIs have their own tooling, see
+[`cms-ui/README.md`](cms-ui/README.md) (NX) and [`workspace-ui/README.md`](workspace-ui/README.md) (Vite,
+with a local GenAIx mock for development).
 
-* its built-in user management not only covers the admin and editor features,
-  but can also be used for handling access to your application.
-* it thinks in content trees (just like websites do), which brings you many
-  things for free: automatic navigation menus, automatic beautiful URLs,
-  built-in link resolving, …​
-* it is scalable and built for clustering, so your deployment can grow with
-  your project’s success.
+### Talk to it
 
+Everything the UIs do goes through the REST API, so you can too:
 
-# Status
+```bash
+# log in and get a session
+curl -X POST http://localhost:8080/rest/auth/login \
+     -H 'Content-Type: application/json' \
+     -d '{"login":"<user>","password":"<password>"}'
+```
 
-Gentics CMS is actively developed by a dedicated team at Gentics Software GmbH in Vienna,
-Austria.
+The full API reference is in the [guides](https://www.gentics.com/Content.Node/guides/).
 
-<p align="center">
-    <img src="https://getmesh.io/blog/JPGs/CMP-DEV.jpg" alt="CMP DEV" style="max-width: 80%" />
-</p>
+### Branches
 
-The Gentics CMS core team consists of the following members:
+* `dev` – next release
+* `hotfix-<version>` – maintenance of released versions
+* `f-<ticket>` – feature branches
 
-<p align="center">
- <table align="center" style="width: 100%; max-width: 600px;">
-  <tr>
-   <td align="center">
-    <a href="https://github.com/deckdom">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     Dominik Decker<br /><i>UI/UX developer</i>
-    </a>
-   </td>
-  </tr>
-  <tr>
-   <td align="center">
-    <a href="https://github.com/npomaroli">
-     <!-- <img src="https://avatars.githubusercontent.com/npomaroli?size=150" width="150" /><br /> -->
-     Norbert Pomaroli<br /><i>Software architect</i>
-    </a>
-   </td>
-  </tr>
-    <tr>
-   <td align="center">
-    <a href="https://github.com/yrucrem">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     Patrick Klaffenböck<br /><i>Backend developer</i>
-    </a>
-   </td>
-  </tr>
-    </tr>
-    <tr>
-   <td align="center">
-    <a href="https://github.com/plyhun">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     Serhii Plyhun<br /><i>Backend developer</i>
-    </a>
-   </td>
-  </tr>
-    </tr>
-    </tr>
-    <tr>
-   <td align="center">
-    <a href="https://github.com/guggi">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     Oliver Guggenberger<br /><i>Backend developer</i>
-    </a>
-   </td>
-  </tr>
-    </tr>
-    </tr>
-    </tr>
-    <tr>
-   <td align="center">
-    <a href="https://github.com/netwarex">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     Péter Nyári<br /><i>Frontend developer</i>
-    </a>
-   </td>
-  </tr>
-  </tr>
-    </tr>
-    </tr>
-    </tr>
-    <tr>
-   <td align="center">
-    <a href="https://github.com/enizhou">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     En Qiang Zhou<br /><i>Product Owner</i>
-    </a>
-   </td>
-  </tr>
- </table>
-</p>
+## Documentation and help
 
-<!-- XXX Roadmap XXX -->
+* [Guides](https://www.gentics.com/Content.Node/guides/) – installation, configuration, development, API
+* [Changelog](https://www.gentics.com/Content.Node/changelog/)
+* [System requirements](https://www.gentics.com/Content.Node/guides/faq_system_requirements.html)
+* [Gentics CMP changelog](https://www.gentics.com/cmp/changelog/) and [guides](https://www.gentics.com/guides/) across all components
+* Issues: [github.com/gentics/cms-oss/issues](https://github.com/gentics/cms-oss/issues)
 
-# Documentation, Changelog, Download Links and System Requirements
+## Licensing
 
-For our comprehensive documentation on Gentics CMS, please visit the following link: https://www.gentics.com/Content.Node/guides/
+Gentics CMS is **open core**:
 
-* Changelog: https://www.gentics.com/Content.Node/changelog/
-* Download Links: https://www.gentics.com/Content.Node/guides/downloads.html
-* System Requirements: https://www.gentics.com/Content.Node/guides/faq_system_requirements.html
+* **Core – Apache License 2.0.** Everything outside `ee/`. OSI-approved open source: run it in production,
+  modify it, redistribute it.
+* **Enterprise Modules – Business Source License 1.1.** Everything inside `ee/`: content staging, forms and the form generator, the Keycloak integration, multichannelling and the enterprise server distribution.
+  The source is public and free to use for development, testing, evaluation and demonstration. Production
+  use requires a commercial license – contact [sales@gentics.com](mailto:sales@gentics.com). Every module
+  converts to Apache 2.0 three years after its release (Change Date); the exact dates are in
+  [`ee/LICENSE`](ee/LICENSE).
 
-# Getting Help
+The core runs without `ee/`. [`LICENSING.md`](LICENSING.md) has the details, the
+[cmp repository](https://github.com/gentics/cmp/blob/master/LICENSING.md) the overview across the platform.
 
-Issues can be reported via [GitHub](https://github.com/gentics/mesh/issues).
+## Contributing
 
-# Professional Services
+Pull requests are welcome.
 
-The company behind Gentics CMS, Gentics Software GmbH is
-offering commercial services for Gentics CMS. Please contact us at
-sales@gentics.com for details.
+* Contributions to the core are accepted under the Apache License 2.0 with a DCO sign-off (`git commit -s`).
+* Contributions to `ee/` additionally need our [Contributor License Agreement](CLA-individual.md)
+  ([corporate version](CLA-corporate.md)). The CLA bot asks on your first pull request that touches `ee/`.
 
-## Product Development
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Found a bug? Open an issue in this repository.
 
-Gentics CMS is a robust and cutting-edge solution that has undergone continuous development for more than two decades. 
-After an extension request has been received from you, it will be evaluated whether the features will be added to the standard product or
-offered as an individual project.
+## Commercial services
 
-## Consulting
+Gentics Software GmbH, the company behind Gentics CMS, offers product maintenance, developer support,
+consulting and custom development. Contact [sales@gentics.com](mailto:sales@gentics.com).
 
-We accompany you in your projects with our experienced Gentics CMS
-Consultants. Here we can help you setting up the project, executing together
-the conception of the structures in the CMS, taking into account your
-requirements, and offer orientation to best practices.
+---
 
-## Maintenance
-
-Product Maintenance includes product error removal. We offer various Product
-Maintenance Packages - differing between Essential, Professional and Elite
-Package - depending on the number of Gentics CMS Nodes.
-
-## Support
-
-To help and support you and your developers working and developing applications
-and online projects using Gentics CMS we offer a dedicated Developer Support
-focusing on all the typical questions and needs arising when working with
-Headless CMS solutions.
-
-# Contributing to Gentics CMS
-
-Please sign the [CLA](https://cla-assistant.io/gentics/cms-oss) in order to contribute to Gentics CMS.
-
-# Copyright & License
-
-Copyright (c) 2014-2023 Gentics Software GmbH. Licensed under the
-Apache License, Version 2.0.
-
-Gentics is a registered trade mark of Gentics Software GmbH.
+Copyright (c) 2014-2026 Gentics Software GmbH. Gentics is a registered trademark of Gentics Software GmbH,
+see [`TRADEMARKS.md`](TRADEMARKS.md).

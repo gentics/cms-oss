@@ -1,0 +1,30 @@
+{
+    "adminEmailAddress": "admin@gentics.com",
+    "adminEmailSubject": {
+        "de": "Es sind neue Daten da",
+        "en": "New data arrived"
+    },
+    "adminEmailPageId": 4712,
+    "adminEmailNodeId": 43,
+    "adminEmailTemplate": "useremail",
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {}
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {}
+        ]
+    }
+}

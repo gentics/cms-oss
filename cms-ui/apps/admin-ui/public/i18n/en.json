@@ -395,8 +395,7 @@
         "password": "Password",
         "user_name": "User Name",
         "activities_title": "Activities",
-        "packages": "Packages",
-        "license_management": "License Management"
+        "packages": "Packages"
     },
     "shared": {
         "assign_contentrepositories_to_nodes": "Assign nodes to ContentRepository",
@@ -907,36 +906,6 @@
         "version_info_label_mesh": "Mesh Version",
         "version_info_label_portal_type": "Portal Type",
         "version_info_label_portal_version": "Portal Version"
-    },
-    "license": {
-        "overview_title": "Overview",
-        "status": "Status",
-        "status_MISSING": "Missing",
-        "status_INVALID": "Invalid",
-        "status_EXPIRED": "Expired",
-        "status_VALID": "Valid",
-        "status_INSUFFICIENT": "Insufficient",
-        "status_NOT_NEEDED": "Not needed",
-        "uuid": "ID",
-        "issuer": "Issuer",
-        "subject": "Subject",
-        "features": "Features",
-        "issuedAt": "Issued at",
-        "validUntil": "Valid until",
-        "unlimitedValidity": "Unlimited",
-        "openSource": "OpenSource",
-        "featureName": "Product",
-        "upload_license": "Upload License",
-        "upload_file": "Upload a license file",
-        "file_upload_button": "Select license file",
-        "selected_file": "Selected file",
-        "enter_license": "Enter license directly",
-        "enter_license_plceholder": "Enter license here",
-        "pushToContentRepositories": "Forward license to ContentRepositories",
-        "cr_license_differs": "The license of the ContentRepository is different from the CMS",
-        "push_license_to_cr_button": "Push license",
-        "push_license_to_all_crs_button": "Push license to all",
-        "contentRepository_info_modal_title": "License information of \"{{ entityName }}\""
     },
     "widget": {
         "cms_status_title": "CMS Status",

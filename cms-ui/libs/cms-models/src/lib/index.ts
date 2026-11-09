@@ -27,7 +27,6 @@ export * from './i18n-language';
 export * from './image';
 export * from './item';
 export * from './language';
-export * from './license';
 export * from './logs';
 export * from './markup-language';
 export * from './mesh-form';

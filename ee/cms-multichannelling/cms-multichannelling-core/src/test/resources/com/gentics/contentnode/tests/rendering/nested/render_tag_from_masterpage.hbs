@@ -1,0 +1,8 @@
+Tag ID: {{gtx_render cms.tag.id}}
+Tag name: {{gtx_render cms.tag.name}}
+editmode: {{gtx_render cms.rendermode.edit}}
+{{#gtx_channel cms.page.node.master.id~}}
+{{#with (gtx_test_page cms.page.id)~}}
+[{{{gtx_render tags.inner_tag}~}}]
+{{~/with~}}
+{{/gtx_channel~}}

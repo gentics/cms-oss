@@ -1,0 +1,57 @@
+h2. Basic Concept of Multichannelling
+
+The basic idea of multichannelling is to create special Nodes (called Channels), which derive from other Nodes and automatically inherit all contents (Folders, Templates, Pages, Images and Files). Objects can then be locally modified in the Channel, so that they completely overwrite the inherited object in the channel.
+
+endprologue.
+
+h3. Inheritance of Objects
+
+Every channel automatically inherits all objects from its immediate Master Node.
+
+These include
+
+* Folders
+* Templates
+* Pages
+* Images
+* Files
+
+Inherited objects are marked with brighter icons that have little arrows in the upper right corner (like shown above).
+
+NOTE: It is important to understand, that the channel contains the same "physical" objects as its master node, not copies or clones. If e.g. a page is locked and edited in the master node, so is the inherited page in the channel.
+
+WARNING: Since the objects in channels are inherited and therefore have the same IDs as the objects in the master nodes, it is _not_ possible to publish a node and any of its channels into the same contentrepository. Also the +hostnames+ of a node and all its channels must be different to ensure that objects published into the filesystem do not overwrite each other.
+
+h3. Localizing Objects in Channels
+
+When an object has to be modified in a channel, it must be localized in the channel first. Initially, a localized copy of an object is identical to its master object (except the ID, of course). But once localized, the two copies can be modified independently. Localized objects are marked with the normal icons.
+
+NOTE: Localized copies of objects completely replace their master objects. A channel either "sees" the inherited master object of an object, or the localized copy (if one exist for that channel) never both.
+
+NOTE: Localized copies cannot live on their own, but are always bound to their respective master objects. If a master object is removed, all localized copies of that object are removed. If a master object is moved to another folder, so are all the localized copies.
+
+h3. Creating Local Objects in Channels
+
+It is possible to create local objects in channels, that do not exist in the master node.
+
+h3. Object references in Channels
+
+The most important feature of multichannelling is the handling of object references. When an object references another object in the master node, the inherited object will automatically reference the localized copy of the other object in the channel node.
+
+Example:
+
+When a template is localized (and modified) in a channel, all pages that would use the _master_ template in the _master_ node, will automatically use the _localized_ template in the _channel_, no matter, whether the pages are inherited from the master or localized themselves.
+
+h3. Channel Chaining
+
+While a channel can only have one master node, it is possible to create many channels of the same master or even to create sub-channels of channels.
+
+h3. Restrictions
+
+There are some restrictions regarding channels:
+
+* Every channel must have a unique hostname (like all nodes)
+* It is not possible to publish a master and any of its channel into the same content repository, unless a "multichannelling aware contentrepository":mc_contentrepository.html is used
+* Channels inherit all objects from their respective master nodes. It is currently not possible to "locally remove" objects in channels
+* If pages, that are page variants of each other are localized, the localized copies will *not* be page variants of each other.
+* If a page that has a page variant is localized in a channel, the other variant (that is inherited from the master) will still share the content with the master, not the localized copy of its page variant.

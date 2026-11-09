@@ -1,0 +1,244 @@
+import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
+import {
+  LoadingScreen,
+} from '@andp/core/src/components/LoadingComponents';
+import { initI18nForms } from '@andp/core/src/services/i18n';
+import theme from '@andp/core/src/styles/theme';
+import { TFunction } from 'i18next';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
+import { sendPreviewLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
+import FormgenScreenErrorOverlay from '../components/overlays/childOverlays/FormgenScreenErrorOverlay';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
+import { RestService } from '../services/RestService';
+import { baseStyles } from '../styles/common/common-style';
+import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
+import { IDataFields, IFeatures, IFormFlowData, ISummaryDetailsUser } from '../types/interfaces';
+import { PreviewFormData, PreviewInformation } from '../types/preview';
+import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
+import RendererScreen from './RendererScreen';
+
+const FormgenScreen: React.FC<{
+  formId: string;
+  config: IFormFlowData;
+  isLoggedIn: boolean;
+  apiToken: string;
+  language: string;
+  businessObjectId: string;
+  devMode: boolean;
+  mockForm: boolean;
+  endpoint: string;
+  successContent?: string;
+  prefillContent?: IDataFields;
+  userData?: ISummaryDetailsUser;
+  features?: IFeatures;
+  t?: TFunction;
+  detailUrl?: string;
+  hasDetail?: boolean;
+  pluginName: string;
+  isFormgridPreview?: boolean;
+  previewFormData?: PreviewFormData;
+  previewInformation?: PreviewInformation;
+  previewSelectedElement?: string;
+  previewSelectedElementContextId?: string;
+  previewPageIndex?: number;
+}> = (props) => {
+  const [features, setFeatures] = useState<IFeatures>();
+  const [loadFeatureError, setLoadFeatureError] = useState<boolean>(false);
+  const isWeb = Platform.OS === 'web';
+  const [t, setT] = useState<TFunction>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const pluginName = (props.pluginName) as PluginNameEnum;
+
+  const restService = new RestService(props.endpoint, pluginName, props.apiToken);
+
+  useEffect(() => {
+    if (pluginName !== PluginNameEnum.ACTA_NOVA) {
+      return;
+    }
+
+    const fetchFeatures = async () => {
+      const response = await restService.ANLoadFeaturesAsync();
+      if (response.success) {
+        const features = response.responseData;
+        if (features != null) {
+          setFeatures(features);
+        } else {
+          setLoadFeatureError(true);
+          setError("Server not responding: Features not available");
+        }
+      }
+    };
+
+    const fetchMockFeatures = async () => {
+      if (__DEV__ || props.isFormgridPreview) {
+        const response = await fetchMockDefaultFeatures();
+        const features = response;
+        if (features != null) {
+          setFeatures(features);
+        } else {
+          setLoadFeatureError(true);
+          setError('Server not responding: Features not available');
+        }
+      }
+    };
+
+    if (props.features != null) {
+      setFeatures(props.features);
+    } else if (props.mockForm || props.isFormgridPreview) {
+      fetchMockFeatures();
+    } else if (!props.isFormgridPreview) {
+      fetchFeatures();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (props.t != null) {
+      setT(() => props.t);
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    (async () => {
+      try {
+        const i18nInstance = await initI18nForms(
+          props.endpoint,
+          props.formId,
+          props.pluginName,
+          false,
+          props.previewInformation,
+          props.language
+        );
+        await i18nInstance.changeLanguage(props.language);
+        if (mounted) {
+          setT(() => i18nInstance.t.bind(i18nInstance));
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error('i18n init error:', err);
+        if (mounted) {
+          setError('Translations could not be loaded: ' + err.toString());
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [props.endpoint]);
+
+  useEffect(() => {
+    if (loading || !isWeb) {
+      return;
+    }
+
+    if (!props.isFormgridPreview) {
+      const loader = document.getElementById('bcLoader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 500);
+      }
+    } else if (props.previewFormData?.schema != null && props.previewFormData.uiSchema != null) {
+      sendPreviewLoadedEvent();
+    }
+  }, [loading, isWeb]);
+
+  const styles = useMemo(() => mergeStyles(baseStyles, customBaseStyles), []);
+
+  const styleHtml = `<style>
+    #root { font-family: ${theme.fontFamily.regular} }
+    ${convertStyleToCssBlock('#root h1', styles.h1)}
+    ${convertStyleToCssBlock('#root h2', styles.h2)}
+    ${convertStyleToCssBlock('#root h3', styles.h3)}
+    ${convertStyleToCssBlock('#root h4', styles.h4)}
+    ${convertStyleToCssBlock('#root h5', styles.h5)}
+    ${convertStyleToCssBlock('#root h6', styles.h6)}
+    ${convertStyleToCssBlock('#root p', styles.p)}
+    ${convertStyleToCssBlock('#root ul', styles.ul)}
+    ${convertStyleToCssBlock('#root ul li', styles.ulItem)}
+    ${convertStyleToCssBlock('#root ol', styles.ol)}
+    ${convertStyleToCssBlock('#root ol li', styles.olItem)}
+    ${convertStyleToCssBlock('#root li', styles.li)}
+    ${convertStyleToCssBlock('#root a', styles.a)}
+    ${convertStyleToCssBlock('#root blockquote', styles.blockquote)}
+    ${convertStyleToCssBlock('#root code', styles.code)}
+    ${convertStyleToCssBlock('#root pre', styles.pre)}
+    ${convertStyleToCssBlock('#root hr', styles.hr)}
+    ${convertStyleToCssBlock('#root b', styles.b)}
+    ${convertStyleToCssBlock('#root strong', styles.strong)}
+    ${convertStyleToCssBlock('#root i', styles.i)}
+    ${convertStyleToCssBlock('#root em', styles.em)}
+    ${convertStyleToCssBlock('#root u', styles.u)}
+  </style>`;
+
+  if (error) {
+    return (
+      <FormgenScreenErrorOverlay
+        title="Error loading resources"
+        contentMessages={[error]}
+      />
+    );
+  }
+  const showRenderScreen = () => {
+    //features are necessary for AN-Forms
+    if(pluginName == PluginNameEnum.ACTA_NOVA && !features ){
+      return false; 
+    }
+
+    if (props.isFormgridPreview) {
+      return props.previewFormData?.uiSchema != null
+        && props.previewFormData?.schema != null;
+    }
+
+    //translations and formFlowConfig is necessary
+    if(!t || !props.config){
+      return false;
+    }
+
+    //if no special check is invalid, render the form
+    return true;
+  }
+  
+  if (showRenderScreen()) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        {t && <RendererScreen
+          features={features as IFeatures}
+          formId={props.formId}
+          businessObjectId={props.businessObjectId}
+          config={props.config}
+          language={props.language}
+          apiToken={props.apiToken}
+          isLoggedIn={props.isLoggedIn}
+          devMode={props.devMode}
+          mockForm={props.mockForm}
+          t={t}
+          endpoint={props.endpoint}
+          prefillContent={props.prefillContent}
+          userData={props.userData}
+          detailUrl={props.detailUrl}
+          hasDetail={props.hasDetail}
+          pluginName={pluginName}
+          successContent={props.successContent}
+          isFormgridPreview={props.isFormgridPreview}
+          previewFormData={props.previewFormData}
+          previewInformation={props.previewInformation}
+          previewSelectedElement={props.previewSelectedElement}
+          previewSelectedElementContextId={props.previewSelectedElementContextId}
+          previewPageIndex={props.previewPageIndex}
+        />}
+        {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}
+      </Suspense>
+    );
+  }
+
+  return <LoadingScreen />;
+};
+
+export default FormgenScreen;
+

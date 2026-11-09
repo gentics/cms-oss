@@ -1,0 +1,22 @@
+h2. Channel Synchronization
+
+This Feature activates the advanced UI for channel synchronization.
+
+endprologue.
+
+h3. Configuration
+
+To activate Channel Synchronization add the following setting to your node.conf and restart the CMS.
+
+<javascript filename="conf/features.yml">
+feature:
+  channelsync: true
+</javascript>
+
+NOTE: Channel Synchronization requires the Feature Multichannelling to be activated.
+After changing the configuration file, the .Node System must be restarted for the changes to fully take effect.
+
+
+h3. Description
+
+Details are found in the "Channel Synchronization documentation":mc_channelsync.html.

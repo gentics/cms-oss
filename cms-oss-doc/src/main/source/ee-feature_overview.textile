@@ -1,0 +1,45 @@
+h2. Gentics CMS Feature Overview
+
+This overview contains a list of Gentics CMS features.
+
+endprologue.
+
+INFO: Features are by default activated by setting them to boolean @true@
+and deactivated by setting them to @false@. These are the allowed settings
+for all features, if not documented otherwise.
+
+The list of features which require no Enterprise Edition licensing is available in the "OSS guides":https://www.gentics.com/Content.Node/cmp8/guides-oss/feature_overview.html.
+
+h3. Channel Synchronization
+
+See "Channel Synchronization":feature_channelsync.html
+
+h3. Content Staging
+
+See "Content Staging":feature_content_staging.html
+
+h3. Forms
+
+With the forms feature, it is possible to create forms directly in Gentics CMS, insert them into pages and publish them into a Mesh ContentRepository.
+
+See "Gentics CMS Forms":feature_forms.html for details.
+
+Forms are rendered and customized on the client side by FormGen. See "FormGen":formgen.html for details.
+
+h3. Keycloak
+
+The keycloak feature allows SSO to the CMS via "Keycloak":http://www.keycloak.org/
+
+See "SSO with Keycloak":feature_keycloak.html for details.
+
+h3. Multichanneling
+
+See "Multichannelling":mc_admin.html
+
+h3. Multichannelling Content.Repositories
+
+See "Multichannelling Content.Repositories":mc_contentrepository.html for more information.
+
+h3. Partial Multichannelling
+
+See "Partial Multichannelling":feature_partial_multichannelling.html for details.

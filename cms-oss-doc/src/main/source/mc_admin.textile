@@ -1,0 +1,37 @@
+h2. Administration of Multichannelling
+
+This Section describes necessary administrative tasks for multichannelling.
+
+endprologue.
+
+h3. Activating Multichannelling
+
+The Feature +Multichannelling+ can be activated by adding the line
+
+<shell filename="conf/features.yml">
+feature:
+  multichannelling: true
+</shell>
+
+to the configuration file +/cms/conf/features.yml+.
+
+NOTE: After changing the configuration file, the CMS must be restarted or the configuration must be reloaded via the admin UI for the changes to fully take effect.
+
+WARNING: Before deactivating the feature, be sure to remove _ALL_ channels. If channels and local or localized objects remain in the system when the feature is deactivated, this will result in undesired results!
+
+h3. Activating Channel Synchronization
+
+The Feature +Channel Synchronization+ can be activated by adding the line
+
+<shell filename="conf/features.yml>
+feature:
+  channelsync: true
+</shell>
+
+to the configuration file +/cms/conf/features.yml+.
+
+NOTE: +Channel Synchronization+ requires the Feature +Multichannelling+ to be activated.
+
+NOTE: After changing the configuration file, the .Node System must be restarted for the changes to fully take effect.
+
+This feature only adds additional UI to synchronize channels and master nodes and safely be activated/deactivated any time.

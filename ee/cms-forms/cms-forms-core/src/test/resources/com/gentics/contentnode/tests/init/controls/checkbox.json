@@ -1,0 +1,68 @@
+{
+	"elements": [
+		{
+			"name": "checkbox_mandatory",
+			"type": "checkbox",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Verpflichtend",
+				"en": "Mandatory"
+			},
+			"mandatory_i18n": {
+				"en": true
+			},
+			"checked_i18n": {
+				"en": false
+			},
+			"value_i18n": {
+				"en": "X"
+			}
+		},
+		{
+			"name": "checkbox_checked",
+			"type": "checkbox",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Angehakt",
+				"en": "Checked"
+			},
+			"mandatory_i18n": {
+				"en": false
+			},
+			"checked_i18n": {
+				"en": true
+			},
+			"value_i18n": {
+				"en": "X"
+			}
+		},
+		{
+			"name": "checkbox_value_y",
+			"type": "checkbox",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Anderer Wert",
+				"en": "Different Value"
+			},
+			"mandatory_i18n": {
+				"en": false
+			},
+			"checked_i18n": {
+				"en": false
+			},
+			"value_i18n": {
+				"en": "Y"
+			}
+		}
+	],
+	"email": "",
+	"mailsubject_i18n": {},
+	"mailsource_pageid": 0,
+	"mailsource_nodeid": 0,
+	"mailtemp_i18n": {},
+	"type": "GENERIC",
+	"templateContext": "theme-red"
+}

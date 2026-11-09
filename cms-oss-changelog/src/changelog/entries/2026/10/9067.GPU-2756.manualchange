@@ -1,0 +1,8 @@
+The Enterprise Edition modules of Gentics CMS (Multichannelling, Forms including the form renderer, Content Staging and Keycloak) are now part of the CMS OSS project. They are located in the folder @ee/@ and licensed under the Business Source License 1.1; all other modules remain under the Apache License 2.0.
+The license check has been removed, together with the license management in the Admin UI and the REST API:
+* The configuration @LICENSEKEY@ (environment variable of the Docker image, Helm values @cms.license.&#42;@) is no longer used and should be removed.
+* The global prefix of an installation no longer comes from the license. A stored global prefix is kept; it can be set explicitly with the new configuration @GLOBALPREFIX@.
+* The support login with RSA tokens has been removed; the support login with JWT is still available.
+* The permission "License management" has been removed.
+
+There are two Docker images: @gentics/cms-oss@ contains the modules under the Apache License 2.0, now including Clustering, Link Checker, Elasticsearch and Automatic Translation; @gentics/cms@ additionally contains the modules from the folder @ee/@ (Business Source License 1.1).

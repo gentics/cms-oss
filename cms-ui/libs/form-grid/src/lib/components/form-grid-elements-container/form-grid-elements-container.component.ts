@@ -37,14 +37,17 @@ import { blockDragForElement } from '../../utils/dragging';
 
 interface DisplayItem {
     id: string;
+    trackId: string;
     label: I18nString;
     element: FormElement;
     isBlock: boolean;
     isControl: boolean;
     isAggregate: boolean;
     isContainer: boolean;
+    isUnknown: boolean;
+    unknownType: string | null;
     whitelist: string[] | null;
-    config: FormElementConfiguration;
+    config: FormElementConfiguration | null;
     schema?: FormSchemaProperty;
     visible: boolean;
 }
@@ -203,6 +206,10 @@ export class FormGridElementsContainerComponent {
             return;
         }
 
+        if (this.displayItems().find((item) => item.element === element)?.isUnknown) {
+            return;
+        }
+
         this.elementSelect.emit({
             elementId: element.id,
             contextId: this.selfContext(),
@@ -215,11 +222,19 @@ export class FormGridElementsContainerComponent {
 
     public onResizeStart(
         event: PointerEvent,
-        index: number,
+        element: FormElement,
     ): void {
         cancelEvent(event);
 
         if (this.resizing() || !this.gridSurface()) {
+            return;
+        }
+
+        // The rendered items (and therefore the DOM) are based on the display-items,
+        // so the index has to be resolved from there and not from the elements.
+        const items = this.displayItems();
+        const index = items.findIndex((item) => item.element === element);
+        if (index < 0) {
             return;
         }
 
@@ -241,7 +256,7 @@ export class FormGridElementsContainerComponent {
             for (let i = 0; i < index; i++) {
                 const el = itemEls[i];
                 if (el && el.offsetTop === hostTop) {
-                    rowBase += this.getSpan(this.elements()[i]);
+                    rowBase += this.getSpan(items[i].element);
                 }
             }
 
@@ -252,7 +267,7 @@ export class FormGridElementsContainerComponent {
         this.resizing.set(true);
         this.resizePointerId = event.pointerId;
         this.resizeStartX = event.clientX;
-        this.resizeTarget = this.elements()[index];
+        this.resizeTarget = element;
         this.resizeSurfaceEl = parentEl ?? this.gridSurface();
         this.resizeRowBaseCols = rowBase;
         this.resizeRowMaxSpan = rowMax;
@@ -335,7 +350,7 @@ export class FormGridElementsContainerComponent {
         });
     }
 
-    public deleteElement(event: MouseEvent, element: FormElement, index: number): void {
+    public deleteElement(event: MouseEvent, element: FormElement): void {
         cancelEvent(event);
 
         const childCount = Array.isArray(element.elements) ? element.elements.length : 0;
@@ -372,6 +387,13 @@ export class FormGridElementsContainerComponent {
                     return;
                 }
 
+                // Resolve the index by reference, as the element ID may be missing (broken/migrated data)
+                // and the index of the rendered items may differ from the index in the elements.
+                const index = this.elements().indexOf(element);
+                if (index < 0) {
+                    return;
+                }
+
                 if (
                     this.selectedElement()?.id === element.id
                     && this.selfContext() === this.selectedElementContextId()
@@ -382,10 +404,12 @@ export class FormGridElementsContainerComponent {
                 const newElements = this.elements().slice();
                 newElements.splice(index, 1);
                 this.elements.set(newElements);
-                this.schema.update((data) => {
-                    delete data.properties[element.id];
-                    return data;
-                });
+                if (element.id) {
+                    this.schema.update((data) => {
+                        delete data.properties[element.id];
+                        return data;
+                    });
+                }
                 this.updateDisplayItems();
             })
             .catch(() => {
@@ -426,13 +450,23 @@ export class FormGridElementsContainerComponent {
             return;
         }
 
-        // Sort the visible list
-        const newElements = this.elements().slice(0);
-        const sorted = event.sort(newElements);
+        // The indices of the event are based on the rendered (display) items, which may differ
+        // from the elements. Therefore the moved element is resolved by reference and re-inserted
+        // in front of the element which follows it in the rendered list.
+        const items = this.displayItems();
+        const moved = items[event.oldIndex]?.element;
 
-        // Persist back into the current page (this.pages is usually a reference to uiSchema.pages,
-        // but we also explicitly write to uiSchema to be safe)
-        this.elements.set(sorted);
+        if (moved != null && event.oldIndex !== event.newIndex) {
+            const remainingItems = items.filter((_, idx) => idx !== event.oldIndex);
+            const following = remainingItems[event.newIndex]?.element;
+            const sorted = this.elements().filter((el) => el !== moved);
+            const followingIdx = following != null ? sorted.indexOf(following) : -1;
+            sorted.splice(followingIdx < 0 ? sorted.length : followingIdx, 0, moved);
+
+            // Persist back into the current page (this.pages is usually a reference to uiSchema.pages,
+            // but we also explicitly write to uiSchema to be safe)
+            this.elements.set(sorted);
+        }
         this.updateDisplayItems();
         this.elementMoving.set(null);
     }
@@ -452,7 +486,12 @@ export class FormGridElementsContainerComponent {
             const isControl = event.item.getAttribute('data-is-control') === 'true';
             const containerType = event.item.getAttribute('data-container-type');
 
-            this.addNewElement(elType, event.newDraggableIndex || event.newIndex, isControl, containerType as any);
+            this.addNewElement(
+                elType,
+                this.toElementIndex(event.newDraggableIndex || event.newIndex),
+                isControl,
+                containerType as any,
+            );
             return;
         }
 
@@ -473,7 +512,7 @@ export class FormGridElementsContainerComponent {
             fromContextId: fromCtx,
             toContainerId: toId,
             toContextId: toCtx,
-            targetIndex: Math.max(0, event.newDraggableIndex - 1),
+            targetIndex: Math.max(0, this.toElementIndex(event.newDraggableIndex) - 1),
         });
 
         this.elementMoving.set(null);
@@ -483,7 +522,8 @@ export class FormGridElementsContainerComponent {
         cancelEvent(event);
 
         this.elements.update((data) => {
-            const idx = data.findIndex((el) => el.id === item.id);
+            // Resolved by reference, as the element ID may be missing (broken/migrated data)
+            const idx = data.indexOf(item.element);
 
             if (idx < 0) {
                 return data;
@@ -507,6 +547,26 @@ export class FormGridElementsContainerComponent {
 
     /* INTERNALS
      * ===================================================================== */
+
+    /**
+     * Converts an index of the rendered (display) items - like the ones SortableJS provides from the DOM -
+     * to the corresponding index in the elements of this container.
+     * An index at (or past) the end of the rendered items is mapped to the end of the elements.
+     */
+    private toElementIndex(displayIndex: number | null | undefined): number {
+        const elements = this.elements() || [];
+        const items = this.displayItems();
+
+        if (displayIndex == null || !Number.isInteger(displayIndex) || displayIndex <= 0) {
+            return 0;
+        }
+        if (displayIndex >= items.length) {
+            return elements.length;
+        }
+
+        const idx = elements.indexOf(items[displayIndex].element);
+        return idx < 0 ? elements.length : idx;
+    }
 
     private addNewElement(type: string, index: number, isControl: boolean, containerType: 'aggregate' | 'container' | null): void {
         const createdEl = this.createNewElement(type, isControl, containerType);
@@ -541,31 +601,61 @@ export class FormGridElementsContainerComponent {
 
     private updateDisplayItems(): void {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
-        this.displayItems.set((this.elements() || []).map((el) => {
+        // Every element results in exactly one display item (unresolvable ones as placeholder),
+        // so the rendered items always correspond to the elements.
+        const usedTrackIds = new Set<string>();
+
+        this.displayItems.set((this.elements() || []).map((el, index): DisplayItem => {
+            let trackId = el.id;
+            if (!trackId || usedTrackIds.has(trackId)) {
+                trackId = `__unresolved_element__${index}`;
+            }
+            usedTrackIds.add(trackId);
+
             const uniqueElId = this.id() === this.rootId()
                 ? el.id
                 : `${this.selfContext()}${UNIQUE_ID_GLUE}${el.id}`;
             const itemSchema = this.schemaPropertiesMap()?.[uniqueElId];
             const visible = !el.formGridOptions?.['hidden'];
 
+            const unknownItem = (isControl: boolean, unknownType: string | null): DisplayItem => ({
+                id: el.id,
+                trackId,
+                label: el.label,
+                element: el,
+                isBlock: !isControl,
+                isControl,
+                isAggregate: false,
+                isContainer: false,
+                isUnknown: true,
+                unknownType,
+                whitelist: null,
+                config: null,
+                schema: itemSchema,
+                visible,
+            });
+
             if (itemSchema) {
                 const itemConfig = this.config().controls[itemSchema?.type];
 
                 if (!itemConfig) {
-                    console.warn(`Could not find a control config for type "${itemSchema?.type}"! Is the form-type configuration correct?  Element ${el.id} will not be dispalyed in the editor.`);
-                    return null;
+                    console.warn(`Could not find a control config for type "${itemSchema?.type}"! Is the form-type configuration correct? Element "${el.id}" is displayed as unknown element in the editor.`, el);
+                    return unknownItem(true, itemSchema?.type ?? null);
                 }
 
                 const isAggregate = !!(itemConfig).aggregate;
 
                 return {
                     id: el.id,
+                    trackId,
                     label: itemConfig.labelI18n,
                     element: el,
                     isBlock: false,
                     isControl: true,
                     isAggregate,
                     isContainer: false,
+                    isUnknown: false,
+                    unknownType: null,
                     whitelist: isAggregate ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                     schema: itemSchema,
@@ -575,33 +665,36 @@ export class FormGridElementsContainerComponent {
                 const type = el.formGridOptions?.type;
 
                 if (!type) {
-                    console.warn('Could not determine a item type from element! Element will not be displayed in editor.', el);
-                    return null;
+                    console.warn('Could not determine a item type from element! Element is displayed as unknown element in the editor.', el);
+                    return unknownItem(false, null);
                 }
 
                 const itemConfig = (this.config().blocks || {})[type];
 
                 if (!itemConfig) {
-                    console.warn(`Could not find a block config for type "${type}"! Is the form-type configuration correct? Element ${el.id} will not be dispalyed in the editor.`);
-                    return null;
+                    console.warn(`Could not find a block config for type "${type}"! Is the form-type configuration correct? Element "${el.id}" is displayed as unknown element in the editor.`, el);
+                    return unknownItem(false, type);
                 }
 
                 const isContainer = !!(itemConfig).container;
 
                 return {
                     id: el.id,
+                    trackId,
                     label: itemConfig.labelI18n,
                     element: el,
                     isControl: false,
                     isBlock: true,
                     isAggregate: false,
                     isContainer,
+                    isUnknown: false,
+                    unknownType: null,
                     whitelist: isContainer ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                     visible,
                 };
             }
-        }).filter((item) => item != null));
+        }));
     }
 
     private setSpan(el: any, span: number): void {

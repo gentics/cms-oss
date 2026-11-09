@@ -1,0 +1,1 @@
+Editor User Interface: Fixed resizing, deleting and sorting of form elements, which affected other elements when the form contained elements with a type missing in the form type configuration. Such elements are now displayed as placeholder.

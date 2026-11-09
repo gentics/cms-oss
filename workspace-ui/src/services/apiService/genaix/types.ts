@@ -78,9 +78,13 @@ export type InteractionKind = GenaixSchema<'InteractionKind'>;
 
 // `InteractionAnswer` is generated as `unknown` since the rc.5 addition: `ChoiceAnswer`'s `anyOf` branches
 // carry only `required`, and a union with `unknown` collapses to `unknown`. These are its members as
-// generated in `schema.d.ts`, with `ChoiceAnswer`'s `anyOf` (at least one selected id, or `other`) as a union.
-/** The answer to a `choice`: the selected option ids, or with `other_allowed` the user's own text (`other`). */
-export type ChoiceAnswer = { selected?: string[]; other?: string; comment?: string } & ({ selected: string[] } | { other: string });
+// generated in `schema.d.ts`, with `ChoiceAnswer`'s `anyOf` (at least one selected id, `other`, or `reference`) as a union.
+/**
+ * The answer to a `choice`: the selected option ids, with `other_allowed` the user's own text (`other`),
+ * or with `reference_types` (rc.6) an object the user picked (`reference`).
+ */
+export type ChoiceAnswer = { selected?: string[]; other?: string; reference?: ContextReference; comment?: string }
+    & ({ selected: string[] } | { other: string } | { reference: ContextReference });
 export type InteractionAnswer =
     | { text: string }
     | ChoiceAnswer

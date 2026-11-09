@@ -317,7 +317,7 @@ spec:
                         } else if (params.install) {
                             // Install
                             mvnGoal = "install"
-                            mvnProjects = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server,cms-ui'"
+                            mvnProjects = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server,cms-ui,ee/cms-server'"
                             mvnArguments = " -DskipTests=true -Dskip.unit.tests "
                         }
                     }

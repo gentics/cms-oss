@@ -7,7 +7,7 @@ produces. Section 11 continues past the first page: accepting a plan, a second p
 same conversation that edits pages, publishing them per plan, and one plan revised as the user
 changes their mind (`s7-continuous-session.sse`, `s6-content-edit.sse`, `s8-living-plan.sse`).
 
-This describes `1.0.0-rc.5`, agreed by all parties on 2026-10-15. Its one idea: **a session is one conversation, and the work it
+This describes the `1.0.0-rc.6` draft on top of `1.0.0-rc.5`, agreed by all parties on 2026-10-15. Its one idea: **a session is one conversation, and the work it
 carries out is a set of living plans.** A plan covers one piece of work, uses one or more
 workflow modules and has its own steps, checks, gates, derived settings, previews, publications
 and lifecycle. A follow-up on the same work **revises** the plan as a new version with the same
@@ -703,6 +703,10 @@ Section 11 shows a mixed outcome.
 over `keep`, since `1.0.0-rc.5`): `keep` (the default) leaves pages the plan already wrote as
 drafts in the CMS, `restore` restores each page's version from before the plan. The session credential is untouched by every plan transition.
 
+Since `1.0.0-rc.6`, under either value, a guideline the plan created is deleted as part of the discard,
+so a client does not delete it itself, and `publish` covers the forms a plan created or changed, online
+before its pages, each with its own `Publication`. A form has no review.
+
 `at` on a `publish` schedules it, which is the "publish on 1 January at midnight, when
 the update comes into force" case.
 
@@ -1117,14 +1121,14 @@ the user.
 | `s1-content-create.sse` | S1, content creation from source material: the execute run of one `content_create` plan, accepted at version 1. 92 events: plan, steps with substeps, CMS writes, a streamed `page_structure` part, the verbatim proof, a `settings_review` interaction confirming folder, language and template, previews, an artifact |
 | `s2-content-research.sse` | S2, research and reporting: a read-only `content_research` plan that runs without acceptance. 51 events: search calls, a streamed `table` part, citations, no CMS writes |
 | `s3-construct-create.sse` | S3, construct creation. 61 events: catalogue check, a streamed `construct_draft` part, Handlebars validation, the `confirm` interaction that is the user's acceptance (the plan is `proposed` until then), `create_construct`, an `api_call_log` part, preview |
-| `s4-admin-user.sse` | S4, optional. 43 events: group lookup, a `form` interaction, permission impact simulation, the `confirm` that accepts the plan, user creation, group assignment |
+| `s4-admin-user.sse` | S4, optional, in the `1.0.0-rc.6` shapes. 44 events: group lookup, a `form` interaction, user lookup, the group's permissions read instead of a preview (a new user has no id), the one `confirm` that accepts the plan, user creation in the group |
 | `s5-failure-and-recovery.sse` | Not a showcase scenario, the unhappy paths. 53 events across two execute runs of one `content_edit` plan on one stream, the plan back to `accepted` after each: `tool.failed` on a locked page, a recoverable `error`, `artifact.created`, `tool.failed` plus `auth.required` plus `run.failed` on a dead connection credential, then after re-registering it a second run with `artifact.updated` and `run.cancelled` |
 | `s6-content-edit.sse` | `content_edit` (`1.0.0-rc.3`), no showcase scenario. 114 events. A session started with `workflow: content_edit` and `continued_from` the S2 conversation, over three pages in two folders: the proposing run that stops at the plan, the execute run with per-page previews, and a publish with two pages published and one sent to review |
 | `s7-continuous-session.sse` | One continuous session (`1.0.0-rc.4`; revisions since `1.0.0-rc.5`), no showcase scenario. 90 events, two plans: a question answered by the session agent, a `content_edit` plan adjusted and accepted in the card, a side run while it executes, a `plan_scope_violation`, release and publish, then a `content_create` plan revised to version 2 before acceptance (section 11.2) |
 | `s8-living-plan.sse` | One living plan (`1.0.0-rc.5`), the PNDemo session, no showcase scenario. 217 events: one plan revised four times across `content_create` and `content_edit`, a settings review per version that needs one (`file_folder` with the node default), one execute run per module segment, a redirect while executing (`run.cancelled`, `redirected`), the `before_release` gates of both modules, one publish (section 11.4) |
 | `session-lifecycle.md` | This file |
 
-All transcripts use the `1.0.0-rc.5` shapes: `Plan.workflows`, `versions` and the items'
+All transcripts use the `1.0.0-rc.5` shapes, and S4 those of `1.0.0-rc.6`: `Plan.workflows`, `versions` and the items'
 `workflow`, `version` and `change`; `<workflow>/<id>` step and check ids carrying `workflow`;
 `run.workflow`; `Session.open_plan_ids`.
 

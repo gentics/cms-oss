@@ -397,6 +397,15 @@ text** — an at-mention, a tree selection, a guideline or an uploaded file all 
 `ContextReference` (`type`, `id`, optional `label`/`node_id`/`global_id`), so the agent resolves
 them through CMS tools instead of guessing from a string.
 
+**Language.** The client sends its UI language as `Accept-Language` on `POST /sessions` and on
+every `POST /sessions/{session_id}/messages` (since the `1.0.0-rc.5` addition of 2026-10-19),
+taken from its own language setting rather than the browser default. A new session's steps and
+checks are labelled in it, and GenAIx speaks it until it has recognised the language the user
+writes in, which then wins; a later message with another value replaces it. Only languages GenAIx
+supports count (primary subtag, ordered by `q`); otherwise nothing changes, and without either
+GenAIx speaks English. The header never sets a page's `language`, which stays a write-governing
+setting.
+
 `continued_from` (optional, a session id) links the new conversation to an earlier one
 (`1.0.0-rc.3`, §4.3).
 
@@ -558,7 +567,9 @@ page changed removes it from the work by adjusting the plan before accepting it 
 pages the plan wrote as they are, unpublished changes staying as drafts in the CMS, and answers
 `200`; `restore` restores each page's version from before the plan in a transition run and
 answers `202`, the plan becoming `discarded` once the run has landed. Discarding a plan that wrote
-nothing just closes it (`200`). The conversation goes on either way.
+nothing just closes it (`200`). The conversation goes on either way. Under either value, a
+guideline the plan created is deleted as part of the discard (since `1.0.0-rc.6`): left behind, a
+default guideline would keep applying to the node's sessions, so a client does not delete it itself.
 
 Three details fixed in `1.0.0-rc.2`, per plan since `1.0.0-rc.4`. The `202` body carries the
 plan **as it is when the call returns** (`released`); the outcome arrives on the stream and in
@@ -574,6 +585,14 @@ the page, while for a page the user may publish it is a GenAIx-side step — the
 performs it. `publish` maps the CMS outcome `published` or `scheduled` to the entry status
 `published` and `queued_for_approval` to `review_requested`; a CMS problem marks that entry
 `failed` with its `error`, and the plan status then follows the rules above.
+
+**Forms** (since `1.0.0-rc.6`). A plan's `publish` also covers the forms it created or changed, each
+with its own `Publication` entry, and they go online before its pages, so that a page never goes out
+with an offline form. If a form fails, the plan's pages stay `pending`, the run fails with the plan
+left `released`, and a repeated `publish` retries. A form has no review: `request_review` takes it
+online too, because an approval later in the CMS would otherwise publish the page with an offline
+form, and a user who may not publish it gets `failed`. An external form the plan only embeds
+is not written, so it has no entry.
 
 **Quality gates run before `release`, `publish` and `request_review`** (§8.1), per plan: the
 gates of every module of the plan for that moment, each over its own module's items (since
@@ -1285,7 +1304,7 @@ subject, never a login), `accepted_at`, `closed_at` (cleared when a settled plan
 - **`inputs`**: the module inputs of the plan, keyed by module id (since `1.0.0-rc.5`; one object
   before), each validated against that module's `inputs_schema`.
 - **`plan`**: the `Plan` above. `items` are `PlanItem`s (`id`, `label`, `kind`:
-  `create`\|`update`\|`link`\|`translate`\|`publish`\|`construct`\|`report`\|`other`,
+  `create`\|`update`\|`delete`\|`link`\|`translate`\|`publish`\|`construct`\|`report`\|`other`,
   `workflow`, `target?`, `status`: `pending`\|`running`\|`done`\|`skipped`\|`failed`\|`removed`,
   and since `1.0.0-rc.5` `version`, `change` and `depends_on`, §4.4 and §4.6; `creates`, `created`
   and `parent` since the `1.0.0-rc.5` addition, 2026-10-15), plus `reason` on every version after the first. Versioned
@@ -1304,7 +1323,10 @@ subject, never a login), `accepted_at`, `closed_at` (cleared when a settled plan
 
   **A plan at a glance.** A client counts only the items without a `parent`, grouped by `kind`
   and by the object type (`creates.type`, else `target.type`): "+3 folders · +4 pages · 2 pages
-  edited · +2 translations". A `report` or `other` item is never counted.
+  edited · +2 translations". A `report` or `other` item is never counted. A `delete` item's
+  object is its `target`, as in "+1 form · 1 form edited · 1 form deleted" (since `1.0.0-rc.6`).
+  Embedding a form in a page is a sub-step of the item that creates or edits the page, so it
+  counts as that page, and an external form is never counted as created or deleted.
 - **`steps`**: `Step` objects (`id`, `workflow`, `label`, `status`:
   `pending`\|`running`\|`done`\|`skipped`\|`failed`\|`waiting`, `detail?`, `substeps?`,
   `tool_calls?`), each module's `steps_template` in plan order. `waiting` means blocked on a user
@@ -1482,6 +1504,38 @@ has one value), a `reason` per option, and `other_allowed`. A client puts the re
 first with its reason and preselects it; with `other_allowed` it offers a free-text answer,
 sent as `other`, and `selected` may then be empty. `other` without `other_allowed` is `422` at
 `/answer/other`; an empty `selected` without `other` is `422` at `/answer/selected`.
+
+**Reference fields and answers** (since `1.0.0-rc.6`). A question can ask for an object from a
+picker, and the answer is one `ContextReference`. In a `form`, a property of `type: object` with
+`format: context-reference` and `x-reference-types` is such a field, and it stays one answer field:
+
+```json
+"headerImage": {
+  "type": "object",
+  "format": "context-reference",
+  "x-reference-types": ["image", "session_file"],
+  "title": "Header image"
+}
+```
+
+```json
+{ "values": { "headerImage": { "type": "image", "id": "4411", "node_id": 1 } } }
+{ "values": { "headerImage": { "type": "session_file", "id": "6b0d9e31-44a8-4c57-9f2e-8d1a3c7b5e02" } } }
+```
+
+A `choice` with `reference_types` lets the user pick another object instead of an option:
+`{"selected": [], "reference": {"type": "form", "id": "4410", "node_id": 3}}`. An option that
+names a CMS object carries it in `ref`.
+
+GenAIx answers `422` at `/answer/values/<field>` or `/answer/reference` when the type is not
+listed, a `page`, `folder`, `file`, `image`, `template`, `construct` or `form` has no `node_id`, a session file is not in this session, or, in a field that
+also lists `image`, a session file is not an image. `reference` without `reference_types` is `422`
+as well. GenAIx does not ask the CMS at this point: the agent reads the object later, and asks
+again if it cannot be used where the plan needs it. To answer with a new file, upload it first
+with `POST /sessions/{session_id}/files` (`mode: source`, the default, which suits images because
+they hold no text to lock; the allowed types are in `capabilities.upload_media_types`), then answer
+with its id. An upload does not stop `expires_at`, so a client shows the remaining time, and a late
+answer is `410`.
 
 Resolve with `POST /sessions/{session_id}/interactions/{interaction_id}` (the blocked run
 continues on the same stream), or with `reply_to_interaction` on the next `POST .../messages`

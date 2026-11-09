@@ -1217,12 +1217,22 @@ joins the plan's objects, and the later writes that name it are in scope.
 
 | Gate | Kind | Blocking | When | Inputs | Pass criteria |
 |---|---|:-:|---|---|---|
-| `permission_impact_previewed` | script | **yes** | `step_end` st-2 | none | This run's tool log holds a `preview_permission_impact` result for the exact `(user, add_groups, remove_groups)` about to be applied, with a non-empty before/after matrix. |
-| `admin_confirm` | human | **yes** | `step_end` st-2, `before_publish` | rendered diff | The administrator approves the rendered permission diff through `interaction kind=confirm`. A rejection is a `fail` carrying their comment. |
+| `permission_impact_previewed` | script | **yes** | `step_end` st-2 | none | This run's tool log holds a `preview_permission_impact` result for the exact `(user, add_groups, remove_groups)` about to be applied, with a non-empty before/after matrix, or for a new user a `get_group_permissions` result for each group joined. |
 
-This is the one workflow whose correct gate is a person. A permission grant is small, silent and
-consequential, and no script can judge whether this user belongs in that group. What a gate can
-guarantee is that nobody grants it blind: the preview must exist, and a human must have seen it.
+A permission grant is small, silent and consequential, and no script can judge whether this user
+belongs in that group. So the module asks exactly one confirmation (since `1.0.0-rc.6`, which removes
+the `admin_confirm` gate): `plan_approval: false`, and the run's `confirm`, after the preview and
+before the first write, is the plan's acceptance (§6.5). It shows each change and what the preview
+did not cover. What the harness guarantees is that nobody grants it blind: before each write it
+checks the exact user, group and direction against the accepted plan, so accepting "add Alice to
+group 31" does not allow adding anyone else to it. A new user has no id to preview, so
+`get_group_permissions` on each group joined stands in for the preview. The module sets
+`derived_settings: false` and publishes nothing. A plan item's `target` may be a `group` or a `user`,
+and `creates` may be a `user`.
+
+The tools send no invitation, so the module promises none: how a new user signs in is up to the
+installation. A caller cannot remove their own account from a group through MCP, so they cannot lose the
+rights that allow these changes, and the CMS refuses to remove a user's last group. The module reports both refusals.
 
 ### 8.5 Editing existing pages, `content_edit`
 
@@ -1488,6 +1498,37 @@ carrying the page as `target`, and the version detail in `evidence`:
 reports stays out of the evidence, which lives in the user's session store. A page whose version
 history cannot be read is an `error` verdict for the gate, which, being blocking with the
 default `on_error: fail`, refuses the release.
+
+### 8.6 CMS Forms, `form_manage` (optional)
+
+Since `1.0.0-rc.6`. Creates, edits and deletes CMS Forms through a plan. `produces: [form]`,
+`plan_approval: true`, with write bindings for `create_form`, `update_form` and `delete_form`.
+`publish` takes a plan's forms online before its pages. A `delete` item needs its own `confirm`,
+naming the form and the pages that embed it (`get_related` with `uses_form`), on top of the plan's acceptance. External forms are not
+offered here, and the CMS tools refuse every write to one, so the rule holds whatever a module does.
+
+Picking a form is not this module's work. A content module that needs one, with no form in the
+context, searches for candidates and confirms its pick on a `choice`: the recommended option first
+with its `reason`, CMS and external forms alike, each with its `ref`, and `reference_types: ["form"]`
+for any other existing form. With no candidates it asks. Embedding then goes through
+a construct with a `CMSFORM` part (§4.7), as a sub-step of the page's item. The module looks the
+construct up by that part, never by a keyword. With several on the page it picks the one that fits
+and states why, or asks on a `choice`. With none it tells the user that this page has no form
+construct and embeds nothing. It does not create one, because `CMSFORM` is out of scope for generated
+constructs (`06-construct-devtools-requirements.md`).
+
+### 8.7 Guidelines, `guideline_create` and `guideline_edit` (optional)
+
+Since `1.0.0-rc.6`. A guideline is a Markdown file of a devtools package, with the id
+`<package>/<name>[.default]`. Its name and `.default` make up the id, so changing them makes another
+guideline, while a priority does not. A default guideline applies to every session of the package's
+nodes, and users add any other to a plan. Content users read guidelines, Chief Content Creators write
+them.
+
+Both modules produce `guideline`, with `plan_approval: true` and the whole text in the plan. The
+plan item's `created` names the new guideline by its id, through `creates: guideline`, and a later
+revision may write to it. Discarding a plan deletes the guideline it created, whatever `on_discard`
+says, and a client takes the plan's `discarded` status to mean it is gone. An edit applies at once and stays under `keep`.
 
 ## 9. Testing a module
 

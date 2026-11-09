@@ -4,7 +4,7 @@
 contract the CMS team hosts in the cms-mcp module, ioflair implements as tools inside it, and any MCP client consumes. The prose companion, with rationale, scenario coverage,
 exclusions and the requirements towards the CMS implementation, is `../04-mcp-scope.md`.
 
-Current version: `1.0.0-rc.5` (the GenAIx-side tools follow living plans: `draft_plan` takes optional
+Current version: `1.0.0-rc.6`, a draft: it adds the groups `forms_read`, `forms_write`, `guidelines_read` and `guidelines_write`, corrects the admin tools to what the CMS does, and `list_folder_items` no longer lists forms. `1.0.0-rc.5` (the GenAIx-side tools follow living plans: `draft_plan` takes optional
 `workflows`, `revise_plan` is new, both with input schemas; the CMS tools describe and write every part
 value: `get_construct` gives each part's `value` schema, `update_page_tags` writes every part type it
 reads, `add_page_tag` returns `parts` and `embedAs`), aligned with `../openapi.yaml`, agreed by all

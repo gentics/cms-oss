@@ -135,6 +135,17 @@ Real, and worth relying on for client development:
 - `count_content` counts over the same fields and object types `search_content` matches, so a count
   with a search's own inputs reproduces its total; `list_templates` (phase one since `1.0.0-rc.2`)
   lists the templates a folder or node allows.
+- The `forms_read`, `forms_write`, `guidelines_read` and `guidelines_write` groups (`1.0.0-rc.6`,
+  `phase: two`, all served). `search_content` and `count_content` find forms with `types: ["form"]`,
+  and `list_folder_items` does not take them. Every write to an external form, and a create with an
+  external form type, is `external-form-read-only` (`422`). `delete_form` goes to the wastebin and is
+  refused where the node has none. A duplicate guideline id is `invalid-data`, also with another
+  priority; a name outside the pattern of `tools.json` is refused by the input schema.
+- The admin tools follow the corrected contract: no `active`, no `updategroupuser`, the `useradmin` and
+  `groupadmin` types, only subgroups of the caller's groups can be used (`parentGroupId` in
+  `fixtures/groups.json`), a user in a group outside that tree cannot be administered, a user's last
+  group cannot be removed, and a caller cannot remove their own account from a group. `create_user` sends
+  no invitation.
 - The `phase: future` tools are listed (per this mock's brief) but every call returns a clean
   `not-implemented-phase-one` problem, isolating "the tool exists in the contract" from "the tool
   works here".
@@ -238,7 +249,7 @@ python scripts/call.py create_construct '{"keyword": "my_box", "name": {"en": "M
 | `state.py` | In-memory `Store`, seeded from `fixtures/`, plus id counters and token bookkeeping |
 | `common.py` | `ObjectRef`/`Problem` builders, list envelope, schema-driven example generator |
 | `audit.py` | JSON-lines audit log writer |
-| `handlers/` | One module per tool group; `handlers.REGISTRY` auto-collects every public function by name (a function named `search_content` implements the `search_content` tool) |
+| `handlers/` | One module per tool group; `handlers.REGISTRY` auto-collects every public function by name (a function named `search_content` implements the `search_content` tool), `handlers/forms.py` and `handlers/guidelines.py` among them |
 | `handlers/generic.py` | Fallback for `phase: future` tools and any tool without a hand-written handler |
 | `scripts/call.py` | Manual CLI: `python scripts/call.py <tool> '<json args>' --token ...` |
 | `tests/test_smoke.py` | Starts the real server as a subprocess and drives it with the official `mcp` client |

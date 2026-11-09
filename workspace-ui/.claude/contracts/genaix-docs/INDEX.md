@@ -4,20 +4,24 @@
 
 The machine-readable artifacts are normative: where a prose document and a contract file disagree, the contract file wins. Read the architecture document first, then the API narrative for a Workspace UI role or the MCP and integration documents for a CMS role. This package is a specification with runnable mocks, not the finished integration.
 
-Contract version: 1.0.0-rc.5, shared by openapi.yaml and mcp/tools.json.
+Contract version: 1.0.0-rc.6, shared by openapi.yaml and mcp/tools.json. It is the basis for development here; the documents still call it a draft and rc.5 the frozen basis, which does not apply here (`.claude/rules/genaix-contracts.md`).
 
-<!-- Source: llm-index.md of the hand-out (contract 1.0.0-rc.5), with links rewritten to local paths.
+<!-- Source: llm-index.md of the hand-out (contract 1.0.0-rc.6), with links rewritten to local paths.
      The documents are llm-full.md split at its "# File:" separators, content unchanged. -->
 
 ## Reading path for the Workspace UI
 
 1. [01-architecture.md](01-architecture.md): read first, regardless of role (README, "Reading order")
 2. [03-genaix-api.md](03-genaix-api.md): the narrative for `../openapi.yaml`
-3. [08-workflow-modules.md](08-workflow-modules.md): plans (drafting, proposing, accepting, revising: §6.5; several modules in one plan: §6.7), quality gates
+3. [08-workflow-modules.md](08-workflow-modules.md): plans (drafting, proposing, accepting, revising: §6.5; several modules in one plan: §6.7), quality gates; since rc.6 `form_manage` (§8.6) and the guideline modules (§8.7)
 4. [examples-session-lifecycle.md](examples-session-lifecycle.md): the call sequence a client actually makes
 5. [09-integration-guide.md](09-integration-guide.md): sections 3 to 6 only (its "Purpose and audience" section)
 
-What changed since `1.0.0-rc.4`: `03-genaix-api.md` §16.1, `09-integration-guide.md` §10, `README.md` "Contract versions", and the `changelog` of both contract files (authoritative).
+What changed since `1.0.0-rc.5` (`1.0.0-rc.6`, 2026-11-06: forms, guidelines, user administration, reference fields): `README.md` "Contract versions", `03-genaix-api.md` §4.2 ("Forms", discard of a created guideline), §8 ("A plan at a glance": `delete`), §9 ("Reference fields and answers"), `08-workflow-modules.md` §8.4 (`admin_user`), §8.6, §8.7, `09-integration-guide.md` §10 ("rc.6 (draft)"), and the `1.0.0-rc.6` entry of the changelog of both contract files (authoritative).
+
+The `1.0.0-rc.5` addition of 2026-10-19 (one optional request header, `Accept-Language`, the Workspace UI's language on `createSession` and `postMessage`): `03-genaix-api.md` §4 ("Language"), `09-integration-guide.md` "Send a message" ("The UI language") and "What must be forwarded", the `AcceptLanguage` parameter and the `1.0.0-rc.5 addition (2026-10-19)` entry of the `openapi.yaml` changelog.
+
+What changed from `1.0.0-rc.4` to `1.0.0-rc.5`: `03-genaix-api.md` §16.1, `09-integration-guide.md` §10, `README.md` "Contract versions", and the `changelog` of both contract files (authoritative).
 
 The `1.0.0-rc.5` addition of 2026-10-15 ("plans at a glance": `PlanItem.creates`, `created`, `parent`; `Check.plan_version`, `item_ids`; a `choice` with `recommended`, option `reason`, `other_allowed`, answered with `other`): `03-genaix-api.md` §8, §9 and §16.1 ("Addition of 2026-10-15"), `09-integration-guide.md` "The plan card" ("The plan at a glance") and §10, and the `1.0.0-rc.5 addition` entry of the `openapi.yaml` changelog.
 

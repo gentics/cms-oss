@@ -1,6 +1,6 @@
 {
   "$schema_note": "Specification of the Gentics CMS MCP tool surface (cms-mcp). Companion document: stage1/04-mcp-scope.md. Every inputSchema and outputSchema is JSON Schema draft 2020-12. $ref values resolve against the root of THIS document; dereference them before handing a schema to an MCP client. Tool names are snake_case; input and output field names are camelCase, identical to the CMS REST model names. Input schemas are strict (additionalProperties false); output schemas are intentionally open so cms-mcp can add fields additively.",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0-rc.6",
   "changelog": [
     {
       "version": "1.0.0-draft.1",
@@ -38,9 +38,14 @@
       "version": "1.0.0-rc.5",
       "summary": "Agreed by all parties (2026-10-15). The GenAIx-side tools follow the GenAIx API 1.0.0-rc.5, in which a plan is living and may use several workflow modules: draft_plan takes optional workflows instead of a required workflow, and revise_plan is new. The CMS tools describe and write every part value: update_page_tags writes every part type get_page_tags reads, get_construct gives each part's value schema, add_page_tag returns what is needed to embed a tag in a text.",
       "detail": "(1) draft_plan: the session agent names the goal of new work and may pass the workflow modules it expects (workflows, module ids); the plan's proposing run picks the modules the work needs, splits it into items, each naming its module, and orders them by their dependencies. The required single workflow of 1.0.0-rc.4 is gone. (2) New revise_plan(plan_id, instruction): a message about the work of an existing plan revises that plan as a new version instead of drafting another; items finished in an earlier version stay done. A plan that is executing is redirected by GenAIx's router, not by this tool (its run is cancelled with cancel_reason redirected, then the proposing run follows). Every plan but a discarded or superseded one is revisable. (3) genaix_side_tools gains schemas, the input schemas of draft_plan and revise_plan, because the GenAIx API now depends on their arguments. (4) update_page_tags writes every part type get_page_tags reads a value for, in that shape: besides text, checkbox and page/file/image/folder ids, also node and form references, external page URLs, form UUIDs, lists, single and multi selects (by option value), datasource entries, overviews and page/template tag links; a reference may be given as an id or as the ref the read tools return. A select value that is not an option is invalid-data, listing the options. (5) get_page and get_page_tags read datasource entries ({key, value}) and overviews ({listType, selectType, orderBy, orderDirection, maxItems, recursive, items}), which they omitted. (6) get_construct: every writable part carries value, the JSON schema of what update_page_tags writes into it (select options as enum), and datasourceId for a select. (7) add_page_tag also returns parts (the construct's parts with value) and embedAs, the <node TAGNAME> element that shows the tag inside a rich-text part, when the construct may be a subtag. All additive: every call and value valid in 1.0.0-rc.4 stays valid. Transport and groups are unchanged."
+    },
+    {
+      "version": "1.0.0-rc.6",
+      "summary": "Draft. New groups forms_read, forms_write, guidelines_read, guidelines_write. The admin tools state what the CMS does. list_folder_items no longer lists forms.",
+      "detail": "(1) forms_read: get_form, list_form_types; forms_write: create_form, update_form, delete_form, publish_form. External forms are read and embedded, every write to one is refused. (2) guidelines_read: list_guidelines, get_guideline; guidelines_write: create_guideline, update_guideline, delete_guideline. (3) get_permissions accepts createform. (4) list_folder_items: form is removed, because the CMS cannot list forms together with the other types; search_content with types [form] finds them. (5) Admin group: permissions follow the CMS (useradmin createuser, userassignment on a parent group), useradmin and groupadmin are permission types and the instance-only types are gone, create_user is not previewed, assignment is not one transaction and node restrictions add up, the last group of a user cannot be removed, and a caller cannot remove their own account from a group."
     }
   ],
-  "status": "1.0.0-rc.5 agreed and frozen for development (release candidate 5); 1.0.0 at the demo-readiness checkpoint",
+  "status": "1.0.0-rc.6 draft, proposed for agreement; 1.0.0-rc.5 stays agreed until then; 1.0.0 at the demo-readiness checkpoint",
   "owner": {
     "specification": "ioflair",
     "implementation": "Gentics (cms-mcp Java module)"
@@ -76,7 +81,6 @@
       "cms_permissions": [
         "createuser",
         "updateuser",
-        "updategroupuser",
         "userassignment",
         "setperm"
       ]
@@ -358,7 +362,7 @@
     "dynamic_tool_listing": {
       "enabled": true,
       "granularity": "tool",
-      "description": "tools/list is computed per request and per tool from the acting user's type-level CMS permissions: a tool is listed when the user's permissions can satisfy the tool's permissions entry, and omitted otherwise. In effect a whole group disappears when none of its tools can be used (admin without createuser/updategroupuser, content_write without page create or edit permission in any node, search when the CMS feature elasticsearch is inactive), while a group with mixed access lists only what the user may call: a content creator sees the read tools of constructs without holding updateconstructs. Per-object checks still happen on the call and surface as permission-denied.",
+      "description": "tools/list is computed per request and per tool from the acting user's type-level CMS permissions: a tool is listed when the user's permissions can satisfy the tool's permissions entry, and omitted otherwise. In effect a whole group disappears when none of its tools can be used (admin without createuser or userassignment, content_write without page create or edit permission in any node, search when the CMS feature elasticsearch is inactive), while a group with mixed access lists only what the user may call: a content creator sees the read tools of constructs without holding updateconstructs. Per-object checks still happen on the call and surface as permission-denied.",
       "clients_must": "Tolerate the list changing between calls and intersect it with their own allowlist."
     },
     "error_mapping": [
@@ -676,6 +680,7 @@
                     "updatetemplates",
                     "deletetemplates",
                     "linktemplates",
+                    "createform",
                     "wastebin",
                     "setperm",
                     "userassignment"
@@ -1254,7 +1259,7 @@
         {
           "name": "get_related",
           "title": "Get related objects",
-          "description": "Reverse lookup: which objects reference this one. Use it to find pages to link to, and to check whether an object is safe to take offline or delete. This is relational usage data, not search, so it is exact rather than ranked. Do NOT use it to find textually similar content, that is find_similar.",
+          "description": "Reverse lookup: which objects reference this one. Use it to find pages to link to, and to check whether an object is safe to take offline or delete. This is relational usage data, not search, so it is exact rather than ranked. Do NOT use it to find textually similar content, that is find_similar. For a form, uses_form lists the pages that embed it.",
           "group": "search",
           "access": "read",
           "roles": [
@@ -1303,6 +1308,7 @@
                     "links_to_file",
                     "links_to_image",
                     "uses_template",
+                    "uses_form",
                     "uses_tag",
                     "variants",
                     "total"
@@ -1420,6 +1426,10 @@
               {
                 "method": "GET",
                 "path": "/image/usage/total"
+              },
+              {
+                "method": "GET",
+                "path": "/form/usage/page"
               }
             ],
             "notes": "All usage endpoints take id (repeatable), nodeId and the paging parameters skipCount, maxItems, sortby, sortorder. /page/usage/total and /file/usage/total return TotalUsageResponse, the others return PageUsageListResponse or the per-type list response. cms-mcp normalises them into one groups array."
@@ -1737,7 +1747,7 @@
         {
           "name": "list_folder_items",
           "title": "List folder items",
-          "description": "Lists the pages, files, images, folders and forms in one folder, with edit and publish state. This is the exact inventory of a folder, unlike search_content which is ranked retrieval. Use it when the user names a folder, and to check whether a page already exists there before creating one.",
+          "description": "Lists the pages, files, images and folders in one folder, with edit and publish state. This is the exact inventory of a folder, unlike search_content which is ranked retrieval. Use it when the user names a folder, and to check whether a page already exists there before creating one. To find forms, use search_content with types [form].",
           "group": "content_read",
           "access": "read",
           "roles": [
@@ -1775,15 +1785,14 @@
               "types": {
                 "type": "array",
                 "minItems": 1,
-                "maxItems": 6,
+                "maxItems": 4,
                 "uniqueItems": true,
                 "items": {
                   "enum": [
                     "page",
                     "file",
                     "image",
-                    "folder",
-                    "form"
+                    "folder"
                   ]
                 },
                 "default": [
@@ -7957,9 +7966,933 @@
       ]
     },
     {
+      "id": "forms_read",
+      "title": "Forms read",
+      "description": "Reading CMS and external forms. Finding them is search_content with types [form]. Embedding one in a page is update_page_tags on a CMSFORM part.",
+      "roles": [
+        "content_creator",
+        "chief_content_creator",
+        "cmp_admin"
+      ],
+      "tools": [
+        {
+          "name": "get_form",
+          "title": "Get form",
+          "description": "Reads one form: name, type, languages, publish state, whether it is external, and its definition. Forms, CMS and external alike, are found with search_content and types [form].",
+          "group": "forms_read",
+          "access": "read",
+          "roles": [
+            "content_creator",
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "folder",
+              "perms": [
+                "readitems"
+              ],
+              "scope": "the containing folder",
+              "confirm": false
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "formId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/definitions/ObjectRef"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "formType": {
+                "type": "string"
+              },
+              "external": {
+                "type": "boolean",
+                "description": "The form's type is an external form type. Every write to such a form is refused."
+              },
+              "languages": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "online": {
+                "type": "boolean"
+              },
+              "modified": {
+                "type": "boolean"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "data": {
+                "description": "The form's definition, in the shape its form type uses."
+              }
+            },
+            "required": [
+              "ref",
+              "formType",
+              "external"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/form/{id}"
+              }
+            ],
+            "notes": "external comes from the form type's configuration."
+          }
+        },
+        {
+          "name": "list_form_types",
+          "title": "List form types",
+          "description": "Lists the form types a node offers, each saying whether it is external. create_form needs one that is not.",
+          "group": "forms_read",
+          "access": "read",
+          "roles": [
+            "content_creator",
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "node",
+              "perms": [
+                "view"
+              ],
+              "confirm": false
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "external"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "external": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "items"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/form/types"
+              }
+            ],
+            "notes": "Limited to the types assigned to the node."
+          }
+        }
+      ]
+    },
+    {
+      "id": "forms_write",
+      "title": "Forms write",
+      "description": "Creating, changing, deleting and publishing CMS forms. Every write to an external form is refused. Omitted from tools/list for users without a form create or edit permission in any node.",
+      "roles": [
+        "content_creator",
+        "chief_content_creator"
+      ],
+      "tools": [
+        {
+          "name": "create_form",
+          "title": "Create form",
+          "description": "Creates one offline CMS form in a folder, or in the node's default form folder when folderId is left out. formType must not be an external type: such a form is refused with external-form-read-only, because external forms come from their external system.",
+          "group": "forms_write",
+          "access": "write",
+          "roles": [
+            "content_creator",
+            "chief_content_creator"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "folder",
+              "perms": [
+                "createform"
+              ],
+              "scope": "the target folder"
+            }
+          ],
+          "idempotent": false,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "folderId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string"
+              },
+              "formType": {
+                "type": "string"
+              },
+              "languages": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "data": {
+                "description": "The form's definition, in the shape its form type uses."
+              }
+            },
+            "required": [
+              "name",
+              "formType",
+              "languages"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/definitions/ObjectRef"
+              }
+            },
+            "required": [
+              "ref"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "POST",
+                "path": "/form"
+              }
+            ],
+            "notes": "externalId is deliberately not exposed: with one, the CMS turns a create into an update."
+          }
+        },
+        {
+          "name": "update_form",
+          "title": "Update form",
+          "description": "Changes one form's name, description, languages or definition, and completes its own lock cycle. A published form stays online in its published version until publish_form. Refused with external-form-read-only for an external form.",
+          "group": "forms_write",
+          "access": "write",
+          "roles": [
+            "content_creator",
+            "chief_content_creator"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "form",
+              "perms": [
+                "edit"
+              ],
+              "scope": "the target form"
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string"
+              },
+              "languages": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "data": {
+                "description": "The form's definition, in the shape its form type uses."
+              }
+            },
+            "required": [
+              "formId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/definitions/ObjectRef"
+              },
+              "changed": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "ref"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "PUT",
+                "path": "/form/{id}"
+              },
+              {
+                "method": "PUT",
+                "path": "/form/{id}/lock"
+              },
+              {
+                "method": "DELETE",
+                "path": "/form/{id}/lock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "delete_form",
+          "title": "Delete form to wastebin",
+          "description": "Moves a form to the wastebin, where it remains restorable by a human in the CMS. Refused with invalid-data on a node without wastebin, so this never deletes permanently. Confirm with the user before calling it, and check get_related with uses_form first: pages may embed it. Refused with external-form-read-only for an external form.",
+          "group": "forms_write",
+          "access": "write",
+          "roles": [
+            "content_creator",
+            "chief_content_creator"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "form",
+              "perms": [
+                "delete"
+              ],
+              "scope": "the target form"
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "formId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/definitions/ObjectRef"
+              },
+              "deleted": {
+                "type": "boolean"
+              },
+              "restorable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "ref",
+              "deleted"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "DELETE",
+                "path": "/form/{id}"
+              }
+            ],
+            "notes": "The purge route DELETE /form/wastebin/{id} is deliberately NOT exposed."
+          }
+        },
+        {
+          "name": "publish_form",
+          "title": "Publish form",
+          "description": "Puts a form online. Called by the harness during a plan's publish, never by the model, as for publish_page. Refused with external-form-read-only for an external form.",
+          "group": "forms_write",
+          "access": "write",
+          "roles": [
+            "content_creator",
+            "chief_content_creator"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "form",
+              "perms": [
+                "publish"
+              ],
+              "scope": "the target form"
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "formId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/definitions/ObjectRef"
+              },
+              "online": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "ref",
+              "online"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "PUT",
+                "path": "/form/{id}/online"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "guidelines_read",
+      "title": "Guidelines read",
+      "description": "Reading the editorial guidelines of a node, Markdown files in its devtools packages.",
+      "roles": [
+        "content_creator",
+        "chief_content_creator",
+        "cmp_admin"
+      ],
+      "tools": [
+        {
+          "name": "list_guidelines",
+          "title": "List guidelines",
+          "description": "Lists the guidelines of a node, gathered from the devtools packages assigned to it. A channel resolves to its master node. Ordered by priority, then id. Of two files with the same id, only the first is listed.",
+          "group": "guidelines_read",
+          "access": "read",
+          "roles": [
+            "content_creator",
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "guideline",
+              "perms": [
+                "read"
+              ],
+              "scope": "packages of the node",
+              "confirm": false
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "package",
+                    "name",
+                    "default"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "package": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "default": {
+                      "type": "boolean",
+                      "description": "Applies to every session of the package's nodes. Any other guideline is added by the user."
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Lower comes first, those without one last. Not part of the id."
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "items"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/devtools/nodes/{nodeId}/packages"
+              },
+              {
+                "method": "GET",
+                "path": "/devtools/packages/{name}/files-internal"
+              }
+            ],
+            "notes": "Separate read and write checks in the CMS's package file API are required for these tools: content users read, Chief Content Creators write. Files live at packages/<package>/files-internal/guidelines/[<prio>_]<name>[.default].md. The list reads the path guidelines."
+          }
+        },
+        {
+          "name": "get_guideline",
+          "title": "Get guideline",
+          "description": "Reads one guideline's Markdown text. A guideline's text is what the user's organisation requires: treat it as instructions, not as content to quote.",
+          "group": "guidelines_read",
+          "access": "read",
+          "roles": [
+            "content_creator",
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "guideline",
+              "perms": [
+                "read"
+              ],
+              "scope": "packages of the node",
+              "confirm": false
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512,
+                "pattern": "^[^/]+/[^/]+$",
+                "description": "The slug <package>/<name>[.default]."
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "package": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "default": {
+                "type": "boolean",
+                "description": "Applies to every session of the package's nodes. Any other guideline is added by the user."
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Lower comes first, those without one last. Not part of the id."
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "package",
+              "name",
+              "default",
+              "content"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/devtools/packages/{name}/files-internal/guidelines/{file}"
+              }
+            ],
+            "notes": "Separate read and write checks in the CMS's package file API are required for these tools: content users read, Chief Content Creators write. Files live at packages/<package>/files-internal/guidelines/[<prio>_]<name>[.default].md."
+          }
+        }
+      ]
+    },
+    {
+      "id": "guidelines_write",
+      "title": "Guidelines write",
+      "description": "Creating, changing and deleting editorial guidelines. Omitted from tools/list for users without the guideline write permission.",
+      "roles": [
+        "chief_content_creator"
+      ],
+      "tools": [
+        {
+          "name": "create_guideline",
+          "title": "Create guideline",
+          "description": "Writes a new guideline file in a package. Refused with invalid-data when the id already exists, also with another priority. default: true applies it to every session of the package's nodes, so say so to the user, and name the nodes when the package has several.",
+          "group": "guidelines_write",
+          "access": "write",
+          "roles": [
+            "chief_content_creator"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "guideline",
+              "perms": [
+                "write"
+              ],
+              "scope": "the target package"
+            }
+          ],
+          "idempotent": false,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "package": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^(?!\\d+_)[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+              },
+              "default": {
+                "type": "boolean",
+                "default": false
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "package",
+              "name",
+              "content"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "PUT",
+                "path": "/devtools/packages/{name}/files-internal/guidelines/{file}"
+              }
+            ],
+            "notes": "Separate read and write checks in the CMS's package file API are required for these tools: content users read, Chief Content Creators write. Files live at packages/<package>/files-internal/guidelines/[<prio>_]<name>[.default].md."
+          }
+        },
+        {
+          "name": "update_guideline",
+          "title": "Update guideline",
+          "description": "Replaces a guideline's text or priority. The change applies at once. Changing its name or default makes it another guideline, which is a create and a delete.",
+          "group": "guidelines_write",
+          "access": "write",
+          "roles": [
+            "chief_content_creator"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "guideline",
+              "perms": [
+                "write"
+              ],
+              "scope": "the target package"
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512,
+                "pattern": "^[^/]+/[^/]+$",
+                "description": "The slug <package>/<name>[.default]."
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "PUT",
+                "path": "/devtools/packages/{name}/files-internal/guidelines/{file}"
+              }
+            ],
+            "notes": "Separate read and write checks in the CMS's package file API are required for these tools: content users read, Chief Content Creators write. Files live at packages/<package>/files-internal/guidelines/[<prio>_]<name>[.default].md."
+          }
+        },
+        {
+          "name": "delete_guideline",
+          "title": "Delete guideline",
+          "description": "Deletes a guideline file. This is permanent, so confirm with the user first. The harness also calls it when a plan that created the guideline is discarded.",
+          "group": "guidelines_write",
+          "access": "write",
+          "roles": [
+            "chief_content_creator"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "guideline",
+              "perms": [
+                "write"
+              ],
+              "scope": "the target package"
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512,
+                "pattern": "^[^/]+/[^/]+$",
+                "description": "The slug <package>/<name>[.default]."
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "deleted": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "deleted"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "DELETE",
+                "path": "/devtools/packages/{name}/files-internal/guidelines/{file}"
+              }
+            ],
+            "notes": "Separate read and write checks in the CMS's package file API are required for these tools: content users read, Chief Content Creators write. Files live at packages/<package>/files-internal/guidelines/[<prio>_]<name>[.default].md."
+          }
+        }
+      ]
+    },
+    {
       "id": "admin",
       "title": "User and group administration",
-      "description": "Scenario S4, which is optional. Omitted from tools/list for users without createuser and updategroupuser. No tool writes permission bits.",
+      "description": "Scenario S4, which is optional. Omitted from tools/list for users without useradmin createuser or userassignment on a group. No tool writes permission bits.",
       "roles": [
         "cmp_admin"
       ],
@@ -7967,7 +8900,7 @@
         {
           "name": "list_users",
           "title": "List users",
-          "description": "Finds CMS users by name, login or email. Call it before create_user to check whether the person already has an account, which is the common case in an existing installation.",
+          "description": "Finds CMS users by name, login or email. Call it before create_user to check whether the person already has an account, which is the common case in an existing installation. A user who is also in a group outside your own group tree is listed but cannot be administered: those tools answer permission-denied.",
           "group": "admin",
           "access": "read",
           "roles": [
@@ -8059,9 +8992,6 @@
                       "items": {
                         "$ref": "#/definitions/ObjectRef"
                       }
-                    },
-                    "active": {
-                      "type": "boolean"
                     }
                   }
                 }
@@ -8190,7 +9120,7 @@
         {
           "name": "get_group_permissions",
           "title": "Get group permissions",
-          "description": "Returns what a group may do, either on an object type or on one specific object, as a list of named permissions with labels. This is the read a permission impact preview is built from. It describes a GROUP, not a user: a user's effective rights are the union over their groups, which is what preview_permission_impact computes.",
+          "description": "Returns what a group may do, either on an object type or on one specific object, as a list of named permissions with labels. This is the read a permission impact preview is built from. It describes a GROUP, not a user: a user's effective rights are the union over their groups, which is what preview_permission_impact computes. Pages, templates, files, images, forms and constructs have no permissions of their own: read them as folder or node permissions, where a node stands for its root folder.",
           "group": "admin",
           "access": "read",
           "roles": [
@@ -8223,17 +9153,13 @@
               },
               "type": {
                 "enum": [
-                  "page",
                   "folder",
-                  "template",
-                  "file",
-                  "image",
-                  "form",
-                  "construct",
                   "node",
                   "group",
                   "user",
                   "admin",
+                  "useradmin",
+                  "groupadmin",
                   "scheduler"
                 ]
               },
@@ -8330,7 +9256,7 @@
         {
           "name": "create_user",
           "title": "Create user in group",
-          "description": "Creates a CMS user and places them in a group in the same call. groupId is REQUIRED: the CMS has no standalone user-create endpoint, so there is no way to create a user without a group. Check with list_users that the login is free, and with get_group_permissions that the group carries the intended role. Always show preview_permission_impact to the user and get their confirmation before calling this.",
+          "description": "Creates a CMS user and places them in a group in the same call. groupId is REQUIRED: the CMS has no standalone user-create endpoint, so there is no way to create a user without a group. Check with list_users that the login is free. A new user has no id to preview, so show get_group_permissions for the target group instead, and get the user's confirmation before calling this. The tool sends no invitation. Only subgroups of your own groups can be used.",
           "group": "admin",
           "access": "write",
           "roles": [
@@ -8345,7 +9271,7 @@
           },
           "permissions": [
             {
-              "type": "admin",
+              "type": "useradmin",
               "perms": [
                 "createuser"
               ]
@@ -8353,9 +9279,9 @@
             {
               "type": "group",
               "perms": [
-                "updategroupuser"
+                "userassignment"
               ],
-              "scope": "the target group"
+              "scope": "a parent group of the target group"
             }
           ],
           "idempotent": false,
@@ -8395,7 +9321,7 @@
                 "type": "string",
                 "minLength": 8,
                 "maxLength": 200,
-                "description": "Omit where the installation provisions credentials externally, for example via single sign-on."
+                "description": "Omit where the installation provisions credentials externally, for example via single sign-on. The tool enforces 8 to 200 characters; the CMS itself accepts any. Never returned or logged."
               },
               "idempotencyKey": {
                 "type": "string",
@@ -8464,7 +9390,7 @@
         {
           "name": "assign_user_to_group",
           "title": "Assign user to group",
-          "description": "Adds an existing user to a group, which is how a role is granted. Optionally restrict the membership to specific nodes. Show preview_permission_impact first and get confirmation: this changes what the person can do immediately.",
+          "description": "Adds an existing user to a group, which is how a role is granted. Optionally restrict the membership to specific nodes: nodeIds add to existing restrictions, and leaving them out clears nothing. Only subgroups of your own groups can be used. Show preview_permission_impact first and get confirmation: this changes what the person can do immediately.",
           "group": "admin",
           "access": "write",
           "roles": [
@@ -8480,16 +9406,15 @@
               "PUT /user/{id}/groups/{groupId}",
               "PUT /user/{id}/groups/{groupId}/nodes/{nodeId} for the node scope"
             ],
-            "transaction": "single"
+            "notes": "Separate CMS calls. All nodes are checked first; if a restriction then fails, a membership added by this call is removed again."
           },
           "permissions": [
             {
               "type": "group",
               "perms": [
-                "userassignment",
-                "updategroupuser"
+                "userassignment"
               ],
-              "scope": "the target group"
+              "scope": "a parent group of the target group"
             }
           ],
           "idempotent": true,
@@ -8574,7 +9499,7 @@
         {
           "name": "remove_user_from_group",
           "title": "Remove user from group",
-          "description": "Removes a user from a group, revoking the rights that group carried. Show preview_permission_impact first: the person may lose access to work in progress. Removing the last group of a user leaves them able to log in with no permissions.",
+          "description": "Removes a user from a group, revoking the rights that group carried. Show preview_permission_impact first: the person may lose access to work in progress. The CMS refuses to remove a user's last group. You can only remove users from subgroups of your own groups, and you cannot remove your own account from a group here: that is refused with permission-denied, so you cannot lose the rights that allow these changes.",
           "group": "admin",
           "access": "write",
           "roles": [
@@ -8591,10 +9516,9 @@
             {
               "type": "group",
               "perms": [
-                "userassignment",
-                "updategroupuser"
+                "userassignment"
               ],
-              "scope": "the target group"
+              "scope": "a parent group of the target group"
             }
           ],
           "idempotent": true,
@@ -8665,7 +9589,7 @@
         {
           "name": "preview_permission_impact",
           "title": "Preview permission impact",
-          "description": "Shows what a user will and will not be able to do if the listed groups are added or removed, WITHOUT changing anything. Always run this and show the result before create_user, assign_user_to_group or remove_user_from_group. It is a composition of the group permissions the user would hold, not a CMS simulation: it does not reproduce folder-tree inheritance or every role and language subtlety, so present it as a preview and read the warnings it returns.",
+          "description": "Shows what a user will and will not be able to do if the listed groups are added or removed, WITHOUT changing anything. Always run this and show the result before assign_user_to_group or remove_user_from_group. It needs an existing user, so before create_user use get_group_permissions instead. It is a composition of the group permissions the user would hold, not a CMS simulation: it does not reproduce folder-tree inheritance or every role and language subtlety, so present it as a preview and read the warnings it returns.",
           "group": "admin",
           "access": "read",
           "roles": [
@@ -8680,10 +9604,9 @@
             "composes": [
               "GET /user/{id}/groups",
               "GET /group/{id}/perms/{type}",
-              "GET /perm/{type}/{id}",
+              "the user's node restrictions",
               "unioned into a before and after view"
-            ],
-            "transaction": "single"
+            ]
           },
           "permissions": [
             {
@@ -8878,10 +9801,6 @@
               {
                 "method": "GET",
                 "path": "/group/{id}/perms/{type}/{instanceId}"
-              },
-              {
-                "method": "GET",
-                "path": "/perm/{type}/{id}"
               }
             ],
             "notes": "No CMS simulation endpoint exists: the permission surface is read or written, never evaluated hypothetically. cms-mcp reads the user's current groups, reads each group's TypePermissionResponse for the requested types, and unions the result for the before and after sets. This is an approximation; the output carries warnings and computedBy composition. to be confirmed: whether a real POST /perm/simulate is worth adding. Recommendation: composition for Phase One."

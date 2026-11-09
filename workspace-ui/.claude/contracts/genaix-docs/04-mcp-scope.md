@@ -179,7 +179,8 @@ only when none of its tools can be used.
 | User lacks `updateconstructs` on the construct type | the write tools of `constructs` omitted; its read tools (`list_constructs`, `get_construct`, `list_construct_categories`, `list_part_types`, `list_datasources`, `get_datasource`) stay, since they need construct `view` only, which a Content Creator holds |
 | User lacks `createuser`/`updategroupuser` admin permissions | whole `admin` group omitted |
 | User has no node with page create or edit permission | `content_write` group omitted |
-| CMS feature `elasticsearch` inactive | whole `search` group omitted (§2.5) |
+| CMS without the enterprise module `cms-mcp` | `search_content`, `find_similar` and `count_content` omitted; `get_related` stays |
+| CMS feature `elasticsearch` inactive | those three stay listed and answer `search-unavailable` (§2.5); `get_related` still works |
 | Anything else | tool listed |
 
 A client that builds a read-only allowlist for a quality gate or a reviewer agent may name the read tools of
@@ -235,6 +236,7 @@ in the CMS OpenAPI document). `cms-mcp` maps both onto one MCP tool result with 
 | `NOTLICENSED` | 403 | `feature-not-licensed` | 403 | no | e.g. a non-OSS module is absent |
 | `FAILURE` | 500 | `cms-failure` | 500 | yes, once | unexpected server-side error |
 | *(search only)* | 405 | `search-unavailable` | 503 | no | feature `elasticsearch` not activated; the search resource answers 405 by contract (`cms-search-api/.../SearchResource.java`, `@StatusCodes`). The 401 condition text on that same annotation, "No valid sid and session secret cookie were provided", is **pre-the CMS branch wording** and no longer describes the mechanism: there is no sid, and `cms-mcp` clients authenticate with a bearer token (§2.2) |
+| *(forms only)* | - | `external-form-read-only` | 422 | no | a write to an external form, or a create with an external form type (since `1.0.0-rc.6`) |
 | *(transport)* | 429 | `rate-limited` | 429 | yes | reserved; no CMS rate limiter today |
 
 Tool results never carry a stack trace. The text summary for an error is one sentence, in the user's
@@ -383,6 +385,9 @@ per-language publish rights. `type` accepts the CMS type names (`page`, `folder`
 
 The Content RAG surface; full contract in `05-content-rag-contract.md`. The `search_content` input
 and output below are exactly the scenario definition and must stay in sync with `mcp/tools.json`.
+
+Since `1.0.0-rc.6`, `search_content`, `find_similar` and `count_content` come with the enterprise module
+`cms-mcp`, and an OSS server does not list them. `get_related` is part of every server.
 
 Ground truth: `POST /rest/elastic/{type}/_search` exists in the non-OSS `cms-search` module
 (`cms/cms-search/cms-search-api/.../search/SearchResource.java`), which is why the OSS OpenAPI snapshot
@@ -640,7 +645,7 @@ Notes.
 ### 4.6 Group `admin`
 
 Scenario S4, which the scenario definition marks **optional** and not an acceptance criterion unless confirmed.
-Restricted to users holding `createuser`, `updategroupuser` and `userassignment`.
+Restricted to users holding `useradmin createuser` or `userassignment` on a group. The CMS checks `userassignment` through a group of the caller above the target group, so only subgroups of the caller's own groups can be used.
 
 | Tool | Purpose | Input (summary) | Output (summary) | CMS endpoint(s) | R/W | Roles |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -662,8 +667,67 @@ Notes.
   endpoint exists, so `cms-mcp` unions the group permissions the user would hold afterwards. That does not
   reproduce folder-tree inheritance or role-per-language subtleties, so the output carries `warnings` and
   `computedBy: "composition"` and a client must label it a preview (§11).
+- **`create_user` cannot be previewed.** The preview needs an existing user, so `get_group_permissions` on the
+  target group stands in for it. The tool sends no invitation.
+- **`assign_user_to_group` is not one transaction.** All nodes are checked first, and if a restriction then
+  fails, a membership the call added is removed again. `nodeIds` add to existing restrictions, and omitting them
+  clears nothing.
+- **Refusals a module must handle.** The CMS refuses to remove a user's last group. A caller cannot remove their own account from a group through MCP (`permission-denied`), so they cannot lose the
+  rights that allow these changes. A user who is also
+  in a group outside the caller's tree is listed but cannot be administered (`permission-denied`).
+- **Permission types.** `useradmin` and `groupadmin` hold the user administration bits. Pages, templates, files,
+  images, forms and constructs have no permissions of their own, so `get_group_permissions` reads them as folder or
+  node permissions. `preview_permission_impact` still takes those names in `types`, and evaluates them on each node's
+  root folder.
+- `list_users` returns no `active` field, and `create_user.password` is limited to 8 to 200 characters by the tool.
 - No tool writes permissions. `POST /perm/{type}/{id}` and `POST /group/{id}/perms/{type}` exist and are
   deliberately not exposed: bit edits stay a human action in the CMS UI.
+
+### 4.7 Groups `forms_read` and `forms_write`
+
+Since `1.0.0-rc.6`. Forms are found with `search_content` and `types: ["form"]`.
+`list_folder_items` does not list forms.
+
+A form is embedded through a construct with a `CMSFORM` part (part type 42). The CMS ships the part
+type but no such construct, so a project provides one. Its template renders the form with the
+`gtx_form` Handlebars helper, because the part alone prints only the form's id. To embed, find the
+construct with `list_constructs` and `{ pageId, partTypeIds: [42] }`, add it with `add_page_tag`, and
+set the form with `update_page_tags`. Construct keywords in this package's examples, such as
+`form_embed`, are illustrative and are not shipped by the CMS.
+
+| Tool | Purpose | Input | Output | CMS | Access | Role |
+|---|---|---|---|---|---|---|
+| `get_form` | Read one form, with `external` and its definition | `{ formId, nodeId? }` | `{ ref, name, description, formType, external, languages, online, modified, locked, data }` | `GET /form/{id}` | R | any |
+| `list_form_types` | The form types of a node, with `external` | `{ nodeId }` | `{ items[] }` | `GET /form/types` | R | any |
+| `create_form` | Create an offline CMS form | `{ folderId?, nodeId?, name, description?, formType, languages, data? }` | `{ ref }` | `POST /form` | **W** | CC |
+| `update_form` | Change one form in its own lock cycle | `{ formId, nodeId?, name?, description?, languages?, data? }` | `{ ref, changed }` | `PUT /form/{id}` | **W** | CC |
+| `delete_form` | Move a form to the wastebin, never a hard delete | `{ formId, nodeId? }` | `{ ref, deleted, restorable }` | `DELETE /form/{id}` | **W** | CC |
+| `publish_form` | Put a form online, called by the harness only | `{ formId, nodeId? }` | `{ ref, online }` | `PUT /form/{id}/online` | **W** | CC |
+
+An external form comes from its external system. Every write to one, and a `create_form` with an
+external `formType`, is refused with the problem type `external-form-read-only` (`422`). `delete_form`
+is refused on a node without wastebin (`invalid-data`). `get_related` with `uses_form` lists the pages that embed a
+form. `externalId` is not exposed, because with one the CMS turns a
+create into an update.
+
+### 4.8 Groups `guidelines_read` and `guidelines_write`
+
+Since `1.0.0-rc.6`. Guidelines are Markdown files at
+`packages/<package>/files-internal/guidelines/[<prio>_]<name>[.default].md`, with the id
+`<package>/<name>[.default]`.
+
+| Tool | Purpose | Input | Output | CMS | Access | Role |
+|---|---|---|---|---|---|---|
+| `list_guidelines` | A node's guidelines, from its assigned packages | `{ nodeId }` | `{ items[] }` | `GET /devtools/nodes/{nodeId}/packages`, then the package files | R | any |
+| `get_guideline` | One guideline's text | `{ id }` | `{ id, package, name, default, priority, content }` | package file read | R | any |
+| `create_guideline` | A new guideline file | `{ package, name, default?, priority?, content }` | `{ id }` | package file write | **W** | CCC |
+| `update_guideline` | Replace text or priority | `{ id, content?, priority? }` | `{ id }` | package file write | **W** | CCC |
+| `delete_guideline` | Delete the file, which is permanent | `{ id }` | `{ id, deleted }` | package file delete | **W** | CCC |
+
+Content users read and Chief Content Creators write, so these tools need separate read and write
+checks in the CMS's package file API. A `name` holds only letters, digits, `_` and `-`, does not
+start with a priority, and `.default` is reserved. `create_guideline` refuses an id that exists, also
+with another priority.
 
 ## 5. Scenario coverage matrix
 
@@ -701,6 +765,17 @@ scenario of its own; it uses only tools the scenarios already need, so the tool 
 | content_write | `translate_page` | x | | | | |
 | content_write | `restore_page_version` | | x | | | |
 | content_write | `upload_file` | x | | | | |
+| forms_read | `get_form` | | | | | |
+| forms_read | `list_form_types` | | | | | |
+| forms_write | `create_form` | | | | | |
+| forms_write | `update_form` | | | | | |
+| forms_write | `delete_form` | | | | | |
+| forms_write | `publish_form` | | | | | |
+| guidelines_read | `list_guidelines` | | | | | |
+| guidelines_read | `get_guideline` | | | | | |
+| guidelines_write | `create_guideline` | | | | | |
+| guidelines_write | `update_guideline` | | | | | |
+| guidelines_write | `delete_guideline` | | | | | |
 | constructs | `list_constructs` | x | | x | | x |
 | constructs | `get_construct` | x | | x | | x |
 | constructs | `create_construct` | | | x | | |
@@ -1096,8 +1171,9 @@ are needed for individual tools or scenarios.
 3. **Harden the Elasticsearch filter injection.** `addFilters` should build the `query.bool` wrapper itself and
    fail closed rather than forwarding an unfiltered body (§4.2.1). Adjusting `hits.total` after the `canView`
    post-filter would additionally make counts object-accurate.
-4. **Activate the `elasticsearch` feature** with the page index populated per language. Without it the whole
-   `search` group answers HTTP 405 and scenario S2 has no implementation.
+4. **Activate the `elasticsearch` feature** with the page index populated per language. Without it
+   `search_content`, `find_similar` and `count_content` answer `search-unavailable`, and scenario S2 has no
+   implementation. They also need the enterprise module `cms-mcp`; an OSS server does not list them.
 5. **Publish the API token model classes and support `pruneOnExpiry`.** `ApiTokenCreationRequest`,
    `ApiTokenCreationResponse` and `ApiTokenListResponse` are not yet in the tree. The creation request is
    `{name, expires, pruneOnExpiry}` (§2.2); `pruneOnExpiry` is the new field and the one the session-scoped

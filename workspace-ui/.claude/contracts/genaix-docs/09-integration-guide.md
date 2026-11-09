@@ -201,7 +201,8 @@ Two headers need care. **`Last-Event-ID`** on a request must pass through untouc
 reconnecting stream says where it left off, and rewriting it turns a resume into a full replay at
 best and a gap at worst. **`X-GenAIx-Request-Id`** on a response must reach the client, being the
 support correlation key. The streaming variant of `POST /sessions/{session_id}/messages` also answers
-with `X-GenAIx-Run-Id` and `X-GenAIx-Message-Id`, so pass those through too.
+with `X-GenAIx-Run-Id` and `X-GenAIx-Message-Id`, so pass those through too. **`Accept-Language`**
+on a request passes through as well: it carries the Workspace UI's language (see "Send a message").
 
 ### Streaming requirements
 
@@ -621,6 +622,15 @@ rejected with `422` `validation_failed`; the same fallback leniency the event st
 unrecognized output part types does not extend to what a client may send in. The body also carries
 `files`, `reply_to_interaction`, and `options.mode` of `execute` (default), `plan_only` or, since
 `1.0.0-rc.5`, `revise` with `options.plan_id` (see "Stop and change" below).
+
+**The UI language.** Send `Accept-Language` with the Workspace UI's current language on
+`POST /sessions` and on every message (since the `1.0.0-rc.5` addition of 2026-10-19). Set it from the
+UI's own language switch, not the browser default, which the browser would otherwise send by itself:
+`fetch(url, { headers: { "Accept-Language": uiLanguage } })`. A new session's step labels and checks
+come in that language, and GenAIx answers and asks in it until the user writes in another language,
+which then wins. Switching the UI language takes effect with the next message, unless the language
+the user writes in already decides. It does not choose the language of a page; that stays the
+`language` setting.
 
 ```json
 POST /sessions/{session_id}/messages
@@ -1738,7 +1748,9 @@ streaming flush, which needs the CMS release that includes GPU-2665. The load-be
 
 - Must offer the three per-user API token endpoints of section 4, with the token name readable in the
   list response. That name is what makes the find-or-recreate step possible.
-- The Elasticsearch feature must be enabled on any instance the research workflow runs against, and
+- The enterprise module `cms-mcp` and the Elasticsearch feature must be present on any instance the
+  research workflow runs against. An OSS server does not list `search_content`, `find_similar` or
+  `count_content`. The feature must be enabled, and
   the search passthrough should apply its permission, node, folder and wastebin filters regardless of
   the query shape received. Clients wrap every query in `bool`, which covers the filter path from
   their side, but server-side enforcement makes it a guarantee rather than a convention.
@@ -1940,3 +1952,12 @@ edited"; a check carries the `plan_version` and `item_ids` it is about, and the 
 reports findings before acceptance; a `choice` carries `recommended`, option `reason`s and
 `other_allowed`, answered with `other`. `UserPlan.items` allows up to 200 items. A client that
 ignores the new members keeps working.
+
+**rc.6 (draft).** **Forms, guidelines, user administration and reference fields.** A client gets new
+values for `ContextReference.type` (`form`, `user`, `group`), `PlannedObject.type` (`form`,
+`guideline`, `user`) and `PlanItem.kind` (`delete`), and shows a chip and a glance count for each. It
+marks a reference with `external: true` as external. A form field with
+`format: context-reference` opens a picker and sends a `ContextReference`; it must not fall back to a
+text input, so a client adds the picker first and GenAIx uses the field only afterwards. A `choice`
+with `reference_types` offers a picker beside its options and answers with `reference`. A client no
+longer deletes a guideline after a discard, because GenAIx does. `admin_user` raises one `confirm`.

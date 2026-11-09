@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: GenAIx API
-  version: 1.0.0-rc.5
+  version: 1.0.0-rc.6
   summary: Agentic content API for Gentics CMP 9.
   description: |
     The GenAIx API drives agentic content work against a Gentics CMS installation. A
@@ -204,6 +204,25 @@ info:
     UUIDv4 strings; CMS object ids are integers as the CMS REST API reports them.
 
     ## Changelog
+
+    **1.0.0-rc.6** (draft, 2026-11-06, additive except where marked). **Forms, guidelines, user
+    administration and pickers.** `ContextReference.type` adds `form`, `user` and `group`, and a
+    form reference may say `external`. `PlannedObject.type` adds `form`, `guideline` and `user`.
+    `PlanItem.kind` adds `delete`, counted in the plan glance. `Workflow.produces` adds `form` and
+    `guideline`. A `form` interaction may hold a reference field (`format: context-reference`
+    with `x-reference-types`), answered in `FormAnswer.values` with a `ContextReference`. A
+    `choice` may carry `reference_types`, answered with `ChoiceAnswer.reference`. `publish`
+    covers the forms a plan created or changed, and they go online before its pages; a
+    `Publication` may name a form. Discarding a plan deletes the guideline it created, whatever
+    `on_discard` says. `admin_user` asks one confirmation, the plan's `confirm`, and its
+    `admin_confirm` gate is gone. A client that ignores the new members keeps working, but must
+    not show a reference field as a text input.
+
+    **1.0.0-rc.5 addition** (2026-10-19, one optional request header; a client that does not
+    send it keeps working). **The Workspace UI's language.** `createSession` and `postMessage`
+    accept `Accept-Language`, set by the client from its own language setting. It labels a new
+    session's steps and checks and is the language GenAIx speaks until the user's own messages
+    name one; the language the user writes in wins. It never sets a page's `language`.
 
     **1.0.0-rc.5 addition** (2026-10-15, optional members only, one constraint relaxed; a
     client that ignores them keeps working). **Plans at a glance.** A plan item may say what it
@@ -1923,6 +1942,7 @@ paths:
         searches, next to `title`.
       parameters:
         - $ref: '#/components/parameters/XGcmsSubject'
+        - $ref: '#/components/parameters/AcceptLanguage'
       requestBody:
         required: true
         content:
@@ -3556,6 +3576,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/SessionId'
         - $ref: '#/components/parameters/XGcmsSubject'
+        - $ref: '#/components/parameters/AcceptLanguage'
       requestBody:
         required: true
         content:
@@ -5514,8 +5535,8 @@ paths:
                         title: Create a user and grant a role
                         description: >-
                           Create a CMS user, grant the Chief Content Creator group and
-                          show a permission impact preview before committing. Optional
-                          in Phase One and not an acceptance criterion.
+                          show what the group grants before committing. Optional in
+                          Phase One and not an acceptance criterion.
                         scenario: S4
                         roles: [cmp_administrator]
                         optional: true
@@ -5547,21 +5568,8 @@ paths:
                             description: >-
                               This run's tool log holds a preview_permission_impact result for
                               the exact change about to be applied, with a non-empty before
-                              and after matrix. Nobody grants a permission blind.
-                          - id: admin_confirm
-                            label: Administrator confirms the change
-                            kind: human
-                            blocking: true
-                            when: step_end
-                            step_id: st-2
-                            triggers:
-                              - when: step_end
-                                step_ids: [st-2]
-                            description: >-
-                              Raised as an interaction.requested of kind confirm showing the
-                              rendered permission diff. A rejection is a fail carrying the
-                              administrator's comment. The one scenario whose correct gate is
-                              a person.
+                              and after matrix, or for a new user a get_group_permissions
+                              result for each group joined. Nobody grants a permission blind.
                         produces: [user]
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -6912,6 +6920,33 @@ components:
         installation with no CMS key configured, is `401` `identity_invalid`.
 
   parameters:
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: |
+        The Workspace UI's language (since the `1.0.0-rc.5` addition of 2026-10-19), a standard
+        `Accept-Language` value (RFC 9110 §12.5.4). The client sets it from its own language
+        setting, not the browser default; a proxy forwards it unchanged. GenAIx reads only
+        `createSession` and `postMessage`; every other route ignores it.
+
+        GenAIx takes the primary subtag (`de-AT` is `de`), orders by `q` and uses the first
+        language it supports (Phase One: `en`, `de`, `hu`, `fr`, `it`, `es`, `nl`, `pl`, `cs`).
+        Others are skipped; with none left, or the header absent, nothing changes.
+
+        - On `createSession` the session's module steps and checks are labelled in it.
+        - On every `postMessage` it becomes the session's UI language; a later message with
+          another value replaces it. `answerInteraction` does not read it.
+        - The language the user writes in wins: once GenAIx has recognised the language of
+          the user's messages, its replies, questions and check texts follow that. The UI
+          language applies until then, and for messages without text. Without either, English.
+
+        It never changes a write-governing `language` setting: the language of a page comes from
+        the `setting` part, the session context or the settings review as before.
+      schema:
+        type: string
+        maxLength: 256
+      example: de-AT,de;q=0.9,en;q=0.5
     XGcmsSubject:
       name: X-GCMS-Subject
       in: header
@@ -8590,6 +8625,9 @@ components:
             - session_file
             - url
             - document
+            - form
+            - user
+            - group
         id:
           type: string
           maxLength: 512
@@ -8610,6 +8648,13 @@ components:
         global_id:
           type: string
           description: The CMS global id when known, for stable cross-installation reference.
+        external:
+          type: boolean
+          description: >-
+            For `type: form`: the form is of an external form type (since `1.0.0-rc.6`). Set
+            by GenAIx on the references it produces; the CMS decides. Such a form is picked and
+            embedded like any other and is never created or deleted through GenAIx.
+            Informational.
         path:
           type: string
           maxLength: 1024
@@ -8629,8 +8674,13 @@ components:
           id: 6b0d9e31-44a8-4c57-9f2e-8d1a3c7b5e02
           label: neue-nutzungsbedingungen-ab-q3.pdf
         - type: guideline
-          id: tone-of-voice-de
-          label: Tone of voice (German)
+          id: corporate/tone-of-voice.default
+          label: Tone of voice
+        - type: form
+          id: '4410'
+          node_id: 3
+          label: Newsletter sign-up
+          external: true
 
     CmsObjectRef:
       type: object
@@ -11130,7 +11180,7 @@ components:
           maxLength: 500
         kind:
           type: string
-          enum: [create, update, link, translate, publish, construct, report, other]
+          enum: [create, update, delete, link, translate, publish, construct, report, other]
           description: >-
             Absent keeps the current item's `kind`; on a new step GenAIx chooses one.
         target:
@@ -11251,7 +11301,7 @@ components:
           description: Kinds of object a successful run of this workflow yields.
           items:
             type: string
-            enum: [page, construct, report, user, file, none]
+            enum: [page, form, construct, guideline, report, user, file, none]
         plan_approval:
           type: boolean
           default: false
@@ -12049,7 +12099,7 @@ components:
           type: string
         kind:
           type: string
-          enum: [create, update, link, translate, publish, construct, report, other]
+          enum: [create, update, delete, link, translate, publish, construct, report, other]
         workflow:
           type: string
           description: >-
@@ -12130,7 +12180,7 @@ components:
       properties:
         type:
           type: string
-          enum: [folder, page, file, image, construct]
+          enum: [folder, page, file, image, construct, form, guideline, user]
         label:
           type: string
           maxLength: 512
@@ -12476,6 +12526,11 @@ components:
         from the user's permissions on that page's folder, so one page may go out directly
         while another goes to review.
 
+        Since `1.0.0-rc.6` an entry may also name a form the plan created or changed
+        (`cms_ref.type: form`), and these go online before the plan's pages, under `publish` and
+        `request_review` alike. If a form fails, the pages stay `pending`. A form has no review:
+        its `approval_chain` is empty, and a user who may not publish it gets `failed`.
+
         - `pending`: not handled yet. Every entry starts here and stays until a `publish` or
           `request_review` handles it.
         - `published`: the CMS published the page, or scheduled it for `publish_at`.
@@ -12723,11 +12778,41 @@ components:
           description: >-
             For `choice`: the answer may be the user's own text (`other`) instead of, or
             besides, the options (since `1.0.0-rc.5` addition, 2026-10-15).
+        reference_types:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          description: >-
+            For `choice`: the answer may instead be a CMS object or session file the user
+            picks, as a `reference` of one of these `ContextReference` types (since
+            `1.0.0-rc.6`). A client offers a picker beside the options.
+          items:
+            type: string
         schema:
           type: object
-          description: >-
+          description: |
             For kind `form`, a JSON Schema (draft 2020-12) the `values` object must
             validate against. Keep it flat: one property is one answer field.
+
+            **A reference field** (since `1.0.0-rc.6`) is a property that opens a picker. It
+            is one answer field, answered with one `ContextReference` of a listed type:
+
+            ```json
+            "headerImage": {
+              "type": "object",
+              "format": "context-reference",
+              "x-reference-types": ["image", "session_file"],
+              "title": "Header image"
+            }
+            ```
+
+            GenAIx answers `422` at `/answer/values/<field>` when the type is not listed, a
+            `page`, `folder`, `file`, `image`, `template`, `construct` or `form` has no `node_id`, a session file is not in this session, or, where
+            `image` is listed too, a session file is not an image. It does not ask the CMS at
+            this point: the agent reads the object later. For a `session_file`, the client
+            uploads with `POST /sessions/{session_id}/files` first, `mode: source` being the
+            default, and answers with the file's id. The interaction keeps its `expires_at`
+            during an upload.
           additionalProperties: true
         proposed:
           type: array
@@ -12947,6 +13032,7 @@ components:
                 selected:
                   minItems: 1
             - required: [other]
+            - required: [reference]
           properties:
             selected:
               type: array
@@ -12957,6 +13043,14 @@ components:
               minLength: 1
               maxLength: 4000
               description: The user's own answer, only where `other_allowed` (since `1.0.0-rc.5` addition, 2026-10-15).
+            reference:
+              $ref: '#/components/schemas/ContextReference'
+              description: >-
+                The object the user picked instead of an option, where the interaction has
+                `reference_types` (since `1.0.0-rc.6`; `selected` may then be empty). `422` at
+                `/answer/reference` without `reference_types`, for a type it does not list, for
+                a `page`, `folder`, `file`, `image`, `template`, `construct` or `form` without
+                `node_id`, or for a session file not in this session.
             comment:
               type: string
               maxLength: 4000
@@ -12978,6 +13072,9 @@ components:
             values:
               type: object
               additionalProperties: true
+              description: >-
+                The answer per field. A reference field's value is one `ContextReference`
+                (since `1.0.0-rc.6`).
           additionalProperties: false
         - type: object
           title: SettingsAnswer

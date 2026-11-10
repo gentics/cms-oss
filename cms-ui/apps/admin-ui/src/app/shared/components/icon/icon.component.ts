@@ -54,6 +54,9 @@ export type GtxIcon =
     'packages' |
     'cr-fragments' |
     'crfragment' |
+    'portal-implementations' |
+    'portalimplementationadmin' |
+    'portalimplementation' |
     'template-management' |
     'tools' |
     'boolean-true' |
@@ -282,6 +285,10 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconPrimary: 'dns',
         matIconSecondary: null,
     },
+    'portal-implementations': {
+        matIconPrimary: 'web',
+        matIconSecondary: null,
+    },
     'template-management': {
         matIconPrimary: 'view_quilt',
         matIconSecondary: null,
@@ -406,6 +413,10 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconPrimary: 'dns',
         matIconSecondary: null,
     },
+    portalimplementationadmin: {
+        matIconPrimary: 'web',
+        matIconSecondary: null,
+    },
     tasktemplateadmin: {
         matIconPrimary: 'assignment',
         matIconSecondary: null,
@@ -482,6 +493,10 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
     },
     crfragment: {
         matIconPrimary: 'dns',
+        matIconSecondary: null,
+    },
+    portalimplementation: {
+        matIconPrimary: 'web',
         matIconSecondary: null,
     },
     mesh: {

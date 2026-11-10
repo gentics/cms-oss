@@ -30,6 +30,7 @@ import {
     AbstractPartTypeAPI,
     AbstractPermissionAPI,
     AbstractPolicyMapAPI,
+    AbstractPortalImplementationAPI,
     AbstractRoleAPI,
     AbstractScheduleTaskAPI,
     AbstractSchedulerAPI,
@@ -200,6 +201,7 @@ export type GCMSPageAPI = MappedAPI<AbstractPageAPI>;
 export type GCMSPartTypeAPI = MappedAPI<AbstractPartTypeAPI>;
 export type GCMSPermissionAPI = MappedAPI<AbstractPermissionAPI>;
 export type GCMSPolicyMapAPI = MappedAPI<AbstractPolicyMapAPI>;
+export type GCMSPortalImplementationAPI = MappedAPI<AbstractPortalImplementationAPI>;
 export type GCMSRoleAPI = MappedAPI<AbstractRoleAPI>;
 export type GCMSSchedulerAPI = MappedAPI<AbstractSchedulerAPI>;
 export type GCMSScheduleTaskAPI = MappedAPI<AbstractScheduleTaskAPI>;

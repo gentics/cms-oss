@@ -8,6 +8,7 @@ import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
 import { EntityManagerService } from '../entity-manager';
 import { PortalImplementationOperations } from '../operations';
+import { PortalImplementationHandlerService } from '../portal-implementation-handler/portal-implementation-handler.service';
 
 export interface PortalImplementationTableLoaderOptions {
     /** Load the portal implementations contained in the package */
@@ -25,17 +26,17 @@ export class PortalImplementationTableLoaderService
         appState: AppStateService,
         protected api: GcmsApi,
         protected operations: PortalImplementationOperations,
+        protected handler: PortalImplementationHandlerService,
     ) {
         super('portalImplementation', entityManager, appState);
     }
 
     public canDelete(entityId: string | number): Promise<boolean> {
-        // portal implementations are not deleted from this table (only removed from packages)
-        return Promise.resolve(false);
+        return Promise.resolve(true);
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return Promise.reject(new Error('Deleting portal implementations is not supported here'));
+        return this.handler.delete(entityId).toPromise();
     }
 
     protected loadEntities(

@@ -1,0 +1,37 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ 'portal_implementation.assign_to_nodes_title' | gtxI18n: { entityName: portalImplementation?.name } }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <gtx-node-table
+            class="modal-table"
+            [showSearch]="true"
+            [hideActions]="true"
+            [disabled]="loading"
+            [(selected)]="nodeIdsSelected"
+        ></gtx-node-table>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            data-action="confirm"
+            [disabled]="loading"
+            (click)="buttonAssignClicked()"
+            gtxActionAllowed="portalImplementation.assignPortalImplementationToNodes"
+        >
+            {{ 'shared.assign' | gtxI18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            data-action="cancel"
+            flat
+            [disabled]="loading"
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | gtxI18n }}
+        </gtx-button>
+    </div>
+</div>

@@ -21,6 +21,7 @@ import com.gentics.contentnode.rest.model.PortalImplementationFileModel;
 import com.gentics.contentnode.rest.model.PortalImplementationFolderModel;
 import com.gentics.contentnode.rest.model.PortalImplementationListResponse;
 import com.gentics.contentnode.rest.model.PortalImplementationModel;
+import com.gentics.contentnode.rest.model.response.NodeList;
 import com.gentics.contentnode.rest.model.response.PortalImplementationFileResponse;
 import com.gentics.contentnode.rest.model.response.PortalImplementationFolderResponse;
 import com.gentics.contentnode.rest.model.response.PortalImplementationResponse;
@@ -141,6 +142,21 @@ public interface PortalImplementationResource {
 		@ResponseCode(code = 404, condition = "Portal Implementation {id} does not exist.")
 	})
 	Response delete(@PathParam("id") String id) throws Exception;
+
+	/**
+	 * Get the nodes, the Portal Implementation is assigned to. Only nodes, the user is allowed to view, are returned.
+	 * The assignment is changed via the endpoints <code>/node/{nodeId}/portalimplementations/{id}</code>.
+	 * @param id internal or external Portal Implementation ID
+	 * @return list of nodes
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/{id}/nodes")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "The list of nodes, Portal Implementation {id} is assigned to, is returned."),
+		@ResponseCode(code = 404, condition = "Portal Implementation {id} does not exist.")
+	})
+	NodeList getNodes(@PathParam("id") String id) throws Exception;
 	/**
 	 * Get the contents of a folder of the Portal Implementation: the names of the direct subfolders and the files directly contained in the folder.
 	 * @param id internal or external Portal Implementation ID

@@ -37,7 +37,7 @@ import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { Page, PageWithExternalLinks } from './page';
 import { GcmsPermission, PermissionsMapCollection } from './permissions';
-import { PortalImplementation } from './portal-implementation';
+import { PortalImplementation, PortalImplementationFile } from './portal-implementation';
 import { PrivilegeMapFromServer } from './privileges';
 import { Role, RolePermissions } from './role';
 import { Schedule } from './schedule';
@@ -725,6 +725,11 @@ export interface PortalImplementationResponse extends Response {
  * Response from `portalimplementations`
  */
 export interface PortalImplementationListResponse extends ListResponse<PortalImplementation> { }
+
+/**
+ * Response from `portalimplementations/:id/files`
+ */
+export interface PortalImplementationFileListResponse extends ListResponse<PortalImplementationFile> { }
 
 // TAGMAPENTRY //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

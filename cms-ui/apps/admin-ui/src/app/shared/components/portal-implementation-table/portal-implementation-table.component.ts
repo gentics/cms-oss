@@ -13,10 +13,13 @@ import {
 } from '../../../core';
 import { AppStateService } from '../../../state';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import { AssignNodesToPortalImplementationModalComponent } from '../assign-nodes-to-portal-implementation-modal/assign-nodes-to-portal-implementation-modal.component';
 import { AssignPortalImplementationsToNodeModalComponent } from '../assign-portal-implementations-to-node-modal/assign-portal-implementations-to-node-modal.component';
+import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
 
 const UNASSIGN_FROM_NODE_ACTION = 'unassignFromNode';
+const ASSIGN_TO_NODES_ACTION = 'assignToNodes';
 
 @Component({
     selector: 'gtx-portal-implementation-table',
@@ -59,6 +62,7 @@ export class PortalImplementationTableComponent
     ];
 
     public canManagePackage = false;
+    public canCreate = false;
 
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'portalImplementation';
 
@@ -100,9 +104,15 @@ export class PortalImplementationTableComponent
         return combineLatest([
             this.actionRebuildTrigger$,
             this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentadmin.updateContent').typePermissions),
+            this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('portalImplementation.createPortalImplementation').typePermissions),
+            this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('portalImplementation.deletePortalImplementation').typePermissions),
+            this.permissions.checkPermissions(
+                this.permissions.getUserActionPermsForId('portalImplementation.assignPortalImplementationToNodes').typePermissions,
+            ),
         ]).pipe(
-            map(([_, canManagePackage]) => {
+            map(([_, canManagePackage, canCreate, canDelete, canAssignToNodes]) => {
                 this.canManagePackage = canManagePackage;
+                this.canCreate = canCreate;
 
                 const actions: TableAction<PortalImplementationBO>[] = [];
 
@@ -126,6 +136,23 @@ export class PortalImplementationTableComponent
                         single: true,
                         multiple: true,
                     });
+                } else {
+                    actions.push({
+                        id: ASSIGN_TO_NODES_ACTION,
+                        icon: 'device_hub',
+                        type: 'primary',
+                        label: this.i18n.instant('portal_implementation.assign_to_nodes'),
+                        enabled: canAssignToNodes,
+                        single: true,
+                    }, {
+                        id: DELETE_ACTION,
+                        icon: 'delete',
+                        type: 'alert',
+                        label: this.i18n.instant('shared.delete'),
+                        enabled: canDelete,
+                        single: true,
+                        multiple: true,
+                    });
                 }
 
                 return actions;
@@ -145,6 +172,10 @@ export class PortalImplementationTableComponent
             case UNASSIGN_FROM_NODE_ACTION:
                 this.unassignFromNode(this.getAffectedEntityIds(event));
                 return;
+
+            case ASSIGN_TO_NODES_ACTION:
+                this.assignToNodes(event.item);
+                return;
         }
 
         super.handleAction(event);
@@ -161,6 +192,18 @@ export class PortalImplementationTableComponent
         if (didChange) {
             this.loadTrigger.next();
         }
+    }
+
+    /**
+     * Open the modal for changing the nodes, the portal implementation is assigned to
+     */
+    protected async assignToNodes(portalImplementation: PortalImplementationBO): Promise<void> {
+        const dialog = await this.modalService.fromComponent(
+            AssignNodesToPortalImplementationModalComponent,
+            { closeOnOverlayClick: false, width: '50%' },
+            { portalImplementation },
+        );
+        await dialog.open();
     }
 
     protected async unassignFromNode(ids: string[]): Promise<void> {

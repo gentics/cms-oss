@@ -38,7 +38,7 @@ import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
 import { ApiToken, EditableApiToken } from './api-token';
-import { PortalImplementation } from './portal-implementation';
+import { PortalImplementation, PortalImplementationFile, PortalImplementationType } from './portal-implementation';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -2123,6 +2123,33 @@ export type ContentRepositoryFragmentUpdateRequest = ContentRepositoryFragmentCr
  * Query parameters for `/portalimplementations`
  */
 export type PortalImplementationListOptions = BaseListOptionsWithPaging<PortalImplementation>;
+
+/**
+ * Request used for creating a Portal Implementation
+ */
+export interface PortalImplementationCreateRequest {
+    /** Optional global ID (generated, if omitted) */
+    globalId?: string;
+    keyword: string;
+    name: string;
+    description?: string;
+    type: PortalImplementationType;
+}
+
+/**
+ * Request used for updating a Portal Implementation. Attributes, which are not set, are not changed.
+ */
+export interface PortalImplementationUpdateRequest {
+    keyword?: string;
+    name?: string;
+    description?: string;
+    type?: PortalImplementationType;
+}
+
+/**
+ * Query parameters for `/portalimplementations/{id}/files`
+ */
+export type PortalImplementationFileListOptions = BaseListOptionsWithPaging<PortalImplementationFile>;
 
 // OBJECTPROPERTY //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -346,6 +346,28 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 },
             },
 
+            // Portal Implementations Module
+            {
+                path: AdminUIModuleRoutes.PORTAL_IMPLEMENTATIONS,
+                component: SplitViewRouterOutletComponent,
+                loadChildren: () => import('./features/portal-implementation/portal-implementation.module')
+                    .then(m => m.PortalImplementationModule),
+                data: {
+                    [ROUTE_BREADCRUMB_KEY]: {
+                        title: 'dashboard.item_portal_implementations',
+                    },
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
+                        {
+                            type: AccessControlledType.PORTAL_IMPLEMENTATION_ADMIN,
+                            permissions: [
+                                GcmsPermission.READ,
+                            ],
+                        },
+                    ],
+                },
+            },
+
             // Templates Module
             {
                 path: AdminUIModuleRoutes.TEMPLATES,

@@ -35,6 +35,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.PortalImplementationFileFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.PortalImplementationFile;
@@ -49,6 +50,7 @@ import com.gentics.contentnode.rest.model.PortalImplementationFolderModel;
 import com.gentics.contentnode.rest.model.PortalImplementationListResponse;
 import com.gentics.contentnode.rest.model.PortalImplementationModel;
 import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.NodeList;
 import com.gentics.contentnode.rest.model.response.PortalImplementationFileResponse;
 import com.gentics.contentnode.rest.model.response.PortalImplementationFolderResponse;
 import com.gentics.contentnode.rest.model.response.PortalImplementationResponse;
@@ -152,6 +154,26 @@ public class PortalImplementationResourceImpl implements PortalImplementationRes
 			impl.delete();
 			trx.success();
 			return Response.noContent().build();
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/{id}/nodes")
+	public NodeList getNodes(@PathParam("id") String id) throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PortalImplementation impl = MiscUtils.load(PortalImplementation.class, id);
+			List<com.gentics.contentnode.rest.model.Node> nodes = new ArrayList<>();
+			for (Node node : impl.getNodes()) {
+				if (ObjectPermission.view.checkObject(node.getFolder())) {
+					nodes.add(Node.TRANSFORM2REST.apply(node));
+				}
+			}
+			NodeList response = new NodeList();
+			response.setItems(nodes);
+			response.setResponseInfo(ResponseInfo.ok("Successfully loaded nodes of the Portal Implementation"));
+			trx.success();
+			return response;
 		}
 	}
 	@Override

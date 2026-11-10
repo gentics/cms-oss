@@ -17,6 +17,7 @@ import { LANGUAGE_MODULE_ACTION_PERMISSIONS } from './action-permissions/languag
 import { NODE_MODULE_ACTION_PERMISSIONS } from './action-permissions/node-module.action-permissions';
 import { OBJECTPROPERTYCATEGORY_MODULE_ACTION_PERMISSIONS } from './action-permissions/object-property-category-module.action-permissions';
 import { OBJECTPROPERTY_MODULE_ACTION_PERMISSIONS } from './action-permissions/object-property-module.action-permissions';
+import { PORTAL_IMPLEMENTATION_MODULE_ACTION_PERMISSIONS } from './action-permissions/portal-implementation-module.action-permissions';
 import { ROLE_MODULE_ACTION_PERMISSIONS } from './action-permissions/role-module.action-permissions';
 import { SCHEDULER_MODULE_ACTION_PERMISSIONS } from './action-permissions/scheduler-module.action-permissions';
 import { TEMPLATE_MODULE_ACTION_PERMISSIONS } from './action-permissions/template-module.action-permission';
@@ -105,6 +106,7 @@ export const USER_ACTION_PERMISSIONS_DEF: MultiModuleUserActionPermissions = {
     node: NODE_MODULE_ACTION_PERMISSIONS,
     objectProperty: OBJECTPROPERTY_MODULE_ACTION_PERMISSIONS,
     objectPropertyCategory: OBJECTPROPERTYCATEGORY_MODULE_ACTION_PERMISSIONS,
+    portalImplementation: PORTAL_IMPLEMENTATION_MODULE_ACTION_PERMISSIONS,
     role: ROLE_MODULE_ACTION_PERMISSIONS,
     scheduler: SCHEDULER_MODULE_ACTION_PERMISSIONS,
     template: TEMPLATE_MODULE_ACTION_PERMISSIONS,

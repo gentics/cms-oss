@@ -32,6 +32,7 @@ import {
     GCMSPartTypeAPI,
     GCMSPermissionAPI,
     GCMSPolicyMapAPI,
+    GCMSPortalImplementationAPI,
     GCMSPublishProtocolAPI,
     GCMSRestClientConfig,
     GCMSRestClientInterceptorData,
@@ -826,6 +827,17 @@ export class GCMSRestClient implements GCMSRootAPI {
     public policyMap: GCMSPolicyMapAPI = {
         policy: (options) => this.executeMappedJsonRequest(GET, '/policyMap/policy', null, options),
         policyGroup: (type) => this.executeMappedJsonRequest(GET, `/policyMap/partType/${type}/policyGroup`),
+    } as const;
+
+    public portalImplementation: GCMSPortalImplementationAPI = {
+        list: (options) => this.executeMappedJsonRequest(GET, '/portalimplementations', null, options),
+        create: (body) => this.executeMappedJsonRequest(POST, '/portalimplementations', body),
+        get: (id) => this.executeMappedJsonRequest(GET, `/portalimplementations/${id}`),
+        update: (id, body) => this.executeMappedJsonRequest(PUT, `/portalimplementations/${id}`, body),
+        delete: (id) => this.executeMappedJsonRequest(DELETE, `/portalimplementations/${id}`),
+
+        listNodes: (id) => this.executeMappedJsonRequest(GET, `/portalimplementations/${id}/nodes`),
+        listFiles: (id, options) => this.executeMappedJsonRequest(GET, `/portalimplementations/${id}/files`, null, options),
     } as const;
 
     public publishProtocol: GCMSPublishProtocolAPI = {

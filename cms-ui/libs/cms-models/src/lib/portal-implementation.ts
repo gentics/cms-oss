@@ -43,3 +43,29 @@ export interface PortalImplementationBO<T extends ModelType = DefaultModelType> 
     /** Internal ID of the Portal Implementation */
     id: string;
 }
+
+/** File contained in a Portal Implementation (REST resource `/portalimplementations/{id}/files`) */
+export interface PortalImplementationFile {
+    /** Internal ID of the file */
+    id: number;
+    /** Global ID */
+    globalId: string;
+    /** Path of the file (including the filename) */
+    path: string;
+    /** Filename */
+    name: string;
+    /** Path of the folder containing the file (empty for the root folder) */
+    folder: string;
+    /** Mimetype */
+    mimetype: string;
+    /** Filesize in bytes */
+    filesize: number;
+    /** Creator */
+    creator?: User<Raw>;
+    /** Creation timestamp */
+    cdate?: number;
+    /** Last editor */
+    editor?: User<Raw>;
+    /** Timestamp of last editing */
+    edate?: number;
+}

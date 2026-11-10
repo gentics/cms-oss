@@ -187,4 +187,11 @@ public interface PortalImplementation extends NamedNodeObject, SynchronizableNod
 	 * @throws NodeException
 	 */
 	PortalImplementationFile getFile(String path) throws NodeException;
+
+	/**
+	 * Get the nodes, the Portal Implementation is assigned to
+	 * @return list of nodes
+	 * @throws NodeException
+	 */
+	List<Node> getNodes() throws NodeException;
 }

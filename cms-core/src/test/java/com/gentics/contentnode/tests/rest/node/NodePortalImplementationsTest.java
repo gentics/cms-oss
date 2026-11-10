@@ -35,6 +35,7 @@ import com.gentics.contentnode.perm.Permissions;
 import com.gentics.contentnode.rest.model.PortalImplementationListResponse;
 import com.gentics.contentnode.rest.model.PortalImplementationModel;
 import com.gentics.contentnode.rest.model.PortalImplementationModel.Type;
+import com.gentics.contentnode.rest.model.response.NodeList;
 import com.gentics.contentnode.rest.model.response.PortalImplementationResponse;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -242,6 +243,52 @@ public class NodePortalImplementationsTest {
 
 		assertThat(supply(() -> DBUtils.select("SELECT node_id id FROM node_portal_implementation", DBUtils.IDS)))
 				.as("Node IDs of assignments after deleting the node").containsOnly(node.getId());
+	}
+
+	/**
+	 * Test listing the nodes, a Portal Implementation is assigned to
+	 * @throws Exception
+	 */
+	@Test
+	public void testListNodes() throws Exception {
+		Node otherNode = supply(() -> createNode());
+		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, otherNode.getFolder().getId(), Arrays.asList(nodeGroup), PermHandler.FULL_PERM));
+		Node unassignedNode = supply(() -> createNode());
+		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, unassignedNode.getFolder().getId(), Arrays.asList(nodeGroup), PermHandler.FULL_PERM));
+
+		assertThat(nodeIds(ADMIN_LOGIN, impl)).as("Nodes before assignment").isEmpty();
+
+		assertStatus(assign(ADMIN_LOGIN, node, impl.getKeyword()), Status.OK);
+		assertStatus(assign(ADMIN_LOGIN, otherNode, impl.getKeyword()), Status.OK);
+
+		assertThat(nodeIds(ADMIN_LOGIN, impl)).as("Nodes for admin").containsOnly(node.getId(), otherNode.getId());
+
+		// the restricted user may only view the first node
+		assertThat(nodeIds(USER_LOGIN, impl)).as("Nodes for restricted user").containsOnly(node.getId());
+
+		// the restricted user may not view this portal implementation
+		PortalImplementationModel invisible = create(ADMIN_LOGIN);
+		try (LoggedInClient client = restContext.client(USER_LOGIN, PASSWORD)) {
+			Response response = client.get().base().path("portalimplementations").path(Integer.toString(invisible.getId())).path("nodes").request().get();
+			assertThat(response.getStatus()).as("Response status for Portal Implementation without permission").isEqualTo(Status.FORBIDDEN.getStatusCode());
+			response.close();
+		}
+	}
+
+	/**
+	 * Get the IDs of the nodes, the Portal Implementation is assigned to, via GET /portalimplementations/{id}/nodes
+	 * @param login login
+	 * @param impl Portal Implementation
+	 * @return list of node IDs
+	 * @throws Exception
+	 */
+	protected List<Integer> nodeIds(String login, PortalImplementationModel impl) throws Exception {
+		try (LoggedInClient client = restContext.client(login, PASSWORD)) {
+			NodeList response = client.get().base().path("portalimplementations").path(Integer.toString(impl.getId())).path("nodes").request()
+					.get(NodeList.class);
+			client.get().assertResponse(response);
+			return response.getItems().stream().map(com.gentics.contentnode.rest.model.Node::getId).collect(Collectors.toList());
+		}
 	}
 
 	/**

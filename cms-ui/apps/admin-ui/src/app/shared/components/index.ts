@@ -4,6 +4,7 @@ export * from './assign-entity-to-package-modal/assign-entity-to-package-modal.c
 export * from './assign-group-to-users-modal/assign-group-to-users-modal.component';
 export * from './assign-node-restriction-to-object-properties-modal/assign-node-restriction-to-object-properties-modal.component';
 export * from './assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
+export * from './assign-nodes-to-portal-implementation-modal/assign-nodes-to-portal-implementation-modal.component';
 export * from './assign-packages-to-node-modal/assign-packages-to-node-modal.component';
 export * from './assign-portal-implementations-to-node-modal/assign-portal-implementations-to-node-modal.component';
 export * from './assign-user-to-groups-modal/assign-user-to-groups-modal.component';

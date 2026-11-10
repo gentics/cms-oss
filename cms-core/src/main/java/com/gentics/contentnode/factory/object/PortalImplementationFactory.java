@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.ws.rs.core.Response.Status;
 
@@ -34,6 +35,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.AbstractContentObject;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.PortalImplementation;
@@ -319,6 +321,16 @@ public class PortalImplementationFactory extends AbstractFactory {
 			}
 			Integer fileId = PortalImplementationFileFactory.getFileId(getId(), PortalImplementationFileFactory.normalize(path));
 			return fileId != null ? TransactionManager.getCurrentTransaction().getObject(PortalImplementationFile.class, fileId) : null;
+		}
+
+		@Override
+		public List<Node> getNodes() throws NodeException {
+			if (isEmptyId(getId())) {
+				return Collections.emptyList();
+			}
+			Set<Integer> nodeIds = DBUtils.select("SELECT node_id id FROM " + C.Tables.NODE_PORTAL_IMPLEMENTATION + " WHERE portal_implementation_id = ?",
+					st -> st.setInt(1, getId()), DBUtils.IDS);
+			return TransactionManager.getCurrentTransaction().getObjects(Node.class, nodeIds);
 		}
 
 		@Override

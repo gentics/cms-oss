@@ -285,8 +285,13 @@ import {
     PolicyGroupResponse,
     PolicyMapOptions,
     PolicyResponse,
+    PortalImplementationCreateRequest,
+    PortalImplementationFileListOptions,
+    PortalImplementationFileListResponse,
     PortalImplementationListOptions,
     PortalImplementationListResponse,
+    PortalImplementationResponse,
+    PortalImplementationUpdateRequest,
     PublishInfo,
     PublishLogEntry,
     PublishLogListOption,
@@ -1147,6 +1152,17 @@ export interface AbstractPublishProtocolAPI extends BasicAPI {
     list: (options?: PublishLogListOption) => ListResponse<PublishLogEntry>;
 }
 
+export interface AbstractPortalImplementationAPI extends BasicAPI {
+    list: (options?: PortalImplementationListOptions) => PortalImplementationListResponse;
+    create: (body: PortalImplementationCreateRequest) => PortalImplementationResponse;
+    get: (id: number | string) => PortalImplementationResponse;
+    update: (id: number | string, body: PortalImplementationUpdateRequest) => PortalImplementationResponse;
+    delete: (id: number | string) => void;
+
+    listNodes: (id: number | string) => NodeListResponse;
+    listFiles: (id: number | string, options?: PortalImplementationFileListOptions) => PortalImplementationFileListResponse;
+}
+
 export interface AbstractKeycloakAPI extends BasicAPI {
     configuration: () => KeycloakConfiguration;
 }
@@ -1182,6 +1198,7 @@ export interface AbstractRootAPI {
     partType: AbstractPartTypeAPI;
     permission: AbstractPermissionAPI;
     policyMap: AbstractPolicyMapAPI;
+    portalImplementation: AbstractPortalImplementationAPI;
     publishProtocol: AbstractPublishProtocolAPI;
     role: AbstractRoleAPI;
     scheduler: AbstractSchedulerAPI;

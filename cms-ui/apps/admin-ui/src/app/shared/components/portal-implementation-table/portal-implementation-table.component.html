@@ -10,6 +10,19 @@
 
 @if (!hideActions || packageName || nodeId) {
   <div class="entity-table-actions-bar">
+    @if (!hideActions && !packageName && !nodeId) {
+      <gtx-button
+        class="table-action-button"
+        data-action="create"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || !canCreate"
+        (click)="handleCreateButton()"
+        >
+        <icon left>add</icon> {{ 'portal_implementation.create_button' | gtxI18n }}
+      </gtx-button>
+    }
     @if (nodeId) {
       <gtx-button
         class="table-action-button"

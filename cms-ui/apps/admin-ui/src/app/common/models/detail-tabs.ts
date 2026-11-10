@@ -44,6 +44,7 @@ export enum DevToolPackageDetailTabs {
 
 export enum PortalImplementationDetailTabs {
     PROPERTIES = 'properties',
+    FILES = 'files',
 }
 
 export enum FolderDetailTabs {

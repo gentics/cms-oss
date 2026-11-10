@@ -47,6 +47,14 @@
           [(selected)]="packageChildEntitySelectedIdsCurrent"
         ></gtx-object-property-table>
       }
+      @case ('portalImplementation') {
+        <gtx-portal-implementation-table
+          class="modal-table"
+          [showSearch]="true"
+          [hideActions]="true"
+          [(selected)]="packageChildEntitySelectedIdsCurrent"
+        ></gtx-portal-implementation-table>
+      }
       @case ('template') {
         <gtx-template-table
           class="modal-table"

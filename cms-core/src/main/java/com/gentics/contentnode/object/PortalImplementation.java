@@ -5,6 +5,7 @@ import java.util.List;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
+import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Function;
@@ -19,7 +20,7 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
  * Interface for Portal Implementation NodeObjects
  */
 @TType(PortalImplementation.TYPE_PORTAL_IMPLEMENTATION)
-public interface PortalImplementation extends NamedNodeObject, Resolvable {
+public interface PortalImplementation extends NamedNodeObject, SynchronizableNodeObject, Resolvable {
 	/**
 	 * TType of the Portal Implementations admin (used for permissions). Value: {@value}
 	 */

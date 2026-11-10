@@ -742,6 +742,19 @@
         "globalId": "Global Id",
         "name": "Name"
     },
+    "portal_implementation": {
+        "portalImplementation_singular": "Portal Implementation",
+        "portalImplementation_plural": "Portal Implementations",
+        "portalImplementation_successfully_added_to_package": "Portal Implementation {{name}} successfully added to package",
+        "portalImplementation_successfully_removed_from_package": "Portal Implementation {{name}} successfully removed from package",
+        "info_selected_portalImplementation": "{{amountSelected}} of {{amountTotal}} Portal Implementations selected",
+        "keyword": "Keyword",
+        "name": "Name",
+        "type": "Type"
+    },
+    "portalImplementation": {
+        "portalImplementation_plural": "Portal Implementations"
+    },
     "group": {
         "all_perms": "All",
         "apply_to_subfolders": "Also apply to subfolders",
@@ -1512,6 +1525,7 @@
         "constructs_of_package": "Constructs of \"{{ packageName }}\"",
         "contentrepositories_of_package": "Contentrepositories of \"{{ packageName }}\"",
         "contentRepositoryFragments_of_package": "ContentRepositoryfragments of \"{{ packageName }}\"",
+        "portalImplementations_of_package": "Portal Implementations of \"{{ packageName }}\"",
         "dataSources_of_package": "DataSources of \"{{ packageName }}\"",
         "objectproperties_of_package": "Objectproperties of \"{{ packageName }}\"",
         "templates_of_package": "Templates of \"{{ packageName }}\"",

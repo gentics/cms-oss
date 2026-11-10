@@ -21,6 +21,7 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.rest.model.devtools.Package;
@@ -51,6 +52,7 @@ public class MainPackageSynchronizer extends PackageSynchronizer {
 		restModel.setTemplates(synchronizer.getObjects(Template.class, false).size());
 		restModel.setCrFragments(synchronizer.getObjects(CrFragment.class, false).size());
 		restModel.setContentRepositories(synchronizer.getObjects(ContentRepository.class, false).size());
+		restModel.setPortalImplementations(synchronizer.getObjects(PortalImplementation.class, false).size());
 		restModel.setDescription(synchronizer.getDescription());
 		if (synchronizer.subPackageContainer != null) {
 			Set<Package> subPackages = new HashSet<>();

@@ -285,6 +285,8 @@ import {
     PolicyGroupResponse,
     PolicyMapOptions,
     PolicyResponse,
+    PortalImplementationListOptions,
+    PortalImplementationListResponse,
     PublishInfo,
     PublishLogEntry,
     PublishLogListOption,
@@ -583,6 +585,10 @@ export interface AbstractDevToolsAPI extends BasicAPI {
     listObjectProperties: (name: string, options?: ObjectPropertyListOptions) => ObjectPropertyListResponse;
     assignObjectProperty: (name: string, opId: number | string) => Response;
     unassignObjectProperty: (name: string, opId: number | string) => Response;
+
+    listPortalImplementations: (name: string, options?: PortalImplementationListOptions) => PortalImplementationListResponse;
+    assignPortalImplementation: (name: string, portalImplementationId: number | string) => Response;
+    unassignPortalImplementation: (name: string, portalImplementationId: number | string) => Response;
 
     listTemplates: (name: string, options?: TemplateListRequest) => ListResponse<Template>;
     assignTemplate: (name: string, templateId: number | string) => Response;

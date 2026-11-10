@@ -52,7 +52,7 @@ public class ListPackagesToolTest {
 
 		PackageInfo info = PackageInfo.of(pkg);
 
-		assertThat(info).isEqualTo(new PackageInfo("genaix", "GenAIx constructs", new Counts(3, 1, 0, 0, 0, 0)));
+		assertThat(info).isEqualTo(new PackageInfo("genaix", "GenAIx constructs", new Counts(3, 1, 0, 0, 0, 0, 0)));
 		assertValidOutput(tool, ListResult.of(Slice.of(0, 25, 1), List.of(info)));
 	}
 }

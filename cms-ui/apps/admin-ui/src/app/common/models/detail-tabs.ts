@@ -37,8 +37,13 @@ export enum DevToolPackageDetailTabs {
     CR_FRAGMENTS = 'cr-fragments',
     DATA_SOURCES = 'data-sources',
     OBJECT_PROPERTIES = 'object-properties',
+    PORTAL_IMPLEMENTATIONS = 'portal-implementations',
     TEMPLATES = 'templates',
     CONSISTENCY_CHECK = 'consistency-check',
+}
+
+export enum PortalImplementationDetailTabs {
+    PROPERTIES = 'properties',
 }
 
 export enum FolderDetailTabs {

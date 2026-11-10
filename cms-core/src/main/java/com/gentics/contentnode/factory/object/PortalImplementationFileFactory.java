@@ -20,6 +20,8 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.events.Events;
+import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.DBTable;
@@ -204,6 +206,33 @@ public class PortalImplementationFileFactory extends AbstractFactory {
 				.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
 	}
 
+	/**
+	 * Trigger an update event for the Portal Implementation (at the end of the transaction), because the given file was changed.
+	 * The event will be triggered only once per transaction and Portal Implementation. This causes the Portal Implementation
+	 * to be synchronized into the devtool packages containing it.
+	 * @param t transaction
+	 * @param file changed file
+	 */
+	protected static void triggerPortalImplementationUpdate(Transaction t, PortalImplementationFile file) {
+		String key = String.format("%s.update.%d", PortalImplementationFile.class.getName(), file.getPortalImplementationId());
+		if (t.getAttributes().putIfAbsent(key, Boolean.TRUE) == null) {
+			t.addTransactional(new TransactionalTriggerEvent(PortalImplementation.class, file.getPortalImplementationId(), null, Events.UPDATE) {
+				@Override
+				public boolean onTransactionCommit(Transaction t) {
+					// remove the marker, so that changes done after the commit (in the same transaction) will trigger the event again
+					t.getAttributes().remove(key);
+					return super.onTransactionCommit(t);
+				}
+
+				@Override
+				public void onTransactionRollback(Transaction t) {
+					t.getAttributes().remove(key);
+					super.onTransactionRollback(t);
+				}
+			});
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends NodeObject> T createObject(FactoryHandle handle, Class<T> clazz) throws NodeException {
@@ -254,6 +283,7 @@ public class PortalImplementationFileFactory extends AbstractFactory {
 						file.getPortalImplementationId(), logInfo("delete", file.getPath()));
 				// the contents are removed from the dbfiles folder after the transaction was committed
 				fileManager.deleteFile(file.getBinFile());
+				triggerPortalImplementationUpdate(t, file);
 			}
 
 			flushDelete("DELETE FROM " + C.Tables.PORTAL_IMPLEMENTATION_FILE + " WHERE id IN", PortalImplementationFile.class);
@@ -566,6 +596,7 @@ public class PortalImplementationFileFactory extends AbstractFactory {
 
 					originalPath = path;
 					t.dirtObjectCache(PortalImplementationFile.class, getId());
+					triggerPortalImplementationUpdate(t, this);
 				}
 			} finally {
 				deleteTmpFile();

@@ -20,6 +20,8 @@ export interface Package<T extends ModelType = DefaultModelType> {
     crFragments?: number;
     /** Number of ContentRepositories contained in the package */
     contentRepositories?: number;
+    /** Number of Portal Implementations contained in the package */
+    portalImplementations?: number;
     /** Get set of sub packages */
     subPackages?: PackageBO<T>[];
 }

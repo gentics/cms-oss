@@ -27,6 +27,7 @@ import { ObjectPropertyApi } from './object-property/object-property-api';
 import { ObjectPropertyCategoryApi } from './object-property-category/object-property-category-api';
 import { PageApi } from './page/page-api';
 import { PermissionApi } from './permission/permission-api';
+import { PortalImplementationApi } from './portal-implementation/portal-implementation-api';
 import { PublishQueueApi } from './publish-queue/publish-queue-api';
 import { RoleApi } from './role/role-api';
 import { SchedulerApi } from './scheduler/scheduler-api';
@@ -72,6 +73,7 @@ export class GcmsApi {
     objectPropertycategories: ObjectPropertyCategoryApi;
     pages: PageApi;
     permissions: PermissionApi;
+    portalImplementations: PortalImplementationApi;
     publishQueue: PublishQueueApi;
     role: RoleApi;
     scheduler: SchedulerApi;
@@ -105,6 +107,7 @@ export class GcmsApi {
         this.objectPropertycategories = new ObjectPropertyCategoryApi(apiBase);
         this.pages = new PageApi(apiBase);
         this.permissions = new PermissionApi(apiBase);
+        this.portalImplementations = new PortalImplementationApi(apiBase);
         this.publishQueue = new PublishQueueApi(apiBase);
         this.role = new RoleApi(apiBase);
         this.scheduler = new SchedulerApi(apiBase);

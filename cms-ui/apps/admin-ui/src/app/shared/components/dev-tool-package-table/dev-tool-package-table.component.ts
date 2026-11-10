@@ -95,6 +95,14 @@ export class DevToolPackageTableComponent
             sortable: true,
             sortValue: 'cotnentRepositories',
         },
+        {
+            id: 'portal-implementations',
+            label: 'portal_implementation.portalImplementation_plural',
+            fieldPath: 'portalImplementations',
+            align: 'right',
+            sortable: true,
+            sortValue: 'portalImplementations',
+        },
     ];
 
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'package';

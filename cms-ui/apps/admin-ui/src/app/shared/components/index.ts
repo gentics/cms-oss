@@ -45,6 +45,7 @@ export * from './node-table/node-table.component';
 export * from './object-property-table/object-property-table.component';
 export * from './permission-icon/permission-icon.component';
 export * from './permissions-trable/permissions-trable.component';
+export * from './portal-implementation-table/portal-implementation-table.component';
 export * from './properties-manager/properties-manager.component';
 export * from './properties-tabs/properties-tabs.component';
 export * from './send-message-form/send-message-form.component';

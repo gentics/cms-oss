@@ -36,6 +36,7 @@ export const INITIAL_ENTITY_STATE = defineInitialState<EntityStateModel>({
     objectPropertyCategory: {},
     package: {},
     page: {},
+    portalImplementation: {},
     role: {},
     schedule: {},
     scheduleExecution: {},

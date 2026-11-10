@@ -385,6 +385,10 @@ export class GCMSRestClient implements GCMSRootAPI {
         assignObjectProperty: (name, opId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/objectproperties/${opId}`),
         unassignObjectProperty: (name, opId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/objectproperties/${opId}`),
 
+        listPortalImplementations: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/portal_implementations`, null, options),
+        assignPortalImplementation: (name, portalImplementationId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/portal_implementations/${portalImplementationId}`),
+        unassignPortalImplementation: (name, portalImplementationId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/portal_implementations/${portalImplementationId}`),
+
         listTemplates: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/templates`, null, options),
         assignTemplate: (name, templateId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/templates/${templateId}`),
         unassignTemplate: (name, templateId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/templates/${templateId}`),

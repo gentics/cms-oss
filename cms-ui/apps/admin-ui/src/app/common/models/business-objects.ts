@@ -23,6 +23,7 @@ import {
     Page,
     PermissionInfo,
     PermissionsSet,
+    PortalImplementation,
     Raw,
     Role,
     Schedule,
@@ -93,6 +94,7 @@ export type NodeBO = Node<Raw> & BusinessObject;
 export type ContentRepositoryBO = ContentRepository & BusinessObject;
 export type TagMapEntryBO = TagmapEntry & BusinessObject;
 export type ContentRepositoryFragmentBO = ContentRepositoryFragment & BusinessObject;
+export type PortalImplementationBO = PortalImplementation & BusinessObject;
 export type ConstructBO = TagType & BusinessObject;
 export type ConstructCategoryBO = ConstructCategory & SortableBusinessObject;
 export type FolderBO = Folder & BusinessObject;

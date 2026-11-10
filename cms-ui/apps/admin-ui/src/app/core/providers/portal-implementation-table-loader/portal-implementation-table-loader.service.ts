@@ -1,0 +1,79 @@
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, PortalImplementationBO, TableLoadOptions } from '@admin-ui/common';
+import { AppStateService } from '@admin-ui/state';
+import { Injectable } from '@angular/core';
+import { PortalImplementation, PortalImplementationListResponse } from '@gentics/cms-models';
+import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
+import { EntityManagerService } from '../entity-manager';
+import { PortalImplementationOperations } from '../operations';
+
+export interface PortalImplementationTableLoaderOptions {
+    packageName?: string;
+}
+
+@Injectable()
+export class PortalImplementationTableLoaderService
+    extends BaseTableLoaderService<PortalImplementation, PortalImplementationBO, PortalImplementationTableLoaderOptions> {
+
+    constructor(
+        entityManager: EntityManagerService,
+        appState: AppStateService,
+        protected api: GcmsApi,
+        protected operations: PortalImplementationOperations,
+    ) {
+        super('portalImplementation', entityManager, appState);
+    }
+
+    public canDelete(entityId: string | number): Promise<boolean> {
+        // portal implementations are not deleted from this table (only removed from packages)
+        return Promise.resolve(false);
+    }
+
+    public deleteEntity(entityId: string | number): Promise<void> {
+        return Promise.reject(new Error('Deleting portal implementations is not supported here'));
+    }
+
+    protected loadEntities(
+        options: TableLoadOptions,
+        additionalOptions?: PortalImplementationTableLoaderOptions,
+    ): Observable<EntityPageResponse<PortalImplementationBO>> {
+        const loadOptions = this.createDefaultOptions(options);
+        let loader: Observable<PortalImplementationListResponse>;
+
+        if (additionalOptions?.packageName) {
+            loader = this.api.devTools.getPortalImplementations(additionalOptions.packageName, loadOptions);
+        } else {
+            loader = this.api.portalImplementations.getPortalImplementations(loadOptions);
+        }
+
+        return loader.pipe(
+            map(response => {
+                const entities = response.items.map(item => this.mapToBusinessObject(item));
+
+                return {
+                    entities,
+                    totalCount: response.numItems,
+                };
+            }),
+        );
+    }
+
+    public mapToBusinessObject(portalImplementation: PortalImplementation): PortalImplementationBO {
+        return {
+            ...portalImplementation,
+            [BO_ID]: String(portalImplementation.id),
+            [BO_PERMISSIONS]: [],
+            [BO_DISPLAY_NAME]: portalImplementation.name,
+        };
+    }
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.operations.addToDevTool(devToolPackage, entityId);
+    }
+
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.operations.removeFromDevTool(devToolPackage, entityId);
+    }
+}

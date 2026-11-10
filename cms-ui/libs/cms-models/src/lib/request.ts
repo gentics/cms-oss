@@ -38,6 +38,7 @@ import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
 import { ApiToken, EditableApiToken } from './api-token';
+import { PortalImplementation } from './portal-implementation';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -2115,6 +2116,13 @@ export interface ContentRepositoryFragmentCreateRequest {
 }
 
 export type ContentRepositoryFragmentUpdateRequest = ContentRepositoryFragmentCreateRequest;
+
+// PORTAL_IMPLEMENTATION //////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Query parameters for `/portalimplementations`
+ */
+export type PortalImplementationListOptions = BaseListOptionsWithPaging<PortalImplementation>;
 
 // OBJECTPROPERTY //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

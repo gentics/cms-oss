@@ -37,6 +37,7 @@ import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { Page, PageWithExternalLinks } from './page';
 import { GcmsPermission, PermissionsMapCollection } from './permissions';
+import { PortalImplementation } from './portal-implementation';
 import { PrivilegeMapFromServer } from './privileges';
 import { Role, RolePermissions } from './role';
 import { Schedule } from './schedule';
@@ -710,6 +711,20 @@ export interface ContentRepositoryFragmentResponse extends Response {
  * Response from `cr_fragments`
  */
 export interface ContentRepositoryFragmentListResponse extends ListResponse<ContentRepositoryFragment> { }
+
+// PORTAL_IMPLEMENTATION //////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Response from `portalimplementations/:id`
+ */
+export interface PortalImplementationResponse extends Response {
+    portalImplementation: PortalImplementation;
+}
+
+/**
+ * Response from `portalimplementations`
+ */
+export interface PortalImplementationListResponse extends ListResponse<PortalImplementation> { }
 
 // TAGMAPENTRY //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

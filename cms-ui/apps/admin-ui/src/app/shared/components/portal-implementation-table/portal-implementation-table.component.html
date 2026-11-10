@@ -1,0 +1,79 @@
+@if (showSearch) {
+  <gtx-search-bar
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | gtxI18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+  ></gtx-search-bar>
+}
+
+@if (!hideActions || packageName) {
+  <div class="entity-table-actions-bar">
+    @if (packageName) {
+      <gtx-button
+        class="table-action-button"
+        data-action="assign-to-package"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || !canManagePackage"
+        (click)="handleAssignToPackageButton()"
+        >
+        <icon left>link</icon> {{ 'shared.assign_entity_to_package_button' | gtxI18n }}
+      </gtx-button>
+    }
+    @if (!hideActions) {
+      <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+        >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+      </gtx-button>
+    }
+  </div>
+}
+
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'portal_implementation.info_selected_portalImplementation' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+  class="entity-table"
+
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
+
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
+
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
+
+  [renderers]="{}"
+
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowSelect)="forwardSelect($event)"
+  (rowDeselect)="forwardDeselect($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
+></gtx-table>

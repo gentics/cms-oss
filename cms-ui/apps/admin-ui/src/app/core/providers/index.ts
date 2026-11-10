@@ -36,6 +36,7 @@ export * from './object-property-table-loader/object-property-table-loader.servi
 export * from './operations';
 export * from './permissions-trable-loader/permissions-trable-loader.service';
 export * from './permissions/permissions.service';
+export * from './portal-implementation-table-loader/portal-implementation-table-loader.service';
 export * from './route-entity-resolver/route-entity-resolver.service';
 export * from './schedule-handler/schedule-handler.service';
 export * from './server-storage/server-storage.service';

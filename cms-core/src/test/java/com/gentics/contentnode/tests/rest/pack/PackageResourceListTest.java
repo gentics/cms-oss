@@ -26,9 +26,11 @@ import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.Datasource.SourceType;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
+import com.gentics.contentnode.rest.model.PortalImplementationModel;
 import com.gentics.contentnode.rest.model.devtools.Package;
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;
 import com.gentics.contentnode.rest.resource.devtools.PackageResource;
@@ -59,12 +61,15 @@ public class PackageResourceListTest extends AbstractListSortAndFilterTest<Packa
 
 	protected final static List<Template> templates = new ArrayList<>();
 
+	protected final static List<PortalImplementation> portalImplementations = new ArrayList<>();
+
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
 		AbstractListSortAndFilterTest.setupOnce();
 		Synchronizer.start();
 
 		for (int i = 0; i < NUM_ITEMS; i++) {
+			int index = i;
 			constructs.add(Builder.create(Construct.class, c -> {
 				c.setAutoEnable(true);
 				c.setKeyword(randomStringGenerator.generate(5, 10));
@@ -104,6 +109,11 @@ public class PackageResourceListTest extends AbstractListSortAndFilterTest<Packa
 				t.setName(randomStringGenerator.generate(5, 10));
 				t.setDescription(randomStringGenerator.generate(10, 20));
 			}).build());
+			portalImplementations.add(Builder.create(PortalImplementation.class, impl -> {
+				impl.setKeyword(randomStringGenerator.generate(5, 10) + index);
+				impl.setName(randomStringGenerator.generate(5, 10) + index);
+				impl.setType(getRandomEntry(PortalImplementationModel.Type.values()));
+			}).build());
 		}
 	}
 
@@ -116,7 +126,8 @@ public class PackageResourceListTest extends AbstractListSortAndFilterTest<Packa
 				Pair.of("templates", item -> addLeadingZeros(item.getTemplates())),
 				Pair.of("objectProperties", item -> addLeadingZeros(item.getObjectProperties())),
 				Pair.of("crFragments", item -> addLeadingZeros(item.getCrFragments())),
-				Pair.of("contentRepositories", item -> addLeadingZeros(item.getContentRepositories()))
+				Pair.of("contentRepositories", item -> addLeadingZeros(item.getContentRepositories())),
+				Pair.of("portalImplementations", item -> addLeadingZeros(item.getPortalImplementations()))
 		);
 		List<Pair<String, Function<Package, String>>> filterAttributes = Arrays.asList(
 				Pair.of("name", Package::getName)
@@ -137,6 +148,7 @@ public class PackageResourceListTest extends AbstractListSortAndFilterTest<Packa
 			addItems(pack, objectProperties);
 			addItems(pack, crFragments);
 			addItems(pack, templates);
+			addItems(pack, portalImplementations);
 
 			return MainPackageSynchronizer.TRANSFORM2REST.apply(pack);
 		});

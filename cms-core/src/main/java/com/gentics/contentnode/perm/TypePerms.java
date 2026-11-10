@@ -38,6 +38,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.object.utility.FolderComparator;
@@ -345,6 +346,35 @@ public enum TypePerms {
 			false,
 			NamedPerm.copy(NamedPerm.read).category("cr_fragment"),
 			NamedPerm.copy(NamedPerm.setperm).category("cr_fragment"), NamedPerm.copy(NamedPerm.update).category("cr_fragment"), NamedPerm.copy(NamedPerm.delete).category("cr_fragment")),
+
+	portalimplementationadmin(PortalImplementation.TYPE_PORTAL_IMPLEMENTATIONS,
+			"portal_implementations",
+			contentadmin,
+			NamedPerm.read,
+			NamedPerm.setperm,
+			NamedPerm.create),
+
+	portalimplementation(PortalImplementation.TYPE_PORTAL_IMPLEMENTATION,
+			id -> {
+				if (id == null) {
+					return I18NHelper.get("portal_implementation");
+				}
+				Transaction t = TransactionManager.getCurrentTransaction();
+				PortalImplementation impl = t.getObject(PortalImplementation.class, id);
+				if (impl != null) {
+					return impl.getName();
+				} else {
+					return null;
+				}
+			},
+			null,
+			portalimplementationadmin,
+			(id, channelId) -> DBUtils.select("SELECT id FROM portal_implementation ORDER BY name", DBUtils.IDLIST),
+			null,
+			false,
+			false,
+			NamedPerm.copy(NamedPerm.read).category("portal_implementation"),
+			NamedPerm.copy(NamedPerm.setperm).category("portal_implementation"), NamedPerm.copy(NamedPerm.update).category("portal_implementation"), NamedPerm.copy(NamedPerm.delete).category("portal_implementation")),
 
 	searchindexmaintenance(10400,
 			"search.maintenance",

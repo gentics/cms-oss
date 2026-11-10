@@ -24,6 +24,7 @@ public abstract class C {
 		public final static String OBJTAG = "objtag";
 		public final static String PAGE = "page";
 		public static final String PART = "part";
+		public static final String PORTAL_IMPLEMENTATION = "portal_implementation";
 		public final static String DS_OBJ = "ds_obj";
 		public final static String DS = "ds";
 		public final static String VALUE = "value";

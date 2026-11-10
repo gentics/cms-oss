@@ -770,6 +770,25 @@
 			</property>
 		</properties>
 	</table>
+	<table name="portal_implementation">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">10501</property>
+			<property id="namecolumn">name</property>
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT pi2.id, pi1.name FROM portal_implementation AS pi1
+				INNER JOIN portal_implementation AS pi2 ON pi1.id != pi2.id
+				WHERE pi1.id = ? AND pi1.name = pi2.name
+			</property>
+			<property id="unique2column">keyword</property>
+			<property id="unique2sql">
+				SELECT pi2.id, pi1.keyword FROM portal_implementation AS pi1
+				INNER JOIN portal_implementation AS pi2 ON pi1.id != pi2.id
+				WHERE pi1.id = ? AND pi1.keyword = pi2.keyword
+			</property>
+		</properties>
+	</table>
 	<table name="cr_fragment_entry">
 		<restrict>"${export}" = "yes"</restrict>
 		<references>

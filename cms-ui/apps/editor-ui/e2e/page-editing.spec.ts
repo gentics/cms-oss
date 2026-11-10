@@ -1,5 +1,5 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { Page as CmsPage, PageSaveRequest, Raw, StringTagPartProperty, Template } from '@gentics/cms-models';
+import { Page as CmsPage, Feature, PageSaveRequest, Raw, StringTagPartProperty, Template } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
@@ -1028,6 +1028,12 @@ test.describe('Page Editing', () => {
                 const TEXT_CONTENT = 'Example Link';
                 const TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID) as Template;
                 const TEMPLATE_TAGS = Object.keys(TEMPLATE.templateTags);
+
+                // Copied tags are only created as new tags with this feature.
+                // It is applied to the editor when the page is re-opened below.
+                await IMPORTER.setupFeatures({
+                    [Feature.COPY_TAGS]: true,
+                });
 
                 await test.step('Create internal link', async () => {
                     // Type content

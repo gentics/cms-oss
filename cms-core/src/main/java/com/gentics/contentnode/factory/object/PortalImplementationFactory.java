@@ -8,6 +8,7 @@ import static com.gentics.contentnode.perm.PermHandler.PERM_VIEW;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.PortalImplementation;
+import com.gentics.contentnode.object.PortalImplementationFile;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
@@ -285,7 +287,29 @@ public class PortalImplementationFactory extends AbstractFactory {
 		}
 
 		@Override
+		public List<PortalImplementationFile> getFiles(String folder) throws NodeException {
+			if (isEmptyId(getId())) {
+				return Collections.emptyList();
+			}
+			return TransactionManager.getCurrentTransaction().getObjects(PortalImplementationFile.class,
+					PortalImplementationFileFactory.getFileIds(getId(), PortalImplementationFileFactory.normalize(folder)));
+		}
+
+		@Override
+		public PortalImplementationFile getFile(String path) throws NodeException {
+			if (isEmptyId(getId())) {
+				return null;
+			}
+			Integer fileId = PortalImplementationFileFactory.getFileId(getId(), PortalImplementationFileFactory.normalize(path));
+			return fileId != null ? TransactionManager.getCurrentTransaction().getObject(PortalImplementationFile.class, fileId) : null;
+		}
+
+		@Override
 		public void delete(boolean force) throws InsufficientPrivilegesException, NodeException {
+			// delete the contained files
+			for (PortalImplementationFile file : getFiles(null)) {
+				file.delete(force);
+			}
 			deletedFactoryObject(this);
 		}
 

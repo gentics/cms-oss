@@ -789,6 +789,16 @@
 			</property>
 		</properties>
 	</table>
+	<table name="portal_implementation_file">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="portal_implementation" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="ttype">10502</property>
+			<property id="pathtoparent">portal_implementation_id</property>
+		</properties>
+	</table>
 	<table name="cr_fragment_entry">
 		<restrict>"${export}" = "yes"</restrict>
 		<references>

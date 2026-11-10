@@ -1,5 +1,7 @@
 package com.gentics.contentnode.object;
 
+import java.util.List;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
@@ -169,4 +171,19 @@ public interface PortalImplementation extends NamedNodeObject, Resolvable {
 	 * @throws NodeException
 	 */
 	SystemUser getEditor() throws NodeException;
+	/**
+	 * Get the files contained in the given folder (including all subfolders)
+	 * @param folder path of the folder, empty for the root folder (i.e. all files)
+	 * @return list of files
+	 * @throws NodeException
+	 */
+	List<PortalImplementationFile> getFiles(String folder) throws NodeException;
+
+	/**
+	 * Get the file with the given path
+	 * @param path path of the file
+	 * @return file or null, if no such file exists
+	 * @throws NodeException
+	 */
+	PortalImplementationFile getFile(String path) throws NodeException;
 }

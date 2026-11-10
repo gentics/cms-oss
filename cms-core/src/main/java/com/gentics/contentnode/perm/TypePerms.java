@@ -39,6 +39,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.PortalImplementation;
+import com.gentics.contentnode.object.PortalImplementationFile;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.object.utility.FolderComparator;
@@ -781,7 +782,8 @@ public enum TypePerms {
 	image(10011, "image", folder),
 	form(10050, "form", folder),
 	objtag(10113, "objectproperty", objprop),
-	pagecontent(10015, "content", page);
+	pagecontent(10015, "content", page),
+	portalimplementationfile(PortalImplementationFile.TYPE_PORTAL_IMPLEMENTATION_FILE, "portal_implementation_file", portalimplementation);
 
 	/**
 	 * Transform the type into its REST model

@@ -43,7 +43,7 @@ function gtx_alohalink(tag, renderMode, options) {
         ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.Page" data-gentics-aloha-object-id="10007.' + url.target.id + '" data-gentics-aloha-object-online="' + url.target.online + '"';
         href = url.target.url;
     } else {
-        if (/^(https|http):\/\/(.*)$/.test(url.externalurl) || /^mailto:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/.test(url.externalurl) || /^\/(.*)$/.test(url.externalurl)) {
+        if (/^(https|http):\/\/(.*)$/.test(url.externalurl) || /^mailto:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/.test(url.externalurl) || /^tel:\+?[0-9().\- ]*[0-9][0-9().\- ]*$/.test(url.externalurl) || /^\/(.*)$/.test(url.externalurl)) {
             ctx['data'] = ' data-gentics-gcn-url="' + encodeURIComponent(url.externalurl) + '"';
             href = url.externalurl;
         }

@@ -1338,7 +1338,7 @@ test.describe('Page Editing', () => {
                 await expect(linkElement).not.toHaveAttribute('data-gentics-gcn-anchor');
             });
 
-            for (const LINK_URL of ['mailto:info@example.com', '/relative/path.html']) {
+            for (const LINK_URL of ['mailto:info@example.com', 'tel:+49 1 234-567', '/relative/path.html']) {
                 test(`should keep the external link "${LINK_URL}" after saving`, {
                     annotation: [{
                         type: 'ticket',

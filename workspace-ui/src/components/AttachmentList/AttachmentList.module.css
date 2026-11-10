@@ -21,8 +21,10 @@
   font-size: var(--font-size-xs);
 }
 
+/* Verbatim: the attachment's shape, but marked like a verbatim token, dashed (design.md §12). */
 .verbatim {
-  border-color: rgba(var(--interactive-rgb), 0.35);
+  border-style: dashed;
+  border-color: rgba(var(--interactive-rgb), 0.3);
   background: rgba(var(--interactive-rgb), 0.13);
 }
 

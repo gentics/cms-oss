@@ -1,21 +1,12 @@
-import { AtSignIcon, HashIcon, ListFilterIcon, PaperclipIcon, RouteIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { AtSignIcon, ListFilterIcon, PaperclipIcon, RouteIcon, SlidersHorizontalIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { refText } from '@/components/MessageParts/contextReference';
 import { PartRenderer } from '@/components/MessageParts/MessageParts';
+import { ReferenceToken } from '@/components/ReferenceToken/ReferenceToken';
 import type { MessagePart, MessageRole, UserMessagePart } from '@/services/apiService/genaix/types';
 
 import styles from './ChatMessage.module.css';
-
-function Token({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-    return (
-        <span className={styles.token}>
-            {icon}
-            <span className={styles.tokenText}>{children}</span>
-        </span>
-    );
-}
 
 // A part of a user turn (contract `UserMessagePart`, §5.1). A `plan` part accepts the agent's plan,
 // as proposed or with the user's steps (`planMessage`).
@@ -28,18 +19,18 @@ function UserPart({ part }: { part: UserMessagePart }) {
         case 'verbatim':
             return <span className={styles.verbatim}>{part.text}</span>;
         case 'reference':
-            return <Token icon={<AtSignIcon size={12} aria-hidden />}>{refText(part.ref)}</Token>;
+            return <ReferenceToken tone="onSolid" icon={AtSignIcon}>{refText(part.ref)}</ReferenceToken>;
         case 'file_ref':
-            return <Token icon={<PaperclipIcon size={12} aria-hidden />}>{t(part.mode === 'verbatim' ? 'chat.fileVerbatim' : 'chat.file')}</Token>;
+            return <ReferenceToken tone="onSolid" icon={PaperclipIcon} verbatim={part.mode === 'verbatim'}>{t(part.mode === 'verbatim' ? 'chat.fileVerbatim' : 'chat.file')}</ReferenceToken>;
         case 'setting':
-            return <Token icon={<HashIcon size={12} aria-hidden />}>{`${part.key}: ${part.label || part.value}`}</Token>;
+            return <ReferenceToken tone="onSolid" icon={SlidersHorizontalIcon}>{`${part.key}: ${part.label || part.value}`}</ReferenceToken>;
         case 'filter':
-            return <Token icon={<ListFilterIcon size={12} aria-hidden />}>{part.label}</Token>;
+            return <ReferenceToken tone="onSolid" icon={ListFilterIcon}>{part.label}</ReferenceToken>;
         case 'plan':
             return (
-                <Token icon={<RouteIcon size={12} aria-hidden />}>
+                <ReferenceToken tone="onSolid" icon={RouteIcon}>
                     {part.plan.items ? t('chat.planAdjusted', { count: part.plan.items.length }) : t('chat.planAccepted')}
-                </Token>
+                </ReferenceToken>
             );
         default:
             return null;

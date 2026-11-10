@@ -12,7 +12,7 @@ import { SessionList } from './SessionList';
 
 /** The toast's close button. Found by its slot, as in `ErrorNotifications.test.tsx`. */
 function toastCloseButton(title: string) {
-    return screen.getByText(title).closest<HTMLElement>('[data-slot="toast"]')!.querySelector<HTMLElement>('[data-slot="toast-close"]')!;
+    return screen.getByRole('heading', { name: title }).closest<HTMLElement>('[data-slot="toast"]')!.querySelector<HTMLElement>('[data-slot="toast-close"]')!;
 }
 
 function AllSessions({ maxItems }: { maxItems?: number }) {
@@ -128,13 +128,13 @@ describe('SessionList', () => {
             await user.click(await screen.findByRole('button', { name: 'Delete “Landing page”' }));
 
             expect(screen.queryByRole('link', { name: /Landing page/ })).not.toBeInTheDocument();
-            expect(screen.getByText('“Landing page” deleted')).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: '“Landing page” deleted' })).toBeInTheDocument();
             await waitFor(() => expect(archivedIds(fetchMock)).toEqual(['s-1']));
 
             await user.click(screen.getByRole('button', { name: 'Undo' }));
 
             expect(await screen.findByRole('link', { name: /Landing page/ })).toBeInTheDocument();
-            await waitFor(() => expect(screen.queryByText('“Landing page” deleted')).not.toBeInTheDocument());
+            await waitFor(() => expect(screen.queryByRole('heading', { name: '“Landing page” deleted' })).not.toBeInTheDocument());
             expect(unarchivedIds(fetchMock)).toEqual(['s-1']);
         });
 
@@ -204,7 +204,7 @@ describe('SessionList', () => {
             expect(useErrorNotificationStore.getState().errors).toMatchObject([
                 { messageKey: 'sessions.archiveFailed', detailKey: 'errors.genaix.session_forbidden' },
             ]);
-            await waitFor(() => expect(screen.queryByText('“Landing page” deleted')).not.toBeInTheDocument());
+            await waitFor(() => expect(screen.queryByRole('heading', { name: '“Landing page” deleted' })).not.toBeInTheDocument());
         });
     });
 });

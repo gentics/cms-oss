@@ -10,7 +10,7 @@ import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { usePlanState } from '@/hooks/useGenaixQueries';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { PlanState } from '@/services/apiService/genaix/types';
-import { cmsRefKey, type LivePreview, livePreviewOf, previewKey, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { isSameCmsObject, type LivePreview, livePreviewOf, previewKey, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './ReviewPage.module.css';
 
@@ -54,13 +54,15 @@ export function ReviewPage() {
     // The router keeps a search value as given, so an empty `?plan=` arrives as `''`: the newest plan then.
     const state = usePlanState(id, planId || newestPlanId);
     const livePreviews = useWorkspaceEventStore((store) => selectSession(id)(store).previews);
+    // The session's, of all its plans: a page a plan published earlier is offered live too.
+    const sessionPublications = useWorkspaceEventStore((store) => selectSession(id)(store).publications);
     const { preview: latest, previews } = planPreviews(state.data, livePreviews);
     const publications = state.data?.publications ?? [];
-    const latestKey = latest && previewKey(latest);
     const page = publications.length > 1
-        ? publications.find(({ cms_ref: ref }) => ref.id === pageId) ?? publications.find(({ cms_ref: ref }) => cmsRefKey(ref) === latestKey) ?? publications[0]
+        ? publications.find(({ cms_ref: ref }) => ref.id === pageId) ?? publications.find(({ cms_ref: ref }) => latest !== undefined && isSameCmsObject(ref, latest.cms_ref)) ?? publications[0]
         : undefined;
-    const preview = page ? previews.find((shown) => previewKey(shown) === cmsRefKey(page.cms_ref)) : latest;
+    // A publication names its page with the connection, a preview without (`isSameCmsObject`).
+    const preview = page ? previews.find((shown) => isSameCmsObject(shown.cms_ref, page.cms_ref)) : latest;
 
     let panel;
 
@@ -90,7 +92,7 @@ export function ReviewPage() {
                 {state.data && page && <ReviewPages sessionId={id} publications={publications} checks={state.data.checks} selectedId={page.cms_ref.id} />}
                 <div className={styles.preview}>
                     {preview
-                        ? <PreviewColumn preview={preview} previews={page ? undefined : previews} />
+                        ? <PreviewColumn preview={preview} previews={page ? undefined : previews} publications={[...Object.values(sessionPublications ?? {}).flat(), ...publications]} />
                         : <p className={styles.noPreview}>{t('review.noPreview')}</p>}
                 </div>
                 <aside className={styles.panel}>{panel}</aside>

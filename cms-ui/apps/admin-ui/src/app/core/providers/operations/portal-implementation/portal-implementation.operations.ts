@@ -121,6 +121,48 @@ export class PortalImplementationOperations
         );
     }
 
+    /**
+     * Assign the portal implementation to the node
+     */
+    addToNode(nodeId: number, entityId: string | number): Observable<void> {
+        const entity = this.appState.now.entity.portalImplementation[entityId];
+
+        return this.api.node.addNodePortalImplementation(nodeId, entityId).pipe(
+            map(() => undefined),
+            tap(() => {
+                this.notification.show({
+                    message: 'portal_implementation.portalImplementation_successfully_assigned_to_node',
+                    type: 'success',
+                    translationParams: {
+                        name: entity?.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    /**
+     * Remove the portal implementation from the node
+     */
+    removeFromNode(nodeId: number, entityId: string | number): Observable<void> {
+        const entity = this.appState.now.entity.portalImplementation[entityId];
+
+        return this.api.node.removeNodePortalImplementation(nodeId, entityId).pipe(
+            map(() => undefined),
+            tap(() => {
+                this.notification.show({
+                    message: 'portal_implementation.portalImplementation_successfully_removed_from_node',
+                    type: 'success',
+                    translationParams: {
+                        name: entity?.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
     listFromDevTool(
         devtoolPackage: string,
         body?: DevToolEntityListRequestModel<EditableEntity.PORTAL_IMPLEMENTATION>,

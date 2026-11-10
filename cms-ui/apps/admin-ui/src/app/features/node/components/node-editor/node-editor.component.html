@@ -174,5 +174,27 @@
         </div>
       </gtx-tab>
     }
+
+    <gtx-tab
+      [id]="Tabs.PORTAL_IMPLEMENTATIONS"
+      gtxDetailTabLink
+      [title]="'portal_implementation.portalImplementation_plural' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [title]="'node.title_node_portal_implementations_of_entity' | gtxI18n: { entityName: entity?.name }"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
+        <div class="gtx-entity-details-tab-content-body">
+          @if (entity && editorTab === Tabs.PORTAL_IMPLEMENTATIONS) {
+            <gtx-portal-implementation-table
+              [nodeId]="entity.masterNodeId || entity.id"
+              [isMasterNode]="!isChildNode"
+              [showSearch]="true"
+            ></gtx-portal-implementation-table>
+          }
+        </div>
+      </div>
+    </gtx-tab>
   </gtx-tabs>
 </div>

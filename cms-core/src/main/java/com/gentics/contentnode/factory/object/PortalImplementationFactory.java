@@ -68,6 +68,23 @@ public class PortalImplementationFactory extends AbstractFactory {
 		super();
 	}
 
+	/**
+	 * Get the Portal Implementation with the given local ID, global ID or keyword
+	 * @param idOrKeyword local ID, global ID or keyword
+	 * @return Portal Implementation or null, if not found
+	 * @throws NodeException
+	 */
+	public static PortalImplementation get(String idOrKeyword) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		PortalImplementation impl = t.getObject(PortalImplementation.class, idOrKeyword);
+		if (impl != null) {
+			return impl;
+		}
+		Integer id = DBUtils.select("SELECT id FROM " + C.Tables.PORTAL_IMPLEMENTATION + " WHERE keyword = ?", st -> st.setString(1, idOrKeyword),
+				rs -> rs.next() ? rs.getInt("id") : null);
+		return id != null ? t.getObject(PortalImplementation.class, id) : null;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends NodeObject> T createObject(FactoryHandle handle, Class<T> clazz) throws NodeException {

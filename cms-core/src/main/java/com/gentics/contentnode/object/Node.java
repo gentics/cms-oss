@@ -690,6 +690,13 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	List<ObjectTagDefinition> getObjectTagDefinitions() throws NodeException;
 
 	/**
+	 * Get the list of Portal Implementations assigned to this node (for channels, the Portal Implementations assigned to the master node)
+	 * @return list of Portal Implementations assigned to this node
+	 * @throws NodeException
+	 */
+	List<PortalImplementation> getPortalImplementations() throws NodeException;
+
+	/**
 	 * Get the contentrepository for the node
 	 * @return contentrepository for the node
 	 * @throws NodeException
@@ -1008,6 +1015,20 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	 * @throws NodeException
 	 */
 	void removeObjectTagDefinition(ObjectTagDefinition def) throws NodeException;
+
+	/**
+	 * Assign the Portal Implementation to the node (for channels, the Portal Implementation is assigned to the master node)
+	 * @param portalImplementation Portal Implementation
+	 * @throws NodeException
+	 */
+	void addPortalImplementation(PortalImplementation portalImplementation) throws NodeException;
+
+	/**
+	 * Remove the Portal Implementation from the node (for channels, the Portal Implementation is removed from the master node)
+	 * @param portalImplementation Portal Implementation
+	 * @throws NodeException
+	 */
+	void removePortalImplementation(PortalImplementation portalImplementation) throws NodeException;
 
 	/**
 	 * Get the mesh project, this node publishes into

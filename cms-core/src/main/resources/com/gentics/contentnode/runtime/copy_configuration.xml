@@ -815,6 +815,12 @@
 			<ref target="cr_fragment" deepcopy="false" foreigndeepcopy="true" />
 		</references>
 	</table>
+	<table name="node_portal_implementation" type="cross" idcol="node_id,portal_implementation_id">
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="portal_implementation" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+	</table>
 	<table name="form">
 		<restrict>"${export}" = "yes"</restrict>
 		<properties>

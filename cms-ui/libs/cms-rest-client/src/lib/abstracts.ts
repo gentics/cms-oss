@@ -913,6 +913,10 @@ export interface AbstractNodeAPI extends BasicAPI {
     listObjectProperties: (id: number | string, options?: ObjectPropertyListOptions) => ObjectPropertyListResponse;
     assignObjectProperty: (id: number | string, opId: number | string) => Response;
     unassignObjectProperty: (id: number | string, opId: number | string) => Response;
+
+    listPortalImplementations: (id: number | string, options?: PortalImplementationListOptions) => PortalImplementationListResponse;
+    assignPortalImplementation: (id: number | string, portalImplementationId: number | string) => Response;
+    unassignPortalImplementation: (id: number | string, portalImplementationId: number | string) => Response;
 }
 
 export interface AbstractObjectPropertyAPI extends BasicAPI {

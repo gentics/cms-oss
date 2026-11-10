@@ -291,6 +291,7 @@ public class PortalImplementationSynchronizer extends AbstractSynchronizer<Porta
 
 	@Override
 	protected void assign(PortalImplementation object, Node node, boolean isNew) throws NodeException {
-		// Portal Implementations are not assigned to nodes
+		// Portal Implementations contained in a package are assigned to all nodes, the package is assigned to
+		node.addPortalImplementation(object);
 	}
 }

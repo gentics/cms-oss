@@ -10,7 +10,10 @@ import { EntityManagerService } from '../entity-manager';
 import { PortalImplementationOperations } from '../operations';
 
 export interface PortalImplementationTableLoaderOptions {
+    /** Load the portal implementations contained in the package */
     packageName?: string;
+    /** Load the portal implementations assigned to the node */
+    nodeId?: number;
 }
 
 @Injectable()
@@ -44,6 +47,8 @@ export class PortalImplementationTableLoaderService
 
         if (additionalOptions?.packageName) {
             loader = this.api.devTools.getPortalImplementations(additionalOptions.packageName, loadOptions);
+        } else if (additionalOptions?.nodeId) {
+            loader = this.api.node.getNodePortalImplementations(additionalOptions.nodeId, loadOptions);
         } else {
             loader = this.api.portalImplementations.getPortalImplementations(loadOptions);
         }
@@ -75,5 +80,13 @@ export class PortalImplementationTableLoaderService
 
     removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
         return this.operations.removeFromDevTool(devToolPackage, entityId);
+    }
+
+    addToNode(nodeId: number, entityId: string | number): Observable<void> {
+        return this.operations.addToNode(nodeId, entityId);
+    }
+
+    removeFromNode(nodeId: number, entityId: string | number): Observable<void> {
+        return this.operations.removeFromNode(nodeId, entityId);
     }
 }

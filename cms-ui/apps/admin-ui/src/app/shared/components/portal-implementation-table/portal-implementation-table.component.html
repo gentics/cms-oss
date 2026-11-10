@@ -8,8 +8,21 @@
   ></gtx-search-bar>
 }
 
-@if (!hideActions || packageName) {
+@if (!hideActions || packageName || nodeId) {
   <div class="entity-table-actions-bar">
+    @if (nodeId) {
+      <gtx-button
+        class="table-action-button"
+        data-action="assign-to-node"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || !isMasterNode"
+        (click)="handleAssignToNode()"
+        >
+        <icon left>link</icon> {{ 'portal_implementation.assign_portalImplementations_to_node' | gtxI18n }}
+      </gtx-button>
+    }
     @if (packageName) {
       <gtx-button
         class="table-action-button"

@@ -70,6 +70,7 @@ export enum NodeDetailTabs {
     FORMS = 'forms',
     LANGUAGES = 'languages',
     PACKAGES = 'packages',
+    PORTAL_IMPLEMENTATIONS = 'portal-implementations',
 }
 
 export enum ObjectPropertyDetailTabs {

@@ -94,6 +94,7 @@ import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.OpResult;
 import com.gentics.contentnode.object.OpResult.Status;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
@@ -6125,6 +6126,44 @@ public class FolderFactory extends AbstractFactory {
 				Transaction t = TransactionManager.getCurrentTransaction();
 
 				return t.getObjects(ObjectTagDefinition.class, loadObjectTagDefinitionIds());
+			}
+		}
+
+		@Override
+		public List<PortalImplementation> getPortalImplementations() throws NodeException {
+			if (isChannel()) {
+				return getMaster().getPortalImplementations();
+			} else {
+				Transaction t = TransactionManager.getCurrentTransaction();
+				Set<Integer> ids = DBUtils.select("SELECT portal_implementation_id id FROM " + C.Tables.NODE_PORTAL_IMPLEMENTATION + " WHERE node_id = ?",
+						st -> st.setInt(1, getId()), DBUtils.IDS);
+				return t.getObjects(PortalImplementation.class, ids);
+			}
+		}
+
+		@Override
+		public void addPortalImplementation(PortalImplementation portalImplementation) throws NodeException {
+			if (isChannel()) {
+				getMaster().addPortalImplementation(portalImplementation);
+			} else {
+				DBUtils.executeStatement("INSERT IGNORE INTO " + C.Tables.NODE_PORTAL_IMPLEMENTATION + " (node_id, portal_implementation_id) VALUES (?, ?)",
+						Transaction.UPDATE_STATEMENT, st -> {
+							st.setInt(1, getId());
+							st.setInt(2, portalImplementation.getId());
+						});
+			}
+		}
+
+		@Override
+		public void removePortalImplementation(PortalImplementation portalImplementation) throws NodeException {
+			if (isChannel()) {
+				getMaster().removePortalImplementation(portalImplementation);
+			} else {
+				DBUtils.executeStatement("DELETE FROM " + C.Tables.NODE_PORTAL_IMPLEMENTATION + " WHERE node_id = ? AND portal_implementation_id = ?",
+						Transaction.DELETE_STATEMENT, st -> {
+							st.setInt(1, getId());
+							st.setInt(2, portalImplementation.getId());
+						});
 			}
 		}
 

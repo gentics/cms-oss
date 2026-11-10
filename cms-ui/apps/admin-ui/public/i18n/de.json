@@ -203,6 +203,7 @@
         "title_node_features_of_entity": "Features von „{{ entityName }}“",
         "title_forms_of_entity": "Formulartypen in „{{ entityName }}“",
         "title_node_packages_of_entity": "Node „{{ entityName }}“ zugewiesene Pakete",
+        "title_node_portal_implementations_of_entity": "Node „{{ entityName }}“ zugewiesene Portal Implementierungen",
         "title_publishing": "Publizierung",
         "title_publishing_of_entity": "Publizierungseinstellungen von „{{ entityName }}“",
         "title_url_rendering": "URL Rendering",
@@ -750,7 +751,11 @@
         "info_selected_portalImplementation": "{{amountSelected}} von {{amountTotal}} Portal Implementierungen ausgewählt",
         "keyword": "Schlüsselwort",
         "name": "Name",
-        "type": "Typ"
+        "type": "Typ",
+        "assign_portalImplementations_to_node": "Portal Implementierungen zu Node zuweisen",
+        "remove_portalImplementations_from_node": "Portal Implementierungen von Node entfernen",
+        "portalImplementation_successfully_assigned_to_node": "Portal Implementierung {{name}} erfolgreich zu Node zugewiesen",
+        "portalImplementation_successfully_removed_from_node": "Portal Implementierung {{name}} erfolgreich von Node entfernt"
     },
     "portalImplementation": {
         "portalImplementation_plural": "Portal Implementierungen"

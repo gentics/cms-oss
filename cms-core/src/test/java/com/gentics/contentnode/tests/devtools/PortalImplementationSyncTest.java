@@ -2,6 +2,7 @@ package com.gentics.contentnode.tests.devtools;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -46,6 +47,7 @@ import com.gentics.contentnode.devtools.WatchServiceWatcher;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.log.ActionLogger;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.PortalImplementationFile;
@@ -271,6 +273,40 @@ public class PortalImplementationSyncTest {
 		}
 		operate(t -> assertThat(filesInCms(t.getObject(PortalImplementation.class, impl.getId()))).as("Files in CMS after deletion")
 				.containsOnlyKeys("index.php", "assets/style.css"));
+	}
+
+	/**
+	 * Test that assigning a package to a node assigns the contained Portal Implementations to the node
+	 * @throws Exception
+	 */
+	@Test
+	public void testAssignPackageToNode() throws Exception {
+		Synchronizer.disable();
+		PortalImplementation impl = createWithFiles();
+		PortalImplementation other = createWithFiles();
+		operate(() -> pack.synchronize(impl, true));
+		Node node = supply(() -> createNode());
+
+		operate(() -> Synchronizer.addPackage(node, PACKAGE_NAME));
+
+		operate(t -> assertThat(t.getObject(node).getPortalImplementations()).as("Portal Implementations assigned to the node").containsOnly(impl));
+	}
+
+	/**
+	 * Test that adding a Portal Implementation to a package, which is assigned to a node, assigns the Portal Implementation to the node
+	 * @throws Exception
+	 */
+	@Test
+	public void testAddToPackageAssignedToNode() throws Exception {
+		Synchronizer.disable();
+		Node node = supply(() -> createNode());
+		operate(() -> Synchronizer.addPackage(node, PACKAGE_NAME));
+		PortalImplementation impl = createWithFiles();
+		operate(t -> assertThat(t.getObject(node).getPortalImplementations()).as("Portal Implementations assigned before adding to the package").isEmpty());
+
+		operate(() -> pack.synchronize(impl, true));
+
+		operate(t -> assertThat(t.getObject(node).getPortalImplementations()).as("Portal Implementations assigned after adding to the package").containsOnly(impl));
 	}
 
 	/**

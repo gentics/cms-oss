@@ -27,6 +27,8 @@ public abstract class C {
 		public static final String PORTAL_IMPLEMENTATION = "portal_implementation";
 
 		public static final String PORTAL_IMPLEMENTATION_FILE = "portal_implementation_file";
+
+		public static final String NODE_PORTAL_IMPLEMENTATION = "node_portal_implementation";
 		public final static String DS_OBJ = "ds_obj";
 		public final static String DS = "ds";
 		public final static String VALUE = "value";

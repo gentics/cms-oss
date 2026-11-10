@@ -707,6 +707,10 @@ export class GCMSRestClient implements GCMSRootAPI {
         listObjectProperties: (id, options) => this.executeMappedJsonRequest(GET, `/node/${id}/objectproperties`, null, options),
         assignObjectProperty: (id, opId) => this.executeMappedJsonRequest(PUT, `/node/${id}/objectproperties/${opId}`),
         unassignObjectProperty: (id, opId) => this.executeMappedJsonRequest(DELETE, `/node/${id}/objectproperties/${opId}`),
+
+        listPortalImplementations: (id, options) => this.executeMappedJsonRequest(GET, `/node/${id}/portalimplementations`, null, options),
+        assignPortalImplementation: (id, portalImplementationId) => this.executeMappedJsonRequest(PUT, `/node/${id}/portalimplementations/${portalImplementationId}`),
+        unassignPortalImplementation: (id, portalImplementationId) => this.executeMappedJsonRequest(DELETE, `/node/${id}/portalimplementations/${portalImplementationId}`),
     } as const;
 
     public objectProperty: GCMSObjectPropertyAPI = {

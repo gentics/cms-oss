@@ -78,6 +78,7 @@ import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.PortalImplementationFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.Construct;
@@ -1798,21 +1799,7 @@ public class PackageResourceImpl implements PackageResource {
 	 * @throws NodeException
 	 */
 	protected PortalImplementation getPortalImplementation(String portalImplementation) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		PortalImplementation nodeObject = t.getObject(PortalImplementation.class, portalImplementation);
-		if (nodeObject != null) {
-			return nodeObject;
-		}
-		int portalImplementationId = DBUtils.select("SELECT id FROM " + C.Tables.PORTAL_IMPLEMENTATION + " WHERE keyword = ?", pst -> {
-			pst.setString(1, portalImplementation);
-		}, rs -> {
-			if (rs.next()) {
-				return rs.getInt("id");
-			} else {
-				return 0;
-			}
-		});
-		nodeObject = t.getObject(PortalImplementation.class, portalImplementationId);
+		PortalImplementation nodeObject = PortalImplementationFactory.get(portalImplementation);
 		if (nodeObject == null) {
 			throw new EntityNotFoundException(I18NHelper.get("portal_implementation.notfound", portalImplementation));
 		}

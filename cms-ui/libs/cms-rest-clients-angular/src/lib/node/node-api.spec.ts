@@ -234,6 +234,24 @@ describe('NodeApi', () => {
         expect(apiBase.put).toHaveBeenCalledWith(`node/${NODE_ID}/constructs/${construct}`, undefined);
     });
 
+    it('getNodePortalImplementations() sends the correct GET request', () => {
+        const options = { pageSize: 10 };
+        nodeApi.getNodePortalImplementations(NODE_ID, options);
+        expect(apiBase.get).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations`, options);
+    });
+
+    it('removeNodePortalImplementation() sends the correct DELETE request', () => {
+        const portalImplementation = 4;
+        nodeApi.removeNodePortalImplementation(NODE_ID, portalImplementation);
+        expect(apiBase.delete).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations/${portalImplementation}`);
+    });
+
+    it('addNodePortalImplementation() sends the correct PUT request', () => {
+        const portalImplementation = 4;
+        nodeApi.addNodePortalImplementation(NODE_ID, portalImplementation);
+        expect(apiBase.put).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations/${portalImplementation}`, undefined);
+    });
+
     it('removeNodeTemplate() sends the correct DELETE request', () => {
         const template = 1;
         nodeApi.removeNodeTemplate(NODE_ID, template);

@@ -378,7 +378,7 @@ export function getExampleFormData(
         ],
         data: {
             adminEmailAddress: 'test@test.at',
-            successUrlI18n: {
+            successUrl: {
                 de: 'https://gentics.com/',
             },
             adminEmailSubject: {

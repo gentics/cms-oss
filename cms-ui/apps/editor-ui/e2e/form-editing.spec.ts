@@ -11,6 +11,7 @@ import {
     EXT_FORM_ONE,
     FORM_ONE,
     FORM_THREE,
+    FormImportData,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -27,7 +28,7 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { expect, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import {
     editorAction,
     fgAddBlock,
@@ -35,6 +36,7 @@ import {
     fgFindDropContainer,
     fgFindEditSidebar,
     fgFindElement,
+    fgHoldDrag,
     fgMoveElement,
     fgMoveElementToPage,
     fgSelectElementTab,
@@ -127,6 +129,15 @@ test.describe('Form Editing', () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
             await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
+        });
+    }
+
+    async function saveForm(page: Page): Promise<FormSaveRequest> {
+        return test.step('Save Form', async () => {
+            const saveReq = page.waitForResponse(matchRequest('PUT', '/rest/form/*'));
+            await editorAction(page, 'save');
+            const res = await saveReq;
+            return res.request().postDataJSON() as FormSaveRequest;
         });
     }
 
@@ -510,6 +521,207 @@ test.describe('Form Editing', () => {
         });
     });
 
+    test.describe('Aggregate Schema Handling', () => {
+        const FULL_PERMISSIONS = (): ImportPermissions[] => [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                ],
+            },
+        ];
+
+        async function openFormEditor(page: Page): Promise<Locator> {
+            await test.step('Open Editor', async () => {
+                const list = findList(page, ITEM_TYPE_FORM);
+                const item = findItem(list, IMPORTER.get(FORM_THREE).id);
+                await itemAction(item, 'edit');
+            });
+
+            const grid = page.locator('content-frame gtx-form-grid');
+            await expect(fgFindElement(grid, 'agg1')).toBeVisible();
+            return grid;
+        }
+
+        test('should add the schema of a new control to the aggregate it is dropped into', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20336',
+            }],
+        }, async ({ page }) => {
+            await setupWithPermissions(page, FULL_PERMISSIONS());
+            const grid = await openFormEditor(page);
+            let newId: string;
+
+            await test.step('Add a control into agg1', async () => {
+                const el = await fgAddControl(grid, 'number', { containerId: 'agg1', position: 0 });
+                await expect(el).toHaveCount(1);
+                await expect(el).toHaveAttribute('data-is-control', 'true');
+                newId = await el.getAttribute('data-element-id');
+
+                await expect(fgFindDropContainer(grid, 'agg1').locator('> .form-item')).toHaveCount(2);
+                await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(3);
+            });
+
+            await test.step('Save and Validate', async () => {
+                const req = await saveForm(page);
+                const rootProps = req.data.schema?.properties || {};
+                const aggProps = rootProps.agg1?.properties || {};
+
+                // The schema has to be nested within the aggregate
+                expect(aggProps[newId]?.type).toBe('number');
+                expect(Object.keys(aggProps).sort()).toEqual(['input1', newId].sort());
+
+                // And must not be added to the root level
+                expect(rootProps[newId]).toBeUndefined();
+                expect(Object.keys(rootProps).sort()).toEqual(['agg1', 'agg2', 'input1']);
+
+                const aggEl = req.data['ui-schema']?.pages?.[0]?.elements?.find((el) => el.id === 'agg1');
+                expect(aggEl?.elements?.map((el) => el.id)).toEqual([newId, 'group1']);
+            });
+        });
+
+        test('should move the schema of a control when moving it into and out of an aggregate', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20336',
+            }],
+        }, async ({ page }) => {
+            await setupWithPermissions(page, FULL_PERMISSIONS());
+            const grid = await openFormEditor(page);
+            let newId: string;
+
+            await test.step('Add a control to the root container', async () => {
+                const el = await fgAddControl(grid, 'number', { position: 0 });
+                await expect(el).toHaveCount(1);
+                newId = await el.getAttribute('data-element-id');
+                await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(4);
+            });
+
+            await test.step('Move the control into agg1', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, newId), { containerId: 'agg1', position: 0 });
+
+                await expect(fgFindElement(grid, newId, 'agg1')).toHaveCount(1);
+                await expect(fgFindElement(grid, newId)).toHaveCount(0);
+                await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(3);
+            });
+
+            await test.step('Validate the schema was moved into agg1', async () => {
+                const req = await saveForm(page);
+                const rootProps = req.data.schema?.properties || {};
+                const aggProps = rootProps.agg1?.properties || {};
+
+                expect(aggProps[newId]?.type).toBe('number');
+                expect(rootProps[newId]).toBeUndefined();
+            });
+
+            await test.step('Move the control back out of agg1', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, newId, 'agg1'), { position: 0 });
+
+                await expect(fgFindElement(grid, newId)).toHaveCount(1);
+                await expect(fgFindElement(grid, newId, 'agg1')).toHaveCount(0);
+                await expect(fgFindDropContainer(grid, 'agg1').locator('> .form-item')).toHaveCount(1);
+            });
+
+            await test.step('Validate the schema was moved back to the root', async () => {
+                const req = await saveForm(page);
+                const rootProps = req.data.schema?.properties || {};
+                const aggProps = rootProps.agg1?.properties || {};
+
+                expect(rootProps[newId]?.type).toBe('number');
+                expect(aggProps[newId]).toBeUndefined();
+                expect(Object.keys(aggProps)).toEqual(['input1']);
+            });
+        });
+
+        test('should not modify the schema when moving a block into an aggregate', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20336',
+            }],
+        }, async ({ page }) => {
+            await setupWithPermissions(page, FULL_PERMISSIONS());
+            const grid = await openFormEditor(page);
+            let newId: string;
+
+            await test.step('Add a block to the root container', async () => {
+                const el = await fgAddBlock(grid, 'spacer', { position: 0 });
+                await expect(el).toHaveCount(1);
+                await expect(el).toHaveAttribute('data-is-block', 'true');
+                await expect(el).not.toHaveAttribute('data-is-control', 'true');
+                newId = await el.getAttribute('data-element-id');
+            });
+
+            await test.step('Move the block into agg1', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, newId), { containerId: 'agg1', position: 0 });
+
+                await expect(fgFindElement(grid, newId, 'agg1')).toHaveCount(1);
+                await expect(fgFindElement(grid, newId)).toHaveCount(0);
+            });
+
+            await test.step('Save and Validate', async () => {
+                const req = await saveForm(page);
+                const rootProps = req.data.schema?.properties || {};
+
+                // Blocks have no schema, therefore nothing should've been added/moved
+                expect(Object.keys(rootProps).sort()).toEqual(['agg1', 'agg2', 'input1']);
+                expect(Object.keys(rootProps.agg1?.properties || {})).toEqual(['input1']);
+
+                const aggEl = req.data['ui-schema']?.pages?.[0]?.elements?.find((el) => el.id === 'agg1');
+                expect(aggEl?.elements?.map((el) => el.id)).toEqual([newId, 'group1']);
+            });
+        });
+
+        test('should block dragging elements in preview mode', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20336',
+            }],
+        }, async ({ page }) => {
+            await setupWithPermissions(page, FULL_PERMISSIONS());
+
+            await test.step('Open Preview', async () => {
+                const list = findList(page, ITEM_TYPE_FORM);
+                const item = findItem(list, IMPORTER.get(FORM_THREE).id);
+                await item.locator('.item-name a').click();
+            });
+
+            const grid = page.locator('content-frame gtx-form-grid');
+            const containers = grid.locator('.editor-main .editor-drop-container');
+            await expect(fgFindElement(grid, 'input1')).toBeVisible();
+
+            await test.step('Every container should be blocked while dragging', async () => {
+                await fgHoldDrag(grid, fgFindElement(grid, 'input1'), async () => {
+                    // root, agg1, group1, agg2
+                    await expect(containers).toHaveCount(4);
+                    for (const container of await containers.all()) {
+                        await expect(container).toContainClass('drag-blocked');
+                    }
+                });
+            });
+
+            await test.step('Moving an element into an aggregate should not be applied', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'agg2'), { containerId: 'agg1' });
+
+                await expect(fgFindDropContainer(grid).locator('> .form-item')).toHaveCount(3);
+                await expect(fgFindDropContainer(grid, 'agg1').locator('> .form-item')).toHaveCount(1);
+                await expect(fgFindElement(grid, 'agg2')).toHaveCount(1);
+            });
+
+            await test.step('Sorting elements should not be applied', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'agg2'), { position: 0 });
+
+                const ids = await fgFindDropContainer(grid).locator('> .form-item')
+                    .evaluateAll((els) => els.map((el) => el.getAttribute('data-element-id')));
+                expect(ids).toEqual(['input1', 'agg1', 'agg2']);
+            });
+        });
+    });
+
     test.describe('External Forms', () => {
         test.beforeEach(async () => {
             const node = IMPORTER.get(NODE_MINIMAL);
@@ -629,6 +841,155 @@ test.describe('Form Editing', () => {
                 expect(block.description).toEqual({
                     [LANGUAGE_EN]: DESCRIPTION_TEXT,
                 });
+            });
+        });
+
+        test('should only allow sorting controls within their own context in restricted mode', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20336',
+            }],
+        }, async ({ page }) => {
+            const EXT_FORM_AGG: FormImportData = {
+                [IMPORT_TYPE]: ITEM_TYPE_FORM,
+                [IMPORT_ID]: `form_${NAMESPACE}_ext_aggregate`,
+
+                nodeId: NODE_MINIMAL[IMPORT_ID],
+                folderId: NODE_MINIMAL[IMPORT_ID],
+
+                languages: [LANGUAGE_EN],
+
+                name: 'Ext Form Aggregate',
+                description: 'External form with an aggregate',
+                formType: 'external',
+                data: {
+                    schema: {
+                        key: '',
+                        version: '',
+                        properties: {
+                            input1: { type: 'string' },
+                            input2: { type: 'string' },
+                            agg1: {
+                                type: 'aggregate',
+                                isList: true,
+                                properties: {
+                                    inputA: { type: 'string' },
+                                },
+                            },
+                        },
+                    },
+                    'ui-schema': {
+                        key: '',
+                        version: '',
+                        pages: [{
+                            pagename: { en: 'Example' },
+                            elements: [
+                                {
+                                    id: 'input1',
+                                    label: { en: 'Input 1' },
+                                    type: 'property',
+                                    uiSchemaPage: 0,
+                                    formGridOptions: { type: 'string' },
+                                },
+                                {
+                                    id: 'input2',
+                                    label: { en: 'Input 2' },
+                                    type: 'property',
+                                    uiSchemaPage: 0,
+                                    formGridOptions: { type: 'string' },
+                                },
+                                {
+                                    id: 'agg1',
+                                    label: { en: 'Aggregate 1' },
+                                    type: 'aggregate',
+                                    uiSchemaPage: 0,
+                                    formGridOptions: { type: 'aggregate' },
+                                    elements: [{
+                                        id: 'inputA',
+                                        label: { en: 'Agg Input A' },
+                                        type: 'property',
+                                        uiSchemaPage: 0,
+                                        formGridOptions: { type: 'string' },
+                                    }],
+                                },
+                            ],
+                        }],
+                    },
+                },
+            };
+
+            await IMPORTER.importData([EXT_FORM_AGG]);
+            const EDITING_FORM = IMPORTER.get(EXT_FORM_AGG);
+
+            await setupWithPermissions(page, [
+                {
+                    type: AccessControlledType.NODE,
+                    instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                    subObjects: true,
+                    perms: [
+                        { type: GcmsPermission.READ, value: true },
+                        { type: GcmsPermission.VIEW_FORM, value: true },
+                        { type: GcmsPermission.UPDATE_FORM, value: true },
+                    ],
+                },
+            ]);
+
+            await test.step('Open Editor', async () => {
+                const list = findList(page, ITEM_TYPE_FORM);
+                const item = findItem(list, EDITING_FORM.id);
+                await itemAction(item, 'edit');
+            });
+
+            const grid = page.locator('content-frame gtx-form-grid');
+            const rootItems = fgFindDropContainer(grid).locator('> .form-item');
+            await expect(fgFindElement(grid, 'agg1')).toBeVisible();
+
+            const getRootOrder = () => rootItems.evaluateAll((els) => els.map((el) => el.getAttribute('data-element-id')));
+
+            await test.step('Only the own context should be available while dragging a root control', async () => {
+                await fgHoldDrag(grid, fgFindElement(grid, 'input1'), async () => {
+                    await expect(fgFindDropContainer(grid)).not.toContainClass('drag-blocked');
+                    await expect(fgFindDropContainer(grid, 'agg1')).toContainClass('drag-blocked');
+                });
+            });
+
+            await test.step('Should allow sorting controls within the same context', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'input2'), { position: 0 });
+
+                await expect(rootItems).toHaveCount(3);
+                expect(await getRootOrder()).toEqual(['input2', 'input1', 'agg1']);
+            });
+
+            await test.step('Should block moving a root control into the aggregate', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'input1'), { containerId: 'agg1' });
+
+                await expect(rootItems).toHaveCount(3);
+                await expect(fgFindDropContainer(grid, 'agg1').locator('> .form-item')).toHaveCount(1);
+                await expect(fgFindElement(grid, 'input1')).toHaveCount(1);
+            });
+
+            await test.step('Should block moving a nested control out of the aggregate', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'inputA', 'agg1'), { position: 0 });
+
+                await expect(rootItems).toHaveCount(3);
+                await expect(fgFindElement(grid, 'inputA', 'agg1')).toHaveCount(1);
+                await expect(fgFindElement(grid, 'inputA')).toHaveCount(0);
+            });
+
+            await test.step('Save and Validate', async () => {
+                // Hovering over the aggregate (while being blocked from entering it) may re-sort
+                // the dragged element within its own container, so compare against the displayed order.
+                const displayedOrder = await getRootOrder();
+                const req = await saveForm(page);
+                const rootProps = req.data.schema?.properties || {};
+
+                // The schema itself must not have been changed
+                expect(Object.keys(rootProps).sort()).toEqual(['agg1', 'input1', 'input2']);
+                expect(Object.keys(rootProps.agg1?.properties || {})).toEqual(['inputA']);
+
+                const elements = req.data['ui-schema']?.pages?.[0]?.elements || [];
+                expect(elements.map((el) => el.id)).toEqual(displayedOrder);
+                expect(elements.find((el) => el.id === 'agg1')?.elements?.map((el) => el.id)).toEqual(['inputA']);
             });
         });
     });

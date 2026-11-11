@@ -1,0 +1,45 @@
+{
+  "globalId" : "a1f6.ae97d304-c975-11f1-a7e5-525400736ed8",
+  "keyword" : "test_form",
+  "name" : {
+    "de" : "[Test] Formular",
+    "en" : "[Test] Form"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : false,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "a1f6.fe9b74c2-dde9-11f1-afc4-1e2b46ff8f63",
+    "name" : {
+      "de" : "Formular",
+      "en" : "Form"
+    },
+    "keyword" : "form",
+    "editable" : true,
+    "typeId" : 42,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

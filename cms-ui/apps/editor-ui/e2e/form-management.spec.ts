@@ -503,7 +503,7 @@ test.describe('Form Management', () => {
         const list = findList(page, ITEM_TYPE_FORM);
 
         await test.step('Setup display fields', async () => {
-            const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
+            const listOptions = await openContext(list.locator('gtx-form-list-header [data-action="open-list-context"]'));
             await listOptions.locator('[data-action="select-display-fields"]').click();
             const modal = page.locator('display-field-selector');
             await modal.locator('gtx-contents-list-item[data-id="usage"] label').click();

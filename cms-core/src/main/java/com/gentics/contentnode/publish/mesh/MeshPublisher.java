@@ -686,6 +686,11 @@ public class MeshPublisher implements AutoCloseable {
 	protected MeshMicronodePublisher micronodePublisher;
 
 	/**
+	 * Publisher for portal implementations
+	 */
+	protected MeshPortalImplementationPublisher portalImplementationPublisher;
+
+	/**
 	 * Map containing the IDs of all objects, which were written to Mesh during the publish process (per nodeId and objectType)
 	 */
 	protected Map<Integer, Map<Integer, Set<Integer>>> written = Collections.synchronizedMap(new HashMap<>());
@@ -1222,6 +1227,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		Transaction t = TransactionManager.getCurrentTransaction();
 		micronodePublisher = new MeshMicronodePublisher(this);
+		portalImplementationPublisher = new MeshPortalImplementationPublisher(this);
 		renderResult = t.getRenderResult();
 
 		this.cr = cr;
@@ -1569,6 +1575,115 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Check the portal implementations assigned to the nodes publishing into the ContentRepository.
+	 * This must be called after {@link #checkSchemasAndProjects(boolean, boolean)} was called successfully.
+	 * For every project and branch, the portal implementations assigned to the nodes publishing into the branch are checked.
+	 * If repair is true, missing or changed portal implementations are written as children of the project root node, and
+	 * portal implementation nodes which are not assigned anymore are removed.
+	 * @param repair true to repair, false to only check
+	 * @return true, if the portal implementations are valid (or were repaired)
+	 * @throws NodeException
+	 */
+	public boolean checkPortalImplementations(boolean repair) throws NodeException {
+		info(String.format("%s portal implementations in '%s'", repair ? "Repair" : "Check", cr.getName()));
+
+		// collect the nodes publishing into the CR, grouped by project and branch
+		Map<MeshProject, Map<String, Set<Node>>> nodesPerProjectAndBranch = new HashMap<>();
+		Map<String, VersioningParameters> branchParameters = new HashMap<>();
+		for (Node node : cr.getNodes()) {
+			if (node.isPublishDisabled() || !node.doPublishContentmap()) {
+				continue;
+			}
+			MeshProject project = getProject(node);
+			VersioningParameters branch = project.enforceBranch(node.getId());
+			String branchKey = String.format("%s|%s", project.name, branch != null ? branch.getBranch() : "");
+			branchParameters.put(branchKey, branch);
+			nodesPerProjectAndBranch.computeIfAbsent(project, key -> new HashMap<>()).computeIfAbsent(branchKey, key -> new HashSet<>()).add(node);
+		}
+
+		boolean valid = true;
+		for (Map.Entry<MeshProject, Map<String, Set<Node>>> projectEntry : nodesPerProjectAndBranch.entrySet()) {
+			for (Map.Entry<String, Set<Node>> branchEntry : projectEntry.getValue().entrySet()) {
+				valid &= portalImplementationPublisher.check(projectEntry.getKey(), branchParameters.get(branchEntry.getKey()), branchEntry.getValue(),
+						repair);
+			}
+		}
+		return valid;
+	}
+
+	/**
+	 * Check whether the schema with given name exists and is valid. If repair is true, a missing schema will be created and an invalid schema will be updated.
+	 * @param schemaName schema name
+	 * @param schemaMap map of existing schemas (will be updated with created/updated schemas)
+	 * @param createSupplier supplier for the request to create the schema
+	 * @param updateSupplier supplier for the request to update the schema
+	 * @param repair true to repair
+	 * @param success success flag, will be set to false, if the schema is not valid and not repaired
+	 * @throws NodeException
+	 */
+	protected void checkSchema(String schemaName, Map<String, SchemaResponse> schemaMap,
+			com.gentics.contentnode.etc.Supplier<SchemaCreateRequest> createSupplier,
+			com.gentics.contentnode.etc.Supplier<SchemaUpdateRequest> updateSupplier, boolean repair, AtomicBoolean success) throws NodeException {
+		SchemaResponse schema = schemaMap.get(schemaName);
+
+		if (schema == null) {
+			info(String.format("Did not find schema %s", schemaName));
+
+			if (repair) {
+				SchemaCreateRequest create = createSupplier.supply();
+
+				SchemaResponse createdSchema = client.createSchema(create).blockingGet();
+
+				info(String.format("Created schema %s", schemaName));
+				schemaMap.put(schemaName, createdSchema);
+			} else {
+				success.set(false);
+			}
+		} else {
+			SchemaUpdateRequest expectedSchema = updateSupplier.supply();
+
+			// diff the schema
+			SchemaResponse updatedSchema = client.diffSchema(schema.getUuid(), expectedSchema).toSingle().flatMap(diffResponse -> {
+				List<SchemaChangeModel> filteredChanges = Flowable.fromIterable(diffResponse.getChanges()).filter(getSchemaChangeFilter(expectedSchema, schema)).toList()
+						.blockingGet();
+				if (filteredChanges.isEmpty()) {
+					info(String.format("Schema %s is valid", schemaName));
+					// do nothing
+					return Single.just(schema);
+				} else if (repair) {
+					info(String.format("Schema %s is not valid and will be updated", schemaName));
+					filteredChanges.forEach(change -> logger.warn(getReadableInfo(change)));
+					// update the schema
+					return client.updateSchema(schema.getUuid(), expectedSchema, new SchemaUpdateParametersImpl().setUpdateAssignedBranches(false))
+							.toSingle().flatMap(r -> client.findSchemaByUuid(schema.getUuid()).toSingle());
+				} else {
+					info(String.format("Schema %s is not valid", schemaName));
+					filteredChanges.forEach(change -> logger.warn(getReadableInfo(change)));
+					success.set(false);
+
+					// validate schema
+					return client.validateSchema(expectedSchema).toSingle().map(resp -> {
+						switch (resp.getStatus()) {
+						case INVALID:
+							logger.warn(String.format("Schema validation failed: %s", resp.getMessage().getMessage()));
+							break;
+						case VALID:
+							logger.info("Schema validation succeeded");
+							break;
+						default:
+							logger.warn("Schema validation returned unknown status");
+							break;
+						}
+						return schema;
+					});
+				}
+			}).blockingGet();
+			schemaMap.put(schemaName, updatedSchema);
+		}
+		info("--");
+	}
+
+	/**
 	 * Check validity of Mesh Data
 	 * <ol>
 	 * <li>Check existence and validity of schemas</li>
@@ -1608,65 +1723,14 @@ public class MeshPublisher implements AutoCloseable {
 
 		// check whether all required schemas exist
 		for (int objectType : schemaNames.keySet()) {
-			String schemaName = getSchemaName(objectType);
-			SchemaResponse schema = schemaMap.get(schemaName);
-
-			if (schema == null) {
-				info(String.format("Did not find schema %s", schemaName));
-
-				if (repair) {
-					SchemaCreateRequest create = getSchema(objectType, new SchemaCreateRequest());
-
-					SchemaResponse createdSchema = client.createSchema(create).blockingGet();
-
-					info(String.format("Created schema %s", schemaName));
-					schemaMap.put(schemaName, createdSchema);
-				} else {
-					success.set(false);
-				}
-			} else {
-				SchemaUpdateRequest expectedSchema = getSchema(objectType, new SchemaUpdateRequest());
-
-				// diff the schema
-				SchemaResponse updatedSchema = client.diffSchema(schema.getUuid(), expectedSchema).toSingle().flatMap(diffResponse -> {
-					List<SchemaChangeModel> filteredChanges = Flowable.fromIterable(diffResponse.getChanges()).filter(getSchemaChangeFilter(expectedSchema, schema)).toList()
-							.blockingGet();
-					if (filteredChanges.isEmpty()) {
-						info(String.format("Schema %s is valid", schemaName));
-						// do nothing
-						return Single.just(schema);
-					} else if (repair) {
-						info(String.format("Schema %s is not valid and will be updated", schemaName));
-						filteredChanges.forEach(change -> logger.warn(getReadableInfo(change)));
-						// update the schema
-						return client.updateSchema(schema.getUuid(), expectedSchema, new SchemaUpdateParametersImpl().setUpdateAssignedBranches(false))
-								.toSingle().flatMap(r -> client.findSchemaByUuid(schema.getUuid()).toSingle());
-					} else {
-						info(String.format("Schema %s is not valid", schemaName));
-						filteredChanges.forEach(change -> logger.warn(getReadableInfo(change)));
-						success.set(false);
-
-						// validate schema
-						return client.validateSchema(expectedSchema).toSingle().map(resp -> {
-							switch (resp.getStatus()) {
-							case INVALID:
-								logger.warn(String.format("Schema validation failed: %s", resp.getMessage().getMessage()));
-								break;
-							case VALID:
-								logger.info("Schema validation succeeded");
-								break;
-							default:
-								logger.warn("Schema validation returned unknown status");
-								break;
-							}
-							return schema;
-						});
-					}
-				}).blockingGet();
-				schemaMap.put(schemaName, updatedSchema);
-			}
-			info("--");
+			checkSchema(getSchemaName(objectType), schemaMap, () -> getSchema(objectType, new SchemaCreateRequest()),
+					() -> getSchema(objectType, new SchemaUpdateRequest()), repair, success);
 		}
+
+		// check the schema for portal implementations
+		checkSchema(portalImplementationPublisher.getSchemaName(), schemaMap,
+				() -> portalImplementationPublisher.getSchema(new SchemaCreateRequest()),
+				() -> portalImplementationPublisher.getSchema(new SchemaUpdateRequest()), repair, success);
 
 		micronodePublisher.init(checkMicroschemas, repair, success);
 
@@ -2324,8 +2388,9 @@ public class MeshPublisher implements AutoCloseable {
 		}
 
 		if (publishProcess) {
-			// remove root folders in alternative projects
-			Set<String> schemas = schemaNames.keySet().stream().map(this::getSchemaName).collect(Collectors.toSet());
+			// remove root folders (and portal implementations) in alternative projects
+			Set<String> schemas = schemaNames.keySet().stream().map(this::getSchemaName).collect(Collectors.toCollection(HashSet::new));
+			schemas.add(portalImplementationPublisher.getSchemaName());
 			for (MeshProject project : alternativeProjects) {
 				NodeListResponse nodeList = client.findNodeChildren(project.name, project.rootNodeUuid,
 						new GenericParametersImpl().setETag(false).setFields("schema", "uuid")).blockingGet();
@@ -4848,8 +4913,13 @@ public class MeshPublisher implements AutoCloseable {
 				Set<String> projectSchemas = client.findSchemas(currentProjectName).toSingle().retry(RETRY_HANDLER)
 						.blockingGet().getData().stream().map(SchemaResponse::getName).collect(Collectors.toSet());
 
+				List<String> requiredSchemaNames = new ArrayList<>();
 				for (int objectType : schemaNames.keySet()) {
-					String schemaName = getSchemaName(objectType);
+					requiredSchemaNames.add(getSchemaName(objectType));
+				}
+				requiredSchemaNames.add(portalImplementationPublisher.getSchemaName());
+
+				for (String schemaName : requiredSchemaNames) {
 					if (!projectSchemas.contains(schemaName)) {
 						if (repair) {
 							info(String.format("Assigning Schema %s to project %s", schemaName, name));
@@ -5092,7 +5162,8 @@ public class MeshPublisher implements AutoCloseable {
 			// check schema versions
 			BranchInfoSchemaList schemaInfoList = client.getBranchSchemaVersions(currentProjectName, branchUuid)
 					.toSingle().retry(RETRY_HANDLER).blockingGet();
-			Set<String> mySchemaNames = schemaNames.entrySet().stream().map(e -> getSchemaName(e.getKey())).collect(Collectors.toSet());
+			Set<String> mySchemaNames = schemaNames.entrySet().stream().map(e -> getSchemaName(e.getKey())).collect(Collectors.toCollection(HashSet::new));
+			mySchemaNames.add(portalImplementationPublisher.getSchemaName());
 			BranchInfoSchemaList updateList = new BranchInfoSchemaList();
 			for (BranchSchemaInfo schemaInfo : schemaInfoList.getSchemas()) {
 				SchemaResponse schema = schemaMap.get(schemaInfo.getName());

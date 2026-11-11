@@ -12,6 +12,8 @@ export const UNIQUE_ID_GLUE = '@';
 export const ATTR_CONTAINER_ID = 'data-drop-container-id';
 export const ATTR_ELEMENT_ID = 'data-element-id';
 export const ATTR_CONTEXT_ID = 'data-context-id';
+export const ATTR_ELEMENT_IS_CONTROL = 'data-is-control';
+export const ATTR_ELEMENT_IS_BLOCK = 'data-is-block';
 
 export interface FormGridClipboardData {
     element: FormElement;

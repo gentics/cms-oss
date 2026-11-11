@@ -43,6 +43,7 @@ export class FormPageManagerComponent {
     public readonly pageIndex = model.required<number>();
     public readonly elementMap = input.required<Record<string, FormElement>>();
     public readonly rootId = input.required<string>();
+    public readonly controlTypeNames = input.required<Set<string>>();
     /** Optional: required for schema cleanup when deleting pages. */
     public readonly schema = model<FormSchema | null>(null);
     public readonly mode = input<FormGridEditMode>(FormGridEditMode.NONE);
@@ -84,6 +85,8 @@ export class FormPageManagerComponent {
 
     public isDragBlocked = computed(() => {
         const moveData = this.elementMoving();
+        const mode = this.mode();
+        const controlTypeNames = this.controlTypeNames();
         const rootId = this.rootId();
         const elMap = this.elementMap();
 
@@ -95,7 +98,7 @@ export class FormPageManagerComponent {
             return false;
         }
 
-        return blockDragForElement(moveData, [], rootId, rootId, elMap);
+        return blockDragForElement(moveData, mode, controlTypeNames, [], rootId, rootId, elMap);
     });
 
     constructor(

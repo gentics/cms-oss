@@ -286,7 +286,7 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconSecondary: null,
     },
     'portal-implementations': {
-        matIconPrimary: 'web',
+        matIconPrimary: 'integration_instructions',
         matIconSecondary: null,
     },
     'template-management': {
@@ -414,7 +414,7 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconSecondary: null,
     },
     portalimplementationadmin: {
-        matIconPrimary: 'web',
+        matIconPrimary: 'integration_instructions',
         matIconSecondary: null,
     },
     tasktemplateadmin: {
@@ -496,7 +496,7 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconSecondary: null,
     },
     portalimplementation: {
-        matIconPrimary: 'web',
+        matIconPrimary: 'integration_instructions',
         matIconSecondary: null,
     },
     mesh: {

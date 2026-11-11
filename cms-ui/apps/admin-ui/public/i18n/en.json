@@ -722,11 +722,11 @@
         "select_node_overview_description": "Select a Node from which you want to view the Templates from"
     },
     "content_repository_fragment": {
-        "contentRepositoryFragment_singular": "CR Fragment",
-        "contentRepositoryFragment_plural": "CR Fragments",
-        "contentRepositoryFragment_successfully_added_to_package": "ContentRepository Fragment {{name}} successfully added to package",
-        "contentRepositoryFragment_successfully_removed_from_package": "ContentRepository Fragment {{name}} successfully removed from package",
-        "info_selected_contentRepositoryFragment": "{{amountSelected}} of {{amountTotal}} CR Fragments selected",
+        "content_repository_fragment_singular": "CR Fragment",
+        "content_repository_fragment_plural": "CR Fragments",
+        "content_repository_fragment_successfully_added_to_package": "ContentRepository Fragment {{name}} successfully added to package",
+        "content_repository_fragment_successfully_removed_from_package": "ContentRepository Fragment {{name}} successfully removed from package",
+        "info_selected_content_repository_fragment": "{{amountSelected}} of {{amountTotal}} CR Fragments selected",
         "globalId": "Global Id",
         "name": "Name"
     },

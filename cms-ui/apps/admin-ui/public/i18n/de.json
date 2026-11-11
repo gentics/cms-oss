@@ -722,11 +722,11 @@
         "select_node_overview_description": "Wählen Sie einen Node aus, von dem Sie die Vorlagen ansehen möchten"
     },
     "content_repository_fragment": {
-        "contentRepositoryFragment_singular": "CR-Fragment",
-        "contentRepositoryFragment_plural": "CR-Fragmente",
-        "contentRepositoryFragment_successfully_added_to_package": "ContentRepository-Fragment {{name}} erfolgreich zu Paket hinzugefügt",
-        "contentRepositoryFragment_successfully_removed_from_package": "ContentRepository-Fragment {{name}} erfolgreich von Paket entfernt",
-        "info_selected_contentRepositoryFragment": "{{amountSelected}} von {{amountTotal}} CR-Fragmenten ausgewählt",
+        "content_repository_fragment_singular": "CR-Fragment",
+        "content_repository_fragment_plural": "CR-Fragmente",
+        "content_repository_fragment_successfully_added_to_package": "ContentRepository-Fragment {{name}} erfolgreich zu Paket hinzugefügt",
+        "content_repository_fragment_successfully_removed_from_package": "ContentRepository-Fragment {{name}} erfolgreich von Paket entfernt",
+        "info_selected_content_repository_fragment": "{{amountSelected}} von {{amountTotal}} CR-Fragmenten ausgewählt",
         "globalId": "Globale Id",
         "name": "Name"
     },

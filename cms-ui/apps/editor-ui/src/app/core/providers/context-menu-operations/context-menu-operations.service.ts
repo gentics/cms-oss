@@ -769,7 +769,6 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Returns a promise that resolves to the folder which the items have been copied to.
      */
     async copyItems(itemType: FolderItemType, items: Item[], activeNodeId: number): Promise<Folder | undefined> {
-
         const options: RepositoryBrowserOptions = {
             allowedSelection: 'folder',
             title: 'modal.copy_item_title',
@@ -831,8 +830,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         };
 
         this.repositoryBrowserClient.openRepositoryBrowser(options)
-            .then((targetFolders: Folder<Raw>[]) => this.folderActions.createPageVariations(pages, activeNodeId, targetFolders))
-            .then(() => this.usageActions.getTotalUsage('page', pages.map((page) => page.id), activeNodeId))
+            .then((targetFolders: Folder<Raw>[]) => {
+                if (targetFolders == null || targetFolders.length === 0) {
+                    return;
+                }
+                return this.folderActions.createPageVariations(pages, activeNodeId, targetFolders)
+                    .then(() => this.usageActions.getTotalUsage('page', pages.map((page) => page.id), activeNodeId));
+            })
             .catch(this.errorHandler.catch);
     }
 
@@ -848,7 +852,12 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         };
 
         this.repositoryBrowserClient.openRepositoryBrowser(options)
-            .then((targetFolder: Folder<Raw>) => this.folderActions.createSinglePageVariation(page, activeNodeId, targetFolder))
+            .then((targetFolder: Folder<Raw>) => {
+                if (targetFolder == null) {
+                    return;
+                }
+                return this.folderActions.createSinglePageVariation(page, activeNodeId, targetFolder);
+            })
             .catch(this.errorHandler.catch);
     }
 

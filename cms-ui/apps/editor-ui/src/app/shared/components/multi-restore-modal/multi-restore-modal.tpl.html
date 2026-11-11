@@ -2,38 +2,42 @@
     <h5>{{ 'modal.multi_restore_title' | gtxI18n: { type: (selectionType() | gtxI18n) } }}</h5>
 </div>
 <div class="modal-content">
-    <wastebin-list
-        type="folder"
-        [filter]="filterTerm"
-        [items]="folders"
-        [selectedItems]="selection['folder']"
-        (selectionChange)="selectionChanged('folder', $event)"
-    >
-    </wastebin-list>
-    <wastebin-list
-        type="page"
-        [filter]="filterTerm"
-        [items]="pages"
-        [selectedItems]="selection['page']"
-        (selectionChange)="selectionChanged('page', $event)"
-    >
-    </wastebin-list>
-    <wastebin-list
-        type="file"
-        [filter]="filterTerm"
-        [items]="files"
-        [selectedItems]="selection['file']"
-        (selectionChange)="selectionChanged('file', $event)"
-    >
-    </wastebin-list>
-    <wastebin-list
-        type="image"
-        [filter]="filterTerm"
-        [items]="images"
-        [selectedItems]="selection['image']"
-        (selectionChange)="selectionChanged('image', $event)"
-    >
-    </wastebin-list>
+    @if (folders.length > 0) {
+        <wastebin-list
+            type="folder"
+            [filter]="filterTerm"
+            [items]="folders"
+            [selectedItems]="selection['folder']"
+            (selectionChange)="selectionChanged('folder', $event)"
+        />
+    }
+    @if (pages.length > 0) {
+        <wastebin-list
+            type="page"
+            [filter]="filterTerm"
+            [items]="pages"
+            [selectedItems]="selection['page']"
+            (selectionChange)="selectionChanged('page', $event)"
+        />
+    }
+    @if (files.length > 0) {
+        <wastebin-list
+            type="file"
+            [filter]="filterTerm"
+            [items]="files"
+            [selectedItems]="selection['file']"
+            (selectionChange)="selectionChanged('file', $event)"
+        />
+    }
+    @if (images.length > 0) {
+        <wastebin-list
+            type="image"
+            [filter]="filterTerm"
+            [items]="images"
+            [selectedItems]="selection['image']"
+            (selectionChange)="selectionChanged('image', $event)"
+        />
+    }
 </div>
 <div class="modal-footer">
     <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>

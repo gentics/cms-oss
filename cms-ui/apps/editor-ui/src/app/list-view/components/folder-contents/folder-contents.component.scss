@@ -82,7 +82,7 @@
                 }
 
                 .other-content {
-                    display: inline;
+                    display: contents;
                 }
 
                 >.inner-wrapper {
@@ -311,7 +311,7 @@ gtx-progress-bar::ng-deep {
 .border-container {
     border-bottom: 2px solid #ffb84f;
     position: sticky;
-    top: 42px;
+    top: 40px;
     z-index: 1;
 
     &.search-active {

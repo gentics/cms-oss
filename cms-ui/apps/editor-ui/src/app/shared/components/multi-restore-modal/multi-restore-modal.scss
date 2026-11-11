@@ -13,6 +13,13 @@ $color-delete: $gtx-color-alert;
 .modal-content {
     min-height: 100px;
     max-height: calc(85vh - 100px);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    wastebin-list {
+        margin: 0;
+    }
 }
 
 .list-header {

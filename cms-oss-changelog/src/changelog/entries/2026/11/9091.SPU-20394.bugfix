@@ -1,0 +1,1 @@
+Core: fixed issue when a page had been scheduled for publishing or taking offline, the user who scheduled it was recorded as publisher (or unpublisher) of every later publish or take-offline of that page, even when another user did it

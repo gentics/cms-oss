@@ -638,6 +638,8 @@ export interface ISchemaFieldProperties {
   searchReferenceValueMinLength?: number;
   updateOnChange?: boolean;
   precision?: number;
+  /** Number properties: show the thousands separator. Sent by Acta Nova from DialogPortal 13 on; missing means true. */
+  useThousandsSeparator?: boolean;
   name?: string;
   validation?: IValidation;
   mandatory?: boolean;

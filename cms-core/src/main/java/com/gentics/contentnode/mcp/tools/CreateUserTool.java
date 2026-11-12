@@ -116,7 +116,7 @@ public class CreateUserTool extends AbstractMcpTool {
 		Writes.logIdempotencyKey("create_user", groupId, arguments);
 
 		GroupResource groupResource = RestPermissions.guard(GroupResource.class, new GroupResourceImpl());
-		UserLoadResponse response = groupResource.createUser(Integer.toString(groupId), user);
+		UserLoadResponse response = groupResource.createUser(Integer.toString(groupId), user, false);
 		requireOk(response, "The user could not be created");
 
 		User created = response.getUser();

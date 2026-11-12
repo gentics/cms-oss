@@ -44,6 +44,7 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.auth.PasswordTokens;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
@@ -577,6 +578,8 @@ public class UserResourceImpl implements UserResource {
 				int userId = ObjectTransformer.getInt(user.getId(), -1);
 
 				user.setPassword(SystemUserFactory.hashPassword(item.getPassword(), userId));
+				// a password set here replaces the one the user would set with an open link
+				PasswordTokens.clear(userId);
 			}
 
 			user.save();

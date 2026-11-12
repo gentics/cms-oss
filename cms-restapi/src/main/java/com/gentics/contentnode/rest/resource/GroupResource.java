@@ -270,6 +270,9 @@ public interface GroupResource {
 	 * Create user in the given group
 	 * @param id local group ID
 	 * @param user user to create
+	 * @param passwordLink true to let the user set their password with a link: the response then contains a
+	 *        {@code passwordToken}, valid for 24 hours and usable once, for {@code POST /auth/password}. The user must
+	 *        not have a password then.
 	 * @return created user
 	 * @throws Exception
 	 */
@@ -277,9 +280,11 @@ public interface GroupResource {
 	@Path("/{id}/users")
 	@StatusCodes({
 		@ResponseCode(code = 201, condition = "User was created."),
+		@ResponseCode(code = 400, condition = "A password was given together with passwordLink=true."),
 		@ResponseCode(code = 404, condition = "Group {id} does not exist.")
 	})
-	UserLoadResponse createUser(@PathParam("id") String id, User user) throws Exception;
+	UserLoadResponse createUser(@PathParam("id") String id, User user,
+			@QueryParam("passwordLink") @DefaultValue("false") boolean passwordLink) throws Exception;
 
 	/**
 	 * Add existing user to the given group

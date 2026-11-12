@@ -73,7 +73,7 @@ gtx-dropdown-list::ng-deep .dropdown-trigger {
     }
 }
 
-gtx-contents-list-item {
+gtx-contents-list-item::ng-deep {
     gap: 1rem;
     flex-wrap: wrap;
 
@@ -174,7 +174,7 @@ gtx-dropdown-item.disabled {
 }
 
 
-gtx-contents-list-item:not(:hover)::shadow {
+gtx-contents-list-item:not(:hover)::ng-deep {
     .item-actions {
         opacity: 0.2;
     }

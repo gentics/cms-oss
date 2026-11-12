@@ -14,6 +14,7 @@ import type {
     MessageRole,
     Plan,
     PlanState,
+    PlanStatus,
     Preview,
     Problem,
     Publication,
@@ -97,6 +98,17 @@ export interface LivePlan extends StreamAnchor {
     runId?: string;
 }
 
+/** The main steps one run of a plan reported; by run, as GenAIx keeps no step history (rc.5). */
+export interface LiveStepRun {
+    runId: string;
+    planId: string;
+    /** `Run.workflow`, so an execute run's template shows before it reports. */
+    workflow?: string;
+    steps: Record<string, Step>;
+    /** The run during which `plan.updated` closed the plan: done comes from `plan.status` (rc.5). */
+    closesPlan?: true;
+}
+
 /** The user message a confirmed `settings_review` became (`interaction.resolved` `message_id`), and where it came. */
 export interface LiveConfirmation extends StreamAnchor {
     seq: number;
@@ -170,8 +182,8 @@ export interface SessionLiveState {
     notices?: RunNotice[];
     /** Interactions waiting for an answer (`interaction.requested`, not resolved yet). */
     interactions?: Interaction[];
-    /** Each plan's main steps by plan id, then by step id, as `step.updated` last reported them. */
-    steps?: Record<string, Record<string, Step>>;
+    /** Every plan run with its steps, in start order, for the steps lines (`stepLines`). */
+    stepRuns?: LiveStepRun[];
     /**
      * Every plan of the session, one entry per `plan.id`, in the order they first came: each later
      * `plan.updated` of a plan replaces it in place (09-integration-guide.md, "The plan card").
@@ -237,8 +249,8 @@ interface WorkspaceEventState {
     resetSession: (sessionId: string) => void;
     /**
      * Puts plan snapshots (`GET …/plans/{plan_id}`, `reloadPlans`) into the live state: each plan, its
-     * main steps, its publications, checks, derived settings and approval chain, the question its run
-     * waits on and, while there is none, the preview.
+     * publications, checks, derived settings and approval chain, the question its run waits on and,
+     * while there is none, the preview. Not its steps: they name no run (`stepRuns`).
      * A plan an event told about after `sinceSeq` (`planSeqs`) is left as the stream has it: the
      * snapshot was asked for after `sinceSeq`, so those events are at least as new as it is.
      */
@@ -467,15 +479,41 @@ function applyToInteractions(interactions: Interaction[] | undefined, event: Gen
     }
 }
 
-// `step.updated` is a full replacement keyed by its plan (`plan_id`, rc.4) and its id. Only the main
-// steps are kept: an update of a substep (`parent_step_id`) may be ignored by a client that shows only
-// those (contract).
-function applyToSteps(steps: SessionLiveState['steps'], event: GenaixEvent): SessionLiveState['steps'] {
-    if (event.type !== 'step.updated' || event.parent_step_id || !event.plan_id) {
-        return steps;
+// The plan statuses after which its work is over
+const PLAN_CLOSING: ReadonlySet<PlanStatus> = new Set(['done', 'released', 'published', 'review_requested', 'discarded', 'superseded']);
+
+// Keeps each plan run's main steps and marks the run that closed the plan. `step.updated` opens a missing
+// run too, as a replay may start after its `run.started`; substeps are left out, the chat shows none.
+function applyToStepRuns(stepRuns: SessionLiveState['stepRuns'], event: GenaixEvent): SessionLiveState['stepRuns'] {
+    if (event.type === 'plan.updated') {
+        const latest = stepRuns?.findLast(({ planId }) => planId === event.plan.id);
+
+        return latest && !latest.closesPlan && PLAN_CLOSING.has(event.plan.status)
+            ? stepRuns!.map((run) => (run === latest ? { ...run, closesPlan: true } : run))
+            : stepRuns;
     }
 
-    return { ...steps, [event.plan_id]: { ...steps?.[event.plan_id], [event.step.id]: event.step } };
+    if (event.type === 'run.started') {
+        const { id: runId, plan_id: planId, workflow } = event.run;
+
+        if (!planId || stepRuns?.some((run) => run.runId === runId)) {
+            return stepRuns;
+        }
+
+        return [...(stepRuns ?? []), { runId, planId, ...(workflow && { workflow }), steps: {} }];
+    }
+
+    if (event.type !== 'step.updated' || event.parent_step_id || !event.plan_id || !event.run_id) {
+        return stepRuns;
+    }
+
+    const { run_id: runId, plan_id: planId, step } = event;
+
+    if (!stepRuns?.some((run) => run.runId === runId)) {
+        return [...(stepRuns ?? []), { runId, planId, steps: { [step.id]: step } }];
+    }
+
+    return stepRuns.map((run) => (run.runId === runId ? { ...run, steps: { ...run.steps, [step.id]: step } } : run));
 }
 
 // `plan.updated` carries the whole plan every time, never a delta, on every change of its items and of
@@ -502,7 +540,7 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
     const runs = applyToRuns(session.runs ?? NO_RUNS, event);
     const notice = noticeOf(event);
     const interactions = applyToInteractions(session.interactions, event);
-    const steps = applyToSteps(session.steps, event);
+    const stepRuns = applyToStepRuns(session.stepRuns, event);
 
     if (event.type === 'plan.updated') {
         next.plans = applyToPlans(session.plans, event, session.messages);
@@ -587,8 +625,8 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
         next.interactions = interactions;
     }
 
-    if (steps !== session.steps) {
-        next.steps = steps;
+    if (stepRuns !== session.stepRuns) {
+        next.stepRuns = stepRuns;
     }
 
     return next;
@@ -604,17 +642,15 @@ function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq
 
     let plans = session.plans ?? [];
     let { interactions, interactionPlans } = session;
-    const steps = { ...session.steps };
     const publications = { ...session.publications };
     const checks = { ...session.checks };
     const derivedSettings = { ...session.derivedSettings };
     const approvalChains = { ...session.approvalChains };
 
-    for (const { plan, steps: planSteps, publications: planPublications, pending_interaction: pending, ...state } of fresh) {
+    for (const { plan, publications: planPublications, pending_interaction: pending, ...state } of fresh) {
         plans = plans.some((live) => live.plan.id === plan.id)
             ? plans.map((live) => (live.plan.id === plan.id ? { ...live, plan } : live))
             : [...plans, { seq: 0, plan }];
-        steps[plan.id] = Object.fromEntries(planSteps.map((step) => [step.id, step]));
         publications[plan.id] = planPublications ?? [];
         checks[plan.id] = Object.fromEntries(state.checks.map((check) => [check.id, check]));
         derivedSettings[plan.id] = state.derived_settings ?? null;
@@ -638,7 +674,6 @@ function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq
     return {
         ...session,
         plans,
-        steps,
         publications,
         checks,
         derivedSettings,
@@ -717,7 +752,7 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         sideRunIds: undefined,
         notices: undefined,
         interactions: undefined,
-        steps: undefined,
+        stepRuns: undefined,
         plans: undefined,
         interactionPlans: undefined,
         confirmations: undefined,

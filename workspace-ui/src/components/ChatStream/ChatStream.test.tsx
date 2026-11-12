@@ -79,6 +79,11 @@ function draftPlan(seq: number, workflow: string) {
     apply(event(seq, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflows: [{ id: workflow, version: '1.0.0' }], status: 'drafting', version: 0, summary: '', items: [] } }));
 }
 
+// A run of the plan `p-1` (`run.started`, `run.completed`); an execute run names its segment's module.
+function planRun(id: string, mode: 'propose' | 'execute', workflow: string | null = null) {
+    return { run: { id, status: 'running', mode, plan_id: 'p-1', workflow, started_at: '2026-10-07T09:00:00Z', step_count: 0 } };
+}
+
 function texts() {
     return screen.getAllByRole('listitem').map((item) => item.textContent);
 }
@@ -384,36 +389,99 @@ describe('ChatStream', () => {
     });
 
     describe('workflow steps', () => {
-        it('shows the current step right under the agent\'s head in its latest block, and moves it down with it', async () => {
-            stubSession('content_create', TEMPLATE, [message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the source.', 'r-1')]);
+        it('goes with the agent to its latest block while the steps are not through, also past a side run\'s answer', async () => {
+            stubSession('content_create', TEMPLATE, [
+                message('m-1', 'user', 'Create a landing page', 'r-1'),
+                message('m-2', 'assistant', 'Here is the plan.', 'r-1'),
+                message('m-3', 'user', 'Which folder?', 'r-2'),
+                message('m-4', 'assistant', 'The folder Richtlinien.', 'r-2'),
+            ]);
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
             draftPlan(1, 'content_create');
-
-            const steps = await screen.findByRole('group', { name: 'Steps' });
-
-            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'steps', 'I read the source.']);
-            expect(steps).toHaveTextContent('0 of 2 steps done');
-
             apply(
-                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
-                event(3, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Propose plan', status: 'running' } }),
-                event(4, 'message.started', { run_id: 'r-2', message_id: 'm-4', role: 'assistant' }),
-                event(5, 'part.started', { run_id: 'r-2', message_id: 'm-4', part_index: 0, part: { type: 'text', format: 'plain', text: 'Here is the plan.' } }),
+                event(2, 'run.started', { run_id: 'r-1', ...planRun('r-1', 'propose') }),
+                event(3, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
+                event(4, 'run.completed', { run_id: 'r-1', ...planRun('r-1', 'propose') }),
+                event(5, 'run.started', { run_id: 'r-2', run: { id: 'r-2', status: 'running', mode: 'side', plan_id: null, started_at: '2026-10-07T09:00:00Z', step_count: 0 } }),
+                event(6, 'run.completed', { run_id: 'r-2', run: { id: 'r-2', status: 'completed', mode: 'side', plan_id: null, started_at: '2026-10-07T09:00:00Z', step_count: 0 } }),
             );
-            act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Go on' }] }));
 
-            // The turn just sent opens the agent's next block: the steps go with it, under its head.
+            await waitFor(() => expect(screen.getByRole('group', { name: 'Steps' })).toHaveTextContent('1 of 2 steps done'));
+
             expect(chatItems()).toEqual([
                 'YouCreate a landing page',
                 'Assistant',
-                'I read the source.',
                 'Here is the plan.',
-                'YouGo on',
+                'YouWhich folder?',
                 'Assistant',
                 'steps',
+                'The folder Richtlinien.',
+                'Answered beside the running plan',
+            ]);
+        });
+
+        it('stays in the block where all steps went through, and the plan\'s next pass goes with the agent again', async () => {
+            stubSession('content_create', TEMPLATE, [message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the source.', 'r-1')]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
+            apply(
+                event(2, 'run.started', { run_id: 'r-1', ...planRun('r-1', 'execute', 'content_create') }),
+                event(3, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
+                event(4, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Propose plan', status: 'done' } }),
+                event(5, 'run.completed', { run_id: 'r-1', ...planRun('r-1', 'execute', 'content_create') }),
+            );
+
+            await waitFor(() => expect(screen.getByRole('group', { name: 'Steps' })).toHaveTextContent('2 of 2 steps done'));
+            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'steps', 'I read the source.']);
+
+            act(() => {
+                useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Change the title' }] });
+                useWorkspaceEventStore.getState().markMessageSent(SESSION, 'local-1', 'm-3', 'r-2');
+            });
+            apply(
+                event(6, 'run.started', { run_id: 'r-2', ...planRun('r-2', 'propose') }),
+                event(7, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Propose plan', status: 'running' } }),
+                event(8, 'message.started', { run_id: 'r-2', message_id: 'm-4', role: 'assistant' }),
+                event(9, 'part.started', { run_id: 'r-2', message_id: 'm-4', part_index: 0, part: { type: 'text', format: 'plain', text: 'Revising the plan.' } }),
+            );
+
+            expect(chatItems()).toEqual([
+                'YouCreate a landing page',
+                'Assistant',
+                'steps',
+                'I read the source.',
+                'YouChange the title',
+                'Assistant',
+                'steps',
+                'Revising the plan.',
                 'Thinking',
             ]);
-            expect(screen.getByRole('group', { name: 'Steps' })).toHaveTextContent('Step 2 of 2: Propose plan');
+
+            const [through, next] = screen.getAllByRole('group', { name: 'Steps' });
+
+            expect(through).toHaveTextContent('2 of 2 steps done');
+            expect(next).toHaveTextContent('Step 2 of 2: Propose plan');
+        });
+
+        it('stays at the plan\'s last run once the plan is discarded, its steps not through', async () => {
+            stubSession('content_create', TEMPLATE, [
+                message('m-1', 'user', 'Create a landing page', 'r-1'),
+                message('m-2', 'assistant', 'Here is the plan.', 'r-1'),
+                message('m-3', 'user', 'Never mind', 'r-2'),
+                message('m-4', 'assistant', 'Okay.', 'r-2'),
+            ]);
+            render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
+            apply(
+                event(2, 'run.started', { run_id: 'r-1', ...planRun('r-1', 'propose') }),
+                event(3, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
+                event(4, 'run.completed', { run_id: 'r-1', ...planRun('r-1', 'propose') }),
+                event(5, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflows: [{ id: 'content_create', version: '1.0.0' }], status: 'discarded', version: 1, summary: '', items: [] } }),
+            );
+
+            await waitFor(() => expect(screen.getByRole('group', { name: 'Steps' })).toHaveTextContent('1 of 2 steps done'));
+
+            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'steps', 'Here is the plan.', 'YouNever mind', 'Assistant', 'Okay.']);
         });
 
         it('shows the steps before the thinking indicator while the agent has not answered yet', async () => {
@@ -422,24 +490,26 @@ describe('ChatStream', () => {
             draftPlan(1, 'content_create');
 
             act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Create a landing page' }] }));
+            apply(event(2, 'run.started', { run_id: 'r-1', ...planRun('r-1', 'execute', 'content_create') }));
             await screen.findByRole('group', { name: 'Steps' });
 
             expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'steps', 'Thinking']);
         });
 
-        it('opens the agent\'s next block with the steps once a sent turn is the last thing, before its run starts', async () => {
+        it('opens the agent\'s next block with the steps of a run of a plan that has not written yet', async () => {
             stubSession('content_create', TEMPLATE, [message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the source.', 'r-1')]);
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
             draftPlan(1, 'content_create');
 
-            await screen.findByRole('group', { name: 'Steps' });
+            await screen.findByText('I read the source.');
             act(() => {
                 useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Go on' }] });
-                useWorkspaceEventStore.getState().markMessageSent(SESSION, 'local-1', 'm-3');
+                useWorkspaceEventStore.getState().markMessageSent(SESSION, 'local-1', 'm-3', 'r-2');
             });
+            apply(event(2, 'run.started', { run_id: 'r-2', ...planRun('r-2', 'execute', 'content_create') }));
+            await screen.findByRole('group', { name: 'Steps' });
 
-            expect(screen.queryByRole('status')).not.toBeInTheDocument();
-            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'I read the source.', 'YouGo on', 'Assistant', 'steps']);
+            expect(chatItems()).toEqual(['YouCreate a landing page', 'Assistant', 'I read the source.', 'YouGo on', 'Assistant', 'steps', 'Thinking']);
         });
 
         it('shows no steps for a workflow without any', async () => {
@@ -447,6 +517,10 @@ describe('ChatStream', () => {
 
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
             draftPlan(1, 'content_research');
+            apply(
+                event(2, 'run.started', { run_id: 'r-1', ...planRun('r-1', 'execute', 'content_research') }),
+                event(3, 'run.completed', { run_id: 'r-1', ...planRun('r-1', 'execute', 'content_research') }),
+            );
 
             await screen.findByText('Hi.');
             await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain('/rest/proxy/genaix/workflows'));

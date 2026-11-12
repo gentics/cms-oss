@@ -323,6 +323,8 @@ export interface GroupListResponse extends PermissionListResponse<Group<Raw>> {}
 export interface GroupUserCreateResponse extends Response {
     user: User<Raw>;
     messages: ResponseMessage[];
+    /** Token for the password link, only when the user was created with `GroupUserCreateOptions.passwordLink` */
+    passwordToken?: string;
 }
 
 /**

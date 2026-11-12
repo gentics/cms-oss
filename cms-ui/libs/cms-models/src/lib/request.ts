@@ -87,6 +87,16 @@ export interface LoginOptions {
 }
 
 /**
+ * Request for `POST /auth/password`: sets the password of a user with the token of a password link.
+ */
+export interface SetPasswordRequest {
+    /** The token from the password link */
+    token: string;
+    /** The new password */
+    password: string;
+}
+
+/**
  * Options which may be passed as query parameters to the `<type>/load/id` endpoints
  */
 export interface ItemRequestOptions {
@@ -1790,7 +1800,19 @@ export type GroupUpdateRequest = Omit<Group<Raw>, 'id' | 'children'>;
  * Users can only be created within a group.
  */
 export interface GroupUserCreateRequest extends Omit<User<Raw>, 'id'> {
-    password: string;
+    /** Must be omitted when the user sets the password with a link (`GroupUserCreateOptions.passwordLink`) */
+    password?: string;
+}
+
+/**
+ * Query parameters for `PUT group/{id}/users`
+ */
+export interface GroupUserCreateOptions {
+    /**
+     * Let the user set the password with a link: the response then contains a `passwordToken`,
+     * valid for 24 hours and usable once.
+     */
+    passwordLink?: boolean;
 }
 
 /**

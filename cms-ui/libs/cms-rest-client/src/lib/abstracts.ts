@@ -143,6 +143,7 @@ import {
     GroupTreeResponse,
     GroupTypeOrInstancePermissionsResponse,
     GroupUpdateRequest,
+    GroupUserCreateOptions,
     GroupUserCreateRequest,
     GroupUserCreateResponse,
     I18nLanguageListResponse,
@@ -322,6 +323,7 @@ import {
     SchedulerSuspendRequest,
     SearchPagesOptions,
     SendMessageRequest,
+    SetPasswordRequest,
     SetPermissionsOptions,
     SetPermissionsRequest,
     SinglePermissionResponse,
@@ -423,6 +425,8 @@ export interface AbstractAuthenticationAPI extends BasicAPI {
     logout: () => Response;
     validate: () => ValidateSidResponse;
     ssoLogin: (bearerToken: string) => string;
+    validatePasswordToken: (token: string) => Response;
+    setPassword: (body: SetPasswordRequest) => Response;
 }
 
 export interface AbstractClusterAPI extends BasicAPI {
@@ -767,7 +771,7 @@ export interface AbstractGroupAPI extends BasicAPI {
     subGroups: (id: number | string, options?: BaseListOptionsWithPaging<Group>) => UserGroupsResponse;
 
     listUsers: (id: number | string, options?: UserListOptions) => UserListResponse;
-    createUser: (id: number | string, body: GroupUserCreateRequest) => GroupUserCreateResponse;
+    createUser: (id: number | string, body: GroupUserCreateRequest, options?: GroupUserCreateOptions) => GroupUserCreateResponse;
     assignUser: (id: number | string, userId: number | string) => UserResponse;
     unassignUser: (id: number | string, userId: number | string) => void;
 

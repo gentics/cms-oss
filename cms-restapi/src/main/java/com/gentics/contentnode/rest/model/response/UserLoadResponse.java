@@ -16,6 +16,11 @@ public class UserLoadResponse extends GenericResponse {
 	private User user;
 
 	/**
+	 * Token for the password link of a created user
+	 */
+	private String passwordToken;
+
+	/**
 	 * Create an empty instance
 	 */
 	public UserLoadResponse() {}
@@ -54,5 +59,22 @@ public class UserLoadResponse extends GenericResponse {
 	 */
 	public User getUser() {
 		return user;
+	}
+
+	/**
+	 * Token for the link, with which the created user sets their password. Only set when a user was created with the
+	 * query parameter {@code passwordLink=true}.
+	 * @return token or null
+	 */
+	public String getPasswordToken() {
+		return passwordToken;
+	}
+
+	/**
+	 * Set the password token
+	 * @param passwordToken token
+	 */
+	public void setPasswordToken(String passwordToken) {
+		this.passwordToken = passwordToken;
 	}
 }

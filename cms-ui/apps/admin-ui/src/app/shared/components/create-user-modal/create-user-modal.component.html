@@ -5,6 +5,15 @@
 <div class="modal-content row">
     <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
 
+    @if (passwordLinkUrl) {
+    <div class="gtx-create-user-modal-password-link" data-context="password-link">
+        <p>{{ 'modal.password_link_created' | gtxI18n }}</p>
+        <gtx-copy-value
+            [label]="'modal.password_link_url_label' | gtxI18n"
+            [value]="passwordLinkUrl"
+        ></gtx-copy-value>
+    </div>
+    } @else {
     <gtx-tabs pure [activeId]="currentTab">
         <gtx-tab id="1" [title]="'shared.title_properties' | gtxI18n">
             @if (form) {
@@ -62,6 +71,13 @@
                         [placeholder]="'shared.last_name' | gtxI18n"
                         formControlName="lastName"
                         ></gtx-input>
+                    </div>
+                    <div class="input-container small-12 columns">
+                        <gtx-checkbox
+                        [label]="'modal.password_link_label' | gtxI18n"
+                        formControlName="passwordLink"
+                        data-control="passwordLink"
+                        ></gtx-checkbox>
                     </div>
                     <!-- Needed to prevent autocomplete in Firefox -->
                     <input type="password" name="password1" value="" style="display: none">
@@ -139,9 +155,19 @@
         ></gtx-group-table>
       </gtx-tab>
     </gtx-tabs>
+    }
   </div>
 
   <div class="modal-footer">
+    @if (passwordLinkUrl) {
+      <gtx-button
+        type="primary"
+        data-action="close"
+        (click)="buttonCloseClicked()"
+        >
+        {{ 'modal.close_button' | gtxI18n }}
+      </gtx-button>
+    } @else {
     @if (tabIndexIsActive(2)) {
       <gtx-button
         type="primary"
@@ -181,4 +207,5 @@
       >
       {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
+    }
   </div>

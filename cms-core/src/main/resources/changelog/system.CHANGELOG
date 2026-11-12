@@ -302,3 +302,4 @@ G# New changelog numbers must be generated via https://dev.gentics.com/numbercru
 2025-04-03  CH-1732 PK  SQL ALTER TABLE systemuser ADD COLUMN support_user BOOLEAN NOT NULL DEFAULT false AFTER inboxtoemail;
 2026-07-08  CH-1748 NOP SQL CREATE TABLE api_token (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, user_id INT NOT NULL REFERENCES systemuser(id), name VARCHAR(255), token_hash VARCHAR(64) NOT NULL UNIQUE, cdate INT NOT NULL, expires INT NOT NULL DEFAULT 0, last_used INT NOT NULL DEFAULT 0);
 2026-09-29	CH-1751	NOP	SQL	ALTER TABLE api_token ADD COLUMN prune_on_expiry BOOLEAN NOT NULL DEFAULT 0 AFTER expires;
+2026-11-12	CH-1758	DB	SQL	ALTER TABLE systemuser ADD COLUMN password_token VARCHAR(36) NULL AFTER support_user; ## token ID of the password link (GPU-2776)

@@ -13,7 +13,7 @@ import {
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { forkJoin, Observable, of, OperatorFunction } from 'rxjs';
-import { first, map, switchMap } from 'rxjs/operators';
+import { first, map, switchMap, tap } from 'rxjs/operators';
 import { LOAD_FLATTENED, masterLoading } from '../../../common';
 import { EntityManagerService, GroupOperations, UserOperations } from '../../../core';
 import { AppStateService } from '../../../state';
@@ -59,10 +59,33 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
     }
 
     createUser(user: GroupUserCreateRequest, userGroupIds: number[]): Observable<User<Normalized>> {
+        return this.createUserInGroups(userGroupIds, (groupId) => this.entityOperations.createUser(groupId, user));
+    }
+
+    /**
+     * Create a user who sets the password with a link. Emits the user and the token for the link.
+     */
+    createUserWithPasswordLink(
+        user: GroupUserCreateRequest,
+        userGroupIds: number[],
+    ): Observable<{ user: User<Normalized>; passwordToken: string }> {
+        let passwordToken: string;
+        return this.createUserInGroups(userGroupIds, (groupId) => this.entityOperations.createUserWithPasswordLink(groupId, user).pipe(
+            tap((created) => passwordToken = created.passwordToken),
+            map((created) => created.user),
+        )).pipe(
+            map((created) => ({ user: created, passwordToken })),
+        );
+    }
+
+    /**
+     * Create the user in the first group with the given function, then assign it to the other groups.
+     */
+    private createUserInGroups(userGroupIds: number[], create: (groupId: number) => Observable<User<Raw>>): Observable<User<Normalized>> {
         // create in group and then assign to groups if provided more than one group id
         const groupIdsToBeAssigned = [...userGroupIds];
         const initialGroupId = groupIdsToBeAssigned.shift();
-        return this.entityOperations.createUser(initialGroupId, user).pipe(
+        return create(initialGroupId).pipe(
             switchMap((newUser: User<Raw>) => {
                 // if additional groups to assign
                 if (groupIdsToBeAssigned.length > 0) {

@@ -680,7 +680,11 @@
         "delete_message_title": "Nachricht löschen",
         "archive_message_title": "Nachricht archivieren",
         "delete_selected_messages_title": "Ausgewählte Nachrichten löschen",
-        "archive_selected_messages_title": "Ausgewählte Nachrichten archivieren"
+        "archive_selected_messages_title": "Ausgewählte Nachrichten archivieren",
+        "set_password_title": "Passwort setzen",
+        "set_password_button": "Passwort setzen",
+        "set_password_invalid_link": "Der Link zum Setzen des Passworts ist ungültig oder abgelaufen.",
+        "set_password_to_login": "Zur Anmeldung"
     },
     "modal": {
         "advanced_search_help_booleans": "<strong>Wörter in der Suche miteinbeziehen/ausschliessen:</strong>: Mit <code>+</code> definieren Sie Begriffe, die sich in dem gesuchten Begriff wiederfinden müssen, mit <code>-</code> definieren Sie Begriffe, die sich in dem gesuchten Begriff nicht wiederfinden dürfen.",

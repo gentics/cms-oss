@@ -38,6 +38,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -45,8 +46,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.auth.PasswordTokens;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -592,13 +595,20 @@ public class GroupResourceImpl implements GroupResource {
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = SystemUser.TYPE_USERADMIN, bit = PermHandler.PERM_VIEW)
-	public UserLoadResponse createUser(@PathParam("id") String id, User user) throws NodeException {
+	public UserLoadResponse createUser(@PathParam("id") String id, User user,
+			@QueryParam("passwordLink") @DefaultValue("false") boolean passwordLink) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
 
 			if (!t.getPermHandler().canCreate(null, SystemUser.class, null)) {
 				throw new InsufficientPrivilegesException(I18NHelper.get(String.format("%s.nopermission", t.getTable(UserGroup.class)), id), null, null,
 						SystemUser.TYPE_SYSTEMUSER, 0, PermType.createuser);
+			}
+
+			if (passwordLink && !ObjectTransformer.isEmpty(user.getPassword())) {
+				throw new RestMappedException(I18NHelper.get("rest.user.password_link_with_password"))
+						.setMessageType(Message.Type.WARNING).setResponseCode(ResponseCode.INVALIDDATA)
+						.setStatus(Status.BAD_REQUEST);
 			}
 
 			UserGroup group = MiscUtils.load(UserGroup.class, id, ObjectPermission.userassignment);
@@ -608,8 +618,8 @@ public class GroupResourceImpl implements GroupResource {
 			systemUser.getUserGroups().add(group);
 			systemUser.save();
 
+			int userId = ObjectTransformer.getInt(systemUser.getId(), -1);
 			if (!ObjectTransformer.isEmpty(user.getPassword())) {
-				int userId = ObjectTransformer.getInt(systemUser.getId(), -1);
 				systemUser.setPassword(SystemUserFactory.hashPassword(user.getPassword(),userId));
 				systemUser.save();
 			}
@@ -617,9 +627,26 @@ public class GroupResourceImpl implements GroupResource {
 			UserLoadResponse response = new UserLoadResponse(null, ResponseInfo.ok("Successfully created user in group"),
 					SystemUser.TRANSFORM2REST.apply(t.getObject(systemUser)));
 
+			if (passwordLink) {
+				response.setPasswordToken(PasswordTokens.create(userId));
+			}
+
 			trx.success();
 			return response;
 		}
+	}
+
+	/**
+	 * Create user in the given group, without a password link. For direct calls only: it is not part of
+	 * {@link GroupResource}, so a guarded call through the interface always reaches the method carrying the permission
+	 * annotations.
+	 * @param id local group ID
+	 * @param user user to create
+	 * @return created user
+	 * @throws NodeException
+	 */
+	public UserLoadResponse createUser(String id, User user) throws NodeException {
+		return createUser(id, user, false);
 	}
 
 	@Override

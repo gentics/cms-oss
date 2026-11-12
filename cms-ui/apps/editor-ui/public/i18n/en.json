@@ -680,7 +680,11 @@
         "delete_message_title": "Delete message",
         "archive_message_title": "Archive message",
         "delete_selected_messages_title": "Delete selected messages",
-        "archive_selected_messages_title": "Archive selected messages"
+        "archive_selected_messages_title": "Archive selected messages",
+        "set_password_title": "Set password",
+        "set_password_button": "Set password",
+        "set_password_invalid_link": "The link for setting the password is invalid or has expired.",
+        "set_password_to_login": "To the login"
     },
     "modal": {
         "advanced_search_help_booleans": "<strong>Include/exclude search terms:</strong> Prefixing a term with <code>+</code> means that this term must be present; terms prefixed with <code>-</code> must not be present.",

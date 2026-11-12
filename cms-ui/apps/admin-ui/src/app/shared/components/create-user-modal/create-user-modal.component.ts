@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { GroupUserCreateRequest, Normalized, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { PASSWORD_VALIDATORS } from '../../../shared/utils';
 import { EntityExistsValidator } from '../../providers/entity-exists-validator/entity-exists-validator.service';
 import { GroupDataService } from '../../providers/group-data/group-data.service';
@@ -14,7 +15,7 @@ import { GroupDataService } from '../../providers/group-data/group-data.service'
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class CreateUserModalComponent extends BaseModal<User<Normalized>> implements OnInit {
+export class CreateUserModalComponent extends BaseModal<User<Normalized>> implements OnInit, OnDestroy {
 
     /** Current step (tab) of the entity creation wizzard */
     currentTab = String(1);
@@ -30,6 +31,14 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
 
     /** Will be set when the create call is sent */
     loading = false;
+
+    /** User created with a password link, set once the link is shown */
+    createdUser: User<Normalized> | null = null;
+
+    /** Link with which the created user sets the password */
+    passwordLinkUrl: string | null = null;
+
+    private passwordLinkSubscription: Subscription;
 
     /** Convenience getter for confirm username input */
     get login(): AbstractControl {
@@ -78,9 +87,27 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
             email: new UntypedFormControl(null, Validators.email),
             login: new UntypedFormControl(null, this.entityExistsValidator.validate),
             description: new UntypedFormControl(null),
+            passwordLink: new UntypedFormControl(false),
             password1: new UntypedFormControl(null, PASSWORD_VALIDATORS),
             password2: new UntypedFormControl(null, PASSWORD_VALIDATORS),
         }, this.passwordsDontMatch);
+
+        // with a link the user sets the password, so the password fields must neither be filled nor validated
+        this.passwordLinkSubscription = this.form.get('passwordLink').valueChanges.subscribe((passwordLink: boolean) => {
+            for (const control of [this.password1, this.password2]) {
+                if (passwordLink) {
+                    control.reset(null);
+                    control.disable();
+                } else {
+                    control.enable();
+                }
+            }
+            this.changeDetector.markForCheck();
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.passwordLinkSubscription?.unsubscribe();
     }
 
     /** Get form validity state */
@@ -121,28 +148,61 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.createUser()
+        const passwordLink: boolean = this.form.value.passwordLink;
+        const created: Promise<User<Normalized>> = passwordLink
+            ? this.groupData.createUserWithPasswordLink(this.userPayload(false), this.userGroupIds).toPromise()
+                .then(({ user, passwordToken }) => {
+                    // the modal stays open to show the link, it is closed with the created user
+                    this.createdUser = user;
+                    this.passwordLinkUrl = this.passwordLinkUrlFor(passwordToken);
+                    return null;
+                })
+            : this.groupData.createUser(this.userPayload(true), this.userGroupIds).toPromise();
+
+        created
             .then((entityCreated) => {
                 this.loading = false;
-                this.closeFn(entityCreated);
+                if (entityCreated) {
+                    this.closeFn(entityCreated);
+                } else {
+                    this.changeDetector.markForCheck();
+                }
             }, () => {
+                // keep the password fields disabled when the link was chosen
                 this.form.enable({ emitEvent: false });
+                if (passwordLink) {
+                    this.password1.disable({ emitEvent: false });
+                    this.password2.disable({ emitEvent: false });
+                }
                 this.loading = false;
                 this.changeDetector.markForCheck();
             });
     }
 
-    private createUser(): Promise<User<Normalized>> {
+    /** Close the modal after the password link was shown */
+    buttonCloseClicked(): void {
+        this.closeFn(this.createdUser);
+    }
+
+    private userPayload(withPassword: boolean): GroupUserCreateRequest {
         // assemble payload with conditional properties
-        const user: GroupUserCreateRequest = {
+        return {
             firstName: this.form.value.firstName,
             lastName: this.form.value.lastName,
             login: this.form.value.login,
-            password: this.form.value.password1,
+            ...(withPassword && { password: this.form.value.password1 }),
             ...(this.form.value.email && { email: this.form.value.email }),
             ...(this.form.value.description && { description: this.form.value.description }),
         };
-        return this.groupData.createUser(user, this.userGroupIds).toPromise();
+    }
+
+    /**
+     * Link to the page of the editor UI where the user sets the password. `skip-sso` keeps Keycloak from
+     * redirecting the user, who has no session yet, to its login.
+     */
+    private passwordLinkUrlFor(token: string): string {
+        const editorUrl = new URL(environment.editorUrl, window.location.toString()).href.replace(/\/+$/, '');
+        return `${editorUrl}/?skip-sso#/set-password?token=${encodeURIComponent(token)}`;
     }
 
 }

@@ -1201,4 +1201,57 @@ describe('ItemListRow', () => {
 
     });
 
+    describe('layout', () => {
+
+        const LONG_NAME = 'A considerably longer file name that needs quite some room to be shown completely.txt';
+
+        function renderWithWidth(fixture: ComponentFixture<TestComponent>, instance: TestComponent, width: number, name: string): void {
+            const host: HTMLElement = fixture.nativeElement;
+            host.style.display = 'block';
+            host.style.width = `${width}px`;
+
+            instance.item = {
+                ...instance.item,
+                name,
+                globalId: 'A547.69478',
+                fileSize: 123456,
+                fileType: 'text/plain',
+            } as Partial<File>;
+            instance.itemsInfo = {
+                ...instance.itemsInfo,
+                displayFields: ['fileSize', 'fileType', 'globalId'],
+            };
+            fixture.detectChanges();
+            tick();
+        }
+
+        it('moves the display fields below the item primary, when the row is too narrow, without horizontal overflow',
+            componentTest(() => TestComponent, (fixture, instance) => {
+                renderWithWidth(fixture, instance, 360, LONG_NAME);
+
+                const row: HTMLElement = fixture.nativeElement.querySelector('gtx-contents-list-item');
+                const primary: HTMLElement = row.querySelector('.item-primary');
+                const fields: HTMLElement = row.querySelector('.display-fields');
+
+                expect(fields.getBoundingClientRect().top).toBeGreaterThanOrEqual(primary.getBoundingClientRect().bottom);
+                expect(row.scrollWidth).toBeLessThanOrEqual(row.clientWidth);
+            }),
+        );
+
+        it('keeps the display fields next to the item primary, when the row is wide enough',
+            componentTest(() => TestComponent, (fixture, instance) => {
+                renderWithWidth(fixture, instance, 1600, 'item1');
+
+                const row: HTMLElement = fixture.nativeElement.querySelector('gtx-contents-list-item');
+                const primary: HTMLElement = row.querySelector('.item-primary');
+                const fields: HTMLElement = row.querySelector('.display-fields');
+
+                expect(fields.getBoundingClientRect().top).toBeLessThan(primary.getBoundingClientRect().bottom);
+                expect(fields.getBoundingClientRect().left).toBeGreaterThanOrEqual(primary.getBoundingClientRect().right);
+                expect(row.scrollWidth).toBeLessThanOrEqual(row.clientWidth);
+            }),
+        );
+
+    });
+
 });

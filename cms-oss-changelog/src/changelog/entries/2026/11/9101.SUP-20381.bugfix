@@ -1,0 +1,1 @@
+Editor User Interface: In the item list, the item name now takes precedence over the display fields when sharing the available width. If the list is too narrow, the display fields are moved below the item name instead of causing horizontal scrolling.

@@ -7,7 +7,7 @@ import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder
     templateUrl: './image-thumbnail.tpl.html',
     styleUrls: ['./image-thumbnail.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ImageThumbnailComponent implements OnChanges {
     @Input() image: ImageModel;
@@ -39,8 +39,8 @@ export class ImageThumbnailComponent implements OnChanges {
         this.width = Math.round(+this.width || this.image.sizeX);
         const ratio = this.width / this.image.sizeX;
         const imageWidth = Math.min(this.width, this.image.sizeX);
-        const imageHeight =
-            this.image.sizeX < this.width
+        const imageHeight
+            = this.image.sizeX < this.width
                 ? this.image.sizeY
                 : this.image.sizeY * ratio;
         const changeDate = this.image.edate || this.image.cdate;
@@ -56,7 +56,7 @@ export class ImageThumbnailComponent implements OnChanges {
                 imageHeight,
                 this.nodeId,
                 changeDate,
-                fileType
+                fileType,
             );
         }
 

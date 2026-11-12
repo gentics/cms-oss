@@ -18,7 +18,7 @@
         transition: transform 0.5s cubic-bezier(.22,.47,.37,.96);
     }
 
-    &::shadow {
+    &::ng-deep {
         image-thumbnail {
             max-width: 300px;
             overflow: hidden;
@@ -165,11 +165,11 @@
         }
     }
 
-    &:not(.selected)::shadow .item-name {
+    &:not(.selected)::ng-deep .item-name {
         color: $gtx-color-off-black;
     }
 
-    &.selected::shadow image-thumbnail {
+    &.selected::ng-deep image-thumbnail {
         box-shadow: 0 0 9px 0px $gtx-color-primary;
     }
 }

@@ -1,7 +1,8 @@
 <div class="image-container"
   [style.width.px]="width"
-  [style.height.px]="height"
-  [style.maxHeight.px]="maxHeight || 2 * width">
+  [style.aspectRatio]="image.sizeX + '/' + image.sizeY"
+  [style.maxHeight.px]="maxHeight || 2 * width"
+>
   @if (showName) {
     <div></div>
   }

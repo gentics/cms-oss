@@ -40,7 +40,7 @@ gtx-sortable-list ::ng-deep {
     @include item-icon-color(template, $gcms-color-template);
 }
 
-gtx-sortable-list::shadow gtx-sortable-item {
+gtx-sortable-list::ng-deep gtx-sortable-item {
     display: flex;
     margin-bottom: 8px;
     position: relative;

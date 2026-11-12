@@ -1,105 +1,113 @@
 ﻿<div [class.deleted]="isDeleted()">
-  <image-thumbnail
-    [image]="item"
-    [nodeId]="nodeId"
-    [width]="280"
-    [minHeight]="200"
-  ></image-thumbnail>
+    <image-thumbnail
+        [image]="item"
+        [nodeId]="nodeId"
+        [width]="280"
+        [minHeight]="200"
+    />
 
-  <div class="thumbnail-overlay" [class.selected]="selected">
-    <div class="top-bar">
-      <icon-checkbox
-        [selected]="selected"
-        [icon]="icon"
-        (change)="toggleSelect()"
-      ></icon-checkbox>
+    <div class="thumbnail-overlay" [class.selected]="selected">
+        <div class="top-bar">
+            <icon-checkbox
+                [selected]="selected"
+                [icon]="icon"
+                (change)="toggleSelect()"
+            />
 
-      <div class="image-info">
-        <span>{{ item.fileSize | filesize }}</span>
-        <span>{{ { width: item.sizeX, height: item.sizeY } | imagedimensions | gtxI18n }}</span>
-      </div>
-      <favourite-toggle [item]="item" class="show-on-hover"></favourite-toggle>
-      <item-context-menu
-        class="show-on-hover context-menu"
-        [item]="item"
-        [activeNode]="activeNode"
-        [permissions]="permissions"
-        [isDeleted]="isDeleted()"
-        [uiMode]="uiMode"
-        [stagingMap]="stagingMap"
-      ></item-context-menu>
-    </div>
+            <div class="image-info">
+                <span>{{ item.fileSize | filesize }}</span>
+                <span>{{ { width: item.sizeX, height: item.sizeY } | imagedimensions | gtxI18n }}</span>
+            </div>
 
-    <div class="thumbnail-middle" [routerLink]="item | routerCommandsForItem">
-      <div class="display-fields">
-        <list-item-details
-          [autoCompact]="false"
-          [fields]="itemsInfo?.displayFields"
-          [item]="item"
-          [isDeleted]="isDeleted()"
-          (usageClick)="showUsage($event)"
-        ></list-item-details>
-      </div>
-    </div>
+            <favourite-toggle [item]="item" class="show-on-hover" />
 
-    <div class="bottom-bar">
-      @if (item.inherited) {
-        <div
-          class="inherited-icon"
-          [title]="'editor.inherited_tooltip' | gtxI18n:{ master: item.inheritedFrom }"
-          >
-          <icon>input</icon>
+            <item-context-menu
+                class="show-on-hover context-menu"
+                [item]="item"
+                [activeNode]="activeNode"
+                [permissions]="permissions"
+                [isDeleted]="isDeleted()"
+                [uiMode]="uiMode"
+                [stagingMap]="stagingMap"
+            />
         </div>
-      }
-      @if (item | itemIsLocalized) {
-        <div
-          class="localized-icon"
-          [title]="'editor.localized_tooltip' | gtxI18n:{ master: item.masterNode }"
-          >
-          <icon>file_copy</icon>
+
+        <div class="thumbnail-middle" [routerLink]="item | routerCommandsForItem">
+            <div class="display-fields">
+                <list-item-details
+                    [autoCompact]="false"
+                    [fields]="itemsInfo?.displayFields"
+                    [item]="item"
+                    [isDeleted]="isDeleted()"
+                    (usageClick)="showUsage($event)"
+                />
+            </div>
         </div>
-      }
-      @if (linkPaths) {
-        <div
-          class="item-name"
-          [title]="item | itemPath:activeNode?.name:true"
-          >
-          <a [routerLink]="['/editor', { outlets: { list: ['node', activeNode.id, 'folder', item.folderId] } }]">
-            {{ item | itemPath:activeNode?.name:true | truncatePath:40 }}
-          </a>
+
+        <div class="bottom-bar">
+            @if (item.inherited) {
+                <div
+                    class="inherited-icon"
+                    [title]="'editor.inherited_tooltip' | gtxI18n:{ master: item.inheritedFrom }"
+                >
+                    <icon>input</icon>
+                </div>
+            }
+
+            @if (item | itemIsLocalized) {
+                <div
+                    class="localized-icon"
+                    [title]="'editor.localized_tooltip' | gtxI18n:{ master: item.masterNode }"
+                >
+                    <icon>file_copy</icon>
+                </div>
+            }
+
+            @if (linkPaths) {
+                <div
+                    class="item-name"
+                    [title]="item | itemPath:activeNode?.name:true"
+                >
+                    <a [routerLink]="['/editor', { outlets: { list: ['node', activeNode.id, 'folder', item.folderId] } }]">
+                        {{ item | itemPath:activeNode?.name:true | truncatePath:40 }}
+                    </a>
+                </div>
+            }
+
+            <div class="name-container">
+                <a
+                    class="item-name"
+                    [routerLink]="item | routerCommandsForItem"
+                    [title]="item?.description || item?.name"
+                    [innerHTML]="item?.name | highlight:filterTerm"
+                    (click)="itemClicked($event, item)"
+                ></a>
+
+                @if (item['liveUrl'] && item['liveUrl'] !== '') {
+                    <a
+                        target="_blank"
+                        class="liveurl-icon"
+                        [href]="item['liveUrl']"
+                        [title]="'editor.live_url_tooltip' | gtxI18n"
+                    >
+                        <gtx-button icon size="small" type="secondary">
+                            <icon>open_in_new</icon>
+                        </gtx-button>
+                    </a>
+                }
+            </div>
+
+            @if (uiMode === UIMode.STAGING) {
+                <item-status-label
+                    [item]="$any(item)"
+                    [activeNodeId]="activeNode?.id"
+                    [uiMode]="uiMode"
+                    [stagingMap]="stagingMap"
+                />
+            }
+            @if (uiMode === UIMode.EDIT) {
+                <file-status-label [item]="item" />
+            }
         </div>
-      }
-      <a
-        class="item-name"
-        [title]="item?.name"
-        [routerLink]="item | routerCommandsForItem"
-        [title]="item?.description"
-        [innerHTML]="item?.name | highlight:filterTerm"
-        (click)="itemClicked($event, item)"
-      ></a>
-      @if (item['liveUrl'] && item['liveUrl'] !== '') {
-        <a
-          target="_blank"
-          class="liveurl-icon"
-          [href]="item['liveUrl']"
-          [title]="'editor.live_url_tooltip' | gtxI18n"
-          >
-          <gtx-button icon size="small" type="secondary">
-            <i class="material-icons" [attr.translate]="'no'">open_in_new</i>
-          </gtx-button>
-        </a>
-      }
-      @if (uiMode === UIMode.STAGING) {
-        <item-status-label
-            [item]="$any(item)"
-            [activeNodeId]="activeNode?.id"
-            [uiMode]="uiMode"
-            [stagingMap]="stagingMap"
-        ></item-status-label>
-      }
-      @if (uiMode === UIMode.EDIT) {
-        <file-status-label [item]="item"></file-status-label>
-      }
     </div>
-  </div>
 </div>

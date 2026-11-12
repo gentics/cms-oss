@@ -219,6 +219,38 @@ public class NodePreviewProxyResourceImpl implements NodePreviewProxyResource {
 	}
 
 	/**
+	 * Get the base URL (protocol, host and port, ending with a slash) of the effective mesh preview URL of the given node
+	 * @param node node
+	 * @return base URL
+	 * @throws NodeException if the preview URL is invalid
+	 */
+	public static String getBaseUrl(Node node) throws NodeException {
+		String previewUrl = node.getEffectiveMeshPreviewUrl();
+		Matcher urlMatcher = URL_PATTERN.matcher(previewUrl);
+		if (!urlMatcher.matches()) {
+			throw new RestMappedException(I18NHelper.get("nodepreview.invalid.url", previewUrl, node.getFolder().getName())).setMessageType(Message.Type.CRITICAL)
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+		}
+
+		boolean ssl = false;
+		int defaultPort = 80;
+		if (urlMatcher.group("protocol") != null) {
+			String protocol = urlMatcher.group("protocol");
+			if (protocol.startsWith("https")) {
+				ssl = true;
+				defaultPort = 443;
+			}
+		}
+		String host = urlMatcher.group("host");
+		int port = defaultPort;
+		if (urlMatcher.group("port") != null) {
+			port = Integer.parseInt(urlMatcher.group("port"));
+		}
+
+		return String.format("%s://%s:%d/", ssl ? "https" : "http", host, port);
+	}
+
+	/**
 	 * Forward the request to the given request method
 	 * @param id node id
 	 * @param path request path (may be null)
@@ -243,30 +275,10 @@ public class NodePreviewProxyResourceImpl implements NodePreviewProxyResource {
 		Node node = validate(id);
 
 		String previewUrl = node.getEffectiveMeshPreviewUrl();
-		Matcher urlMatcher = URL_PATTERN.matcher(previewUrl);
-		if (!urlMatcher.matches()) {
-			throw new RestMappedException(I18NHelper.get("nodepreview.invalid.url", previewUrl, node.getFolder().getName())).setMessageType(Message.Type.CRITICAL)
-					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
-		}
-
-		boolean ssl = false;
-		int defaultPort = 80;
-		if (urlMatcher.group("protocol") != null) {
-			String protocol = urlMatcher.group("protocol");
-			if (protocol.startsWith("https")) {
-				ssl = true;
-				defaultPort = 443;
-			}
-		}
-		String host = urlMatcher.group("host");
-		int port = defaultPort;
-		if (urlMatcher.group("port") != null) {
-			port = Integer.parseInt(urlMatcher.group("port"));
-		}
+		String baseUrl = getBaseUrl(node);
 
 		try {
 			String url = null;
-			String baseUrl = String.format("%s://%s:%d/", ssl ? "https" : "http", host, port);
 			if (StringUtils.isBlank(path)) {
 				url = baseUrl;
 			} else {

@@ -197,4 +197,85 @@ test.describe('Users Module', () => {
         const createUserRow = await findTableRowById(table, createdUserId);
         await expect(createUserRow).toBeVisible();
     });
+
+    test('can create a new user who sets the password with a link', {
+        annotation: [{
+            type: 'ticket',
+            description: 'GPU-2776',
+        }],
+    }, async ({ page }) => {
+        const module = await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.ADMIN,
+                perms: [
+                    GcmsPermission.READ,
+                ],
+            },
+            {
+                type: AccessControlledType.USER_ADMIN,
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.CREATE_USER,
+                ],
+            },
+            {
+                type: AccessControlledType.GROUP_ADMIN,
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.USER_ASSIGNMENT,
+                ],
+            },
+        ]);
+
+        const table = module.locator('gtx-user-table');
+        await table.locator('.entity-table-actions-bar [data-action="create"]').click();
+
+        const modal = page.locator('gtx-create-user-modal');
+        let createdUserId: number;
+        let passwordToken: string;
+
+        await test.step('Create the user with a password link', async () => {
+            await expect(modal).toBeVisible();
+
+            const userForm = modal.locator('gtx-tab .tab-content[data-id="1"] form');
+            await userForm.locator('[formControlName="login"] input').fill('linkuser123');
+            await userForm.locator('[formControlName="firstName"] input').fill('Hello');
+            await userForm.locator('[formControlName="lastName"] input').fill('Link');
+            await userForm.locator('gtx-checkbox[formcontrolname="passwordLink"] label').click();
+            await expect(userForm.locator('[formControlName="password1"] input')).toBeDisabled();
+            await expect(userForm.locator('[formControlName="password2"] input')).toBeDisabled();
+
+            await clickModalAction(modal, 'next');
+
+            const groupsTable = modal.locator('gtx-tab .tab-content[data-id="2"] gtx-group-table');
+            const DUMMY_GROUP = IMPORTER.get(TEST_GROUP_DUMMY);
+            const dummyGroupRow = await findTableRowById(groupsTable, DUMMY_GROUP.id);
+            await selectTableRow(dummyGroupRow);
+
+            const createReq = waitForResponseFrom(page, 'PUT', `/rest/group/${DUMMY_GROUP.id}/users`);
+            await clickModalAction(modal, 'confirm');
+            const createRes = await createReq;
+
+            const req = createRes.request();
+            expect(new URL(req.url()).searchParams.get('passwordLink')).toBe('true');
+            expect(req.postDataJSON()).not.toHaveProperty('password');
+
+            const body = await createRes.json();
+            createdUserId = body.user.id;
+            passwordToken = body.passwordToken;
+            expect(passwordToken).toBeTruthy();
+        });
+
+        await test.step('The link is shown', async () => {
+            const link = modal.locator('[data-context="password-link"] gtx-copy-value .content');
+            await expect(link).toContainText(`#/set-password?token=${encodeURIComponent(passwordToken)}`);
+            await expect(link).toContainText('?skip-sso');
+
+            await clickModalAction(modal, 'close');
+            await expect(modal).toBeHidden();
+        });
+
+        const createUserRow = await findTableRowById(table, createdUserId);
+        await expect(createUserRow).toBeVisible();
+    });
 });

@@ -573,4 +573,99 @@ test.describe('Form Management', () => {
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', false);
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', true);
     });
+
+    test('should download a submitted binary when clicking its link in the form reports', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20337',
+        }],
+    }, async ({ page, context }) => {
+        const REPORT_FORM = IMPORTER.get(FORM_ONE);
+        const ENTRY_UUID = 'e2e-report-entry';
+        const FIELD_NAME = 'e2e_upload';
+        const FILE_NAME = 'submitted-file.txt';
+        const FILE_CONTENT = 'submitted binary content';
+        const BINARY_PATH = `/rest/form/${REPORT_FORM.id}/data/${ENTRY_UUID}/binary/${FIELD_NAME}`;
+
+        await test.step('Publish form', async () => {
+            // The reports tab is only enabled for online forms
+            await IMPORTER.client.form.publish(REPORT_FORM.id).send();
+        });
+
+        await test.step('Mock form report data', async () => {
+            // Submitting real data would require a running form on the frontend side.
+            // We only want to verify that the UI opens the binary link, so the report list and
+            // the binary itself are served from here. Routes are registered on the context,
+            // as the link opens a new tab.
+            await context.route(`**/rest/form/${REPORT_FORM.id}/data?**`, (route) => route.fulfill({
+                json: {
+                    totalCount: 1,
+                    currentPage: 1,
+                    pageCount: 1,
+                    perPage: 15,
+                    elements: {
+                        [FIELD_NAME]: {
+                            active: true,
+                            elements: [],
+                            globalId: FIELD_NAME,
+                            mandatory: false,
+                            multivalue: false,
+                            type: 'file',
+                        },
+                    },
+                    entries: [{
+                        uuid: ENTRY_UUID,
+                        fields: {
+                            [FIELD_NAME]: { fileName: FILE_NAME },
+                        },
+                    }],
+                },
+            }));
+            await context.route(`**${BINARY_PATH}`, (route) => route.fulfill({
+                status: 200,
+                contentType: 'text/plain',
+                headers: { 'Content-Disposition': `attachment; filename="${FILE_NAME}"` },
+                body: FILE_CONTENT,
+            }));
+        });
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.FORM_REPORTS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, REPORT_FORM.id);
+        await itemAction(item, 'properties');
+
+        const binaryLink = page.locator('content-frame combined-properties-editor form-reports-list gtx-table a.form-value.type-binary');
+
+        await test.step('Open form reports', async () => {
+            const tab = page.locator('content-frame combined-properties-editor .properties-tabs .tab-link[data-id="item-reports"]');
+            await tab.click();
+            await expect(binaryLink).toHaveText(FILE_NAME);
+        });
+
+        await test.step('Click binary link', async () => {
+            const binaryRequest = context.waitForEvent('request', {
+                predicate: (req) => new URL(req.url()).pathname.endsWith(BINARY_PATH),
+                timeout: 10_000,
+            });
+            await binaryLink.click();
+
+            const req = await binaryRequest;
+            expect(req.method()).toEqual('GET');
+            const res = await req.response();
+            expect(res.status()).toEqual(200);
+        });
+    });
 });

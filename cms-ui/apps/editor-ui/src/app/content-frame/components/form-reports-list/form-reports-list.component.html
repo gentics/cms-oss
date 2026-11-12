@@ -127,7 +127,8 @@
             >{{ value ? 'check' : 'close' }}</icon>
         }
         @case (ValueType.BINARY) {
-            <a class="form-value type-binary" [href]="value.link" target="_blank">{{ value.fileName }}</a>
+            <!-- Stop the propagation, as the gtx-table row click handler would otherwise cancel the default action (opening the link) -->
+            <a class="form-value type-binary" [href]="value.link" target="_blank" (click)="$event.stopPropagation()">{{ value.fileName }}</a>
         }
     }
 </ng-template>

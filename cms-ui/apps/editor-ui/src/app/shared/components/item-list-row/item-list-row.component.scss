@@ -64,11 +64,22 @@ gtx-contents-list-item {
         padding-top: 0 !important;
     }
 
+    // Holds the primary content and the display fields. The display fields move onto
+    // a new line below the primary content when they don't fit next to it.
+    .item-content {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        column-gap: 0.5rem;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
     // The primary content takes the width it needs and all the remaining space,
     // the display fields only get what is left over (see `.display-fields`).
     .item-primary {
         flex: 1 1 auto;
-        max-width: calc(100% - 77px);
+        max-width: 100%;
     }
 
     .item-name {
@@ -137,8 +148,10 @@ gtx-contents-list-item {
     .display-fields {
         max-width: 50vw;
         max-width: fit-content;
-        // Never grow, and shrink (wrapping the chips) long before `.item-primary` does.
-        flex: 0 1000 auto;
+        // Basis 0: the line only breaks when not even the narrowest (fully wrapped) fields fit
+        // next to the item primary. The high grow factor makes the fields take the spare space
+        // up to their natural width before `.item-primary` gets the rest.
+        flex: 1000 1 0;
         padding-top: 7px;
         padding-bottom: 7px;
     }

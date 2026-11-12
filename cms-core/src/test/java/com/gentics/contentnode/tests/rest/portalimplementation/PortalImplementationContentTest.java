@@ -4,6 +4,7 @@ import static com.gentics.contentnode.perm.PermHandler.PERM_CONTENTREPOSITORY_UP
 import static com.gentics.contentnode.perm.PermHandler.PERM_VIEW;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -208,6 +209,66 @@ public class PortalImplementationContentTest {
 		assertThat(replaced.getEdate()).as("Edit date").isGreaterThan(1000);
 		assertThat(binFile(original.getId())).as("File in dbfiles").hasBinaryContent(newContents);
 		assertThat(countFiles()).as("Number of files").isEqualTo(1);
+	}
+
+	/**
+	 * Test that replacing the contents of a file in a transaction, which is rolled back, keeps the original contents in the dbfiles folder
+	 * @throws Exception
+	 */
+	@Test
+	public void testRollbackKeepsReplacedContents() throws Exception {
+		byte[] contents = "the original contents".getBytes(StandardCharsets.UTF_8);
+		PortalImplementationFileModel original = upload(ADMIN_LOGIN, "index.php", contents, "text/plain");
+
+		try (Trx trx = new Trx()) {
+			PortalImplementationFile file = trx.getTransaction().getObject(PortalImplementationFile.class, original.getId(), true);
+			file.setContents(new ByteArrayInputStream("the new contents, which are rolled back".getBytes(StandardCharsets.UTF_8)));
+			file.save();
+			// the transaction is rolled back, because trx.success() is not called
+		}
+
+		long filesize = Trx.supply(() -> DBUtils.select("SELECT filesize FROM portal_implementation_file WHERE id = ?",
+				ps -> ps.setInt(1, original.getId()), rs -> {
+					rs.next();
+					return rs.getLong("filesize");
+				}));
+		assertThat(filesize).as("Filesize in DB").isEqualTo(contents.length);
+		assertThat(binFile(original.getId())).as("File in dbfiles").hasBinaryContent(contents);
+	}
+
+	/**
+	 * Test that creating a file in a transaction, which is rolled back, leaves no contents in the dbfiles folder
+	 * @throws Exception
+	 */
+	@Test
+	public void testRollbackOfNewFileLeavesNoContents() throws Exception {
+		int fileId;
+		try (Trx trx = new Trx()) {
+			PortalImplementationFile file = trx.getTransaction().createObject(PortalImplementationFile.class);
+			file.setPortalImplementationId(impl.getId());
+			file.setPath("rolledback.txt");
+			file.setContents(new ByteArrayInputStream("rolled back".getBytes(StandardCharsets.UTF_8)));
+			file.save();
+			fileId = file.getId();
+			// the transaction is rolled back, because trx.success() is not called
+		}
+
+		assertThat(countFiles()).as("Number of files").isEqualTo(0);
+		assertThat(binFile(fileId)).as("File in dbfiles").doesNotExist();
+	}
+
+	/**
+	 * Test that the file records are removed by the database, when the record of the Portal Implementation is removed
+	 * @throws Exception
+	 */
+	@Test
+	public void testDeletingImplementationRecordDeletesFileRecords() throws Exception {
+		upload(ADMIN_LOGIN, "index.php", "contents".getBytes(StandardCharsets.UTF_8), "text/plain");
+		assertThat(countFiles()).as("Number of files before deletion").isEqualTo(1);
+
+		Trx.operate(() -> DBUtils.update("DELETE FROM portal_implementation WHERE id = ?", impl.getId()));
+
+		assertThat(countFiles()).as("Number of files after deletion").isEqualTo(0);
 	}
 
 	/**

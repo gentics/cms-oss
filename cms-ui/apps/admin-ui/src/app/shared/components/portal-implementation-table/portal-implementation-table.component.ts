@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
-import { AnyModelType, NormalizableEntityTypesMap, PortalImplementation } from '@gentics/cms-models';
+import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, PortalImplementation } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { PortalImplementationBO } from '../../../common';
+import { BO_PERMISSIONS, PortalImplementationBO } from '../../../common';
 import {
     DevToolPackageTableLoaderService,
     PermissionsService,
@@ -149,7 +149,8 @@ export class PortalImplementationTableComponent
                         icon: 'delete',
                         type: 'alert',
                         label: this.i18n.instant('shared.delete'),
-                        enabled: canDelete,
+                        // deleting requires the delete permission on the portal implementation
+                        enabled: (item) => canDelete && (item == null || item[BO_PERMISSIONS].includes(GcmsPermission.DELETE)),
                         single: true,
                         multiple: true,
                     });

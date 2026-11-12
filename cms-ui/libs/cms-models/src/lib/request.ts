@@ -2122,7 +2122,10 @@ export type ContentRepositoryFragmentUpdateRequest = ContentRepositoryFragmentCr
 /**
  * Query parameters for `/portalimplementations`
  */
-export type PortalImplementationListOptions = BaseListOptionsWithPaging<PortalImplementation>;
+export interface PortalImplementationListOptions extends BaseListOptionsWithPaging<PortalImplementation> {
+    /** Whether the permissions of the user on the portal implementations should be returned */
+    perms?: boolean;
+}
 
 /**
  * Request used for creating a Portal Implementation

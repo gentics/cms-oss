@@ -1,7 +1,7 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, PortalImplementationBO, TableLoadOptions } from '@admin-ui/common';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, PortalImplementationBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { PortalImplementation, PortalImplementationListResponse } from '@gentics/cms-models';
+import { PortalImplementation, PortalImplementationListOptions, PortalImplementationListResponse } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -43,7 +43,7 @@ export class PortalImplementationTableLoaderService
         options: TableLoadOptions,
         additionalOptions?: PortalImplementationTableLoaderOptions,
     ): Observable<EntityPageResponse<PortalImplementationBO>> {
-        const loadOptions = this.createDefaultOptions(options);
+        const loadOptions: PortalImplementationListOptions = this.createDefaultOptions(options);
         let loader: Observable<PortalImplementationListResponse>;
 
         if (additionalOptions?.packageName) {
@@ -51,12 +51,15 @@ export class PortalImplementationTableLoaderService
         } else if (additionalOptions?.nodeId) {
             loader = this.api.node.getNodePortalImplementations(additionalOptions.nodeId, loadOptions);
         } else {
+            // the permissions are needed to enable the actions (e.g. delete) per portal implementation
+            loadOptions.perms = true;
             loader = this.api.portalImplementations.getPortalImplementations(loadOptions);
         }
 
         return loader.pipe(
             map(response => {
                 const entities = response.items.map(item => this.mapToBusinessObject(item));
+                applyPermissions(entities, response);
 
                 return {
                     entities,

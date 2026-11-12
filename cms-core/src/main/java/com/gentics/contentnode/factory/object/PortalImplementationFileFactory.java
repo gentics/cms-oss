@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.AbstractTransactional;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
@@ -80,6 +82,107 @@ public class PortalImplementationFileFactory extends AbstractFactory {
 	 */
 	public PortalImplementationFileFactory() {
 		super();
+	}
+
+	/**
+	 * Contents of files, which were stored in the current transaction. They are moved into the dbfiles folder after the transaction was committed
+	 * (or before the update event for the Portal Implementation is triggered, whatever comes first), and discarded when the transaction is rolled back.
+	 */
+	protected static class PendingContents extends AbstractTransactional {
+		/**
+		 * Key of the instance in the transaction attributes
+		 */
+		protected final static String KEY = PendingContents.class.getName();
+
+		/**
+		 * Pending contents
+		 * @param source temporary file holding the contents (null for empty contents)
+		 * @param target file in the dbfiles folder
+		 */
+		protected static record Contents(java.io.File source, java.io.File target) {
+		}
+
+		/**
+		 * List of pending contents
+		 */
+		protected final List<Contents> pending = new ArrayList<>();
+
+		/**
+		 * Get the instance for the transaction, create and register it if necessary
+		 * @param t transaction
+		 * @return instance
+		 */
+		protected static PendingContents get(Transaction t) {
+			return (PendingContents) t.getAttributes().computeIfAbsent(KEY, key -> {
+				PendingContents pendingContents = new PendingContents();
+				t.addTransactional(pendingContents);
+				return pendingContents;
+			});
+		}
+
+		/**
+		 * Move the pending contents of the transaction into the dbfiles folder (if there are any)
+		 * @param t transaction
+		 */
+		protected static void applyIfPresent(Transaction t) {
+			if (t.getAttributes().get(KEY) instanceof PendingContents pendingContents) {
+				pendingContents.apply(t);
+			}
+		}
+
+		/**
+		 * Add pending contents
+		 * @param source temporary file holding the contents (null for empty contents)
+		 * @param target file in the dbfiles folder
+		 */
+		protected void add(java.io.File source, java.io.File target) {
+			pending.add(new Contents(source, target));
+		}
+
+		/**
+		 * Move the pending contents into the dbfiles folder
+		 * @param t transaction
+		 */
+		protected void apply(Transaction t) {
+			t.getAttributes().remove(KEY, this);
+			for (Contents contents : pending) {
+				try {
+					if (contents.source() != null) {
+						Files.move(contents.source().toPath(), contents.target().toPath(), REPLACE_EXISTING);
+					} else {
+						Files.write(contents.target().toPath(), new byte[0]);
+					}
+				} catch (IOException e) {
+					logger.error("Error while storing contents into " + contents.target().getAbsolutePath(), e);
+				}
+			}
+			pending.clear();
+		}
+
+		@Override
+		public void onDBCommit(Transaction t) throws NodeException {
+		}
+
+		@Override
+		public boolean onTransactionCommit(Transaction t) {
+			apply(t);
+			return false;
+		}
+
+		@Override
+		public void onTransactionRollback(Transaction t) {
+			t.getAttributes().remove(KEY, this);
+			for (Contents contents : pending) {
+				if (contents.source() != null) {
+					try {
+						Files.deleteIfExists(contents.source().toPath());
+					} catch (IOException e) {
+						logger.warn("Could not delete temporary file " + contents.source().getAbsolutePath(), e);
+					}
+				}
+			}
+			pending.clear();
+		}
 	}
 
 	/**
@@ -221,6 +324,8 @@ public class PortalImplementationFileFactory extends AbstractFactory {
 				public boolean onTransactionCommit(Transaction t) {
 					// remove the marker, so that changes done after the commit (in the same transaction) will trigger the event again
 					t.getAttributes().remove(key);
+					// the event synchronizes the Portal Implementation into the devtool packages, so the changed contents must be stored before
+					PendingContents.applyIfPresent(t);
 					return super.onTransactionCommit(t);
 				}
 
@@ -583,7 +688,7 @@ public class PortalImplementationFileFactory extends AbstractFactory {
 					this.modified = false;
 
 					if (contentsChanged || isNew) {
-						storeContents();
+						storeContents(t);
 					}
 
 					if (isNew) {
@@ -651,26 +756,25 @@ public class PortalImplementationFileFactory extends AbstractFactory {
 		}
 
 		/**
-		 * Store the contents in the dbfiles folder. If no contents were set (for a new file), an empty file is created
+		 * Store the contents in the dbfiles folder, after the transaction was committed. If no contents were set (for a new file), an empty file is created.
+		 * When the transaction is rolled back, the new contents are discarded.
+		 * @param t transaction
 		 * @throws NodeException
 		 */
-		protected void storeContents() throws NodeException {
+		protected void storeContents(Transaction t) throws NodeException {
 			java.io.File targetFile = getBinFile();
 			java.io.File contentsDir = targetFile.getParentFile();
 			if (!contentsDir.exists() && !contentsDir.mkdirs()) {
 				throw new NodeException("Could not create folder " + contentsDir.getAbsolutePath());
 			}
-			try {
-				if (tmpFile != null) {
-					Files.move(tmpFile.toPath(), targetFile.toPath(), REPLACE_EXISTING);
-					tmpFile = null;
-				} else {
-					Files.write(targetFile.toPath(), new byte[0]);
-					filesize = 0;
-				}
-			} catch (IOException e) {
-				throw new NodeException("Error while storing contents of " + this + " into " + targetFile.getAbsolutePath(), e);
+
+			// the temporary file is handed over to the pending contents, which are moved into the dbfiles folder after the commit
+			java.io.File sourceFile = tmpFile;
+			tmpFile = null;
+			if (sourceFile == null) {
+				filesize = 0;
 			}
+			PendingContents.get(t).add(sourceFile, targetFile);
 		}
 
 		/**

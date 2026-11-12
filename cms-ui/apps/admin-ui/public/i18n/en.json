@@ -310,6 +310,8 @@
         "repository_plural": "Repositories",
         "contentRepository_singular": "ContentRepository",
         "contentRepository_plural": "Contentrepositories",
+        "portalImplementation_singular": "Portal Implementation",
+        "portalImplementation_plural": "Portal Implementations",
         "copy_plural": "copies",
         "copy_singular": "copy",
         "schedule_singular": "Schedule",

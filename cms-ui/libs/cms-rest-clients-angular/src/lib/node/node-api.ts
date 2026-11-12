@@ -192,6 +192,12 @@ export class NodeApi {
      * Get the portal implementations assigned to this node
      */
     getNodePortalImplementations(nodeId: number, options?: PortalImplementationListOptions): Observable<PortalImplementationListResponse> {
+        if (options?.sort) {
+            const copy: any = { ...options };
+            copy.sort = stringifyPagingSortOptions(copy.sort);
+            options = copy;
+        }
+
         return this.apiBase.get(`node/${nodeId}/portalimplementations`, options);
     }
 

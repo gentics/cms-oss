@@ -724,7 +724,7 @@ export interface PortalImplementationResponse extends Response {
 /**
  * Response from `portalimplementations`
  */
-export interface PortalImplementationListResponse extends ListResponse<PortalImplementation> { }
+export interface PortalImplementationListResponse extends PermissionListResponse<PortalImplementation> { }
 
 /**
  * Response from `portalimplementations/:id/files`

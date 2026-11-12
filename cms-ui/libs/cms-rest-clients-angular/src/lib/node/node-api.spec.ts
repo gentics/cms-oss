@@ -9,6 +9,7 @@ import {
     NodeRequestOptions,
     NodeSaveRequest,
     PagedConstructListRequestOptions,
+    PortalImplementationListOptions,
     TemplateListRequest,
 } from '@gentics/cms-models';
 import { getExampleNodeData } from '@gentics/cms-models/testing';
@@ -238,6 +239,19 @@ describe('NodeApi', () => {
         const options = { pageSize: 10 };
         nodeApi.getNodePortalImplementations(NODE_ID, options);
         expect(apiBase.get).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations`, options);
+    });
+
+    it('getNodePortalImplementations() sends the sort options as string', () => {
+        const options: PortalImplementationListOptions = {
+            sort: {
+                attribute: 'name',
+            },
+        };
+        nodeApi.getNodePortalImplementations(NODE_ID, options);
+        expect(apiBase.get).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations`, {
+            ...options,
+            sort: stringifyPagingSortOptions(options.sort),
+        });
     });
 
     it('removeNodePortalImplementation() sends the correct DELETE request', () => {

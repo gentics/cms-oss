@@ -93,7 +93,7 @@ public interface PortalImplementationResource {
 	 */
 	@POST
 	@StatusCodes({
-		@ResponseCode(code = 201, condition = "Portal Implementation was created."),
+		@ResponseCode(code = 200, condition = "Portal Implementation was created."),
 		@ResponseCode(code = 400, condition = "A mandatory attribute is missing."),
 		@ResponseCode(code = 409, condition = "The keyword, name or globalId is already used by another Portal Implementation.")
 	})
@@ -123,7 +123,7 @@ public interface PortalImplementationResource {
 	@PUT
 	@Path("/{id}")
 	@StatusCodes({
-		@ResponseCode(code = 201, condition = "Portal Implementation {id} was updated."),
+		@ResponseCode(code = 200, condition = "Portal Implementation {id} was updated."),
 		@ResponseCode(code = 404, condition = "Portal Implementation {id} does not exist."),
 		@ResponseCode(code = 409, condition = "The keyword or name is already used by another Portal Implementation.")
 	})

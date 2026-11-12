@@ -64,21 +64,11 @@ gtx-contents-list-item {
         padding-top: 0 !important;
     }
 
-    @media only screen and (max-width: $small-screen) {
-        .item-primary {
-            width: 49%;
-        }
-    }
-
-    @media only screen and (max-width: $small-screen + 15px) and (orientation: landscape) {
-        .item-primary {
-            width: 30%;
-        }
-    }
-
+    // The primary content takes the width it needs and all the remaining space,
+    // the display fields only get what is left over (see `.display-fields`).
     .item-primary {
+        flex: 1 1 auto;
         max-width: calc(100% - 77px);
-        width: 40%;
     }
 
     .item-name {
@@ -147,7 +137,8 @@ gtx-contents-list-item {
     .display-fields {
         max-width: 50vw;
         max-width: fit-content;
-        flex: 1;
+        // Never grow, and shrink (wrapping the chips) long before `.item-primary` does.
+        flex: 0 1000 auto;
         padding-top: 7px;
         padding-bottom: 7px;
     }

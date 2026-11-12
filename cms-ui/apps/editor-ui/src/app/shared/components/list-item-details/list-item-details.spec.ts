@@ -130,6 +130,22 @@ describe('ListItemDetails', () => {
         }),
     );
 
+    it('displays the globalId label and value on the same line',
+        componentTest(() => TestComponent, (fixture, instance) => {
+            instance.displayFields = ['globalId'];
+            instance.item = { ...instance.item, globalId: 'A547.69478' };
+            fixture.detectChanges();
+
+            const chips = fixture.debugElement.queryAll(By.directive(DetailChip));
+            expect(chips.length).toBe(1);
+
+            const chip: HTMLElement = chips[0].nativeElement;
+            expect(chip.querySelector('br')).toBeNull();
+            expect(chip.textContent.trim()).toMatch(/:\s*A547\.69478$/);
+            expect(chip.textContent).not.toContain('\n');
+        }),
+    );
+
     describe('compact mode', () => {
 
         let splitViewContainer: MockSplitViewContainer;

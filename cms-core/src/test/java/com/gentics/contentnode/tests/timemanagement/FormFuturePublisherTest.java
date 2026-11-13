@@ -123,8 +123,8 @@ public class FormFuturePublisherTest {
 	}
 
 	/**
-	 * User B schedules the form for publishing, afterwards user A schedules the form for publishing at a time, which is already due.
-	 * The form is published immediately, A must be the publisher.
+	 * User A schedules the form for publishing, afterwards user B schedules the form for publishing at a time, which is already due.
+	 * The form is published immediately, B must be the publisher.
 	 * @throws NodeException
 	 */
 	@Test
@@ -133,10 +133,10 @@ public class FormFuturePublisherTest {
 		int publishAt = now + 3600;
 
 		Form form = createFormAs(userA, now);
-		publishAs(userB, form, now + 1, publishAt);
-		publishAs(userA, form, now + 3, now + 2);
+		publishAs(userA, form, now + 1, publishAt);
+		publishAs(userB, form, now + 3, now + 2);
 
-		assertPublisher(form, userA);
+		assertPublisher(form, userB);
 	}
 
 	/**

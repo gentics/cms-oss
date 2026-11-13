@@ -371,9 +371,9 @@ export class GCMSRestClient implements GCMSRootAPI {
         assignConstruct: (name, constructId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/constructs/${constructId}`),
         unassignConstruct: (name, constructId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/constructs/${constructId}`),
 
-        listContentRepositories: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/objectproperties`, null, options),
-        assignContentRepository: (name, crId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/objectproperties/${crId}`),
-        unassignContentRepository: (name, crId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/objectproperties/${crId}`),
+        listContentRepositories: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/contentrepositories`, null, options),
+        assignContentRepository: (name, crId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/contentrepositories/${crId}`),
+        unassignContentRepository: (name, crId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/contentrepositories/${crId}`),
 
         listContentRepositoryFragments: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/cr_fragments`, null, options),
         assignContentRepositoryFragment: (name, crfId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/cr_fragments/${crfId}`),
@@ -381,7 +381,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         listDataSources: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/datasources`, null, options),
         assignDataSource: (name, dsId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/datasources/${dsId}`),
-        unassignDataSource: (name, dsId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/datasource/${dsId}`),
+        unassignDataSource: (name, dsId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/datasources/${dsId}`),
 
         listObjectProperties: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/objectproperties`, null, options),
         assignObjectProperty: (name, opId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/objectproperties/${opId}`),

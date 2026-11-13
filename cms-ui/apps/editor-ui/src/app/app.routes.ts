@@ -21,6 +21,12 @@ export const APP_ROUTES: Route[] = [
         loadChildren: () => import('./login/login.module').then((m) => m.LoginModule),
     },
     {
+        // public: the user opening a password link has no session yet, so no AuthGuard
+        path: 'set-password',
+        pathMatch: 'full',
+        loadChildren: () => import('./set-password/set-password.module').then((m) => m.SetPasswordModule),
+    },
+    {
         path: 'no-nodes',
         canActivate: [AuthGuard],
         pathMatch: 'full',

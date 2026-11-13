@@ -302,7 +302,7 @@ describe('ContextMenuOperationsService', () => {
         describe('form', () => {
 
             const basicFormData: Partial<EditableFormData> = {
-                successUrlI18n: {
+                successUrl: {
                     en: 'https://successurl.com',
                     de: 'https://successurl.com',
                 },
@@ -402,7 +402,7 @@ describe('ContextMenuOperationsService', () => {
             };
 
             const basicFormDataWithoutEn: Partial<EditableFormData> = {
-                successUrlI18n: {
+                successUrl: {
                     de: 'https://successurl.com',
                 },
                 adminEmailSubject: {
@@ -489,7 +489,7 @@ describe('ContextMenuOperationsService', () => {
             };
 
             const basicFormDataWithoutDe: Partial<EditableFormData> = {
-                successUrlI18n: {
+                successUrl: {
                     en: 'https://successurl.com',
                 },
                 adminEmailSubject: {

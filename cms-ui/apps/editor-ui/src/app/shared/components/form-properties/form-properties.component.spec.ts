@@ -1,6 +1,6 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgControl, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent, CmsComponentsModule, GCMS_UI_SERVICES_PROVIDER, I18nInputComponent } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
@@ -103,6 +103,44 @@ describe('FormProperties', () => {
                 setupClient();
                 const languageSelectionElement = getLanguageSelectionElement(fixture);
                 expect(languageSelectionElement).toBeNull();
+            }),
+        );
+    });
+
+    describe('success url', () => {
+        const SUCCESS_URL = 'https://gentics.com';
+
+        it('stores an external success url in data.successUrl',
+            componentTest(() => TestComponent, (fixture, instance) => {
+                setupClient();
+                instance.languages = [{ code: 'en', id: 1, name: 'English' }];
+                instance.value = {
+                    languages: ['en'],
+                    data: {
+                        successPageId: 0,
+                        successNodeId: 0,
+                    },
+                };
+                fixture.detectChanges();
+                tick();
+
+                const properties = instance.propertiesForm;
+                // Same as selecting the "external url" radio button
+                properties.updateInternalSuccessPage(false);
+                fixture.detectChanges();
+                tick();
+
+                const urlInput = fixture.debugElement.query(By.directive(I18nInputComponent));
+                expect(urlInput).not.toBeNull();
+                urlInput.injector.get(NgControl).control.setValue({ en: SUCCESS_URL });
+                fixture.detectChanges();
+                tick();
+
+                // Untyped on purpose: checks the actual key that is sent to the server
+                const data: Record<string, unknown> = properties.form.value.data as any;
+                expect(data['successUrl']).toEqual({ en: SUCCESS_URL });
+                expect(Object.keys(data)).not.toContain('successUrlI18n');
+                flush();
             }),
         );
     });

@@ -510,19 +510,19 @@ public class UserResourceImpl implements UserResource {
 			if (request == null || StringUtils.isEmpty(request.getOldPassword()) || StringUtils.isEmpty(request.getNewPassword())) {
 				return new GenericResponse(
 					new Message(Type.WARNING, I18NHelper.get("rest.user.password_missing")),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Old and new password must be given"));
+					new ResponseInfo(ResponseCode.INVALIDDATA, I18NHelper.get("rest.user.password_missing")));
 			}
 
 			if (user.isSupportUser()) {
 				return new GenericResponse(
 					new Message(Type.WARNING, "password", I18NHelper.get("rest.user.support_user_password")),
-					new ResponseInfo(ResponseCode.FAILURE, "Cannot change password of support user"));
+					new ResponseInfo(ResponseCode.FAILURE, I18NHelper.get("rest.user.support_user_password")));
 			}
 
 			if (AbstractSSOFilter.SSO_PASSWORD.equals(user.getPassword())) {
 				return new GenericResponse(
 					new Message(Type.WARNING, "password", I18NHelper.get("rest.user.sso_user_password")),
-					new ResponseInfo(ResponseCode.FAILURE, "Cannot change password of single sign-on user"));
+					new ResponseInfo(ResponseCode.FAILURE, I18NHelper.get("rest.user.sso_user_password")));
 			}
 
 			SystemUser verifiedUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class))
@@ -531,7 +531,7 @@ public class UserResourceImpl implements UserResource {
 			if (verifiedUser == null || !verifiedUser.getId().equals(user.getId())) {
 				return new GenericResponse(
 					new Message(Type.WARNING, "oldPassword", I18NHelper.get("rest.user.old_password_wrong")),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Old password does not match"));
+					new ResponseInfo(ResponseCode.INVALIDDATA, I18NHelper.get("rest.user.old_password_wrong")));
 			}
 
 			// get editable copy of object, change password and save
@@ -540,7 +540,7 @@ public class UserResourceImpl implements UserResource {
 			user.save();
 
 			trx.success();
-			return new GenericResponse(null, ResponseInfo.ok("Successfully changed password"));
+			return new GenericResponse(null, ResponseInfo.ok(I18NHelper.get("rest.user.password_changed")));
 		}
 	}
 

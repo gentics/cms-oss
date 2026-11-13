@@ -23,6 +23,7 @@ import org.junit.rules.RuleChain;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.auth.filter.AbstractSSOFilter;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermissionStore;
@@ -116,7 +117,7 @@ public class UserPasswordChangeTest {
 
 		GenericResponse response = changePassword(user, "wrongpassword", NEW_PASSWORD);
 
-		assertResponse(response, ResponseCode.INVALIDDATA, "Old password does not match");
+		assertResponse(response, ResponseCode.INVALIDDATA, i18n("rest.user.old_password_wrong"));
 		assertThat(response.getMessages()).as("Response messages").hasSize(1);
 		assertThat(response.getMessages().get(0).getFieldName()).as("Field of message").isEqualTo("oldPassword");
 		assertPasswordUnchanged(user);
@@ -132,7 +133,7 @@ public class UserPasswordChangeTest {
 
 		GenericResponse response = changePassword(user, null, NEW_PASSWORD);
 
-		assertResponse(response, ResponseCode.INVALIDDATA, "Old and new password must be given");
+		assertResponse(response, ResponseCode.INVALIDDATA, i18n("rest.user.password_missing"));
 		assertPasswordUnchanged(user);
 	}
 
@@ -146,7 +147,7 @@ public class UserPasswordChangeTest {
 
 		GenericResponse response = changePassword(user, OLD_PASSWORD, "");
 
-		assertResponse(response, ResponseCode.INVALIDDATA, "Old and new password must be given");
+		assertResponse(response, ResponseCode.INVALIDDATA, i18n("rest.user.password_missing"));
 		assertPasswordUnchanged(user);
 	}
 
@@ -165,7 +166,7 @@ public class UserPasswordChangeTest {
 
 		GenericResponse response = changePassword(user, AbstractSSOFilter.SSO_PASSWORD, NEW_PASSWORD);
 
-		assertResponse(response, ResponseCode.FAILURE, "Cannot change password of single sign-on user");
+		assertResponse(response, ResponseCode.FAILURE, i18n("rest.user.sso_user_password"));
 		String storedPassword = supply(t -> t.getObject(SystemUser.class, user.getId()).getPassword());
 		assertThat(storedPassword).as("Stored password").isEqualTo(AbstractSSOFilter.SSO_PASSWORD);
 	}
@@ -194,7 +195,7 @@ public class UserPasswordChangeTest {
 
 		GenericResponse response = changePassword(user, OLD_PASSWORD, NEW_PASSWORD);
 
-		assertResponse(response, ResponseCode.FAILURE, "Cannot change password of support user");
+		assertResponse(response, ResponseCode.FAILURE, i18n("rest.user.support_user_password"));
 		assertPasswordUnchanged(user);
 	}
 
@@ -230,6 +231,19 @@ public class UserPasswordChangeTest {
 	 */
 	protected boolean passwordMatches(SystemUser user, String password) throws NodeException {
 		return supply(t -> ((SystemUserFactory) t.getObjectFactory(SystemUser.class)).getSystemUser(user.getLogin(), password, true) != null);
+	}
+
+	/**
+	 * Get the translation for the given i18n key, as the endpoint resolves it
+	 * @param key i18n key
+	 * @return translation
+	 * @throws NodeException
+	 */
+	protected String i18n(String key) throws NodeException {
+		String translation = supply(() -> I18NHelper.get(key));
+		// a missing key must not make the response message check trivially true
+		assertThat(translation).as("Translation of " + key).isNotBlank().doesNotContain(key);
+		return translation;
 	}
 
 	/**

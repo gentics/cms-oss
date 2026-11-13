@@ -19,6 +19,7 @@ import jakarta.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gentics.contentnode.rest.model.User;
+import com.gentics.contentnode.rest.model.request.ChangePasswordRequest;
 import com.gentics.contentnode.rest.model.request.SortOrder;
 import com.gentics.contentnode.rest.model.request.UserSaveRequest;
 import com.gentics.contentnode.rest.model.request.UserSortAttribute;
@@ -163,6 +164,23 @@ public interface UserResource {
 	@Path("/me/data")
 	@Produces({MediaType.APPLICATION_JSON})
 	UserDataResponse getAllUserData();
+
+	/**
+	 * Change the password of the current user.
+	 * The current (old) password must be given and is verified before the new password is set.
+	 * Only the permission to view the own user (which every user has) is required.
+	 * The password of users, which are authenticated by single sign-on (e.g. Keycloak), and of support users cannot be changed.
+	 * @param request request containing the old and the new password
+	 * @return Generic response
+	 */
+	@POST
+	@Path("/password")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "The password was changed, or the response info explains why not (old password wrong, password missing, single sign-on or support user).")
+	})
+	GenericResponse changePassword(ChangePasswordRequest request) throws Exception;
 
 	/**
 	 * List users.<br>

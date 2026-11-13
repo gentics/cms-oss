@@ -126,14 +126,15 @@ export class AuthActionsService {
     }
 
     /**
-     * Update the user's password.
+     * Update the current user's password. The old password is verified by the server.
      */
-    async changePassword(userId: number, newPassword: string): Promise<boolean> {
+    async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
         await this.appState.dispatch(new ChangePasswordStart()).toPromise();
 
         try {
-            await this.client.user.update(userId, {
-                password: newPassword,
+            await this.client.user.changePassword({
+                oldPassword,
+                newPassword,
             }).toPromise();
             this.localStorage.setSid(null);
             this.notification.show({

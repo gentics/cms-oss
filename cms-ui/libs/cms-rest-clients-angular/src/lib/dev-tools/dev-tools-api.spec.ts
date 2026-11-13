@@ -169,6 +169,27 @@ describe('DevToolsApi', () => {
         expect(apiBase.delete).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/cr_fragments/${PACKAGE_ENTITY_GLOBALID}`);
     });
 
+    // PORTAL_IMPLEMENTATIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    it('getPortalImplementations() sends the correct GET request', () => {
+        devtoolsApi.getPortalImplementations(PACKAGE_NAME, OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/portal_implementations`, { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
+    });
+
+    it('getPortalImplementation() sends the correct GET request', () => {
+        devtoolsApi.getPortalImplementation(PACKAGE_NAME, PACKAGE_ENTITY_GLOBALID);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/portal_implementations/${PACKAGE_ENTITY_GLOBALID}`);
+    });
+
+    it('addPortalImplementationToPackage() sends the correct PUT request', () => {
+        devtoolsApi.addPortalImplementationToPackage(PACKAGE_NAME, PACKAGE_ENTITY_GLOBALID);
+        expect(apiBase.put).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/portal_implementations/${PACKAGE_ENTITY_GLOBALID}`, null);
+    });
+
+    it('removePortalImplementationFromPackage() sends the correct DELETE request', () => {
+        devtoolsApi.removePortalImplementationFromPackage(PACKAGE_NAME, PACKAGE_ENTITY_GLOBALID);
+        expect(apiBase.delete).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/portal_implementations/${PACKAGE_ENTITY_GLOBALID}`);
+    });
+
     // DATASOURCE ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getDataSources() sends the correct GET request', () => {
         devtoolsApi.getDataSources(PACKAGE_NAME, OPTIONS);

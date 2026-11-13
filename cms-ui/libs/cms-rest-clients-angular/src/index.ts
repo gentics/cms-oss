@@ -29,6 +29,7 @@ export * from './lib/node/node-api';
 export * from './lib/object-property-category/object-property-category-api';
 export * from './lib/object-property/object-property-api';
 export * from './lib/page/page-api';
+export * from './lib/portal-implementation/portal-implementation-api';
 export * from './lib/permission/permission-api';
 export * from './lib/publish-queue/publish-queue-api';
 export * from './lib/role/role-api';

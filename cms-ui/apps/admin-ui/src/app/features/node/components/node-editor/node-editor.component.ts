@@ -244,6 +244,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         };
 
         this.tabHandles[this.Tabs.PACKAGES] = NULL_FORM_TAB_HANDLE;
+        this.tabHandles[this.Tabs.PORTAL_IMPLEMENTATIONS] = NULL_FORM_TAB_HANDLE;
     }
 
     protected onEntityChange(): void {

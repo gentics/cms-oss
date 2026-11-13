@@ -90,6 +90,9 @@ index:
       url: "admin_jmx_monitoring"
     - title: "ContentRepositories"
       url: "admin_contentrepositories"
+    - title: "Portal Implementations"
+      url: "admin_portal_implementations"
+      text: "Managing Portal Implementations and publishing them into Mesh ContentRepositories"
     - title: Node specific settings
       url: admin_node_settings
       text: Explains how node specific settings can be configured and retrieved vir the REST API

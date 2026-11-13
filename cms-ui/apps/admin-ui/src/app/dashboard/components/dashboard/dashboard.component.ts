@@ -31,6 +31,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     public packagesModuleEnabled = false;
     public contentRepositoriesModuleEnabled = false;
     public crFragmentsModuleEnabled = false;
+    public portalImplementationsModuleEnabled = false;
     public templatesModuleEnabled = false;
     public schedulerModuleEnabled = false;
     public contentStagingModuleEnabled = false;
@@ -157,6 +158,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
             permissions: GcmsPermission.READ,
         }).subscribe((enabled) => {
             this.crFragmentsModuleEnabled = enabled;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.permissions.checkPermissions({
+            type: AccessControlledType.PORTAL_IMPLEMENTATION_ADMIN,
+            permissions: GcmsPermission.READ,
+        }).subscribe((enabled) => {
+            this.portalImplementationsModuleEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
 

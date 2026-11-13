@@ -24,6 +24,7 @@ import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-to
 import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
+import { PortalImplementationHandlerService } from '../portal-implementation-handler/portal-implementation-handler.service';
 
 export function runEntityResolver(
     from: ActivatedRouteSnapshot,
@@ -67,6 +68,7 @@ export class RouteEntityResolverService {
         private objPropCat: ObjectPropertyCategoryHandlerService,
         private node: NodeHandlerService,
         private objPro: ObjectPropertyHandlerService,
+        private portalImplementation: PortalImplementationHandlerService,
     ) {}
 
     async resolve<K extends EditableEntity>(
@@ -164,6 +166,9 @@ export class RouteEntityResolverService {
 
             case EditableEntity.NODE:
                 return this.node as any;
+
+            case EditableEntity.PORTAL_IMPLEMENTATION:
+                return this.portalImplementation as any;
 
             default:
                 return null;

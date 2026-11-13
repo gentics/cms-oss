@@ -23,6 +23,9 @@ import {
     PackageSyncOptions,
     PackageSyncResponse,
     PagedConstructListRequestOptions,
+    PortalImplementationListOptions,
+    PortalImplementationListResponse,
+    PortalImplementationResponse,
     Response,
     Template,
     TemplateListRequest,
@@ -295,6 +298,46 @@ export class DevToolsApi {
     removeContentRepositoryFragmentFromPackage(packageName: string, crfragmentGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/packages/${sanitizedPackageName}/cr_fragments/${crfragmentGlobalId}`);
+    }
+
+    // PORTAL_IMPLEMENTATIONS ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Get list of portal implementations in a package
+     */
+    getPortalImplementations(packageName: string, options?: PortalImplementationListOptions): Observable<PortalImplementationListResponse> {
+        if (options?.sort) {
+            const copy: any = {...options };
+            copy.sort = stringifyPagingSortOptions(copy.sort);
+            options = copy;
+        }
+
+        const sanitizedPackageName = this.sanitizePackageNameString(packageName);
+        return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/portal_implementations`, options);
+    }
+
+    /**
+     * Get a single portal implementation from a package
+     */
+    getPortalImplementation(packageName: string, portalImplementationId: string | number): Observable<PortalImplementationResponse> {
+        const sanitizedPackageName = this.sanitizePackageNameString(packageName);
+        return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/portal_implementations/${portalImplementationId}`);
+    }
+
+    /**
+     * Add an existing portal implementation to a package
+     */
+    addPortalImplementationToPackage(packageName: string, portalImplementationId: string | number): Observable<void> {
+        const sanitizedPackageName = this.sanitizePackageNameString(packageName);
+        return this.apiBase.put(`devtools/packages/${sanitizedPackageName}/portal_implementations/${portalImplementationId}`, null) as unknown as Observable<void>;
+    }
+
+    /**
+     * Remove an existing portal implementation from a package
+     */
+    removePortalImplementationFromPackage(packageName: string, portalImplementationId: string | number): Observable<void> {
+        const sanitizedPackageName = this.sanitizePackageNameString(packageName);
+        return this.apiBase.delete(`devtools/packages/${sanitizedPackageName}/portal_implementations/${portalImplementationId}`);
     }
 
     // DATASOURCE ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

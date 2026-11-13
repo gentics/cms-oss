@@ -50,7 +50,7 @@ public class ActionLogger {
 	 * Logged types
 	 */
 	public final static List<TypePerms> LOGGED_TYPES = Arrays.asList(TypePerms.user, TypePerms.group, TypePerms.role,
-			TypePerms.inboxmessage, TypePerms.actionlog, TypePerms.language, TypePerms.crfragment,
+			TypePerms.inboxmessage, TypePerms.actionlog, TypePerms.language, TypePerms.crfragment, TypePerms.portalimplementation, TypePerms.portalimplementationfile,
 			TypePerms.contentrepository, TypePerms.construct, TypePerms.part, TypePerms.constructcategory,
 			TypePerms.datasource, TypePerms.objproptype, TypePerms.objprop, TypePerms.objtag, TypePerms.tasktemplate, TypePerms.task, TypePerms.job, TypePerms.node,
 			TypePerms.folder, TypePerms.page, TypePerms.pagecontent, TypePerms.template, TypePerms.image, TypePerms.file, TypePerms.form, TypePerms.devtooladmin);

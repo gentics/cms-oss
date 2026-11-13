@@ -51,9 +51,10 @@ public class ListPackagesTool extends AbstractMcpTool {
 	 * @param objectProperties object properties
 	 * @param crFragments content repository fragments
 	 * @param contentRepositories content repositories
+	 * @param portalImplementations portal implementations
 	 */
 	public record Counts(int constructs, int templates, int datasources, int objectProperties, int crFragments,
-			int contentRepositories) {
+			int contentRepositories, int portalImplementations) {
 	}
 
 	/**
@@ -72,7 +73,7 @@ public class ListPackagesTool extends AbstractMcpTool {
 		static PackageInfo of(Package pkg) {
 			return new PackageInfo(pkg.getName(), pkg.getDescription(), new Counts(pkg.getConstructs(),
 					pkg.getTemplates(), pkg.getDatasources(), pkg.getObjectProperties(), pkg.getCrFragments(),
-					pkg.getContentRepositories()));
+					pkg.getContentRepositories(), pkg.getPortalImplementations()));
 		}
 	}
 
@@ -80,7 +81,7 @@ public class ListPackagesTool extends AbstractMcpTool {
 	public Tool tool() {
 		Map<String, Object> countProperties = new LinkedHashMap<>();
 		for (String type : List.of("constructs", "templates", "datasources", "objectProperties", "crFragments",
-				"contentRepositories")) {
+				"contentRepositories", "portalImplementations")) {
 			countProperties.put(type, schema("integer", null));
 		}
 		Map<String, Object> itemProperties = new LinkedHashMap<>();

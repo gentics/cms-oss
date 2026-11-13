@@ -399,6 +399,17 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	}
 
 	/**
+	 * Publish the portal implementations of all mesh publishers. This must be called after {@link #checkSchemasAndProjects()}
+	 * and {@link #waitForMigrations()}
+	 * @throws NodeException
+	 */
+	public void publishPortalImplementations() throws NodeException {
+		for (MeshPublisher mp : publishers) {
+			mp.checkPortalImplementations(true);
+		}
+	}
+
+	/**
 	 *  Wait for possibly running schema/node migrations
 	 * @throws NodeException
 	 */

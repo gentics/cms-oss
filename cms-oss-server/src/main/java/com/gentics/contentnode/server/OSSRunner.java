@@ -45,6 +45,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.config.AutoScanFeature;
+import com.gentics.contentnode.config.PackageFileRewriteRule;
 import com.gentics.contentnode.config.PackageRewriteRule;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.init.Initializer;
@@ -57,6 +58,7 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.servlets.AlohaPageServlet;
 import com.gentics.contentnode.servlets.GenticsImageStoreServlet;
 import com.gentics.contentnode.servlets.JmxServlet;
+import com.gentics.contentnode.servlets.PortalStaticFileServlet;
 import com.gentics.contentnode.servlets.SelectedSymlinkAllowedResourceAliasChecker;
 import com.gentics.lib.log.NodeLogger;
 
@@ -203,6 +205,9 @@ public class OSSRunner {
 
 		context.addServlet(getStaticFileServletForPath(ConfigurationValue.PACKAGES_PATH.get()),	"/packages/*");
 
+		// add servlet for static files not found in packages (will proxy to the portal, when rendering a portal preview)
+		context.addServlet(PortalStaticFileServlet.class, "/static/*");
+
 		var rewriteHandler = createRewriteHandler();
 		rewriteHandler.setHandler(context);
 
@@ -322,7 +327,8 @@ public class OSSRunner {
 	private static RewriteHandler createRewriteHandler() {
 		var rewriteHandler = new RewriteHandler();
 
-		var rewriteStaticRule = new PackageRewriteRule("^/static/([^/]*)/files/(.*)",
+		// static files are only rewritten to the package, if they exist. Otherwise, the PortalStaticFileServlet handles the request
+		var rewriteStaticRule = new PackageFileRewriteRule("^/static/([^/]*)/files/(.*)",
 				"/packages/$1/files/$2");
 
 		var rewriteInternalRule = new PackageRewriteRule("^/internal/([^/]*)/files/(.*)",

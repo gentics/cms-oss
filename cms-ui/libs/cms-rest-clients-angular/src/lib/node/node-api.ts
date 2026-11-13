@@ -22,6 +22,8 @@ import {
     NodeSettingsResponse,
     PagedConstructListRequestOptions,
     PermissionListResponse,
+    PortalImplementationListOptions,
+    PortalImplementationListResponse,
     Raw,
     Response,
     Template,
@@ -184,6 +186,33 @@ export class NodeApi {
      */
     addNodeConstruct(nodeId: number, constructId: number): Observable<ItemSaveResponse> {
         return this.apiBase.put(`node/${nodeId}/constructs/${constructId}`, undefined);
+    }
+
+    /**
+     * Get the portal implementations assigned to this node
+     */
+    getNodePortalImplementations(nodeId: number, options?: PortalImplementationListOptions): Observable<PortalImplementationListResponse> {
+        if (options?.sort) {
+            const copy: any = { ...options };
+            copy.sort = stringifyPagingSortOptions(copy.sort);
+            options = copy;
+        }
+
+        return this.apiBase.get(`node/${nodeId}/portalimplementations`, options);
+    }
+
+    /**
+     * Remove a portal implementation from a node.
+     */
+    removeNodePortalImplementation(nodeId: number, portalImplementationId: number | string): Observable<ItemDeleteResponse> {
+        return this.apiBase.delete(`node/${nodeId}/portalimplementations/${portalImplementationId}`);
+    }
+
+    /**
+     * Add a portal implementation to a node.
+     */
+    addNodePortalImplementation(nodeId: number, portalImplementationId: number | string): Observable<ItemSaveResponse> {
+        return this.apiBase.put(`node/${nodeId}/portalimplementations/${portalImplementationId}`, undefined);
     }
 
     /**

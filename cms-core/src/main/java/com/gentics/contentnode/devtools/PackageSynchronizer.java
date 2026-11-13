@@ -42,6 +42,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
@@ -75,6 +76,11 @@ public abstract class PackageSynchronizer {
 	 * Name of the subdirectory containing cr fragments
 	 */
 	public final static String CR_FRAGMENTS_DIR = "cr_fragments";
+
+	/**
+	 * Name of the subdirectory containing Portal Implementations
+	 */
+	public final static String PORTAL_IMPLEMENTATIONS_DIR = "portal_implementations";
 
 	/**
 	 * Name of the subdirectory containing contentrepositories
@@ -120,6 +126,7 @@ public abstract class PackageSynchronizer {
 		directoryMap.put(ObjectTagDefinition.class, OBJECTPROPERTIES_DIR);
 		directoryMap.put(CrFragment.class, CR_FRAGMENTS_DIR);
 		directoryMap.put(ContentRepository.class, CONTENTREPOSITORIES_DIR);
+		directoryMap.put(PortalImplementation.class, PORTAL_IMPLEMENTATIONS_DIR);
 	}
 
 	/**
@@ -183,6 +190,7 @@ public abstract class PackageSynchronizer {
 		Path objectPropertiesPath = new File(packagePath.toFile(), OBJECTPROPERTIES_DIR).toPath();
 		Path crFragmentsPath = new File(packagePath.toFile(), CR_FRAGMENTS_DIR).toPath();
 		Path contentrepositoriesPath = new File(packagePath.toFile(), CONTENTREPOSITORIES_DIR).toPath();
+		Path portalImplementationsPath = new File(packagePath.toFile(), PORTAL_IMPLEMENTATIONS_DIR).toPath();
 		try (Trx trx = new Trx(); LangTrx langTrx = new LangTrx("en")) {
 			addSynchronizer(constructsPath, new ConstructSynchronizer(this, constructsPath));
 			addSynchronizer(templatesPath, new TemplateSynchronizer(this, templatesPath));
@@ -190,6 +198,7 @@ public abstract class PackageSynchronizer {
 			addSynchronizer(objectPropertiesPath, new ObjectTagDefinitionSynchronizer(this, objectPropertiesPath));
 			addSynchronizer(crFragmentsPath, new ContentRepositoryFragmentSynchronizer(this, crFragmentsPath));
 			addSynchronizer(contentrepositoriesPath, new ContentRepositorySynchronizer(this, contentrepositoriesPath));
+			addSynchronizer(portalImplementationsPath, new PortalImplementationSynchronizer(this, portalImplementationsPath));
 			trx.success();
 		}
 		// add a handler for changes in the handlebars directory

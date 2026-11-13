@@ -127,6 +127,16 @@ describe('WorkspaceLayout', () => {
         expect(screen.getByText('Preview')).toBeVisible();
     });
 
+    it('lets the columns slide only when asked to, e.g. while GenAIx is at work', () => {
+        const { container, rerender } = render(<WorkspaceLayout left={null} center={null} right={null} isRightColumnVisible={false} />);
+
+        expect(container.firstElementChild).not.toHaveAttribute('data-animated');
+
+        rerender(<WorkspaceLayout left={null} center={null} right={null} isRightColumnVisible animatesColumns />);
+
+        expect(container.firstElementChild).toHaveAttribute('data-animated');
+    });
+
     it('describes each splitter with the width of its column and the limits', () => {
         renderLayout();
 

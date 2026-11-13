@@ -1,9 +1,10 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Check, Publication } from '@/services/apiService/genaix/types';
 import { renderWithProviders } from '@/test/renderWithProviders';
+import { stubCmsPublishPaths } from '@/test/stubCmsPublishPaths';
 
 import { ReviewPages } from './ReviewPages';
 
@@ -34,6 +35,10 @@ const CHECKS: Check[] = [
 ];
 
 describe('ReviewPages', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
     it('lists each page with its publish status and its open issues, the shown one current', async () => {
         renderWithProviders(<ReviewPages sessionId={SESSION} publications={PUBLICATIONS} checks={CHECKS} selectedId={9011} />, { path: `/sessions/${SESSION}/review` });
 
@@ -47,6 +52,21 @@ describe('ReviewPages', () => {
         ]);
         expect(within(pages).getByRole('link', { name: /Serviceinformationen/ })).toHaveAttribute('aria-current', 'page');
         expect(within(pages).getByRole('link', { name: /Versand/ })).not.toHaveAttribute('aria-current');
+    });
+
+    it('opens a published page on the website in a new tab, beside its row; a page not published has no such link', async () => {
+        stubCmsPublishPaths({ 8644: '/versand.html', 9011: '/service.html', 8871: '/garantie.html' });
+
+        renderWithProviders(<ReviewPages sessionId={SESSION} publications={PUBLICATIONS} checks={CHECKS} selectedId={9011} />, { path: `/sessions/${SESSION}/review` });
+
+        const open = await screen.findByRole('link', { name: 'Open “Versand und Lieferung” on the website' });
+
+        expect(open).toHaveAttribute('href', 'https://www.gentics.com/versand.html');
+        expect(open).toHaveAttribute('target', '_blank');
+        // Beside the row's link, not inside it.
+        expect(open.parentElement?.closest('a')).toBeNull();
+        expect(screen.queryByRole('link', { name: /Serviceinformationen.*on the website/ })).not.toBeInTheDocument();
+        expect(screen.getAllByRole('link', { name: /on the website/ })).toHaveLength(1);
     });
 
     it('puts the page picked into the URL, keeping the plan', async () => {

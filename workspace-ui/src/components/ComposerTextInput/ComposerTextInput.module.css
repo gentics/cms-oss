@@ -9,8 +9,7 @@
   }
 }
 
-/* The text field of both composers: the editor's element. A locked verbatim passage is a node view
-   inside it (`ComposerTextInput`), styled by its attributes (design.md §12 "Verbatim-Textstelle"). */
+/* The text field of both composers: the editor's element. */
 .field {
   position: relative;
   overflow-y: auto;
@@ -20,66 +19,26 @@
   overflow-wrap: anywhere;
 
   /* Out of the flow, where the text starts, so the caret stands at the start and not after it;
-     paler than muted text (draft `.input:empty:before`). */
+     paler than muted text (draft `.input:empty:before`). Taking no room, it stays on one line, cut with an ellipsis. */
   &.empty::before {
     position: absolute;
+    max-width: 100%;
+    overflow: hidden;
     content: attr(data-placeholder);
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: rgba(var(--fg-secondary-rgb), 0.5);
     pointer-events: none;
   }
 
-  & [data-verbatim] {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 0 2px 0 3px;
-    border-bottom: 1px solid var(--interactive);
-    border-radius: var(--corner-xs);
-    background: rgba(var(--interactive-rgb), 0.14);
-    color: var(--fg-primary);
-
-    & > svg {
-      flex: none;
-      color: var(--interactive);
-    }
-  }
-
-  & [data-verbatim-text] {
-    white-space: pre-wrap;
-  }
-
-  /* A token (reference, file, setting) is a node view too (`TokenChip`): design.md §12 "@-Token". */
-  & [data-token] {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    max-width: 270px;
-    padding: 0 2px 0 4px;
-    border: 1px solid rgba(var(--interactive-rgb), 0.3);
-    border-radius: var(--corner-sm);
-    background: rgba(var(--interactive-rgb), 0.13);
-    color: var(--fg-primary);
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    line-height: 1.6;
-    vertical-align: -2px;
-    white-space: nowrap;
-
-    & > svg {
-      flex: none;
-      color: var(--interactive);
-    }
-  }
-
-  & [data-token-label] {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  /* A token (reference, file, setting) and a locked verbatim passage are node views (`TokenChip`, `VerbatimPassage`),
+     drawn by `ReferenceToken`. */
 }
 
-/* Dashboard: one large line of text on the surface (design.md §5.1, §11). */
+/* Dashboard: one large line of text on the surface (design.md §5.1, §11). Grows without a limit of its own: the
+   composer's line around it scrolls (`Composer.module.css`), so the scrollbar is at its edge, beside the buttons. */
 .lg {
-  max-height: 150px;
+  overflow-y: visible;
   padding: 2px 0;
   font-size: var(--font-size-lg);
   line-height: 1.5;

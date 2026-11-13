@@ -1,4 +1,4 @@
-import type { CmsObjectRef, Plan, PlanStatus, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
+import type { CmsObjectRef, MessageCreateBody, Plan, PlanStatus, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
 
 export type PlanAction = TransitionRequest['action'];
 
@@ -78,4 +78,13 @@ export function planPresence(plan: Plan, workflows: Workflow[] | undefined, publ
  */
 export function isFirstDraft(plan: Plan): boolean {
     return plan.status === 'drafting' && (plan.items ?? []).length === 0;
+}
+
+// The statuses a follow-up revises the plan in. `accepted` and `drafting` without an active run are left
+// by a failed or cancelled run: a plain message retries it (03-genaix-api.md §4).
+const REVISABLE: ReadonlySet<PlanStatus> = new Set<PlanStatus>(['proposed', 'done', 'released', 'published', 'review_requested']);
+
+/** The options that make the next message revise `plan` (rc.5), unless a run of it is active; else none. */
+export function reviseOptions(plan: Plan | undefined, isPlanRunActive: boolean): MessageCreateBody['options'] {
+    return plan && !isPlanRunActive && REVISABLE.has(plan.status) ? { mode: 'revise', plan_id: plan.id } : undefined;
 }

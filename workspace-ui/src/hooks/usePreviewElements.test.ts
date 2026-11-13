@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isImagePart, linkOf, linksOf, linkTargetOf, markedElementOf, partTextOf, previewElementOf, textBlockOf, textBlocksOf } from './usePreviewElements';
+import { findTarget, isImagePart, linkOf, linksOf, linkTargetOf, markedElementOf, partTextOf, previewElementOf, textBlockOf, textBlocksOf } from './usePreviewElements';
 
 // A page as the CMS renders it with tagmarkers=true: a marked text part inside a marked
 // container part, and unmarked page structure around them.
@@ -97,12 +97,19 @@ describe('isImagePart', () => {
 });
 
 describe('textBlocksOf', () => {
-    // A text part holding a headline and a paragraph, as GenAIx writes a new page into one Aloha text.
+    // A text part holding a headline and a paragraph, as GenAIx writes a new page into one Aloha text; an editable,
+    // as the CMS marks one with tagmarkers=true (only an editable is split).
     function textPart(html: string) {
-        document.body.innerHTML = `<div data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)">${html}</div>`;
+        document.body.innerHTML = `<div data-gcn-tagid="932" data-gcn-tagname="pagecontent" data-gcn-i18n-constructname="Aloha Text (lang)" id="GENTICS_EDITABLE_932">${html}</div>`;
 
         return document.querySelector('[data-gcn-tagid]')!;
     }
+
+    it('does not split a part that is no editable, however many blocks it holds', () => {
+        document.body.innerHTML = '<div data-gcn-tagid="7" data-gcn-tagname="facts_1" data-gcn-i18n-constructname="Key facts"><h3>Fakten</h3><ul><li>Drei Tage</li></ul><p>Mehr</p></div>';
+
+        expect(textBlocksOf(document.querySelector('[data-gcn-tagid]')!)).toEqual([]);
+    });
 
     it('splits a text part into its headings, paragraphs, quotes, code, lists and tables', () => {
         const part = textPart('<h1>headline 1</h1> loose text <p>Lorem</p><br><blockquote>Q</blockquote><pre>C</pre><ul><li>L</li></ul><table><tr><td>T</td></tr></table><div>other</div>');
@@ -133,6 +140,14 @@ describe('textBlocksOf', () => {
         expect(markedElementOf(part.querySelector('img'))?.getAttribute('data-gcn-tagname')).toBe('manimage_1');
     });
 
+    it('takes a paragraph that holds a link tag as a block, the link tag staying a part of its own', () => {
+        const part = textPart('<p>Intro</p><p>Register on the <a data-gcn-tagid="971" data-gcn-tagname="gtxalohapagelink_1" data-gcn-i18n-constructname="Aloha Link" href="/x">contact</a> page.</p><ul><li>L</li></ul>');
+
+        expect(textBlocksOf(part).map((textBlock) => textBlock.textContent)).toEqual(['Intro', 'Register on the contact page.', 'L']);
+        expect(markedElementOf(part.querySelector('a'))?.getAttribute('data-gcn-tagname')).toBe('gtxalohapagelink_1');
+        expect(previewElementOf(part, textBlocksOf(part)[1]).textBlock).toEqual({ index: 1, count: 3, kind: 'paragraph', excerpt: 'Register on the contact page.' });
+    });
+
     it('finds the block a target is in, and none outside the blocks', () => {
         const part = textPart('<h1>headline <b id="bold">1</b></h1><p>Lorem</p>');
 
@@ -148,10 +163,11 @@ describe('textBlocksOf', () => {
         expect(previewElementOf(part, headline)).toEqual({
             tagName: 'pagecontent',
             constructName: 'Aloha Text (lang)',
+            elementId: 'GENTICS_EDITABLE_932',
             textBlock: { index: 0, count: 2, kind: 'heading1', excerpt: 'headline 1' },
         });
         expect(previewElementOf(part, paragraph).textBlock).toEqual({ index: 1, count: 2, kind: 'paragraph', excerpt: 'Lorem ipsum dolor sit amet, consectetur…' });
-        expect(previewElementOf(part, null)).toEqual({ tagName: 'pagecontent', constructName: 'Aloha Text (lang)' });
+        expect(previewElementOf(part, null)).toEqual({ tagName: 'pagecontent', constructName: 'Aloha Text (lang)', elementId: 'GENTICS_EDITABLE_932' });
     });
 });
 
@@ -220,5 +236,50 @@ describe('linkTargetOf', () => {
         expect(linkTargetOf('/alohapage?realid=abc')).toEqual({ type: 'url', url: '/alohapage?realid=abc' });
         expect(linkTargetOf('mailto:info@example.com')).toEqual({ type: 'url', url: 'mailto:info@example.com' });
         expect(linkTargetOf('')).toEqual({ type: 'url', url: '' });
+    });
+});
+
+describe('a tag with several editables', () => {
+    // As the CMS renders a tag with two editable parts in tagmarkers mode: each editable carries the tag's
+    // markers and the id of its own stored value.
+    function twoEditables(withSecond = true) {
+        document.body.innerHTML = `
+            <div data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_101"><h2>Erste Überschrift</h2></div>
+            ${withSecond ? '<div data-gcn-tagid="20" data-gcn-tagname="teaser" data-gcn-i18n-constructname="Teaser" id="GENTICS_EDITABLE_102"><p>Zweiter Teil, Absatz eins</p><p id="second">Absatz zwei</p></div>' : ''}`;
+    }
+
+    it('remembers which of the tag\'s elements is meant, by its id', () => {
+        twoEditables();
+
+        const second = document.getElementById('GENTICS_EDITABLE_102')!;
+
+        expect(previewElementOf(second, document.getElementById('second'))).toEqual({
+            tagName: 'teaser',
+            constructName: 'Teaser',
+            elementId: 'GENTICS_EDITABLE_102',
+            textBlock: { index: 1, count: 2, kind: 'paragraph', excerpt: 'Absatz zwei' },
+        });
+    });
+
+    it('finds a text block of the second editable again, not in the first one', () => {
+        twoEditables();
+
+        const element = previewElementOf(document.getElementById('GENTICS_EDITABLE_102')!, document.getElementById('second'));
+
+        expect(findTarget(document, element)).toBe(document.getElementById('second'));
+        expect(findTarget(document, { tagName: 'teaser', constructName: 'Teaser', elementId: 'GENTICS_EDITABLE_102' })).toBe(document.getElementById('GENTICS_EDITABLE_102'));
+    });
+
+    it('finds nothing when that editable is gone, rather than another one of the tag', () => {
+        twoEditables(false);
+
+        expect(findTarget(document, { tagName: 'teaser', constructName: 'Teaser', elementId: 'GENTICS_EDITABLE_102' })).toBeNull();
+    });
+
+    it('finds a part without an id by its tag name, as before', () => {
+        document.body.innerHTML = '<p data-gcn-tagid="12" data-gcn-tagname="content_2">Text</p>';
+
+        expect(previewElementOf(document.querySelector('p')!)).toEqual({ tagName: 'content_2', constructName: '' });
+        expect(findTarget(document, { tagName: 'content_2', constructName: '' })).toBe(document.querySelector('p'));
     });
 });

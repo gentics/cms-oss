@@ -57,6 +57,8 @@ function ANInputElement(props: IFormComponentAttributes) {
   // if precision is not 0 step and formGridOptions.numberStep is less than 1, step will be formGridOptions.numberStep
   // if precision is not 0 step and formGridOptions.numberStep is equal or greater than 1, step will be formGridOptions.numberStep
   const precision = schema.precision;
+  // Missing (form not yet published with DialogPortal 13) falls back to showing the separator.
+  const useGrouping = schema.useThousandsSeparator ?? true;
   let rawStep = props.formGridOptions?.numberStep;
   let step =
     rawStep == null
@@ -71,7 +73,7 @@ function ANInputElement(props: IFormComponentAttributes) {
 
   const initialFormatted =
     schema.type === 'number'
-      ? getPrecisionAppliedValue(String(props.value ?? ''), lang, precision)
+      ? getPrecisionAppliedValue(String(props.value ?? ''), lang, precision, useGrouping)
       : props.value;
 
   const [formattedValue, setFormattedValue] = useState(initialFormatted);
@@ -91,7 +93,7 @@ function ANInputElement(props: IFormComponentAttributes) {
       props.value !== formattedValue
     ) {
       setLocalValue(props.value);
-      const formVal = getPrecisionAppliedValue(String(props.value), lang, precision);
+      const formVal = getPrecisionAppliedValue(String(props.value), lang, precision, useGrouping);
       setFormattedValue(formVal);
       if (props.value === '') {
         setIsFocused(false);
@@ -193,7 +195,7 @@ function ANInputElement(props: IFormComponentAttributes) {
     const newNumericValue = current + delta;
     const prec = schema.precision ?? 0;
     const fixed = newNumericValue.toFixed(prec);
-    const newVal = getPrecisionAppliedValue(String(newNumericValue), lang, prec);
+    const newVal = getPrecisionAppliedValue(String(newNumericValue), lang, prec, useGrouping);
     setFormattedValue(newVal);
     triggerHandleChange(fixed, true);
   };
@@ -255,7 +257,7 @@ function ANInputElement(props: IFormComponentAttributes) {
       if (precision === 0) {
         v = v.replace(/[.,].*$/, '');
       }
-      v = getPrecisionAppliedValue(v, lang, precision);
+      v = getPrecisionAppliedValue(v, lang, precision, useGrouping);
       // Wenn step definiert ist und precision 0 ist, runde auf das nächste Vielfache von step
       if (!isNaN(v) && step && step > 0 && precision === 0) {
         v = String(Math.round(v / step) * step);
@@ -420,13 +422,20 @@ ANInputElement.getSummaryValue = function (
   state: FormState,
   jsonpath: string,
   id: string,
-  restService: RestService,
+  t: any,
+  formGridOptions?: IFormGridOptions,
+  restService?: RestService,
 ) {
   let ret = utils.getValue(state, jsonpath, id);
   const elementSchema = utils.getSchemaForElement(state.schema, id);
   const lang = restService?.getFullCulture?.() || "de-AT";
   if (elementSchema.type === 'number') {
-    ret = getPrecisionAppliedValue(ret, lang, elementSchema.precision);
+    ret = getPrecisionAppliedValue(
+      ret,
+      lang,
+      elementSchema.precision,
+      elementSchema.useThousandsSeparator ?? true,
+    );
   }
   return ret;
 };

@@ -43,6 +43,7 @@
           "en": "$"
         },
         "unitPosition": "Prepend",
+        "useThousandsSeparator": true,
         "updateOnChange": false,
         "validation": {
           "minValue": 10.5,
@@ -63,6 +64,7 @@
           "fr-CH": null,
           "it-CH": null
         },
+        "useThousandsSeparator": true,
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -74,12 +76,25 @@
         "type": "number",
         "isRaw": true,
         "unit": {},
+        "useThousandsSeparator": true,
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
         "isList": false,
 
         "name": "No_Precision_Test"
+      },
+      "7EF4CA2A-DADD-4B9D-A2AD-A622F9A606E1": {
+        "type": "number",
+        "precision": 2,
+        "isRaw": true,
+        "unit": {},
+        "useThousandsSeparator": false,
+        "updateOnChange": false,
+        "validation": {},
+        "mandatory": false,
+        "isList": false,
+        "name": "No_Thousands_Separator_Test"
       },
       "12D6E122-2CC7-4940-A202-E1D2C51898AD": {
         "numberOfLines": 1,
@@ -283,6 +298,7 @@
             },
             "mandatory": false,
             "isList": false,
+            "useThousandsSeparator": true,
             "name": "Zahl_1"
           },
           "9AA5D590-8E6D-4913-91C8-121AAE383456": {
@@ -294,6 +310,7 @@
             "validation": {},
             "mandatory": false,
             "isList": false,
+            "useThousandsSeparator": false,
             "name": "Zahl_2"
           }
         },
@@ -1207,6 +1224,25 @@
             "id": "7EF4CA2A-DADD-4B9D-A2AD-A622F9A606DF",
             "label": {
               "de": "Input Nummer no Precision"
+            },
+            "description": {},
+            "formGridOptions": {
+              "numberOfColumns": 3,
+              "overlayOptions": {
+                "isShowOverlay": false,
+                "texts": {
+                  "textPre": {},
+                  "textPost": {}
+                }
+              }
+            },
+            "uiSchemaPage": 0
+          },
+          {
+            "type": "property",
+            "id": "7EF4CA2A-DADD-4B9D-A2AD-A622F9A606E1",
+            "label": {
+              "de": "Input Nummer ohne Tausendertrennzeichen"
             },
             "description": {},
             "formGridOptions": {
@@ -5425,6 +5461,13 @@
         "editable": true,
         "name": "Input Nummer no Precision"
       },
+      "7EF4CA2A-DADD-4B9D-A2AD-A622F9A606E1": {
+        "id": "e25b2776-56b3-43a0-a786-0ad43fc36be1",
+        "visible": true,
+        "editable": true,
+        "name": "Input Nummer ohne Tausendertrennzeichen",
+        "value": "1234567.89"
+      },
       "12D6E122-2CC7-4940-A202-E1D2C51898AD": {
         "id": "41b10eb5-3c8f-4d43-a399-f45ea4ee7a24",
         "visible": true,
@@ -5749,14 +5792,14 @@
                 "visible": true,
                 "editable": true,
                 "name": "Zahl 1",
-                "value": "100.00000"
+                "value": "12345.67000"
               },
               "9AA5D590-8E6D-4913-91C8-121AAE383456": {
                 "id": "12b2395e-0fd0-4513-95c3-d228c3db5c24",
                 "visible": true,
                 "editable": true,
                 "name": "Zahl 2",
-                "value": "100.00000"
+                "value": "12345.67000"
               }
             }
           }

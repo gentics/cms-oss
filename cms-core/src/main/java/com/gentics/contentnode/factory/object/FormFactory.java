@@ -402,7 +402,7 @@ public class FormFactory extends AbstractFactory {
 				data.put("time_pub_version", version != null ? version.getId() : null);
 				if (user != null) {
 					data.put("future_publisher", user.getId());
-					publisherId = getInteger(user.getId(), publisherId);
+					futurePublisherId = user.getId();
 				}
 
 				DBUtils.updateOrInsert("form", id, data);
@@ -420,6 +420,9 @@ public class FormFactory extends AbstractFactory {
 				data.put("pdate", pdate);
 				data.put("time_pub", 0);
 				data.put("time_pub_version", null);
+				// unset future_publisher because the user who planned it should not be recorded as publisher
+				data.put("future_publisher", 0);
+				futurePublisherId = 0;
 				this.timePub = new ContentNodeDate(0);
 				this.timePubVersion = null;
 				this.pDate = new ContentNodeDate(pdate);
@@ -461,60 +464,75 @@ public class FormFactory extends AbstractFactory {
 		public void takeOffline(int at) throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
+			if (at > 0 && at >= t.getUnixTimestamp()) {
+				Map<String, Object> id = new HashMap<>();
+				id.put("id", getId());
+
+				Map<String, Object> data = new HashMap<>();
+				data.put("time_off", at);
+				// store the user who scheduled taking offline, so that the time management records this user as unpublisher
+				data.put("future_unpublisher", t.getUserId());
+				timeOff = new ContentNodeDate(at);
+				futureUnpublisherId = t.getUserId();
+
+				DBUtils.updateOrInsert("form", id, data);
+
+				ActionLogger.logCmd(ActionLogger.PAGETIME, TYPE_FORM, getId(), getFolderId(), String.format("Form scheduled for taking offline @%d", at));
+
+				// dirt the form cache
+				t.dirtObjectCache(Form.class, getId());
+
+				// we need to sent the NOTIFY event for the form in order to allow indexing (for feature ELASTICSEARCH)
+				t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
+			} else {
+				// unset future_unpublisher because the user who planned taking offline should not be recorded as unpublisher
+				DBUtils.update("UPDATE form SET future_unpublisher = ? WHERE id = ?", 0, getId());
+				futureUnpublisherId = 0;
+
+				doTakeOffline();
+			}
+		}
+
+		/**
+		 * Take the form offline now. The unpublisher is the stored future unpublisher (if set) or the current user.
+		 * This is called by {@link #takeOffline(int)} and by the time management, which must record the stored future unpublisher.
+		 * @throws NodeException
+		 */
+		protected void doTakeOffline() throws NodeException {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
 			boolean onlineBefore = isOnline();
 
 			Map<String, Object> id = new HashMap<>();
 			id.put("id", getId());
 
-			if (at > 0 && at >= t.getUnixTimestamp()) {
-				Map<String, Object> data = new HashMap<>();
-				data.put("time_off", at);
-				timeOff = new ContentNodeDate(at);
+			Map<String, Object> data = new HashMap<>();
+			data.put("online", 0);
+			online = false;
+			DBUtils.updateOrInsert("form", id, data);
 
-				DBUtils.updateOrInsert("form", id, data);
+			ActionLogger.logCmd(ActionLogger.PAGEOFFLINE, TYPE_FORM, getId(), getFolderId(), "Form offline");
 
-				ActionLogger.logCmd(ActionLogger.PAGETIME, TYPE_FORM, getId(), getFolderId(), String.format("Form scheduled for taking offline @%d", at));
-			} else {
-				Map<String, Object> data = new HashMap<>();
-				data.put("online", 0);
-				online = false;
-				DBUtils.updateOrInsert("form", id, data);
-				saveUnpublishInfo();
-
-				ActionLogger.logCmd(ActionLogger.PAGEOFFLINE, TYPE_FORM, getId(), getFolderId(), "Form offline");
-
-				String[] props = null;
-				int eventMask = Events.EVENT_CN_PAGESTATUS;
-				if (onlineBefore) {
-					// form was online before, so its "online" status changed (from on to off)
-					props = new String[] { "online"};
-					eventMask |= Events.UPDATE;
-				}
-				if (DependencyManager.isDependencyTriggering()) {
-					triggerEvent(new DependencyObject(this), props, eventMask, 0, 0);
-				} else {
-					t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), props, eventMask));
-				}
-
-				onTakeOffline(this, onlineBefore, t.getUserId());
+			String[] props = null;
+			int eventMask = Events.EVENT_CN_PAGESTATUS;
+			if (onlineBefore) {
+				// form was online before, so its "online" status changed (from on to off)
+				props = new String[] { "online"};
+				eventMask |= Events.UPDATE;
 			}
+			if (DependencyManager.isDependencyTriggering()) {
+				triggerEvent(new DependencyObject(this), props, eventMask, 0, 0);
+			} else {
+				t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), props, eventMask));
+			}
+
+			onTakeOffline(this, onlineBefore, t.getUserId());
 
 			// dirt the form cache
 			t.dirtObjectCache(Form.class, getId());
 
 			// we need to sent the NOTIFY event for the form in order to allow indexing (for feature ELASTICSEARCH)
 			t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
-		}
-
-		/**
-		 * Saves the future publisher
-		 *
-		 * @throws NodeException
-		 */
-		private void saveUnpublishInfo() throws NodeException {
-			Transaction t = TransactionManager.getCurrentTransaction();
-
-			DBUtils.update("UPDATE form SET future_unpublisher = ? WHERE id = ?", t.getUserId(), getId());
 		}
 
 		@Override
@@ -535,7 +553,7 @@ public class FormFactory extends AbstractFactory {
 				if (publishAtTime > offlineAtTime) {
 					publishVersion(timePubVersion);
 				} else {
-					takeOffline();
+					doTakeOffline();
 				}
 				internalClearTimePub();
 				internalClearTimeOff();
@@ -545,7 +563,7 @@ public class FormFactory extends AbstractFactory {
 				internalClearTimePub();
 				handled = true;
 			} else if (offlineAtDue) {
-				takeOffline();
+				doTakeOffline();
 				internalClearTimeOff();
 				handled = true;
 			}

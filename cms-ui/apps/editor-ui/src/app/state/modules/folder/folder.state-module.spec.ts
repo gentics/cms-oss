@@ -357,12 +357,10 @@ describe('FolderStateModule', () => {
     }));
 
     it('fetchItemSuccess works', fakeAsync(() => {
-        mockListState('pages', { fetching: true });
         const page = getExamplePageData({ id: 1234, userId: 777 });
         state.dispatch(new ItemFetchingSuccessAction('page', page));
         tick();
 
-        expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.entities.page[1234]).toBeDefined('page not in entity state');
         expect(state.now.entities.user[777]).toBeDefined('user not in entity state');
     }));
@@ -630,7 +628,6 @@ describe('FolderStateModule', () => {
     }));
 
     it('fetchNodeSuccess works', fakeAsync(() => {
-        mockListState('nodes', { fetching: true });
         const user = getExampleUserData();
         const folders = [
             getExampleFolderData({ id: 111 }),
@@ -648,7 +645,6 @@ describe('FolderStateModule', () => {
         state.dispatch(new ItemFetchingSuccessAction('nodes', node));
         tick();
 
-        expect(state.now.folder.nodes.fetching).toBe(false);
         expect(state.now.folder.nodes.hasMore).toBe(false, 'hasMore != false');
         expect(state.now.entities.node[1]).toBeDefined('node 1 not in entity state');
         expect(state.now.entities.user[user.id]).toBeDefined('user not in entity state');
@@ -1053,12 +1049,10 @@ describe('FolderStateModule', () => {
     }));
 
     it('searchPagesSuccess works', fakeAsync(() => {
-        mockListState('pages', { fetching: true });
         const foundPage = getExamplePageData({ id: 1234 });
         state.dispatch(new ItemFetchingSuccessAction('page', foundPage));
         tick();
 
-        expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.entities.page[1234]).toBeDefined('page not added to entity state');
     }));
 

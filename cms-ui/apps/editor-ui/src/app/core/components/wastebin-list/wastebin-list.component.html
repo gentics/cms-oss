@@ -7,7 +7,9 @@
                     [selected]="allSelected()"
                     (change)="toggleSelectAll($event)"
                 ></icon-checkbox>
-                {{ getItemCount() }} {{ type | gtxI18n:{ count: getItemCount() } }}
+                <span class="item-count">
+                    {{ getItemCount() }} {{ type | gtxI18n:{ count: getItemCount() } }}
+                </span>
             </div>
 
             @if (listSize < filteredItems.length) {

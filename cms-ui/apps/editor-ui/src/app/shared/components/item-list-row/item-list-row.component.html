@@ -143,11 +143,12 @@
             }
 
             @if (getItemDetailsShowPaths() && itemType !== 'folder') {
-                <div
-                    class="file-name"
-                    [title]="item | itemPath:activeNode?.name"
-                    [innerHTML]="item | itemPath:activeNode?.name | highlight:filterTerm"
-                ></div>
+                <div class="file-name">
+                    <span
+                        [title]="item | itemPath:activeNode?.name"
+                        [innerHTML]="item | itemPath:activeNode?.name | highlight:filterTerm"
+                    ></span>
+                </div>
             }
 
             @if (

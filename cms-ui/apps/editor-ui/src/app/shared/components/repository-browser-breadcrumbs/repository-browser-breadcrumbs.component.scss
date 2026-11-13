@@ -97,7 +97,7 @@
                     cursor: default;
                 }
 
-                > gtx-dropdown-list::shadow .dropdown-trigger {
+                > gtx-dropdown-list::ng-deep .dropdown-trigger {
                     height: 18px;
                     line-height: 16px;
                 }

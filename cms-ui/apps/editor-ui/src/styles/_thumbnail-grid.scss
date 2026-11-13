@@ -18,7 +18,7 @@
         transition: transform 0.5s cubic-bezier(.22,.47,.37,.96);
     }
 
-    &::shadow {
+    &::ng-deep {
         image-thumbnail {
             max-width: 300px;
             overflow: hidden;
@@ -73,6 +73,8 @@
                 padding: 5px;
                 background-color: rgba(255, 255, 255, 0.1);
                 transition: background 0.2s;
+                align-items: center;
+                gap: 0.5rem;
 
                 > gtx-checkbox,
                 icon-checkbox {
@@ -91,13 +93,16 @@
 
                 .image-info {
                     flex: 1;
+                    gap: 0.25rem;
+                    display: flex;
+                    height: min-content;
+
                     span {
-                        margin: 4px 5px;
                         font-size: 12px;
                         display: inline-block;
                         color: $gtx-color-dark-gray;
                         background-color: rgba(255, 255, 255, 0.56);
-                        padding: 0 3px;
+                        padding: 0 5px;
                         border-radius: 2px;
                         opacity: 0;
                         transition: opacity 0.2s;
@@ -130,8 +135,13 @@
             .bottom-bar {
                 text-align: center;
                 background-color: rgba(255, 255, 255, 0.9);
-                padding: 5px;
+                padding: 9px 5px;
                 width: 100%;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: space-between;
+                align-items: center;
 
                 .inherited-icon {
                     display: inline;
@@ -162,15 +172,42 @@
                         }
                     }
                 }
+
+                .name-container {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    overflow: auto;
+
+                    .item-name {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+
+                    .liveurl-icon {
+                        display: contents;
+                    }
+                }
+
+                file-status-label {
+                    display: inline-block;
+                    padding-bottom: 1px;
+
+                    &::ng-deep .status-label {
+                        margin: 0;
+                        display: block;
+                    }
+                }
             }
         }
     }
 
-    &:not(.selected)::shadow .item-name {
+    &:not(.selected)::ng-deep .item-name {
         color: $gtx-color-off-black;
     }
 
-    &.selected::shadow image-thumbnail {
+    &.selected::ng-deep image-thumbnail {
         box-shadow: 0 0 9px 0px $gtx-color-primary;
     }
 }

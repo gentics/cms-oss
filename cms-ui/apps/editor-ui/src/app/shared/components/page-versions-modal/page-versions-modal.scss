@@ -57,7 +57,7 @@ h5 {
     justify-content: center;
 }
 
-gtx-dropdown-list::shadow .dropdown-trigger {
+gtx-dropdown-list::ng-deep .dropdown-trigger {
     cursor: pointer;
     color: inherit;
 
@@ -65,15 +65,15 @@ gtx-dropdown-list::shadow .dropdown-trigger {
         position: relative;
         top: -2px;
 
-        &::shadow .material-icons,
-        &::shadow icon {
+        &::ng-deep .material-icons,
+        &::ng-deep icon {
             margin-left: -4px;
             width: 20px;
         }
     }
 }
 
-gtx-contents-list-item::shadow {
+gtx-contents-list-item::ng-deep {
     .item-primary > * {
         white-space: nowrap;
     }
@@ -156,7 +156,7 @@ gtx-dropdown-item.disabled {
 }
 
 
-gtx-contents-list-item:not(:hover)::shadow {
+gtx-contents-list-item:not(:hover)::ng-deep {
     .item-actions {
         opacity: 0.2;
     }

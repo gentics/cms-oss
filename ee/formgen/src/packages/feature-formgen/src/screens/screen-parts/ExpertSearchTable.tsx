@@ -253,6 +253,11 @@ const TableView: React.FC<TableViewProps> = (props) => {
               />
             )}
             keyExtractor={(item, index) => getRowKey(item, index)}
+            // The list has no fixed height here (it grows with its rows), so it never needs its
+            // own scrollbar. At certain table widths one still appeared on the list's ScrollView,
+            // narrowing the content; FlashList re-renders on every width change, and the scrollbar
+            // toggling on/off looped until React aborted with error #185 (white screen).
+            showsVerticalScrollIndicator={false}
             extraData={{ checkBoxesState, colWidths }}
           />
         </View>

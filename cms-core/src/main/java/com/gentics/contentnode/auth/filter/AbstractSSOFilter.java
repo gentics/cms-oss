@@ -59,6 +59,11 @@ public abstract class AbstractSSOFilter implements Filter {
 	private static final int NODE_GROUP_ID = 2;
 
 	/**
+	 * Value stored as password of users created by single sign-on. It is no valid password hash, so login with user credentials is impossible.
+	 */
+	public final static String SSO_PASSWORD = "SSO";
+
+	/**
 	 * logger
 	 */
 	protected NodeLogger logger = NodeLogger.getNodeLogger(getClass());
@@ -476,7 +481,7 @@ public abstract class AbstractSSOFilter implements Filter {
 			// set the login
 			systemUser.setLogin(login);
 			// set 'SSO' as encrypted password (this will make it impossible to login by user credentials)
-			systemUser.setPassword("SSO");
+			systemUser.setPassword(SSO_PASSWORD);
 			// set the user active
 			systemUser.setActive(true);
 

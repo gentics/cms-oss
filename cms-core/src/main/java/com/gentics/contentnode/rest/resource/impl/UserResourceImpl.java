@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.contentnode.auth.filter.AbstractSSOFilter;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
@@ -63,6 +64,7 @@ import com.gentics.contentnode.rest.filters.RequiredPerm;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.perm.PermType;
+import com.gentics.contentnode.rest.model.request.ChangePasswordRequest;
 import com.gentics.contentnode.rest.model.request.SortOrder;
 import com.gentics.contentnode.rest.model.request.UserSaveRequest;
 import com.gentics.contentnode.rest.model.request.UserSortAttribute;
@@ -491,6 +493,54 @@ public class UserResourceImpl implements UserResource {
 		} catch (NodeException e) {
 			logger.error("Error while getting all user data", e);
 			throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).build());
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/password")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public GenericResponse changePassword(ChangePasswordRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			// only the permission to view the own user is required
+			SystemUser user = MiscUtils.load(SystemUser.class, Integer.toString(t.getUserId()));
+
+			if (request == null || StringUtils.isEmpty(request.getOldPassword()) || StringUtils.isEmpty(request.getNewPassword())) {
+				return new GenericResponse(
+					new Message(Type.WARNING, I18NHelper.get("rest.user.password_missing")),
+					new ResponseInfo(ResponseCode.INVALIDDATA, "Old and new password must be given"));
+			}
+
+			if (user.isSupportUser()) {
+				return new GenericResponse(
+					new Message(Type.WARNING, "password", I18NHelper.get("rest.user.support_user_password")),
+					new ResponseInfo(ResponseCode.FAILURE, "Cannot change password of support user"));
+			}
+
+			if (AbstractSSOFilter.SSO_PASSWORD.equals(user.getPassword())) {
+				return new GenericResponse(
+					new Message(Type.WARNING, "password", I18NHelper.get("rest.user.sso_user_password")),
+					new ResponseInfo(ResponseCode.FAILURE, "Cannot change password of single sign-on user"));
+			}
+
+			SystemUser verifiedUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class))
+					.getSystemUser(user.getLogin(), request.getOldPassword(), true);
+
+			if (verifiedUser == null || !verifiedUser.getId().equals(user.getId())) {
+				return new GenericResponse(
+					new Message(Type.WARNING, "oldPassword", I18NHelper.get("rest.user.old_password_wrong")),
+					new ResponseInfo(ResponseCode.INVALIDDATA, "Old password does not match"));
+			}
+
+			// get editable copy of object, change password and save
+			user = t.getObject(user, true);
+			user.setPassword(SystemUserFactory.hashPassword(request.getNewPassword(), user.getId()));
+			user.save();
+
+			trx.success();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully changed password"));
 		}
 	}
 

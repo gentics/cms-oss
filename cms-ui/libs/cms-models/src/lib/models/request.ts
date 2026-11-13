@@ -1736,6 +1736,16 @@ export type UserUpdateRequest = Partial<User<Raw>> & {
 };
 
 /**
+ * Request used for changing the password of the current user with the `user/password` endpoint.
+ */
+export interface ChangePasswordRequest {
+    /** Current password, which is verified before the change */
+    oldPassword: string;
+    /** New password */
+    newPassword: string;
+}
+
+/**
  * Request object used to create a new group using the `group/{id}/groups` endpoint.
  *
  * Groups can only be created as subgroups. There is always one root group existing in the CMS instance.

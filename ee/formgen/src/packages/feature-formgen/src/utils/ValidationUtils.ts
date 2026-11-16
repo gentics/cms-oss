@@ -13,6 +13,7 @@ import { getElementTypeByPlugin } from '../custom/ElementTypes';
 import i18n from '@andp/core/src/services/i18n';
 import * as utils from '../utils/Utils';
 import * as overlayUtils from '../utils/OverlayUtils';
+import { handleDialogPortalProblem } from '../utils/DialogPortalErrorUtils';
 import * as mockFormularUtils from '../utils/MockFormularUtils';
 import JsonPath from 'jsonpath';
 import memoize from 'memoizee';
@@ -706,7 +707,9 @@ const loadValidation = async (
   const errorFunc = (errorResponse: any) => {
     (global as any).updateOnChangeWillRun = undefined;
     console.error(errorResponse);
-    if (jsonPath) {
+    if (handleDialogPortalProblem(errorResponse, uiState, formState, updateState)) {
+      // The DialogPortal error overlay is shown instead of the load error.
+    } else if (jsonPath) {
       utils.setANFieldLoadError(formState, jsonPath, true);
       updateState(StatesToUpdateEnum.UIState);
     } else {

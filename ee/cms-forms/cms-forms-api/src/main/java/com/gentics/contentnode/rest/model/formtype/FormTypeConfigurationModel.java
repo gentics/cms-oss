@@ -63,6 +63,13 @@ public class FormTypeConfigurationModel implements Serializable {
 	public Blocks blocks;
 
 	/**
+	 * Settings for the form itself, which can be set in the form properties.
+	 * The values are stored in the form data under "formSettings.{setting.id}", unless a propertyPath (relative to the form data) is given.
+	 */
+	@JsonProperty
+	public List<BaseSetting> settings;
+
+	/**
 	 * Options which can be selected for user reference information
 	 */
 	@JsonProperty

@@ -157,6 +157,8 @@ public class FormTransformer {
 				handleLinks(typeConfig, elementConfig, element, languages);
 			}, null);
 
+			transformFormSettings(typeConfig, data, languages);
+
 			if (!typeConfig.external) {
 				transformPageReference(data, "successPageId", "successNodeId", (n, p) -> {
 					if (p != null) {
@@ -399,6 +401,16 @@ public class FormTransformer {
 				}
 			}
 		}, null);
+
+		if (CollectionUtils.isNotEmpty(config.settings)) {
+			for (BaseSetting setting : config.settings) {
+				if (setting instanceof TranslationSetting) {
+					FormDataUtils.getFormSettingHolder(data, setting).ifPresent(holder -> {
+						transformLanguageCodes(holder.getLeft().path(holder.getRight()), transformationMap);
+					});
+				}
+			}
+		}
 		return data;
 	}
 
@@ -756,6 +768,51 @@ public class FormTransformer {
 					// ignored
 				}
 			}
+		}
+	}
+
+	/**
+	 * Transform the values of the form settings (references and links in richtext settings)
+	 * @param typeConfig type configuration
+	 * @param data form data
+	 * @param languages form languages
+	 * @throws NodeException
+	 */
+	protected void transformFormSettings(FormTypeConfiguration typeConfig, ObjectNode data, List<String> languages)
+			throws NodeException {
+		if (CollectionUtils.isEmpty(typeConfig.settings)) {
+			return;
+		}
+
+		for (BaseSetting setting : typeConfig.settings) {
+			boolean needsTransformation = setting instanceof ReferenceSetting
+					|| (setting instanceof StringSetting stringSetting && stringSetting.richContent)
+					|| (setting instanceof TranslationSetting translationSetting && translationSetting.richContent);
+			if (!needsTransformation) {
+				continue;
+			}
+
+			Optional<Pair<ObjectNode, String>> optHolder = FormDataUtils.getFormSettingHolder(data, setting);
+			if (optHolder.isEmpty() || !optHolder.get().getLeft().has(optHolder.get().getRight())) {
+				continue;
+			}
+			ObjectNode holder = optHolder.get().getLeft();
+			String name = optHolder.get().getRight();
+
+			// the transformation methods expect the value to be stored with the setting ID as name,
+			// so we wrap the value, transform it and write it back
+			ObjectNode wrapper = holder.objectNode();
+			wrapper.set(setting.id, holder.get(name));
+
+			if (setting instanceof ReferenceSetting referenceSetting) {
+				transformReference(referenceSetting, wrapper, languages);
+			} else if (setting instanceof StringSetting stringSetting) {
+				transformationTarget.transform(stringSetting, wrapper, languages);
+			} else if (setting instanceof TranslationSetting translationSetting) {
+				transformationTarget.transform(translationSetting, wrapper, languages);
+			}
+
+			holder.set(name, wrapper.get(setting.id));
 		}
 	}
 

@@ -257,8 +257,24 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			form.updateData(FormTransformer.transformToInternalLanguageCodes(config, restModel.getData().deepCopy()));
 		}
 
+		removeObsoleteFormSettings(form);
+
 		return form;
 	};
+
+	/**
+	 * Remove values of form settings from the form data, which do not belong to any form setting of the form type (any more)
+	 * @param form form (must be editable)
+	 * @throws NodeException
+	 */
+	protected static void removeObsoleteFormSettings(Form form) throws NodeException {
+		if (form.getData() instanceof ObjectNode data && data.get(FormDataUtils.FORM_SETTINGS) instanceof ObjectNode) {
+			ObjectNode copy = data.deepCopy();
+			if (FormDataUtils.removeObsoleteFormSettings(getFormTypeConfiguration(form.getFormType()), copy)) {
+				form.setData(copy);
+			}
+		}
+	}
 
 	/**
 	 * Required key of the translations custom tool
@@ -380,6 +396,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 					update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
 					FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
 					handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
+					removeObsoleteFormSettings(update);
 					update.save();
 				}
 
@@ -426,6 +443,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 						update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
 						FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
 						handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
+						removeObsoleteFormSettings(update);
 						update.save();
 						update.unlock();
 					}

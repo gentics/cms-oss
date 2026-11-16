@@ -275,6 +275,12 @@ export interface FormTypeConfiguration {
      */
     blocks?: Record<string, FormBlockConfiguration>;
     /**
+     * Settings for the form itself, which can be configured in the form properties.
+     * The values are stored in the form data in `formSettings[setting.id]`, unless a `propertyPath`
+     * (relative to the form data) is given.
+     */
+    settings?: FormSettingConfiguration[];
+    /**
      * Options which can be selected for user reference information
      */
     userOptions?: FormSelectOption[];

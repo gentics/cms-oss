@@ -1,15 +1,24 @@
 package com.gentics.contentnode.etc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
+import com.gentics.contentnode.rest.model.formtype.BaseSetting;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
@@ -22,6 +31,11 @@ public class FormDataUtils {
 	 * Name of the form gridp options attribute
 	 */
 	public final static String FORM_GRID_OPTIONS = "formGridOptions";
+
+	/**
+	 * Name of the attribute holding the values of the form settings
+	 */
+	public final static String FORM_SETTINGS = "formSettings";
 
 	/**
 	 * Name of the schema property
@@ -199,5 +213,64 @@ public class FormDataUtils {
 	 */
 	protected static Stream<JsonNode> withSubelements(JsonNode element) {
 		return Stream.concat(Stream.of(element), element.path(ELEMENTS).valueStream().flatMap(FormDataUtils::withSubelements));
+	}
+
+	/**
+	 * Get the JSON object holding the value of the given form setting and the name of the property within that object.
+	 * If the setting has a propertyPath, it is resolved relative to the form data, otherwise the value is stored in "formSettings.{setting.id}".
+	 * @param data form data
+	 * @param setting form setting
+	 * @return optional pair of holder object and property name, empty if the holder object does not exist
+	 */
+	public static Optional<Pair<ObjectNode, String>> getFormSettingHolder(JsonNode data, BaseSetting setting) {
+		String[] path = StringUtils.isNotBlank(setting.propertyPath) ? StringUtils.split(setting.propertyPath, '.')
+				: new String[] { FORM_SETTINGS, setting.id };
+
+		JsonNode holder = data;
+		for (int i = 0; i < path.length - 1; i++) {
+			holder = holder.path(path[i]);
+		}
+
+		if (holder instanceof ObjectNode holderObject) {
+			return Optional.of(Pair.of(holderObject, path[path.length - 1]));
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	/**
+	 * Remove values from the "formSettings" of the form data, which do not belong to any form setting of the configuration.
+	 * Values stored with a propertyPath outside of "formSettings" are not touched.
+	 * @param config form type configuration
+	 * @param data form data (will be modified)
+	 * @return true if values were removed, false if not
+	 */
+	public static boolean removeObsoleteFormSettings(FormTypeConfiguration config, ObjectNode data) {
+		if (!(data.get(FORM_SETTINGS) instanceof ObjectNode formSettings)) {
+			return false;
+		}
+
+		Set<String> usedKeys = new HashSet<>();
+		if (config.settings != null) {
+			for (BaseSetting setting : config.settings) {
+				if (StringUtils.isBlank(setting.propertyPath)) {
+					usedKeys.add(setting.id);
+				} else {
+					String[] path = StringUtils.split(setting.propertyPath, '.');
+					if (path.length > 1 && FORM_SETTINGS.equals(path[0])) {
+						usedKeys.add(path[1]);
+					}
+				}
+			}
+		}
+
+		List<String> obsoleteKeys = new ArrayList<>();
+		formSettings.fieldNames().forEachRemaining(key -> {
+			if (!usedKeys.contains(key)) {
+				obsoleteKeys.add(key);
+			}
+		});
+		formSettings.remove(obsoleteKeys);
+		return !obsoleteKeys.isEmpty();
 	}
 }

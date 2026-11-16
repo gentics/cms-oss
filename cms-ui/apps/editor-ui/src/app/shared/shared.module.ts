@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CmsComponentsModule, WindowRef } from '@gentics/cms-components';
+import { FormGridModule } from '@gentics/form-grid';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgxPaginationModule } from 'ngx-pagination';
@@ -250,6 +251,7 @@ const IMPORTS: any[] = [
     FormsModule,
     GenticsUICoreModule,
     CmsComponentsModule,
+    FormGridModule,
     NgxPaginationModule,
     ReactiveFormsModule,
     RouterModule,

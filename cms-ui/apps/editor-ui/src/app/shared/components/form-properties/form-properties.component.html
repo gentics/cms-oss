@@ -132,6 +132,44 @@
             }
         </div>
 
+        @if (formSettings.length > 0 && formSettingsData != null) {
+            <div class="form-section-container form-settings">
+                <div class="gtx-form-section-title">{{ 'editor.form_settings_title' | gtxI18n }}</div>
+
+                <gtx-dynamic-form-settings
+                    class="form-settings-list"
+                    [config]="activeConfiguration"
+                    [contextId]="formSettingsContextId"
+                    [settings]="formSettings"
+                    [element]="formSettingsData"
+                    [elementConfig]="formSettingsConfig"
+                    [disabled]="disabled"
+                    [languages]="form?.value?.languages || []"
+                    (elementChange)="updateFormSettingsData($event)"
+                ></gtx-dynamic-form-settings>
+
+                @if (hasTranslatableFormSettings && formLanguages?.length > 0) {
+                    <gtx-i18n-panel-group
+                        class="columns small-12"
+                        [languages]="formLanguages"
+                        [(activeLanguage)]="activeLanguage"
+                    >
+                        <gtx-dynamic-form-translations
+                            class="form-settings-translations"
+                            [contextId]="formSettingsContextId"
+                            [settings]="formSettings"
+                            [element]="formSettingsData"
+                            [elementConfig]="formSettingsConfig"
+                            [disabled]="disabled"
+                            [languages]="form?.value?.languages || []"
+                            [activeLanguage]="activeLanguage?.code"
+                            (elementChange)="updateFormSettingsData($event)"
+                        ></gtx-dynamic-form-translations>
+                    </gtx-i18n-panel-group>
+                }
+            </div>
+        }
+
         @if (activeConfiguration != null && !activeConfiguration.external) {
             <div class="flex-row" formGroupName="data">
                 <div class="gtx-form-section-title">{{ 'editor.form_administrator_email_title' | gtxI18n }}</div>

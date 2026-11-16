@@ -61,6 +61,11 @@ export interface EditableFormData {
      * The ID of the captcha to use for this form.
      */
     captchaId?: string;
+    /**
+     * The values of the form settings, which are defined in the form type configuration.
+     * Values of settings with a `propertyPath` are stored at that path in the form data instead.
+     */
+    formSettings?: Record<string, unknown>;
 
     /* INTERNAL FORMS
      * ===================================================================== */

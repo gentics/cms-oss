@@ -678,6 +678,144 @@ public class FormTransformerTest implements ConfigModifier {
 		}
 	}
 
+	@Test
+	public void testFormSettingString() throws NodeException {
+		ObjectNode data = mapper.createObjectNode();
+		data.withObjectProperty("formSettings").put("formString", "Plain value");
+
+		ObjectNode expected = getMinimalRendered(form);
+		expected.withObjectProperty("formSettings").put("formString", "Plain value");
+
+		doTransformTest(data, publish, expected);
+	}
+
+	@Test
+	public void testFormSettingRichtext() throws NodeException {
+		ObjectNode data = mapper.createObjectNode();
+		data.withObjectProperty("formSettings")
+			.put("formRichString", "Text with a link: {{ LINK|URL:https&col;//gentics.com|Go to Gentics &dollar;|_self }}");
+
+		ObjectNode expected = getMinimalRendered(form);
+		expected.withObjectProperty("formSettings")
+			.put("formRichString", "Text with a link: <a href='https://gentics.com' target='_self'>Go to Gentics $</a>");
+
+		doTransformTest(data, publish, expected);
+	}
+
+	@Test
+	public void testFormSettingContentReference() throws NodeException {
+		ObjectNode data = mapper.createObjectNode();
+		addFormSettingReference(data, "formContentPage", germanPage.getId(), node.getId(), "page");
+
+		ObjectNode expected = getMinimalRendered(form);
+		expected.withObjectProperty("formSettings")
+			.withObjectProperty("formContentPage")
+			.put("de", "Seite (de)")
+			.put("en", "Page (en)");
+
+		doTransformTest(data, publish, expected);
+	}
+
+	@Test
+	public void testFormSettingUrlReference() throws NodeException {
+		ObjectNode data = mapper.createObjectNode();
+		addFormSettingReference(data, "formUrlReference", germanPage.getId(), node.getId(), "page");
+
+		ObjectNode expected = getMinimalRendered(form);
+		expected.withObjectProperty("formSettings")
+			.withObjectProperty("formUrlReference")
+			.put("de", "http://node/Content.node/test_de/folder/Seite.de.html")
+			.put("en", "http://node/Content.node/test_en/folder/Page.en.html");
+
+		doTransformTest(data, publish, expected);
+	}
+
+	@Test
+	public void testFormSettingMeshlinkReference() throws NodeException {
+		ObjectNode data = mapper.createObjectNode();
+		addFormSettingReference(data, "formMeshlinkReference", germanPage.getId(), node.getId(), "page");
+
+		String meshUuid = supply(() -> MeshPublisher.getMeshUuid(germanPage));
+
+		ObjectNode expected = getMinimalRendered(form);
+		expected.withObjectProperty("formSettings")
+			.withObjectProperty("formMeshlinkReference")
+			.put("de", "{{mesh.link(%s, de, Node)}}".formatted(meshUuid))
+			.put("en", "{{mesh.link(%s, en, Node)}}".formatted(meshUuid));
+
+		doTransformTest(data, publish, expected);
+	}
+
+	@Test
+	public void testFormSettingReferenceToContentPackage() throws NodeException {
+		ObjectNode data = mapper.createObjectNode();
+		addFormSettingReference(data, "formUrlReference", germanPage.getId(), node.getId(), "page");
+
+		ObjectNode expected = getMinimalContentPackage(form);
+		expected.withObjectProperty("formSettings")
+			.withObjectProperty("formUrlReference")
+			.put("id", germanPage.getGlobalId().toString())
+			.put("nodeId", node.getGlobalId().toString())
+			.put("type", "page");
+
+		doTransformTest(data, toContentPackage, expected);
+	}
+
+	@Test
+	public void testFormSettingReferenceFromContentPackage() throws NodeException {
+		ObjectNode data = getMinimalContentPackage(form);
+		data.withObjectProperty("formSettings")
+			.withObjectProperty("formUrlReference")
+			.put("id", germanPage.getGlobalId().toString())
+			.put("nodeId", node.getGlobalId().toString())
+			.put("type", "page");
+
+		ObjectNode expected = getMinimalContentPackage(form);
+		expected.withObjectProperty("formSettings")
+			.withObjectProperty("formUrlReference")
+			.put("id", germanPage.getId())
+			.put("nodeId", node.getId())
+			.put("type", "page");
+
+		doTransformTest(data, fromContentPackage, expected);
+	}
+
+	@Test
+	public void testFormSettingReferenceWithPropertyPath() throws NodeException {
+		ObjectNode data = mapper.createObjectNode();
+		data.withObjectProperty("custom")
+			.withObjectProperty("path")
+			.withObjectProperty("reference")
+			.put("id", germanPage.getId())
+			.put("nodeId", node.getId())
+			.put("type", "page");
+
+		ObjectNode expected = getMinimalRendered(form);
+		expected.withObjectProperty("custom")
+			.withObjectProperty("path")
+			.withObjectProperty("reference")
+			.put("de", "http://node/Content.node/test_de/folder/Seite.de.html")
+			.put("en", "http://node/Content.node/test_en/folder/Page.en.html");
+
+		doTransformTest(data, publish, expected);
+	}
+
+	/**
+	 * Add a reference as value of a form setting
+	 * @param data form data
+	 * @param settingId setting ID
+	 * @param itemId ID of the referenced item
+	 * @param nodeId node ID of the referenced item
+	 * @param type type of the referenced item
+	 */
+	protected void addFormSettingReference(ObjectNode data, String settingId, int itemId, int nodeId, String type) {
+		data.withObjectProperty("formSettings")
+			.withObjectProperty(settingId)
+			.put("id", itemId)
+			.put("nodeId", nodeId)
+			.put("type", type);
+	}
+
 	/**
 	 * Do the transformation test
 	 * @param data original data
@@ -801,6 +939,22 @@ public class FormTransformerTest implements ConfigModifier {
 				meshlinkReferenceBackend);
 
 		formsConfig.controls = new Controls(Map.of("control", control));
+
+		StringSetting formString = new StringSetting("formString", Map.of());
+		StringSetting formRichString = new StringSetting("formRichString", Map.of());
+		formRichString.richContent = true;
+		ReferenceSetting formContentPage = new ReferenceSetting("formContentPage", Map.of(),
+				Set.of(ReferenceType.page), PublishAsType.content);
+		ReferenceSetting formUrlReference = new ReferenceSetting("formUrlReference", Map.of(),
+				Set.of(ReferenceType.page, ReferenceType.file, ReferenceType.image), PublishAsType.url);
+		ReferenceSetting formMeshlinkReference = new ReferenceSetting("formMeshlinkReference", Map.of(),
+				Set.of(ReferenceType.page, ReferenceType.file, ReferenceType.image), PublishAsType.meshlink);
+		ReferenceSetting formPathReference = new ReferenceSetting("formPathReference", Map.of(),
+				Set.of(ReferenceType.page), PublishAsType.url);
+		formPathReference.propertyPath = "custom.path.reference";
+
+		formsConfig.settings = List.of(formString, formRichString, formContentPage, formUrlReference,
+				formMeshlinkReference, formPathReference);
 
 		formTypeConfiguration.put(FORM_TYPE, formsConfig);
 

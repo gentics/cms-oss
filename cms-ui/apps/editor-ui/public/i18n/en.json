@@ -178,6 +178,7 @@
         "form_type_detail_label": "Form Type: {{type}}",
         "form_administrator_email_title": "Administrator E-Mail",
         "form_success_page_title": "Success page",
+        "form_settings_title": "Form settings",
         "form_flow_label": "Form flow",
         "form_captcha_label": "Form Captcha",
         "form_width_label": "Form width",

@@ -949,6 +949,123 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testUpdateFormSettings() throws NodeException, JsonMappingException, JsonProcessingException {
+		JsonMapper mapper = JsonMapper.builder().build();
+
+		JsonNode initialData = mapper.readTree("{\"schema\": {\"properties\": {}}}");
+		JsonNode updateData = mapper.readTree("{\"formSettings\": {\"%s\": \"Setting value\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+
+		JsonNode finalData = mapper.readTree("{\"schema\": {\"properties\": {}}, \"formSettings\": {\"%s\": \"Setting value\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+			f.setLanguages(Arrays.asList("de"));
+			f.setData(initialData);
+		}));
+
+		String formId = Integer.toString(form.getId());
+		consume(Form::unlock, form);
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setData(updateData);
+					return target.path("form").path(formId).request().put(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+		assertThat(response.getItem()).as("Updated form").isNotNull().hasFormData(finalData);
+
+		form = execute(Form::reload, form);
+		assertThat(form).as("Reloaded form").hasFormData(finalData);
+	}
+
+	@Test
+	public void testUpdateRemovesObsoleteFormSettings() throws NodeException, JsonMappingException, JsonProcessingException {
+		JsonMapper mapper = JsonMapper.builder().build();
+
+		JsonNode initialData = mapper.readTree("{\"formSettings\": {\"%s\": \"a\", \"removedSetting\": \"b\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+		JsonNode updateData = mapper.readTree("{\"formSettings\": {\"%s\": \"a\", \"removedSetting\": \"b\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+		JsonNode finalData = mapper.readTree("{\"formSettings\": {\"%s\": \"a\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+
+		Form form = createFormWithData("Form with obsolete settings", initialData);
+		String formId = Integer.toString(form.getId());
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setData(updateData);
+					return target.path("form").path(formId).request().put(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+		assertThat(response.getItem()).as("Updated form").isNotNull().hasFormData(finalData);
+
+		form = execute(Form::reload, form);
+		assertThat(form).as("Reloaded form").hasFormData(finalData);
+	}
+
+	@Test
+	public void testUpdateWithoutDataRemovesObsoleteFormSettings() throws NodeException, JsonMappingException, JsonProcessingException {
+		JsonMapper mapper = JsonMapper.builder().build();
+
+		JsonNode initialData = mapper.readTree("{\"formSettings\": {\"%s\": \"a\", \"removedSetting\": \"b\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+		JsonNode finalData = mapper.readTree("{\"formSettings\": {\"%s\": \"a\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+
+		Form form = createFormWithData("Form with obsolete settings", initialData);
+		String formId = Integer.toString(form.getId());
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setName("Renamed form with obsolete settings");
+					return target.path("form").path(formId).request().put(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+		assertThat(response.getItem()).as("Updated form").isNotNull().hasName("Renamed form with obsolete settings").hasFormData(finalData);
+
+		form = execute(Form::reload, form);
+		assertThat(form).as("Reloaded form").hasFormData(finalData);
+	}
+
+	@Test
+	public void testCreateRemovesObsoleteFormSettings() throws NodeException, JsonMappingException, JsonProcessingException {
+		JsonMapper mapper = JsonMapper.builder().build();
+
+		JsonNode data = mapper.readTree("{\"formSettings\": {\"%s\": \"a\", \"removedSetting\": \"b\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+		JsonNode finalData = mapper.readTree("{\"formSettings\": {\"%s\": \"a\"}}".formatted(FormTypeConfigurationModifier.FORM_SETTING_ID));
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+					request.setName("Created form with obsolete settings");
+					request.setFolderId(testFolder.getId());
+					request.setLanguages(Arrays.asList("de"));
+					request.setData(data);
+					return target.path("form").request().post(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.createform));
+		assertThat(response.getItem()).as("Created form").isNotNull().hasFormData(finalData);
+	}
+
+	/**
+	 * Create an unlocked form of the generic type with the given data
+	 * @param name form name
+	 * @param data form data
+	 * @return form
+	 * @throws NodeException
+	 */
+	protected Form createFormWithData(String name, JsonNode data) throws NodeException {
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setName(name);
+			f.setFolderId(testFolder.getId());
+			f.setLanguages(Arrays.asList("de"));
+			f.setData(data);
+		}));
+		consume(Form::unlock, form);
+		return execute(Form::reload, form);
+	}
+
+	@Test
 	public void testPartialUpdate() throws NodeException, JsonMappingException, JsonProcessingException {
 		JsonMapper mapper = JsonMapper.builder().build();
 

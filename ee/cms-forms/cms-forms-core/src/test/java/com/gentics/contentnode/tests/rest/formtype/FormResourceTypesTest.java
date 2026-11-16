@@ -38,6 +38,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
+import com.gentics.contentnode.rest.model.formtype.StringSetting;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -120,8 +121,25 @@ public class FormResourceTypesTest {
 				.hasFieldOrPropertyWithValue("type", FormTypeConfigurationModifier.GENERIC_TYPE)
 				.hasFieldOrPropertyWithValue("nameI18n", Map.of("de", "CMS Formular", "en", "CMS Form"))
 				.hasOnlyFields("type", "flows", "nameI18n", "descriptionI18n", "external", "submitOnce", "pluginName", "blocks",
-						"controls", "templateOptions", "userOptions", "userEmailTemplateOptions",
+						"controls", "settings", "templateOptions", "userOptions", "userEmailTemplateOptions",
 						"adminEmailTemplateOptions", "captchaOptions");
+	}
+
+	/**
+	 * Test that the form settings are returned with the form type configuration
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLoadFormTypeSettings() throws NodeException {
+		FormTypeConfigurationResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
+			return target.path("form").path("types").path(FormTypeConfigurationModifier.GENERIC_TYPE).request().get(FormTypeConfigurationResponse.class);
+		});
+
+		assertThat(response.getItem().settings).as("Form settings").isNotNull().hasSize(1);
+		assertThat(response.getItem().settings.get(0)).as("Form setting")
+				.isInstanceOf(StringSetting.class)
+				.hasFieldOrPropertyWithValue("id", FormTypeConfigurationModifier.FORM_SETTING_ID)
+				.hasFieldOrPropertyWithValue("labelI18n", Map.of("de", "Formular Einstellung", "en", "Form setting"));
 	}
 
 	/**

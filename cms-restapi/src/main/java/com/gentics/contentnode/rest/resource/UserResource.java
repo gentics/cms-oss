@@ -26,6 +26,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.GroupList;
 import com.gentics.contentnode.rest.model.response.GroupLoadResponse;
 import com.gentics.contentnode.rest.model.response.NodeRestrictionResponse;
+import com.gentics.contentnode.rest.model.response.PasswordLinkResponse;
 import com.gentics.contentnode.rest.model.response.UserDataResponse;
 import com.gentics.contentnode.rest.model.response.UserList;
 import com.gentics.contentnode.rest.model.response.UserListResponse;
@@ -230,6 +231,23 @@ public interface UserResource {
 		@ResponseCode(code = 404, condition = "User {id} does not exist.")
 	})
 	UserLoadResponse update(@PathParam("id") String id, User item) throws Exception;
+
+	/**
+	 * Issue a new token for the link, with which the user sets their password (see {@code POST /auth/password}). Any
+	 * earlier token of the user, also the one issued by {@code PUT /group/{id}/users?passwordLink=true}, becomes
+	 * invalid. Requires the permission to edit the user, like setting the password with {@code PUT /user/{id}}.
+	 * @param id local user ID
+	 * @return token, valid for 24 hours and usable once, with its expiry
+	 * @throws Exception
+	 */
+	@POST
+	@Path("/{id}/passwordLink")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "A token was issued for user {id}."),
+		@ResponseCode(code = 403, condition = "The user may not edit user {id}."),
+		@ResponseCode(code = 404, condition = "User {id} does not exist.")
+	})
+	PasswordLinkResponse createPasswordLink(@PathParam("id") String id) throws Exception;
 
 	/**
 	 * Deactivate the user with given ID

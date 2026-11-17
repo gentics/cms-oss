@@ -210,17 +210,36 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Create a new user in group with id {groupId}
      */
     createUser(groupId: number, payload: GroupUserCreateRequest): Observable<User<Raw>> {
-        return this.client.group.createUser(groupId, payload).pipe(
-            // get user from response
-            map((res: GroupUserCreateResponse) => res.user),
+        return this.addCreatedUser(groupId, this.client.group.createUser(groupId, payload));
+    }
+
+    /**
+     * Create a new user in group with id {groupId}, who sets the password with a link.
+     * Emits the user and the token for the link. The creation only returns the link's expiry, so the token
+     * is fetched afterwards with `POST /user/{id}/passwordLink`, which replaces the token of the creation.
+     */
+    createUserWithPasswordLink(groupId: number, payload: GroupUserCreateRequest): Observable<{ user: User<Raw>; passwordToken: string }> {
+        return this.addCreatedUser(groupId, this.client.group.createUser(groupId, payload, { passwordLink: true })).pipe(
+            switchMap((user) => this.client.user.createPasswordLink(user.id).pipe(
+                map((res) => ({ user, passwordToken: res.token })),
+            )),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    /**
+     * Put the user created by the request into the state and notify about it.
+     */
+    private addCreatedUser(groupId: number, request: Observable<GroupUserCreateResponse>): Observable<User<Raw>> {
+        return request.pipe(
             // get group of created user to assemble raw user (presume that group user has been created in is already in app state)
-            map((user: User<Raw>) => {
+            map((res: GroupUserCreateResponse) => {
                 const userGroupIdInitial = this.entities.denormalizeEntity('group', this.appState.now.entity.group[groupId]);
-                return { ...user, groups: [userGroupIdInitial] };
+                return { ...res.user, groups: [userGroupIdInitial] };
             }),
-            tap((userWithGroups: User<Raw>) => this.entities.addEntity('user', userWithGroups)),
+            tap((user) => this.entities.addEntity('user', user)),
             // display toast notification
-            tap((user: User<Raw>) => this.notification.show({
+            tap((user) => this.notification.show({
                 type: 'success',
                 message: 'shared.item_created',
                 translationParams: { name: user.login },

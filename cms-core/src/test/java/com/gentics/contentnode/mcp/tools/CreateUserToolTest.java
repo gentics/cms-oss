@@ -18,6 +18,7 @@ import org.junit.Test;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
 import com.gentics.contentnode.mcp.model.UserItem;
+import com.gentics.contentnode.mcp.tools.CreateUserTool.PasswordLink;
 import com.gentics.contentnode.mcp.tools.CreateUserTool.Result;
 import com.gentics.contentnode.rest.model.User;
 
@@ -39,7 +40,7 @@ public class CreateUserToolTest {
 	public void testInputValidation() {
 		assertAccepted(tool, args());
 		assertAccepted(tool, Map.of("groupId", 7, "login", "mcp.new", "firstName", "Mia", "lastName", "New"));
-		assertRejected(tool, with("password", "short"));
+		assertRejected(tool, with("password", PASSWORD));
 		assertRejected(tool, with("login", "m"));
 		assertRejected(tool, with("lastName", ""));
 		assertRejected(tool, Map.of("groupId", 7, "login", "mcp.new", "firstName", "Mia"));
@@ -52,7 +53,6 @@ public class CreateUserToolTest {
 
 	@Test
 	public void testArgumentsCheckedBeforeCreating() {
-		assertInvalid(with("password", "short1"), "password");
 		assertInvalid(with("email", "mia at example.com"), "email");
 		assertInvalid(with("lastName", "  "), "lastName");
 	}
@@ -67,19 +67,20 @@ public class CreateUserToolTest {
 		user.setPassword(PASSWORD);
 
 		Map<String, Object> json = assertValidOutput(tool, new Result(UserItem.of(user, List.of(ObjectRef.of(
-				Type.GROUP, 19))), true));
+				Type.GROUP, 19))), true, new PasswordLink("2026-11-18T12:00:00Z")));
 
-		assertThat(json.toString()).doesNotContain(PASSWORD).doesNotContain("password");
+		assertThat(json.toString()).doesNotContain(PASSWORD).contains("2026-11-18T12:00:00Z");
+		assertThat(json).containsKey("passwordLink").doesNotContainKey("password");
 	}
 
 	private void assertInvalid(Map<String, Object> arguments, String name) {
 		assertThatThrownBy(() -> tool.invoke(arguments, Optional.empty())).isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("'" + name + "'").message().doesNotContain(PASSWORD).doesNotContain("short1");
+				.hasMessageContaining("'" + name + "'").message().doesNotContain(PASSWORD);
 	}
 
 	private static Map<String, Object> args() {
 		return Map.of("groupId", 7, "login", "mcp.new", "firstName", "Mia", "lastName", "New", "email",
-				"mia@example.com", "password", PASSWORD);
+				"mia@example.com");
 	}
 
 	private static Map<String, Object> with(String name, Object value) {

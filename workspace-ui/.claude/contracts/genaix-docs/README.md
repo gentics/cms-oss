@@ -23,7 +23,8 @@ reference client that let it be tried out end to end.
 Read 01 first regardless of role. A Workspace UI developer then wants 03, 08 and the
 `examples/` directory; a CMS integrator wants 02, 04, 05, 06 and 09.
 
-The documents describe **`1.0.0-rc.5`, agreed by all parties on 2026-10-15** (living plans,
+The documents describe **`1.0.0-rc.6`, a draft** (Forms, guidelines, user administration and
+reference fields, below), on top of **`1.0.0-rc.5`, agreed by all parties on 2026-10-15** (living plans,
 below). Passages that change with rc.5 say "since `1.0.0-rc.5`", so a reader can tell what rc.4
 did: for the living plan
 start with `03-genaix-api.md` §4.4 to §4.6, for module composition `08-workflow-modules.md` §6.7,
@@ -89,9 +90,9 @@ to rebuild after a contract change.
 ## Contract versions
 
 The GenAIx API (`openapi.yaml`) and the CMS MCP tool specification (`mcp/tools.json`) share the
-same version line. `openapi.yaml` and `mcp/tools.json` carry `1.0.0-rc.5`, **agreed by all
-parties on 2026-10-15** and frozen for development: implementations build against it as it
-stands. A change from here is made by agreement, recorded in the changelogs, and a breaking change only where no additive form exists. A revision that touches only one of the two leaves the other at its previous number. Both files carry their own changelog; the summary below
+same version line. `openapi.yaml` and `mcp/tools.json` carry `1.0.0-rc.6`, a draft for agreement.
+`1.0.0-rc.5`, **agreed by all parties on 2026-10-15**, stays frozen for development until then:
+implementations build against it as it stands. A change from here is made by agreement, recorded in the changelogs, and a breaking change only where no additive form exists. A revision that touches only one of the two leaves the other at its previous number. Both files carry their own changelog; the summary below
 omits detail already there.
 
 - **`1.0.0-draft.1`** — first contract: sessions, messages, runs, the SSE event model, message
@@ -222,3 +223,12 @@ omits detail already there.
   CMS tools are unchanged. New transcript `s8-living-plan.sse`; S1 to S7 carry the rc.5 shapes,
   and S7's "make it a news item instead" revises the proposed plan. The genaix-mock and the
   reference client follow.
+- **`1.0.0-rc.6`** (draft) — **Forms, guidelines, user administration and reference fields.**
+  `ContextReference.type` adds `form`, `user` and `group`, with `external` on a form;
+  `PlannedObject.type` adds `form`, `guideline` and `user`; `PlanItem.kind` adds `delete`;
+  `produces` adds `form` and `guideline`. A `form` question may hold a reference field, and a
+  `choice` may carry `reference_types`, both answered with a `ContextReference`. `publish` covers a
+  plan's forms. Discarding a plan deletes the guideline it created. `admin_user` asks one
+  confirmation. `mcp/tools.json` adds the groups `forms_read`, `forms_write`, `guidelines_read` and
+  `guidelines_write`, corrects the admin tools to what the CMS does, and `list_folder_items` no
+  longer lists forms. S4 follows, and the genaix-mock and the reference client follow.

@@ -1,7 +1,7 @@
 # GenAIx API v1 mock
 
 A standalone Python service that implements every route of
-[`../../openapi.yaml`](../../openapi.yaml) (`1.0.0-rc.5` draft, living plans) with in-memory state, and
+[`../../openapi.yaml`](../../openapi.yaml) (the `1.0.0-rc.6` draft, on top of `1.0.0-rc.5`, living plans) with in-memory state, and
 replays the recorded scenario transcripts in [`../../examples`](../../examples) as live
 Server-Sent Events.
 
@@ -502,7 +502,7 @@ S5 writes page 8903, which S6's proposal does not name: add it to the plan when 
 | `examples/s6-content-edit.sse#2` | The recorded opening `plan.updated` replaced by the live one. A write per page, each followed by `publications.updated` (`pending`), `approval_chain.updated` after the first, one `st-3` substep per page, three passing step_end gate checks, a `preview.updated` per page, the final plan |
 | `examples/s2-content-research.sse` (`content_research`) | Search calls, a streamed `table` part, citations, no CMS writes |
 | `examples/s3-construct-create.sse` (`construct_create`) | Catalogue check, a streamed `construct_draft` part, Handlebars validation, the `confirm` that accepts the plan, an `api_call_log` part, preview |
-| `examples/s4-admin-user.sse` (`admin_user`) | Group lookup, a `form` interaction, permission impact simulation, the `confirm` that accepts the plan, user creation |
+| `examples/s4-admin-user.sse` (`admin_user`) | Group lookup, a `form` interaction, the user lookup, the group's permissions read instead of a preview, the one `confirm` that accepts the plan, user creation in the group |
 | `examples/s7-continuous-session.sse#5` | The side run: one read tool call and a short answer |
 | `scripts/session-agent.sse` | The session agent's first answer |
 | `scripts/followup.sse` | A status line, one text part, `run.completed`: later answers, and a done plan run again |
@@ -540,6 +540,21 @@ arrives. `PlanState.state` is derived as the contract's table says.
 consume a `seq` and are persisted, as the contract requires. One stream carries every run
 of the session interleaved; with `follow=false` it ends once no run of the session is
 active, so a draft's follow-up run and a side run are part of it.
+
+## Reference answers, forms and guidelines (rc.6)
+
+- An answer's reference is checked at `/answer/values/<field>` or `/answer/reference` with `422`: type
+  not listed, a CMS type without `node_id`, a session file not in this session, a session file that is
+  no image where `image` is listed too, and `reference` without `reference_types`. Nothing asks a CMS.
+  `guideline`, `user`, `group`, `language`, `session_file` and `url` need no `node_id`.
+- `publish` takes a plan's forms online first, through `publish_form`, each with its own `Publication`
+  and an empty `approval_chain`. While a form fails, the pages stay `pending`, so a page never goes out
+  with an offline form, and the run fails as for a failed page. `request_review` takes a form online too.
+  A form is recorded when a run's `tool.completed` reports it in `cms_objects`.
+- `discard` deletes every guideline in an item's `created`, under either `on_discard`, and keeps the
+  ones the plan only edited. The mock has no CMS, so it records the ids on the plan.
+- `admin_user` has one confirmation, the plan's `confirm`, and only the `permission_impact_previewed`
+  gate. S4 proposes its plan after its reads, with a `target` of type `group` and `creates` of type `user`.
 
 ## Living plans (rc.5)
 

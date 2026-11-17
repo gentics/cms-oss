@@ -4,7 +4,7 @@ import { ApiResponse, FormState, UIState } from '../types/interfaces';
 import * as overlayUtils from './OverlayUtils';
 
 /**
- * Error handling for the problem types of the ActaNova DialogPortal (RFC 9457
+ * Error handling for the problem responses of ActaNova (RFC 9457
  * problem details, forwarded by the acta-nova plugin as
  * `{ "type": "urn:dialog-portal:error:...", "title": ..., "status": ... }`; in debug
  * mode the complete body from ActaNova, e.g. with `detail`).
@@ -28,10 +28,10 @@ const RESTART_ONLY_PROBLEM_TYPES = [
 ];
 
 /**
- * @returns the DialogPortal problem type of a failed request, or `undefined`
- *   if the response is not a DialogPortal problem
+ * @returns the ActaNova problem type of a failed request, or `undefined`
+ *   if the response is not an ActaNova problem
  */
-export const getDialogPortalProblemType = (
+export const getActaNovaProblemType = (
   response?: ApiResponse | Error,
 ): string | undefined => {
   const apiResponse = response instanceof Error ? undefined : response;
@@ -55,26 +55,26 @@ export const isRestartOnlyProblem = (problemType?: string): boolean =>
   !!problemType && RESTART_ONLY_PROBLEM_TYPES.includes(problemType);
 
 /**
- * Show the DialogPortal error overlay if the failed request returned a
- * DialogPortal problem type.
+ * Show the ActaNova problem overlay if the failed request returned an
+ * ActaNova problem type.
  *
  * @returns `true` if the overlay was shown and the caller must not handle the
  *   error any further, `false` otherwise
  */
-export const handleDialogPortalProblem = (
+export const handleActaNovaProblem = (
   response: ApiResponse | Error | undefined,
   uiState: UIState,
   formState: FormState,
   updateState?: (state: StatesToUpdateEnum) => void,
 ): boolean => {
-  if (!getDialogPortalProblemType(response)) {
+  if (!getActaNovaProblemType(response)) {
     return false;
   }
 
   overlayUtils.setOverlay(
     uiState,
     formState,
-    OverlayTypeEnum.DIALOG_PORTAL_ERROR,
+    OverlayTypeEnum.ACTA_NOVA_PROBLEM,
     updateState,
     { response },
   );

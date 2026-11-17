@@ -20,7 +20,7 @@ import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { RestService } from '../services/RestService';
 import { CaptchaService } from '../services/CaptchaService';
 import * as overlayUtils from './OverlayUtils';
-import { handleDialogPortalProblem } from './DialogPortalErrorUtils';
+import { handleActaNovaProblem } from './ActaNovaProblemUtils';
 import { OverlayTypeEnum } from '../custom/OverlayTypes';
 import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
 import { FileUploadErrorTypeEnum } from '../constants/enums/FileUploadErrorTypeEnum';
@@ -808,7 +808,7 @@ export const saveForm = async (
 
   const errorFunc = function (res: ApiResponse) {
     if (showError) {
-      if (handleDialogPortalProblem(res, uiState, formState, updateState)) {
+      if (handleActaNovaProblem(res, uiState, formState, updateState)) {
         return;
       }
       if (isCaptchaError(res)) {
@@ -1033,7 +1033,7 @@ export const loadDialogForm = async (
 
   if (!apiResponse.success) {
     uiState.loading = false;
-    if (handleDialogPortalProblem(apiResponse, uiState, formState, updateState)) {
+    if (handleActaNovaProblem(apiResponse, uiState, formState, updateState)) {
       return;
     }
     const errorLoadDialog = () => {
@@ -1223,7 +1223,7 @@ export const submitForm = async (
     uiState.loading = false;
     const responseData = res.responseData;
 
-    if (handleDialogPortalProblem(res, uiState, formState, updateState)) {
+    if (handleActaNovaProblem(res, uiState, formState, updateState)) {
       return;
     }
 
@@ -1383,7 +1383,7 @@ export const revertToMainFormFromDialogForm = async (
   utils.endANRequest(uiState, updateState);
   if (!apiResponse.success) {
     uiState.loading = false;
-    if (!handleDialogPortalProblem(apiResponse, uiState, formState, updateState)) {
+    if (!handleActaNovaProblem(apiResponse, uiState, formState, updateState)) {
       errorRefresh();
     }
   } else {

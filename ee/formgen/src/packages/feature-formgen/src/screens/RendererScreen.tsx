@@ -59,7 +59,7 @@ import {
 import * as formEventsUtils from '../utils/FormEventsUtils';
 import * as mockFormularUtils from '../utils/MockFormularUtils';
 import * as overlayUtils from '../utils/OverlayUtils';
-import { handleDialogPortalProblem } from '../utils/DialogPortalErrorUtils';
+import { handleActaNovaProblem } from '../utils/ActaNovaProblemUtils';
 import { changeToPage } from '../utils/UiUtils';
 import * as utils from '../utils/Utils';
 import {
@@ -888,7 +888,7 @@ const RendererScreen: React.FC<{
         requestInitializeData,
       );
       if (!apiResponse.success) {
-        if (!handleDialogPortalProblem(apiResponse, uiState, formState, updateState)) {
+        if (!handleActaNovaProblem(apiResponse, uiState, formState, updateState)) {
           overlayUtils.setOverlay(
             uiState,
             formState,
@@ -1379,6 +1379,11 @@ const RendererScreen: React.FC<{
           }
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1468,6 +1473,11 @@ const RendererScreen: React.FC<{
           }
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1514,6 +1524,11 @@ const RendererScreen: React.FC<{
           callback(null);
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1731,7 +1746,7 @@ const RendererScreen: React.FC<{
         },
         (request: ApiResponse) => {
           // on exception
-          if (handleDialogPortalProblem(request, uiState, formState, updateState)) {
+          if (handleActaNovaProblem(request, uiState, formState, updateState)) {
             return;
           }
           overlayUtils.setOverlay(

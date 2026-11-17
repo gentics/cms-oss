@@ -10,12 +10,12 @@ import * as formEventsUtils from '../../../utils/FormEventsUtils';
 import { OverlayTypeEnum } from '../../../custom/OverlayTypes';
 import { IOverlayFullScreenTextEnum } from '../../../constants/enums/IOverlayFullScreenTextEnum';
 import {
-  getDialogPortalProblemType,
+  getActaNovaProblemType,
   isRestartOnlyProblem,
-} from '../../../utils/DialogPortalErrorUtils';
+} from '../../../utils/ActaNovaProblemUtils';
 
 /**
- * Shown when ActaNova answered with a DialogPortal problem type.
+ * Shown when ActaNova answered with a problem type (`urn:dialog-portal:error:...`).
  *
  * - "Neu starten" deletes the saved form data and initializes the form again.
  * - "Wiederholen" loads the form again without deleting the saved data. It is
@@ -23,7 +23,7 @@ import {
  * - Closing leaves the form (as the load error overlay does), the saved data is kept.
  *   So the user is not trapped when the same problem occurs again after a restart.
  */
-const DialogPortalErrorOverlay: React.FC<ICommonOverlayProps> = (
+const ActaNovaProblemOverlay: React.FC<ICommonOverlayProps> = (
   props: ICommonOverlayProps,
 ) => {
   const t = props.formState.t;
@@ -60,15 +60,15 @@ const DialogPortalErrorOverlay: React.FC<ICommonOverlayProps> = (
 
   const buttonList: OverlayButtonDefinition[] = [
     {
-      key: 'dialog-portal-error-overlay-restart-btn',
+      key: 'acta-nova-problem-overlay-restart-btn',
       title: t('form_dialog_portal_error_restart_button'),
       onPress: restartForm,
     },
   ];
 
-  if (!isRestartOnlyProblem(getDialogPortalProblemType(response))) {
+  if (!isRestartOnlyProblem(getActaNovaProblemType(response))) {
     buttonList.push({
-      key: 'dialog-portal-error-overlay-retry-btn',
+      key: 'acta-nova-problem-overlay-retry-btn',
       title: t('form_dialog_portal_error_retry_button'),
       onPress: reloadForm,
     });
@@ -87,4 +87,4 @@ const DialogPortalErrorOverlay: React.FC<ICommonOverlayProps> = (
   );
 };
 
-export default DialogPortalErrorOverlay;
+export default ActaNovaProblemOverlay;

@@ -860,6 +860,11 @@ export class RestService {
 
     this.post(data.formID, 'search', data, requestHeaders)
       .then((apiResponse) => {
+        // Problem details (ActaNova problem type) go to the error handler
+        if (!apiResponse.success && typeof apiResponse.responseData?.type === 'string') {
+          errorFunc(apiResponse);
+          return;
+        }
         callback(apiResponse.responseData);
       })
       .catch((err) => {
@@ -892,6 +897,11 @@ export class RestService {
     // Sende den Request über die post-Methode
     this.post(data.formID, 'lazycatalog', data, requestHeaders)
       .then((apiResponse) => {
+        // Problem details (ActaNova problem type) go to the error handler
+        if (!apiResponse.success && typeof apiResponse.responseData?.type === 'string') {
+          errorFunc(apiResponse);
+          return;
+        }
         callback(apiResponse.responseData);
       })
       .catch((err) => {
@@ -917,6 +927,11 @@ export class RestService {
     }else{
       this.post(data.formID, 'autocomplete', data, requestHeaders)
       .then((apiResponse) => {
+        // Problem details (ActaNova problem type) go to the error handler
+        if (!apiResponse.success && typeof apiResponse.responseData?.type === 'string') {
+          errorFunc(apiResponse);
+          return;
+        }
         callback(apiResponse.responseData);
       })
       .catch((err) => {

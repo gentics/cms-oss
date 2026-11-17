@@ -20,6 +20,7 @@ export enum OverlayTypeEnum {
   LOAD_CAPTCHA_ERROR,
   CUSTOM_OPTION_INPUT,
   NONE,
+  ACTA_NOVA_PROBLEM,
 }
 
 export const overlayTypes: IOverlayTypes = {
@@ -43,4 +44,5 @@ export const overlayTypes: IOverlayTypes = {
   [OverlayTypeEnum.SUBMIT_USER_INPUT_FAILURE]: Overlays.SubmitOverlay,
   [OverlayTypeEnum.LOAD_CAPTCHA_ERROR]: Overlays.CaptchaErrorOverlay,
   [OverlayTypeEnum.CUSTOM_OPTION_INPUT]: Overlays.CustomOptionOverlay,
+  [OverlayTypeEnum.ACTA_NOVA_PROBLEM]: Overlays.ActaNovaProblemOverlay,
 };

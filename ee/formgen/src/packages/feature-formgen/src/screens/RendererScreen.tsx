@@ -59,6 +59,7 @@ import {
 import * as formEventsUtils from '../utils/FormEventsUtils';
 import * as mockFormularUtils from '../utils/MockFormularUtils';
 import * as overlayUtils from '../utils/OverlayUtils';
+import { handleActaNovaProblem } from '../utils/ActaNovaProblemUtils';
 import { changeToPage } from '../utils/UiUtils';
 import * as utils from '../utils/Utils';
 import {
@@ -759,8 +760,18 @@ const RendererScreen: React.FC<{
       // Reset any existing expert search result so the new form starts clean.
       setReportResult(null);
       setHasSearched(false);
+      // The reset closed every overlay: show the loading overlay as on the first load.
+      if (!props.isFormgridPreview) {
+        overlayUtils.setOverlay(
+          uiState,
+          formState,
+          OverlayTypeEnum.FULL_SCREEN_LOADING,
+          updateState,
+          { loadingText: IOverlayFullScreenTextEnum.LoadPage },
+        );
+      }
     }
-    
+
     const formId = newFormId
       ? newFormId
       : data && data.data && data.data.formID
@@ -877,13 +888,15 @@ const RendererScreen: React.FC<{
         requestInitializeData,
       );
       if (!apiResponse.success) {
-        overlayUtils.setOverlay(
-          uiState,
-          formState,
-          OverlayTypeEnum.LOAD_FORM,
-          updateState,
-          { response: apiResponse },
-        );
+        if (!handleActaNovaProblem(apiResponse, uiState, formState, updateState)) {
+          overlayUtils.setOverlay(
+            uiState,
+            formState,
+            OverlayTypeEnum.LOAD_FORM,
+            updateState,
+            { response: apiResponse },
+          );
+        }
         return apiResponse;
       }
 
@@ -1366,6 +1379,11 @@ const RendererScreen: React.FC<{
           }
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1455,6 +1473,11 @@ const RendererScreen: React.FC<{
           }
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1501,6 +1524,11 @@ const RendererScreen: React.FC<{
           callback(null);
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1718,6 +1746,9 @@ const RendererScreen: React.FC<{
         },
         (request: ApiResponse) => {
           // on exception
+          if (handleActaNovaProblem(request, uiState, formState, updateState)) {
+            return;
+          }
           overlayUtils.setOverlay(
             uiState,
             formState,

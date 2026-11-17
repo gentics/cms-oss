@@ -29,6 +29,31 @@ contentrepository_driverclass:
 After making theses changes the CMS has to be restarted. After the CMS restart it should be
 possible to choose the Oracle-DB or Microsoft-SQL-Server database type in the Content Repository create and edit dialogs.
 
+h3. Tagmap Entries
+
+Tagmap entries define how value(s) from CMS objects such as pages and folders, are to be saved/mapped to the ContentRepository.
+These entries can be managed directly in the ContentRepository or can be shared between multiple with ContentRepository Fragments (or CR-Fragments for short).
+
+See the following table on which target type to use:
+
+|_. Id |_. Name |_. Mesh type |_. DB CR Type* |_. Description |
+| @1@ | (Short) Text | @string@ | @VARCHAR(32)@ | For Mesh CRs simply any form of text; For DB CRs short text value (max 32 chars). |
+| @2@ | Link | @node@ | @VARCHAR(255)@ | For Mesh CRs any kind of element linking; For DB CRs links to content to the same table/type. |
+| @3@ | Integer | @number@ | @INTEGER@ | For Mesh CRs any kind of numbers; For DB CRs integer (32bit) value. |
+| @5@ | Long Text | - | @LONGVARCHAR@ | Variable length text value. |
+| @6@ | Binary | @binary@ | @BLOB@ | Binary value. |
+| @7@ | Foreign Link | - | @VARCHAR(255)@ | Similar to Link, except for links to content of another table/type. |
+| @8@ | Long | - | @BIGINT@ | Numeric long (64bit) value. |
+| @9@ | Double | - | @DOUBLE@ | Numeric double value. |
+| @10@ | Date | @date@ | @TIMESTAMP@ | Datetime value. |
+| @11@ | Boolean | @boolean@ | - | Boolean value. |
+| @12@ | Micronode | @micronode@ | - | Micronode value. |
+| @13@ | JSON | @json@ | - | JSON value. |
+
+*DB Specific variants/changes may apply
+
+Conversion between source and target type are done on a best effort basis, but should match if possible.
+
 h3. ContentRepository Fragments
 
 Tagmap Entries can either be created for individual ContentRepositories, or they can be grouped together in "ContentRepository Fragments":admin_cr_fragments.html.

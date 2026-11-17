@@ -649,13 +649,53 @@
             "confirm": "Verwerfen"
         }
     },
-    "todos": {
-        "title": "Offene To-dos",
+    "tasks": {
+        "title": "Offene Aufgaben",
         "groups": {
-            "released": "Bereit zum Veröffentlichen",
-            "review_requested": "Wartet auf Prüfung",
-            "waiting_for_input": "Wartet auf Ihre Antwort"
-        }
+            "genaix": "Bereit zum Veröffentlichen",
+            "publishQueue": "Wartet auf Ihre Freigabe",
+            "linkChecker": "Defekte Links",
+            "assigned": "Ihnen zugewiesen"
+        },
+        "name": {
+            "approvePublish": "{{name}} veröffentlichen",
+            "approveOffline": "{{name}} offline nehmen",
+            "fixBrokenLinks": "Links auf {{name}} reparieren",
+            "genaixReadyToPublish": "{{name}} ist bereit zum Veröffentlichen",
+            "requestConstruct": "Neuer Tagtyp für {{name}}"
+        },
+        "meta": {
+            "requestedBy": "Angefragt von {{name}}",
+            "brokenLinks_one": "{{count}} defekter Link",
+            "brokenLinks_other": "{{count}} defekte Links",
+            "forGroup": "Für {{name}}",
+            "claimedBy": "Übernommen von {{name}}",
+            "due": "Fällig {{date}}"
+        },
+        "actions": {
+            "approve": "Freigeben",
+            "assignBack": "Übergeben",
+            "compare": "Vergleichen",
+            "open": "Öffnen",
+            "view": "Live ansehen",
+            "fixWithGenaix": "Mit GenAIx beheben",
+            "startSession": "Session starten",
+            "claim": "Mir zuweisen",
+            "unclaim": "Zurückgeben",
+            "complete": "Erledigt"
+        },
+        "instruction": {
+            "fixBrokenLinks": "Repariere die defekten Links auf dieser Seite:\n{{urls}}",
+            "default": "Hilf mir bei dieser Aufgabe."
+        },
+        "assignBack": {
+            "title": "Zur Bearbeitung übergeben",
+            "recipients": "Benutzer",
+            "message": "Nachricht",
+            "cancel": "Abbrechen",
+            "failed": "Die Seite konnte nicht übergeben werden."
+        },
+        "actionFailed": "Die Aufgabe konnte nicht geändert werden."
     },
     "ui": {
         "close": "Schließen",

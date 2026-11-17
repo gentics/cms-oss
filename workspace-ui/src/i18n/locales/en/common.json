@@ -649,13 +649,53 @@
             "confirm": "Discard"
         }
     },
-    "todos": {
-        "title": "Open to-dos",
+    "tasks": {
+        "title": "Open tasks",
         "groups": {
-            "released": "Ready to publish",
-            "review_requested": "Waiting for review",
-            "waiting_for_input": "Waiting for your answer"
-        }
+            "genaix": "Ready to publish",
+            "publishQueue": "Waiting for your approval",
+            "linkChecker": "Broken links",
+            "assigned": "Assigned to you"
+        },
+        "name": {
+            "approvePublish": "Publish {{name}}",
+            "approveOffline": "Take {{name}} offline",
+            "fixBrokenLinks": "Fix the links on {{name}}",
+            "genaixReadyToPublish": "{{name}} is ready to publish",
+            "requestConstruct": "New tag type for {{name}}"
+        },
+        "meta": {
+            "requestedBy": "Asked by {{name}}",
+            "brokenLinks_one": "{{count}} broken link",
+            "brokenLinks_other": "{{count}} broken links",
+            "forGroup": "For {{name}}",
+            "claimedBy": "Taken by {{name}}",
+            "due": "Due {{date}}"
+        },
+        "actions": {
+            "approve": "Approve",
+            "assignBack": "Assign",
+            "compare": "Compare",
+            "open": "Open",
+            "view": "View live",
+            "fixWithGenaix": "Fix with GenAIx",
+            "startSession": "Start session",
+            "claim": "Assign to me",
+            "unclaim": "Give back",
+            "complete": "Done"
+        },
+        "instruction": {
+            "fixBrokenLinks": "Fix the broken links on this page:\n{{urls}}",
+            "default": "Help me with this task."
+        },
+        "assignBack": {
+            "title": "Assign for revision",
+            "recipients": "Users",
+            "message": "Message",
+            "cancel": "Cancel",
+            "failed": "The page could not be assigned."
+        },
+        "actionFailed": "The task could not be updated."
     },
     "ui": {
         "close": "Close",

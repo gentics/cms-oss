@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Composer } from '@/components/Composer/Composer';
 import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
-import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
+import { TaskList } from '@/components/TaskList/TaskList';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { useCmsUser } from '@/hooks/useCmsAuth';
 import { useSessionStart } from '@/hooks/useSessionStart';
@@ -23,7 +23,7 @@ function greetingKey(hour: number): string {
 }
 
 /**
- * The page at `/`: the prompt that starts a session, the open to-dos and the recent sessions. Once
+ * The page at `/`: the prompt that starts a session, the open tasks and the recent sessions. Once
  * the session exists, and its files are uploaded, the session's page opens.
  */
 export function DashboardPage() {
@@ -44,7 +44,7 @@ export function DashboardPage() {
                         <Composer variant="start" onSubmit={start} isSubmitting={isStarting} uploadProgress={uploadProgress} />
 
                         <div className={styles.todos}>
-                            <SessionTodos />
+                            <TaskList />
                         </div>
 
                         <RecentSessions />

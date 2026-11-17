@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Composer } from '@/components/Composer/Composer';
 import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
-import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
+import { TaskList } from '@/components/TaskList/TaskList';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
@@ -117,7 +117,7 @@ function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) 
 /**
  * The page after a plan was published (`/sessions/$id/published?plan=`, design.md §12 "Erfolg nach dem
  * Veröffentlichen"): what went out (`Outcome`), then the prompt that starts the next session, the open
- * to-dos (`SessionTodos`, placed as on the dashboard) and the sessions to continue. It reads the plan itself, so it shows the same after a reload; a plan that is
+ * tasks (`TaskList`, placed as on the dashboard) and the sessions to continue. It reads the plan itself, so it shows the same after a reload; a plan that is
  * not `published` or `review_requested` (yet) has nothing to show and links back to its review. A plan that could
  * not be read says why, with a button to try again.
  */
@@ -169,7 +169,7 @@ export function PublishedPage() {
                         </section>
 
                         <div className={styles.todos}>
-                            <SessionTodos />
+                            <TaskList />
                         </div>
 
                         <RecentSessions title={t('published.continue')} defaultOpen />

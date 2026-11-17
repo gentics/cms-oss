@@ -1,0 +1,24 @@
+/* "Assign" dialog (design.md §12 "Eingabefelder"). */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  & + .field {
+    margin-top: 14px;
+  }
+}
+
+.label {
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.recipients {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}

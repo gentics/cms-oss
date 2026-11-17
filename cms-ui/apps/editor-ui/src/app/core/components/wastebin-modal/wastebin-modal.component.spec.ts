@@ -1,8 +1,8 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { FALLBACK_LANGUAGE, I18nDatePipe, I18nService } from '@gentics/cms-components';
-import { Folder, Normalized } from '@gentics/cms-models';
+import { Folder, Normalized, Page } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NEVER, Observable } from 'rxjs';
@@ -185,10 +185,88 @@ describe('WastebinModal', () => {
         });
     });
 
+    describe('selected actions', () => {
+
+        const PAGE_ID = 5678;
+
+        beforeEach(() => {
+            state.mockState({
+                entities: {
+                    ...state.now.entities,
+                    page: {
+                        [PAGE_ID]: {
+                            id: PAGE_ID,
+                            type: 'page',
+                            name: 'deleted page',
+                            deleted: {
+                                at: 1700000000,
+                                by: {
+                                    firstName: 'some',
+                                    lastName: 'user',
+                                },
+                            },
+                        } as Page<Normalized>,
+                    },
+                },
+                wastebin: {
+                    folder: { list: [], requesting: false },
+                    form: { list: [], requesting: false },
+                    page: { list: [PAGE_ID], requesting: false },
+                    file: { list: [], requesting: false },
+                    image: { list: [], requesting: false },
+                    lastError: '',
+                },
+            });
+        });
+
+        function getActionButtons(fixture: ComponentFixture<WastebinModal>): HTMLButtonElement[] {
+            return Array.from(fixture.nativeElement.querySelectorAll('.selected-actions gtx-button button'));
+        }
+
+        function selectPage(fixture: ComponentFixture<WastebinModal>): void {
+            const label: HTMLElement = fixture.nativeElement.querySelector('wastebin-list gtx-contents-list-item gtx-checkbox label');
+            label.click();
+            fixture.detectChanges();
+        }
+
+        it('disables the restore and remove buttons when nothing is selected', () => {
+            const fixture = TestBed.createComponent(WastebinModal);
+            fixture.detectChanges();
+
+            expect(getActionButtons(fixture).map((button) => button.disabled)).toEqual([true, true]);
+        });
+
+        it('enables the restore and remove buttons when an item is selected', () => {
+            const fixture = TestBed.createComponent(WastebinModal);
+            fixture.detectChanges();
+
+            selectPage(fixture);
+
+            expect(fixture.componentInstance.selection['page']).toEqual([PAGE_ID]);
+            expect(getActionButtons(fixture).map((button) => button.disabled)).toEqual([false, false]);
+            const checkboxInput: HTMLInputElement = fixture.nativeElement.querySelector('wastebin-list gtx-contents-list-item gtx-checkbox input');
+            expect(checkboxInput.checked).toBe(true);
+        });
+
+        it('restores the selected items when the restore button is clicked', () => {
+            const fixture = TestBed.createComponent(WastebinModal);
+            fixture.detectChanges();
+            selectPage(fixture);
+
+            getActionButtons(fixture)[0].click();
+
+            const wastebinActions: MockWastebinActions = TestBed.inject(WastebinActionsService) as any;
+            expect(wastebinActions.restoreItemsFromWastebin).toHaveBeenCalledWith('page', [PAGE_ID]);
+        });
+    });
+
 });
 
 class MockWastebinActions {
     getWastebinContents(): void {}
+    getWastebinContentsByType(): void {}
+    restoreItemsFromWastebin = jasmine.createSpy('WastebinActions.restoreItemsFromWastebin')
+        .and.returnValue(Promise.resolve());
 }
 
 class MockFolderActions {}

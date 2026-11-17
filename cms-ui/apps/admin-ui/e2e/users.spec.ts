@@ -17,7 +17,7 @@ import {
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import test, { expect, Locator, Page } from '@playwright/test';
-import { navigateToModule } from './helpers';
+import { expectOnlySuccessNotification, navigateToModule } from './helpers';
 import { AccessControlledType, GcmsPermission, UserResponse } from '@gentics/cms-models';
 
 test.describe('Users Module', () => {
@@ -253,6 +253,7 @@ test.describe('Users Module', () => {
             await selectTableRow(dummyGroupRow);
 
             const createReq = waitForResponseFrom(page, 'PUT', `/rest/group/${DUMMY_GROUP.id}/users`);
+            const linkReq = waitForResponseFrom(page, 'POST', /\/rest\/user\/\d+\/passwordLink/);
             await clickModalAction(modal, 'confirm');
             const createRes = await createReq;
 
@@ -260,16 +261,24 @@ test.describe('Users Module', () => {
             expect(new URL(req.url()).searchParams.get('passwordLink')).toBe('true');
             expect(req.postDataJSON()).not.toHaveProperty('password');
 
+            // the creation returns only the link's expiry, the token is fetched afterwards
             const body = await createRes.json();
             createdUserId = body.user.id;
-            passwordToken = body.passwordToken;
+            expect(body).not.toHaveProperty('passwordToken');
+            expect(body.expiresAt).toBeGreaterThan(Date.now() / 1000);
+
+            const linkRes = await linkReq;
+            expect(new URL(linkRes.url()).pathname).toContain(`/rest/user/${createdUserId}/passwordLink`);
+            passwordToken = (await linkRes.json()).token;
             expect(passwordToken).toBeTruthy();
         });
 
-        await test.step('The link is shown', async () => {
-            const link = modal.locator('[data-context="password-link"] gtx-copy-value .content');
-            await expect(link).toContainText(`#/set-password?token=${encodeURIComponent(passwordToken)}`);
-            await expect(link).toContainText('?skip-sso');
+        await test.step('The link is shown and can be copied', async () => {
+            const link = modal.locator('[data-context="password-link"] [data-control="password-link-url"] textarea');
+            await expect(link).toHaveValue(new RegExp(`\\?skip-sso#/set-password\\?token=${encodeURIComponent(passwordToken)}$`));
+
+            await clickModalAction(modal, 'copy-link');
+            await expectOnlySuccessNotification(page, 'password-link-copied');
 
             await clickModalAction(modal, 'close');
             await expect(modal).toBeHidden();

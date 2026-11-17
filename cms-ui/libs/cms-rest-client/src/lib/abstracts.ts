@@ -371,6 +371,7 @@ import {
     UserGroupsResponse,
     UserListOptions,
     UserListResponse,
+    UserPasswordLinkResponse,
     UserResponse,
     UserUpdateRequest,
     UserUpdateResponse,
@@ -1107,6 +1108,7 @@ export interface AbstractUserAPI extends BasicAPI {
     get: (id: number | string) => UserResponse;
     update: (id: number | string, body: UserUpdateRequest) => UserUpdateResponse;
     delete: (id: number | string) => void;
+    createPasswordLink: (id: number | string) => UserPasswordLinkResponse;
 
     me: (options?: MeRequestOptions) => UserResponse;
     getFullUserData: () => UserDataResponse;

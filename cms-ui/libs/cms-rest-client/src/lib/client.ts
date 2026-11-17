@@ -906,6 +906,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         get: (id) => this.executeMappedJsonRequest(GET, `/user/${id}`),
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/user/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/user/${id}`),
+        createPasswordLink: (id) => this.executeMappedJsonRequest(POST, `/user/${id}/passwordLink`),
 
         me: (options) => this.executeMappedJsonRequest(GET, '/user/me', null, options),
         getFullUserData: () => this.executeMappedJsonRequest(GET, '/user/me/data'),

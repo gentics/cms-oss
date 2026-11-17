@@ -16,9 +16,9 @@ public class UserLoadResponse extends GenericResponse {
 	private User user;
 
 	/**
-	 * Token for the password link of a created user
+	 * Expiry of the password link of a created user
 	 */
-	private String passwordToken;
+	private Integer expiresAt;
 
 	/**
 	 * Create an empty instance
@@ -62,19 +62,20 @@ public class UserLoadResponse extends GenericResponse {
 	}
 
 	/**
-	 * Token for the link, with which the created user sets their password. Only set when a user was created with the
-	 * query parameter {@code passwordLink=true}.
-	 * @return token or null
+	 * Expiry of the link, with which the created user sets their password, as Unix timestamp in seconds. Only set when
+	 * a user was created with the query parameter {@code passwordLink=true}. The link itself is never part of this
+	 * response, it is issued by {@code POST /user/{id}/passwordLink}.
+	 * @return expiry or null
 	 */
-	public String getPasswordToken() {
-		return passwordToken;
+	public Integer getExpiresAt() {
+		return expiresAt;
 	}
 
 	/**
-	 * Set the password token
-	 * @param passwordToken token
+	 * Set the expiry of the password link
+	 * @param expiresAt Unix timestamp in seconds
 	 */
-	public void setPasswordToken(String passwordToken) {
-		this.passwordToken = passwordToken;
+	public void setExpiresAt(Integer expiresAt) {
+		this.expiresAt = expiresAt;
 	}
 }

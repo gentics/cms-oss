@@ -7,24 +7,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.auth.PasswordTokens;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.configuration.KeyProvider;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.SetPasswordRequest;
+import com.gentics.contentnode.rest.model.response.PasswordLinkResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.UserLoadResponse;
 import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
@@ -66,7 +72,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	@Test
 	public void testSetPasswordAndLogin() throws NodeException {
 		UserLoadResponse created = createUser("linkuser", true);
-		String token = created.getPasswordToken();
+		String token = token(created);
 		assertThat(token).as("Password token").isNotBlank();
 
 		assertSuccess(() -> getAuthResource().validatePasswordToken(token), null);
@@ -86,7 +92,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testTokenUsableOnce() throws NodeException {
-		String token = createUser("linkuser", true).getPasswordToken();
+		String token = token(createUser("linkuser", true));
 		assertSuccess(() -> getAuthResource().setPassword(new SetPasswordRequest().setToken(token).setPassword(PASSWORD)),
 				null);
 
@@ -102,8 +108,90 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	@Test
 	public void testNoTokenWithoutOption() throws NodeException {
 		UserLoadResponse created = createUser("plainuser", false);
-		assertThat(created.getPasswordToken()).as("Password token").isNull();
+		assertThat(created.getExpiresAt()).as("Password link expiry").isNull();
 		assertThat(storedJti(created.getUser().getId())).as("Stored token ID").isNull();
+	}
+
+	/**
+	 * Test that the response of creating a user with a password link contains the expiry, but no token
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateResponseHasNoToken() throws Exception {
+		long before = System.currentTimeMillis() / 1000;
+		UserLoadResponse created = createUser("linkuser", true);
+
+		JsonNode json = new ObjectMapper().valueToTree(created);
+		assertThat(json.has("passwordToken")).as("Response has passwordToken").isFalse();
+		assertThat(json.has("token")).as("Response has token").isFalse();
+		assertThat(created.getExpiresAt()).as("Password link expiry").isNotNull()
+				.isBetween((int) (before + PasswordTokens.VALIDITY.toSeconds()),
+						(int) (System.currentTimeMillis() / 1000 + PasswordTokens.VALIDITY.toSeconds()));
+		assertThat(storedJti(created.getUser().getId())).as("Stored token ID").isNotNull();
+	}
+
+	/**
+	 * Test that a password link replaces the token created with the user, and returns the expiry of its token
+	 * @throws NodeException
+	 */
+	@Test
+	public void testPasswordLinkReplacesInitialToken() throws NodeException {
+		UserLoadResponse created = createUser("linkuser", true);
+		int userId = created.getUser().getId();
+		String initialJti = storedJti(userId);
+
+		PasswordLinkResponse link = passwordLink(userId);
+		assertResponse(link, ResponseCode.OK);
+
+		Claims claims = claims(link.getToken());
+		assertThat(storedJti(userId)).as("Stored token ID").isNotEqualTo(initialJti).isEqualTo(claims.getId());
+		assertThat(link.getExpiresAt()).as("Expiry").isEqualTo((int) (claims.getExpiration().getTime() / 1000));
+	}
+
+	/**
+	 * Test that a second password link invalidates the first one
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSecondPasswordLinkInvalidatesFirst() throws NodeException {
+		int userId = createUser("linkuser", true).getUser().getId();
+		String first = passwordLink(userId).getToken();
+		String second = passwordLink(userId).getToken();
+
+		assertInvalid(first);
+		assertSuccess(() -> getAuthResource().validatePasswordToken(second), null);
+	}
+
+	/**
+	 * Test that issuing a password link writes an entry into the action log, which does not contain the token
+	 * @throws NodeException
+	 */
+	@Test
+	public void testPasswordLinkLogged() throws NodeException {
+		int userId = createUser("linkuser", true).getUser().getId();
+		assertThat(passwordLinkLogEntries(userId)).as("Log entries before").isEmpty();
+
+		String token = passwordLink(userId).getToken();
+
+		assertThat(passwordLinkLogEntries(userId)).as("Log entries after").hasSize(1)
+				.allSatisfy(info -> assertThat(info).doesNotContain(token));
+	}
+
+	/**
+	 * Test that no password link is issued for the support user
+	 * @throws NodeException
+	 */
+	@Test
+	public void testNoPasswordLinkForSupportUser() throws NodeException {
+		int userId = createUser("supportuser", false).getUser().getId();
+		Trx.operate(t -> {
+			SystemUser user = t.getObject(SystemUser.class, userId, true);
+			user.setSupportUser(true);
+			user.save();
+		});
+
+		assertResponse(passwordLink(userId), ResponseCode.FAILURE);
+		assertThat(storedJti(userId)).as("Stored token ID").isNull();
 	}
 
 	/**
@@ -124,8 +212,8 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	@Test
 	public void testNewTokenReplacesOld() throws NodeException {
 		UserLoadResponse created = createUser("linkuser", true);
-		String oldToken = created.getPasswordToken();
-		String newToken = Trx.supply(() -> PasswordTokens.create(created.getUser().getId()));
+		String oldToken = token(created);
+		String newToken = Trx.supply(() -> PasswordTokens.create(created.getUser().getId())).token();
 
 		assertInvalid(oldToken);
 		assertSuccess(() -> getAuthResource().validatePasswordToken(newToken), null);
@@ -137,7 +225,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testExpiredToken() throws NodeException {
-		Claims claims = claims(createUser("linkuser", true).getPasswordToken());
+		Claims claims = claims(token(createUser("linkuser", true)));
 		String expired = sign(Jwts.builder().setSubject(claims.getSubject()).setId(claims.getId())
 				.setExpiration(new Date(System.currentTimeMillis() - 60_000)).claim("purpose", "set-password"));
 
@@ -150,7 +238,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testTokenWithoutExpiry() throws NodeException {
-		Claims claims = claims(createUser("linkuser", true).getPasswordToken());
+		Claims claims = claims(token(createUser("linkuser", true)));
 		String noExpiry = sign(Jwts.builder().setSubject(claims.getSubject()).setId(claims.getId())
 				.claim("purpose", "set-password"));
 
@@ -163,7 +251,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testTokenWithoutPurpose() throws NodeException {
-		Claims claims = claims(createUser("linkuser", true).getPasswordToken());
+		Claims claims = claims(token(createUser("linkuser", true)));
 		String noPurpose = sign(Jwts.builder().setSubject(claims.getSubject()).setId(claims.getId())
 				.setExpiration(claims.getExpiration()));
 
@@ -178,8 +266,9 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	public void testTamperedToken() throws NodeException {
 		UserLoadResponse first = createUser("linkuser", true);
 		UserLoadResponse second = createUser("otheruser", true);
-		String[] parts = first.getPasswordToken().split("\\.");
-		Claims claims = claims(first.getPasswordToken());
+		String firstToken = token(first);
+		String[] parts = firstToken.split("\\.");
+		Claims claims = claims(firstToken);
 
 		// same token ID and signature, but for the other user
 		String payload = "{\"sub\":\"%d\",\"jti\":\"%s\",\"exp\":%d,\"purpose\":\"set-password\"}".formatted(
@@ -208,7 +297,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testInvalidPasswordRejected() throws NodeException {
-		String token = createUser("linkuser", true).getPasswordToken();
+		String token = token(createUser("linkuser", true));
 
 		assertResponse(getAuthResource().setPassword(new SetPasswordRequest().setToken(token).setPassword("abc")),
 				ResponseCode.INVALIDDATA);
@@ -227,10 +316,11 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	@Test
 	public void testAdminSettingPasswordRevokesToken() throws NodeException {
 		UserLoadResponse created = createUser("linkuser", true);
+		String token = token(created);
 		Trx.operate(systemUser, () -> new UserResourceImpl().update(String.valueOf(created.getUser().getId()),
 				new User().setPassword(PASSWORD)));
 
-		assertInvalid(created.getPasswordToken());
+		assertInvalid(token);
 	}
 
 	/**
@@ -240,6 +330,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	@Test
 	public void testDeactivatedUser() throws Exception {
 		UserLoadResponse created = createUser("linkuser", true);
+		String token = token(created);
 		Trx.operate(systemUser, () -> {
 			try {
 				new UserResourceImpl().deactivate(String.valueOf(created.getUser().getId()));
@@ -250,7 +341,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 			}
 		});
 
-		assertInvalid(created.getPasswordToken());
+		assertInvalid(token);
 	}
 
 	/**
@@ -263,6 +354,48 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	private UserLoadResponse createUser(String login, boolean passwordLink) throws NodeException {
 		return Trx.supply(systemUser,
 				() -> new GroupResourceImpl().createUser(String.valueOf(group.getId()), user(login), passwordLink));
+	}
+
+	/**
+	 * Issue a password link for the user
+	 * @param userId user ID
+	 * @return response
+	 * @throws NodeException
+	 */
+	private PasswordLinkResponse passwordLink(int userId) throws NodeException {
+		return Trx.supply(systemUser, () -> new UserResourceImpl().createPasswordLink(String.valueOf(userId)));
+	}
+
+	/**
+	 * Get the token of a password link for the created user, which replaces the token created with the user
+	 * @param created response of creating the user
+	 * @return token
+	 * @throws NodeException
+	 */
+	private String token(UserLoadResponse created) throws NodeException {
+		return passwordLink(created.getUser().getId()).getToken();
+	}
+
+	/**
+	 * Get the info of the action log entries for issued password links of the user
+	 * @param userId user ID
+	 * @return info of the entries
+	 * @throws NodeException
+	 */
+	private static List<String> passwordLinkLogEntries(int userId) throws NodeException {
+		return Trx.supply(() -> DBUtils.select(
+				"SELECT info FROM logcmd WHERE cmd_desc_id = ? AND o_type = ? AND o_id = ? AND info LIKE ?", st -> {
+					st.setInt(1, ActionLogger.EDIT);
+					st.setInt(2, SystemUser.TYPE_SYSTEMUSER);
+					st.setInt(3, userId);
+					st.setString(4, "SystemUser.passwordLink%");
+				}, rs -> {
+					List<String> infos = new ArrayList<>();
+					while (rs.next()) {
+						infos.add(rs.getString("info"));
+					}
+					return infos;
+				}));
 	}
 
 	/**

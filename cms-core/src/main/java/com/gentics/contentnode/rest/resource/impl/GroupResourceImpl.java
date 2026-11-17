@@ -628,7 +628,8 @@ public class GroupResourceImpl implements GroupResource {
 					SystemUser.TRANSFORM2REST.apply(t.getObject(systemUser)));
 
 			if (passwordLink) {
-				response.setPasswordToken(PasswordTokens.create(userId));
+				// only the expiry: the token reaches the browser by POST /user/{id}/passwordLink, which replaces this one
+				response.setExpiresAt(PasswordTokens.create(userId).expiresAt());
 			}
 
 			trx.success();

@@ -76,17 +76,19 @@ test.describe('Set password with a link', {
     });
 
     /**
-     * Create the test user with a password link through the REST API, as the admin UI does
+     * Create the test user with a password link through the REST API, as the admin UI does: the creation returns
+     * only the link's expiry, the token is fetched afterwards
      * @returns the token for the link
      */
     async function createUserWithPasswordLink(): Promise<string> {
-        const res = await IMPORTER.client.group.createUser(IMPORTER.get(TEST_GROUP).id, {
+        const created = await IMPORTER.client.group.createUser(IMPORTER.get(TEST_GROUP).id, {
             login: LOGIN,
             firstName: 'Set',
             lastName: 'Password',
         }, { passwordLink: true }).send();
-        expect(res.passwordToken).toBeTruthy();
-        return res.passwordToken;
+        const link = await IMPORTER.client.user.createPasswordLink(created.user.id).send();
+        expect(link.token).toBeTruthy();
+        return link.token;
     }
 
     test('should set the password and log in with it', async ({ page }) => {

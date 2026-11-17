@@ -56,18 +56,28 @@ public final class PasswordTokens {
 	}
 
 	/**
+	 * A created token with its expiry
+	 * @param token signed token
+	 * @param expiresAt expiry as Unix timestamp in seconds, the {@code exp} of the token
+	 */
+	public record Issued(String token, int expiresAt) {
+	}
+
+	/**
 	 * Create a token for the user and store its ID, which revokes any earlier token of the user
 	 * @param userId user ID
-	 * @return signed token
+	 * @return signed token with its expiry
 	 * @throws NodeException
 	 */
-	public static String create(int userId) throws NodeException {
+	public static Issued create(int userId) throws NodeException {
 		String jti = UUID.randomUUID().toString();
 		DBUtils.update("UPDATE systemuser SET password_token = ? WHERE id = ?", jti, userId);
 
-		Date expires = new Date(System.currentTimeMillis() + VALIDITY.toMillis());
-		return KeyProvider.sign(Jwts.builder().setSubject(Integer.toString(userId)).setId(jti).setExpiration(expires)
-				.claim(CLAIM_PURPOSE, PURPOSE)).compact();
+		// whole seconds, because exp has no finer resolution
+		int expiresAt = (int) ((System.currentTimeMillis() + VALIDITY.toMillis()) / 1000);
+		String token = KeyProvider.sign(Jwts.builder().setSubject(Integer.toString(userId)).setId(jti)
+				.setExpiration(new Date(expiresAt * 1000L)).claim(CLAIM_PURPOSE, PURPOSE)).compact();
+		return new Issued(token, expiresAt);
 	}
 
 	/**

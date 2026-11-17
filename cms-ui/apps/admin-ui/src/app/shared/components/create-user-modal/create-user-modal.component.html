@@ -8,10 +8,13 @@
     @if (passwordLinkUrl) {
     <div class="gtx-create-user-modal-password-link" data-context="password-link">
         <p>{{ 'modal.password_link_created' | gtxI18n }}</p>
-        <gtx-copy-value
+        <gtx-textarea
+            class="gtx-create-user-modal-password-link-url"
+            data-control="password-link-url"
             [label]="'modal.password_link_url_label' | gtxI18n"
+            [readonly]="true"
             [value]="passwordLinkUrl"
-        ></gtx-copy-value>
+        ></gtx-textarea>
     </div>
     } @else {
     <gtx-tabs pure [activeId]="currentTab">
@@ -160,6 +163,13 @@
 
   <div class="modal-footer">
     @if (passwordLinkUrl) {
+      <gtx-button
+        type="secondary"
+        data-action="copy-link"
+        (click)="buttonCopyLinkClicked()"
+        >
+        {{ 'modal.password_link_copy_button' | gtxI18n }}
+      </gtx-button>
       <gtx-button
         type="primary"
         data-action="close"

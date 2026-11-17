@@ -1809,8 +1809,8 @@ export interface GroupUserCreateRequest extends Omit<User<Raw>, 'id'> {
  */
 export interface GroupUserCreateOptions {
     /**
-     * Let the user set the password with a link: the response then contains a `passwordToken`,
-     * valid for 24 hours and usable once.
+     * Let the user set the password with a link: the response then contains the `expiresAt` of a link valid for
+     * 24 hours, but not the link itself, which is fetched with `POST /user/{id}/passwordLink`.
      */
     passwordLink?: boolean;
 }

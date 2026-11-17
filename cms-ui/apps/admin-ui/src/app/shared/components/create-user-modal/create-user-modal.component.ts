@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { copyTextToClipboard, I18nNotificationService } from '@gentics/cms-components';
 import { GroupUserCreateRequest, Normalized, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
@@ -74,6 +75,7 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
         private changeDetector: ChangeDetectorRef,
         private groupData: GroupDataService,
         private entityExistsValidator: EntityExistsValidator<User<Normalized>>,
+        private notification: I18nNotificationService,
     ) {
         super();
         entityExistsValidator.configure('user', 'login');
@@ -177,6 +179,16 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
                 this.loading = false;
                 this.changeDetector.markForCheck();
             });
+    }
+
+    /** Copy the shown password link to the clipboard */
+    async buttonCopyLinkClicked(): Promise<void> {
+        try {
+            await copyTextToClipboard(this.passwordLinkUrl);
+            this.notification.show({ id: 'password-link-copied', type: 'success', message: 'modal.password_link_copied' });
+        } catch {
+            this.notification.show({ type: 'alert', message: 'modal.password_link_copy_failed' });
+        }
     }
 
     /** Close the modal after the password link was shown */

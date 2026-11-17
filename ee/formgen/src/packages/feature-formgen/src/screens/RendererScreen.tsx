@@ -34,6 +34,7 @@ import { useFormMirrorStore } from '../state/useFormMirrorState';
 import {
   ApiResponse,
   FormgenSettings,
+  FormSettings,
   FormState,
   IData,
   IDataFields,
@@ -89,6 +90,7 @@ interface FormResponseBody {
   captchaConfig?: any;
   successUrl?: { [language: string]: string };
   formgenSettings?: FormgenSettings;
+  formSettings?: FormSettings;
 }
 
 const RendererScreen: React.FC<{
@@ -907,6 +909,7 @@ const RendererScreen: React.FC<{
       formState.captchaConfig = mapCaptchaConfig(responseBody.captchaConfig);
       formState.successUrl = responseBody.successUrl;
       formState.formgenSettings = responseBody.formgenSettings;
+      formState.formSettings = responseBody.formSettings;
       uiState.lastPage = responseBody.uiSchema.pages.length;
       const missingFlowResponse2 = applyFormFlow(responseBody);
       if (missingFlowResponse2) return missingFlowResponse2;
@@ -1159,7 +1162,8 @@ const RendererScreen: React.FC<{
     updateState(StatesToUpdateEnum.UIState);
     // TODO v8.2 Considering whether to only one fullscreen overlay for the whole aciton
 
-    if (props.mockForm) {
+    // without intermediate saving (formSettings.disableSave) the dialog form is loaded without saving the main form first
+    if (props.mockForm || formState.formSettings?.disableSave === true) {
       await formEventsUtils.loadDialogForm(
         uiState,
         formState,
@@ -1895,7 +1899,8 @@ const RendererScreen: React.FC<{
       props.isLoggedIn &&
       !uiState.isReadOnlyForm &&
       formState.schema.formType !== 'redirectForm' &&
-      !formState.paymentState
+      !formState.paymentState &&
+      formState.formSettings?.disableSave !== true
     ) {
       //add background save / autosave
       const autoSave = () => {

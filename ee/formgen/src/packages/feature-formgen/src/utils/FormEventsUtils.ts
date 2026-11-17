@@ -488,6 +488,12 @@ export async function possibleBinaryUpload(
         }
         updateState(StatesToUpdateEnum.ALL);
       };
+      // intermediate saving is disabled (formSettings.disableSave): no save request, the file stays in
+      // formState.fileUploads and is sent with the submit (prepareDataForSave(formState, true))
+      if (formState.formSettings?.disableSave === true) {
+        await actionAfterSuc();
+        return;
+      }
       try {
         onBinaryChangeFinished();
 

@@ -360,10 +360,23 @@ export interface FormState {
   // Keyed by language code (e.g. { "de": "http://..." }).
   successUrl?: { [language: string]: string };
   formgenSettings?: FormgenSettings;
+  // Form-level settings from the load response (formSettings).
+  formSettings?: FormSettings;
 }
 
 export interface FormgenSettings {
   maxFileSizeToPreviewMB?: number;
+  [key: string]: any;
+}
+
+/**
+ * Form-level settings delivered by the load response as `formSettings`.
+ * @property disableSave Only `true` disables intermediate saving: no autosave, no save button in the leave dialog,
+ *   no save before opening a dialog form, the detail info button shows the leave dialog instead of saving,
+ *   and uploaded files are kept in fileUploads and only sent with the submit.
+ */
+export interface FormSettings {
+  disableSave?: boolean;
   [key: string]: any;
 }
 

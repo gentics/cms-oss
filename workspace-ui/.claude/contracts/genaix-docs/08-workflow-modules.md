@@ -1230,8 +1230,8 @@ group 31" does not allow adding anyone else to it. A new user has no id to previ
 `derived_settings: false` and publishes nothing. A plan item's `target` may be a `group` or a `user`,
 and `creates` may be a `user`.
 
-The tools send no invitation, so the module promises none: how a new user signs in is up to the
-installation. A caller cannot remove their own account from a group through MCP, so they cannot lose the
+The new user sets their password on a one-time CMS link (§4.6, proposed). The module reports the link's expiry
+and never handles the link itself. A caller cannot remove their own account from a group through MCP, so they cannot lose the
 rights that allow these changes, and the CMS refuses to remove a user's last group. The module reports both refusals.
 
 ### 8.5 Editing existing pages, `content_edit`
@@ -1511,11 +1511,10 @@ Picking a form is not this module's work. A content module that needs one, with 
 context, searches for candidates and confirms its pick on a `choice`: the recommended option first
 with its `reason`, CMS and external forms alike, each with its `ref`, and `reference_types: ["form"]`
 for any other existing form. With no candidates it asks. Embedding then goes through
-a construct with a `CMSFORM` part (§4.7), as a sub-step of the page's item. The module looks the
-construct up by that part, never by a keyword. With several on the page it picks the one that fits
-and states why, or asks on a `choice`. With none it tells the user that this page has no form
-construct and embeds nothing. It does not create one, because `CMSFORM` is out of scope for generated
-constructs (`06-construct-devtools-requirements.md`).
+the CMS's default form construct (§4.7), as a sub-step of the page's item. If the page's template
+does not allow that construct, the module tells the user and embeds nothing. It does not create a
+form construct, because `CMSFORM` is out of scope for generated constructs
+(`06-construct-devtools-requirements.md`).
 
 ### 8.7 Guidelines, `guideline_create` and `guideline_edit` (optional)
 

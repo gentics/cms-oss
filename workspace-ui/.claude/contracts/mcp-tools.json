@@ -9256,7 +9256,7 @@
         {
           "name": "create_user",
           "title": "Create user in group",
-          "description": "Creates a CMS user and places them in a group in the same call. groupId is REQUIRED: the CMS has no standalone user-create endpoint, so there is no way to create a user without a group. Check with list_users that the login is free. A new user has no id to preview, so show get_group_permissions for the target group instead, and get the user's confirmation before calling this. The tool sends no invitation. Only subgroups of your own groups can be used.",
+          "description": "Creates a CMS user and places them in a group in the same call. groupId is REQUIRED: the CMS has no standalone user-create endpoint, so there is no way to create a user without a group. Check with list_users that the login is free. A new user has no id to preview, so show get_group_permissions for the target group instead, and get the user's confirmation before calling this. There is no password argument: the CMS creates a one-time link on which the new user sets their password, and the result carries only its expiry (proposed). Only subgroups of your own groups can be used.",
           "group": "admin",
           "access": "write",
           "roles": [
@@ -9317,12 +9317,6 @@
                 "type": "string",
                 "maxLength": 1000
               },
-              "password": {
-                "type": "string",
-                "minLength": 8,
-                "maxLength": 200,
-                "description": "Omit where the installation provisions credentials externally, for example via single sign-on. The tool enforces 8 to 200 characters; the CMS itself accepts any. Never returned or logged."
-              },
               "idempotencyKey": {
                 "type": "string",
                 "maxLength": 128,
@@ -9370,11 +9364,25 @@
               },
               "created": {
                 "type": "boolean"
+              },
+              "passwordLink": {
+                "type": "object",
+                "description": "Proposed (rc.6 second revision): the CMS creates the user with a one-time link on which they set their own password. The result carries the link's expiry and never the link or its token, because a tool result reaches the model and the stored session. The link reaches the user outside the tool result; how (a CMS email, or an admin action in the Workspace that reissues it) is open for Gentics.",
+                "properties": {
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "expiresAt"
+                ]
               }
             },
             "required": [
               "user",
-              "created"
+              "created",
+              "passwordLink"
             ]
           },
           "cms": {
@@ -9384,7 +9392,7 @@
                 "path": "/group/{id}/users"
               }
             ],
-            "notes": "PUT /group/{id}/users with a User body {login, firstName, lastName, email, password, description} creates the user and adds them to the group, returning UserLoadResponse. Verified in cms-oss/cms-restapi/.../rest/resource/GroupResource.java (createUser, @PUT @Path(\"/{id}/users\")). There is no POST /user. PUT /user/{id} is an update and DELETE /user/{id} deactivates rather than deletes, and neither is exposed."
+            "notes": "PUT /group/{id}/users with a User body {login, firstName, lastName, email, description} and the one-time password link (GPU-2776) creates the user and adds them to the group, returning UserLoadResponse. Verified in cms-oss/cms-restapi/.../rest/resource/GroupResource.java (createUser, @PUT @Path(\"/{id}/users\")). There is no POST /user. PUT /user/{id} is an update and DELETE /user/{id} deactivates rather than deletes, and neither is exposed."
           }
         },
         {

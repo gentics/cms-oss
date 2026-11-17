@@ -1953,7 +1953,7 @@ reports findings before acceptance; a `choice` carries `recommended`, option `re
 `other_allowed`, answered with `other`. `UserPlan.items` allows up to 200 items. A client that
 ignores the new members keeps working.
 
-**rc.6 (draft).** **Forms, guidelines, user administration and reference fields.** A client gets new
+**rc.6 (draft, revised 2026-11-16).** **Forms, guidelines, user administration and reference fields.** A client gets new
 values for `ContextReference.type` (`form`, `user`, `group`), `PlannedObject.type` (`form`,
 `guideline`, `user`) and `PlanItem.kind` (`delete`), and shows a chip and a glance count for each. It
 marks a reference with `external: true` as external. A form field with
@@ -1961,3 +1961,6 @@ marks a reference with `external: true` as external. A form field with
 text input, so a client adds the picker first and GenAIx uses the field only afterwards. A `choice`
 with `reference_types` offers a picker beside its options and answers with `reference`. A client no
 longer deletes a guideline after a discard, because GenAIx does. `admin_user` raises one `confirm`.
+Second revision (2026-11-16): forms are embedded with the CMS's default form construct; `create_user`
+takes no password, the new user sets it on a one-time CMS link, and its result carries only the
+link's expiry (proposed, open for Gentics: how the link reaches the user).

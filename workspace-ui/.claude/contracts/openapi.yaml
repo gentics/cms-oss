@@ -205,7 +205,7 @@ info:
 
     ## Changelog
 
-    **1.0.0-rc.6** (draft, 2026-11-06, additive except where marked). **Forms, guidelines, user
+    **1.0.0-rc.6** (draft, 2026-11-06, revised 2026-11-16, additive except where marked). **Forms, guidelines, user
     administration and pickers.** `ContextReference.type` adds `form`, `user` and `group`, and a
     form reference may say `external`. `PlannedObject.type` adds `form`, `guideline` and `user`.
     `PlanItem.kind` adds `delete`, counted in the plan glance. `Workflow.produces` adds `form` and
@@ -216,7 +216,10 @@ info:
     `Publication` may name a form. Discarding a plan deletes the guideline it created, whatever
     `on_discard` says. `admin_user` asks one confirmation, the plan's `confirm`, and its
     `admin_confirm` gate is gone. A client that ignores the new members keeps working, but must
-    not show a reference field as a text input.
+    not show a reference field as a text input. Second revision (2026-11-16): forms are embedded
+    with the CMS's default form construct, which renders for the PHP and the Java portal, and the
+    agent never creates or looks up another; `create_user` takes no password, the new user sets it
+    on a one-time CMS link, and the result carries only the link's expiry (proposed).
 
     **1.0.0-rc.5 addition** (2026-10-19, one optional request header; a client that does not
     send it keeps working). **The Workspace UI's language.** `createSession` and `postMessage`

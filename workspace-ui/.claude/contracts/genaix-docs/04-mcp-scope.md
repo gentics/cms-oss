@@ -652,7 +652,7 @@ Restricted to users holding `useradmin createuser` or `userassignment` on a grou
 | `list_users` | Find a user by name or login, to check whether they already exist | `{ q?, size?, from?, includeGroups? }` | `{ total, items: [{ ref, login, firstName, lastName, email, groups?: [ObjectRef] }] }` | `GET /user` (`q`, `page`, `pageSize`, `embed`) | R | Admin |
 | `list_groups` | List groups, to pick the one that carries the intended role | `{ q?, size?, from? }` | `{ total, items: [{ ref, description? }] }` | `GET /group` | R | Admin |
 | `get_group_permissions` | Read what a group may do, type-level or on one object — the input to the impact preview | `{ groupId, type, instanceId? }` | `{ groupRef, type, instanceRef?, permissions: [{ name, label, category, granted, editable }], roles?: [{id, name, granted}] }` | `GET /group/{id}/perms/{type}`, `GET /group/{id}/perms/{type}/{instanceId}` (`TypePermissionResponse {perms: [TypePermissionItem], roles}`) | R | Admin |
-| `create_user` | Create a user and place them in a group in one call | `{ groupId, login, email, firstName, lastName, password?, description?, idempotencyKey? }` | `{ user: {ref, login, email, groups: [ObjectRef]}, created: true }` | `PUT /group/{id}/users` with a `User` body (`GroupResource.createUser`) | **W** | Admin |
+| `create_user` | Create a user and place them in a group in one call | `{ groupId, login, email, firstName, lastName, description?, idempotencyKey? }` | `{ user: {ref, login, email, groups: [ObjectRef]}, created: true, passwordLink: {expiresAt} }` | `PUT /group/{id}/users` with a `User` body (`GroupResource.createUser`) | **W** | Admin |
 | `assign_user_to_group` | Grant a role by adding the user to a group, optionally scoped to nodes | `{ userId, groupId, nodeIds? }` | `{ userRef, groupRef, groups: [ObjectRef] }` | `PUT /user/{id}/groups/{groupId}`, `PUT /user/{id}/groups/{groupId}/nodes/{nodeId}` for the node scope | **W** | Admin |
 | `remove_user_from_group` | Revoke a role | `{ userId, groupId }` | `{ userRef, groupRef, groups: [ObjectRef] }` | `DELETE /user/{id}/groups/{groupId}` | **W** | Admin |
 | `preview_permission_impact` | Show, before any change, what a user will and will not be able to do after a group change | `{ userId, addGroupIds?, removeGroupIds?, types?: [page, folder, template, construct, admin], nodeIds? }` | `{ userRef, before: [{ scope, permission, granted }], after: [...], added: [...], removed: [...], computedBy: "composition", warnings: [string] }` | **none directly.** Composed read-only from `GET /user/{id}/groups`, `GET /group/{id}/perms/{type}[/{instanceId}]` and `GET /perm/{type}/{id}` | R | Admin |
@@ -668,7 +668,11 @@ Notes.
   reproduce folder-tree inheritance or role-per-language subtleties, so the output carries `warnings` and
   `computedBy: "composition"` and a client must label it a preview (§11).
 - **`create_user` cannot be previewed.** The preview needs an existing user, so `get_group_permissions` on the
-  target group stands in for it. The tool sends no invitation.
+  target group stands in for it.
+- **The new user sets their own password on a one-time CMS link (proposed).** `create_user` takes no
+  password. The CMS creates the user with a single-use link and the result carries only `passwordLink.expiresAt`,
+  never the link or its token, because a tool result reaches the model and the stored session. How the link
+  reaches the user, a CMS email or an admin action in the Workspace that reissues it, is open for Gentics.
 - **`assign_user_to_group` is not one transaction.** All nodes are checked first, and if a restriction then
   fails, a membership the call added is removed again. `nodeIds` add to existing restrictions, and omitting them
   clears nothing.
@@ -679,7 +683,7 @@ Notes.
   images, forms and constructs have no permissions of their own, so `get_group_permissions` reads them as folder or
   node permissions. `preview_permission_impact` still takes those names in `types`, and evaluates them on each node's
   root folder.
-- `list_users` returns no `active` field, and `create_user.password` is limited to 8 to 200 characters by the tool.
+- `list_users` returns no `active` field.
 - No tool writes permissions. `POST /perm/{type}/{id}` and `POST /group/{id}/perms/{type}` exist and are
   deliberately not exposed: bit edits stay a human action in the CMS UI.
 
@@ -688,12 +692,12 @@ Notes.
 Since `1.0.0-rc.6`. Forms are found with `search_content` and `types: ["form"]`.
 `list_folder_items` does not list forms.
 
-A form is embedded through a construct with a `CMSFORM` part (part type 42). The CMS ships the part
-type but no such construct, so a project provides one. Its template renders the form with the
-`gtx_form` Handlebars helper, because the part alone prints only the form's id. To embed, find the
-construct with `list_constructs` and `{ pageId, partTypeIds: [42] }`, add it with `add_page_tag`, and
-set the form with `update_page_tags`. Construct keywords in this package's examples, such as
-`form_embed`, are illustrative and are not shipped by the CMS.
+A form is embedded through the CMS's default form construct. The CMS ships it with the Forms
+module, and it renders the form for the PHP and the Java portal. The agent always embeds with this
+construct: add it with `add_page_tag` and set the form with `update_page_tags`. It never embeds
+through another construct and never creates one. If the page's template does not allow the
+construct, the agent tells the user and embeds nothing. The construct's keyword is not fixed yet;
+`form_embed` in this package's examples is illustrative.
 
 | Tool | Purpose | Input | Output | CMS | Access | Role |
 |---|---|---|---|---|---|---|

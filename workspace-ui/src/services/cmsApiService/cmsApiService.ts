@@ -527,3 +527,40 @@ export async function listCmsLanguages(nodeId: number, signal?: AbortSignal): Pr
 export function cmsImageUrl(nodeId: number, imageId: number): string {
     return `/rest/file/content/load/${imageId}?${new URLSearchParams({ nodeId: String(nodeId) })}`;
 }
+
+/** A token for the link on which a CMS user sets their password, valid once. */
+export interface CmsPasswordLink {
+    token: string;
+    /** Unix timestamp in seconds. */
+    expiresAt: number;
+}
+
+/**
+ * Issues a new password link for the CMS user `userId`: `POST /rest/user/{id}/passwordLink`, with the
+ * browser's own CMS session, so the link never passes through GenAIx. Every call replaces the user's
+ * earlier link. The CMS answers a support user with `200` and `FAILURE`, which is thrown as an
+ * `HttpError` carrying the body, so `errorMessageKey` reads its response code like any other.
+ */
+export async function createCmsPasswordLink(userId: number): Promise<CmsPasswordLink> {
+    const url = `/rest/user/${userId}/passwordLink`;
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; token?: string; expiresAt?: number }>(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+    });
+
+    if (response.responseInfo?.responseCode !== 'OK' || !response.token || response.expiresAt === undefined) {
+        throw new HttpError(url, 200, response);
+    }
+
+    return { token: response.token, expiresAt: response.expiresAt };
+}
+
+/**
+ * The link to the editor UI's page where the user sets the password with `token`, as the admin UI builds
+ * it: `skip-sso` keeps Keycloak from sending the user, who has no session yet, to its login. Absolute,
+ * because it is copied and sent to the user; on the CMS host that serves the workspace, like `/rest`.
+ */
+export function cmsPasswordLinkUrl(token: string): string {
+    return new URL(`/editor/?skip-sso#/set-password?token=${encodeURIComponent(token)}`, window.location.origin).href;
+}

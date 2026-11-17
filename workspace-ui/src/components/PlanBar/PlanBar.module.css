@@ -104,3 +104,23 @@
   color: var(--fg-muted);
   font-size: var(--font-size-sm);
 }
+
+/* The password link of a user the plan created (`PasswordLinkButton`), in its dialog: the link to copy,
+   then its expiry. */
+.passwordLink {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.passwordLinkUrl {
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-md);
+  background: var(--bg-subtle);
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}

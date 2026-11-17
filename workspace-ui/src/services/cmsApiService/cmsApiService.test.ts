@@ -8,7 +8,9 @@ import {
     CMS_SEARCH_MAX_ITEMS,
     cmsImageUrl,
     CmsLoginError,
+    cmsPasswordLinkUrl,
     type CmsTokenInfo,
+    createCmsPasswordLink,
     createCmsToken,
     getCmsKeycloakConfig,
     getCmsUiLanguage,
@@ -496,5 +498,42 @@ describe('CMS UI language', () => {
 
         await expect(getCmsUiLanguage()).rejects.toBeInstanceOf(HttpError);
         await expect(getCmsUiLanguage()).rejects.toBeInstanceOf(HttpError);
+    });
+});
+
+describe('createCmsPasswordLink', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('posts to the user\'s password link with the CMS session cookie and returns the token and its expiry', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' }, token: 'jwt-1', expiresAt: NOW_S + 86400 }));
+
+        await expect(createCmsPasswordLink(1342)).resolves.toEqual({ token: 'jwt-1', expiresAt: NOW_S + 86400 });
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/user/1342/passwordLink');
+        expect(init).toMatchObject({ method: 'POST', credentials: 'same-origin' });
+    });
+
+    it('throws a refusal the CMS answers with 200 as an HttpError carrying its response code', async () => {
+        const body = { responseInfo: { responseCode: 'FAILURE' }, messages: [] };
+
+        stubFetchSequence(Response.json(body));
+
+        await expect(createCmsPasswordLink(1342)).rejects.toMatchObject({ name: 'HttpError', body });
+    });
+
+    it('throws an HttpError for a user the session may not edit', async () => {
+        stubFetchSequence(Response.json({ responseInfo: { responseCode: 'PERMISSION' } }, { status: 403 }));
+
+        await expect(createCmsPasswordLink(1342)).rejects.toBeInstanceOf(HttpError);
+    });
+});
+
+describe('cmsPasswordLinkUrl', () => {
+    it('links the editor UI\'s set-password page on this host, past single sign-on, with the token encoded', () => {
+        expect(cmsPasswordLinkUrl('a.b+c')).toBe(`${window.location.origin}/editor/?skip-sso#/set-password?token=a.b%2Bc`);
     });
 });

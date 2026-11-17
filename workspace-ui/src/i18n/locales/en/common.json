@@ -381,6 +381,15 @@
             "pages_other": "{{count}} pages go online.",
             "failed": "Publishing failed",
             "cancelled": "Publishing was stopped."
+        },
+        "passwordLink": {
+            "show": "Show password link",
+            "showFor": "Password link for {{name}}",
+            "title": "Password link for {{name}}",
+            "loading": "Creating link…",
+            "expires": "Valid once, until {{time}}. Opening this again creates a new link and invalidates this one.",
+            "copy": "Copy link",
+            "copied": "Link copied"
         }
     },
     "handOff": {

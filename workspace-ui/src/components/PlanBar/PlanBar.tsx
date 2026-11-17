@@ -12,6 +12,7 @@ import { usePlanPresence } from '@/hooks/usePlanPresence';
 import type { Plan } from '@/services/apiService/genaix/types';
 import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
+import { PasswordLinkButton } from './PasswordLinkButton';
 import { PlanAdjustActions } from './PlanAdjustActions';
 import { PlanHead } from './PlanHead';
 import { ReviewButton } from './ReviewButton';
@@ -56,6 +57,9 @@ interface PlanBarProps {
  * review page (`ReviewButton` decides), where the plan's preview, checks and pages are shown together, and releases a done
  * plan on the way (`ReviewButton`); publish and request review are made there, not here (`PlanHead`
  * without `withGatedActions`).
+ *
+ * Once the plan is done and has created a CMS user, "Show password link" issues and shows the link on which
+ * that user sets their password (`PasswordLinkButton`); such a plan keeps its head for it (`usePlanPresence`).
  */
 export function PlanBar({ sessionId, plan, openPlans = [], onPickPlan, onHeightChange }: PlanBarProps) {
     const { t } = useTranslation();
@@ -102,6 +106,7 @@ export function PlanBar({ sessionId, plan, openPlans = [], onPickPlan, onHeightC
                 <PlanHead sessionId={sessionId} plan={plan} note={!isHeadOnly && adjustment.noteKey ? t(adjustment.noteKey) : undefined}>
                     {!isHeadOnly && <PlanAdjustActions adjustment={adjustment} onAdjust={() => setToggled({ waits, isExpanded: true })} />}
                     <ReviewButton sessionId={sessionId} plan={plan} />
+                    <PasswordLinkButton sessionId={sessionId} plan={plan} />
                     {onPickPlan && <PlanSwitcher plans={openPlans} currentId={plan.id} onPick={onPickPlan} />}
                     {!isHeadOnly && (
                         <Button

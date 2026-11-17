@@ -381,6 +381,15 @@
             "pages_other": "{{count}} Seiten gehen online.",
             "failed": "Veröffentlichen fehlgeschlagen",
             "cancelled": "Das Veröffentlichen wurde gestoppt."
+        },
+        "passwordLink": {
+            "show": "Passwort-Link anzeigen",
+            "showFor": "Passwort-Link für {{name}}",
+            "title": "Passwort-Link für {{name}}",
+            "loading": "Link wird erstellt…",
+            "expires": "Einmal gültig, bis {{time}}. Erneutes Öffnen erstellt einen neuen Link und macht diesen ungültig.",
+            "copy": "Link kopieren",
+            "copied": "Link kopiert"
         }
     },
     "handOff": {

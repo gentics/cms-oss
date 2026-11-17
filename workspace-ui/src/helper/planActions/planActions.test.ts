@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Plan, Workflow } from '@/services/apiService/genaix/types';
 
-import { hasGatedActions, isAcceptedOnCard, isFirstDraft, planActions, planPresence, reviseOptions, writtenPagesOf } from './planActions';
+import { createdUsersOf, hasGatedActions, isAcceptedOnCard, isFinished, isFirstDraft, planActions, planPresence, reviseOptions, writtenPagesOf } from './planActions';
 
 describe('planActions', () => {
     it('leaves the gated transitions out unless asked for them (the review page)', () => {
@@ -123,5 +123,26 @@ describe('reviseOptions', () => {
         expect(reviseOptions(undefined, false)).toBeUndefined();
         expect(reviseOptions(plan('discarded'), false)).toBeUndefined();
         expect(reviseOptions(plan('superseded'), false)).toBeUndefined();
+    });
+});
+
+describe('createdUsersOf', () => {
+    it('keeps the users the plan created, and nothing else', () => {
+        expect(createdUsersOf([
+            { type: 'user', id: 1, operation: 'created' },
+            { type: 'user', id: 2, operation: 'updated' },
+            { type: 'user', id: 3, operation: 'read' },
+            { type: 'group', id: 4, operation: 'created' },
+            { type: 'page', id: 5, operation: 'created' },
+            { type: 'user', id: 6 },
+        ]).map(({ id }) => id)).toEqual([1]);
+    });
+});
+
+describe('isFinished', () => {
+    it('is true for a done or released plan only', () => {
+        const statuses: Plan['status'][] = ['drafting', 'proposed', 'accepted', 'running', 'done', 'released', 'published', 'review_requested', 'discarded', 'superseded'];
+
+        expect(statuses.filter(isFinished)).toEqual(['done', 'released']);
     });
 });

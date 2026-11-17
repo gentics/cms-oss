@@ -377,3 +377,104 @@ describe('PlanBar', () => {
         expect(within(bar).queryByRole('link', { name: 'Review & release' })).not.toBeInTheDocument();
     });
 });
+
+describe('PlanBar password link', () => {
+    const CREATED_USER: CmsObjectRef = { type: 'user', id: 1342, name: 'Sophie Kaiser', operation: 'created' };
+    const ADMIN_USER_PLAN = { workflows: [{ id: 'admin_user', version: '0.9.0' }] };
+
+    // Answers the plan's state with `cmsObjects` and each password link request with the next token.
+    function stubWithPasswordLinks(cmsObjects: CmsObjectRef[]) {
+        let issued = 0;
+
+        vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
+            const url = String(input);
+
+            if (url.endsWith('/passwordLink')) {
+                issued += 1;
+
+                return Response.json({ responseInfo: { responseCode: 'OK' }, token: `token-${issued}`, expiresAt: 1_790_886_400 });
+            }
+
+            return url.endsWith(`/sessions/${SESSION}/plans/pl-1`)
+                ? Response.json({ plan: plan('done', ADMIN_USER_PLAN), cms_objects: cmsObjects })
+                : Response.json({ items: [], next_cursor: null });
+        }));
+    }
+
+    function passwordLinkRequests() {
+        return vi.mocked(fetch).mock.calls.filter(([input]) => String(input).endsWith('/passwordLink'));
+    }
+
+    beforeEach(() => {
+        useWorkspaceEventStore.setState({ sessions: {} });
+        vi.stubGlobal('ResizeObserver', ResizeObserverStub);
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('asks for no link before the button is clicked, then issues one from the browser and shows it to copy', async () => {
+        const user = userEvent.setup();
+
+        stubWithPasswordLinks([CREATED_USER]);
+
+        const bar = await renderBar('done', ADMIN_USER_PLAN);
+        const button = await within(bar).findByRole('button', { name: 'Show password link' });
+
+        expect(passwordLinkRequests()).toEqual([]);
+
+        await user.click(button);
+
+        const dialog = await screen.findByRole('dialog', { name: 'Password link for Sophie Kaiser' });
+        const link = `${window.location.origin}/editor/?skip-sso#/set-password?token=token-1`;
+
+        expect(await within(dialog).findByText(link)).toBeInTheDocument();
+
+        const [url, init] = passwordLinkRequests()[0]!;
+
+        expect(String(url)).toBe('/rest/user/1342/passwordLink');
+        expect(init).toMatchObject({ method: 'POST', credentials: 'same-origin' });
+
+        await user.click(within(dialog).getByRole('button', { name: 'Copy link' }));
+
+        await expect(navigator.clipboard.readText()).resolves.toBe(link);
+    });
+
+    it('issues a new link each time the dialog opens', async () => {
+        const user = userEvent.setup();
+
+        stubWithPasswordLinks([CREATED_USER]);
+
+        const bar = await renderBar('done', ADMIN_USER_PLAN);
+
+        await user.click(await within(bar).findByRole('button', { name: 'Show password link' }));
+        expect(await screen.findByText(/token=token-1$/)).toBeInTheDocument();
+        await user.keyboard('{Escape}');
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+        await user.click(within(bar).getByRole('button', { name: 'Show password link' }));
+
+        expect(await screen.findByText(/token=token-2$/)).toBeInTheDocument();
+        expect(screen.queryByText(/token=token-1$/)).not.toBeInTheDocument();
+        expect(passwordLinkRequests()).toHaveLength(2);
+    });
+
+    it('names the user on each button when the plan created several', async () => {
+        stubWithPasswordLinks([CREATED_USER, { type: 'user', id: 1343, name: 'Max Muster', operation: 'created' }]);
+
+        const bar = await renderBar('done', ADMIN_USER_PLAN);
+
+        expect(await within(bar).findByRole('button', { name: 'Password link for Sophie Kaiser' })).toBeInTheDocument();
+        expect(within(bar).getByRole('button', { name: 'Password link for Max Muster' })).toBeInTheDocument();
+    });
+
+    it('offers no password link for a plan that created no user', async () => {
+        stubWithPasswordLinks([WRITTEN_PAGE]);
+
+        const bar = await renderBar('done');
+
+        await within(bar).findByRole('link', { name: 'Review & release' });
+        expect(within(bar).queryByRole('button', { name: /password link/i })).not.toBeInTheDocument();
+    });
+});

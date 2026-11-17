@@ -31,6 +31,19 @@ export function writtenPagesOf(cmsObjects: CmsObjectRef[]): CmsObjectRef[] {
     return cmsObjects.filter(({ type, operation }) => type === 'page' && WRITTEN.has(operation));
 }
 
+// The statuses of a plan whose run has finished (contract, `PlanStatus`).
+const FINISHED: ReadonlySet<PlanStatus> = new Set<PlanStatus>(['done', 'released']);
+
+/** Whether the plan's run has finished: `done`, or `released` on its way to publishing. */
+export function isFinished(status: PlanStatus): boolean {
+    return FINISHED.has(status);
+}
+
+/** The CMS users a plan created (`PlanState.cms_objects`), whose password links the plan head offers. */
+export function createdUsersOf(cmsObjects: CmsObjectRef[]): CmsObjectRef[] {
+    return cmsObjects.filter(({ type, operation }) => type === 'user' && operation === 'created');
+}
+
 /** Whether the plan's status allows a gated transition, which is made on the review page. */
 export function hasGatedActions(status: PlanStatus): boolean {
     return (ACTIONS[status] ?? []).some((action) => GATED_ACTIONS.has(action));

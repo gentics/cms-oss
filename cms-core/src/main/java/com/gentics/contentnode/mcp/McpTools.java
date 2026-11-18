@@ -10,8 +10,10 @@ import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreateConstructTool;
 import com.gentics.contentnode.mcp.tools.CreateFolderTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
+import com.gentics.contentnode.mcp.tools.CreateTaskTool;
 import com.gentics.contentnode.mcp.tools.CreateUserTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
+import com.gentics.contentnode.mcp.tools.DeleteTaskTool;
 import com.gentics.contentnode.mcp.tools.EnsureConstructCategoryTool;
 import com.gentics.contentnode.mcp.tools.FindSimilarTool;
 import com.gentics.contentnode.mcp.tools.GetConstructTool;
@@ -34,6 +36,7 @@ import com.gentics.contentnode.mcp.tools.ListGroupsTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.ListPackagesTool;
 import com.gentics.contentnode.mcp.tools.ListPartTypesTool;
+import com.gentics.contentnode.mcp.tools.ListTasksTool;
 import com.gentics.contentnode.mcp.tools.ListTemplatesTool;
 import com.gentics.contentnode.mcp.tools.ListUsersTool;
 import com.gentics.contentnode.mcp.tools.PreviewPermissionImpactTool;
@@ -47,6 +50,7 @@ import com.gentics.contentnode.mcp.tools.TranslatePageTool;
 import com.gentics.contentnode.mcp.tools.UpdateConstructTool;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool;
+import com.gentics.contentnode.mcp.tools.UpdateTaskTool;
 import com.gentics.contentnode.mcp.tools.UploadFileTool;
 import com.gentics.contentnode.mcp.tools.WhoamiTool;
 import com.gentics.lib.log.NodeLogger;
@@ -75,7 +79,8 @@ public final class McpTools {
 			new UpdateConstructTool(), new AssignConstructToNodesTool(), new ListPackagesTool(),
 			new AddConstructToPackageTool(), new ListUsersTool(), new ListGroupsTool(),
 			new GetGroupPermissionsTool(), new CreateUserTool(), new AssignUserToGroupTool(),
-			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool(), new CreateFolderTool());
+			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool(), new CreateFolderTool(),
+			new ListTasksTool(), new CreateTaskTool(), new UpdateTaskTool(), new DeleteTaskTool());
 
 	/**
 	 * Static class, no instances

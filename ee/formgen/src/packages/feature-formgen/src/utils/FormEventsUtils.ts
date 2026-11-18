@@ -488,6 +488,12 @@ export async function possibleBinaryUpload(
         }
         updateState(StatesToUpdateEnum.ALL);
       };
+      // intermediate saving is disabled (formSettings.disableSave): no save request, the file stays in
+      // formState.fileUploads and is sent with the submit (prepareDataForSave(formState, true))
+      if (formState.formSettings?.disableSave === true) {
+        await actionAfterSuc();
+        return;
+      }
       try {
         onBinaryChangeFinished();
 
@@ -745,7 +751,7 @@ export function andpHistoryBackCallback() {
  * @param formState
  * @param updateState
  * @param restService
- * @param actionAfterSave for example for await loadDialogForm()
+ * @param actionAfterSave action that runs after a successful save
  * @param actionAfterError if nothing is defined and "showError" is true -> the default behavior will be triggered
  * @param showError
  * @returns
@@ -997,6 +1003,10 @@ export const loadDialogForm = async (
       uiState: JSON.parse(JSON.stringify(uiState)),
       formState: JSON.parse(JSON.stringify(formState)),
     };
+    // the main form is not saved before the dialog opens, so its pending files must neither
+    // be sent with the dialog submit nor get lost
+    uiState.dialogForm.mainFileUploads = formState.fileUploads;
+    formState.fileUploads = {};
     uiState.dialogForm.isDialogFormOpen = true;
     uiState.currentPage = 0;
     uiState.loading = false;
@@ -1020,6 +1030,8 @@ export const loadDialogForm = async (
       { loadingText: IOverlayFullScreenTextEnum.DialogForm },
     ),
   );
+  // refreshes the authentication if needed (was done by the save that used to run before)
+  if (formState.pluginName === PluginNameEnum.ACTA_NOVA) await restService.keepAlive();
   const apiResponse: ApiResponse = await restService.ANLoadDialogForm(
     formState,
     editModeDialogFormID,
@@ -1328,6 +1340,7 @@ export const revertToMainFormFromDialogForm = async (
 ) => {
   const successRefresh = (data: any) => {
     console.log('refreshForm successful', data);
+    formState.fileUploads = uiState.dialogForm.mainFileUploads ?? {};
     const scrollReference = uiState.dialogForm.scrollReference;
     // reset dialogForm info
     if (!uiState.dialogForm.mainFormState?.uiState.currentPage) {
@@ -1379,6 +1392,9 @@ export const revertToMainFormFromDialogForm = async (
     mainState.formState.data.DialogPortalFormHostObjectID!,
     mainState.uiState.dialogForm.refreshPropertyID!,
     mainState.formState.businessObjectID,
+    // the main form is not saved before the dialog opens: the plugin merges the refreshed
+    // property into this snapshot, so the entries of the main form are kept
+    mainState.formState.data,
   );
   utils.endANRequest(uiState, updateState);
   if (!apiResponse.success) {

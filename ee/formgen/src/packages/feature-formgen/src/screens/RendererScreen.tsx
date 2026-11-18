@@ -34,6 +34,7 @@ import { useFormMirrorStore } from '../state/useFormMirrorState';
 import {
   ApiResponse,
   FormgenSettings,
+  FormSettings,
   FormState,
   IData,
   IDataFields,
@@ -89,6 +90,7 @@ interface FormResponseBody {
   captchaConfig?: any;
   successUrl?: { [language: string]: string };
   formgenSettings?: FormgenSettings;
+  formSettings?: FormSettings;
 }
 
 const RendererScreen: React.FC<{
@@ -907,6 +909,7 @@ const RendererScreen: React.FC<{
       formState.captchaConfig = mapCaptchaConfig(responseBody.captchaConfig);
       formState.successUrl = responseBody.successUrl;
       formState.formgenSettings = responseBody.formgenSettings;
+      formState.formSettings = responseBody.formSettings;
       uiState.lastPage = responseBody.uiSchema.pages.length;
       const missingFlowResponse2 = applyFormFlow(responseBody);
       if (missingFlowResponse2) return missingFlowResponse2;
@@ -1154,56 +1157,27 @@ const RendererScreen: React.FC<{
     const rowIdForRequest = isCopy ? undefined : rowID;
     const duplicateRowID = isCopy ? rowID : undefined;
 
-    const showError = true;
     uiState.loading = true;
     updateState(StatesToUpdateEnum.UIState);
     // TODO v8.2 Considering whether to only one fullscreen overlay for the whole aciton
 
-    if (props.mockForm) {
-      await formEventsUtils.loadDialogForm(
-        uiState,
-        formState,
-        restService,
-        updateState,
-        handleInitFormHooks,
-        refreshPropertyID,
-        scrollReference,
-        editModeDialogFormID,
-        dialogPortalFormHostObjectID,
-        refreshPropertyID,
-        rowIdForRequest,
-        duplicateRowID,
-        createAfterIndex,
-        props.mockForm,
-      );
-      return;
-    }
-    await formEventsUtils.saveForm(
+    // the main form is not saved before the dialog form opens: its data is kept in the
+    // dialog snapshot and restored by revertToMainFormFromDialogForm
+    await formEventsUtils.loadDialogForm(
       uiState,
       formState,
-      updateState,
       restService,
-      false,
-      true,
-      async () =>
-        await formEventsUtils.loadDialogForm(
-          uiState,
-          formState,
-          restService,
-          updateState,
-          handleInitFormHooks,
-          refreshPropertyID,
-          scrollReference,
-          editModeDialogFormID,
-          dialogPortalFormHostObjectID,
-          refreshPropertyID,
-          rowIdForRequest,
-          duplicateRowID,
-          createAfterIndex,
-          props.mockForm,
-        ),
-      () => {},
-      showError,
+      updateState,
+      handleInitFormHooks,
+      refreshPropertyID,
+      scrollReference,
+      editModeDialogFormID,
+      dialogPortalFormHostObjectID,
+      refreshPropertyID,
+      rowIdForRequest,
+      duplicateRowID,
+      createAfterIndex,
+      props.mockForm,
     );
   };
 
@@ -1895,7 +1869,8 @@ const RendererScreen: React.FC<{
       props.isLoggedIn &&
       !uiState.isReadOnlyForm &&
       formState.schema.formType !== 'redirectForm' &&
-      !formState.paymentState
+      !formState.paymentState &&
+      formState.formSettings?.disableSave !== true
     ) {
       //add background save / autosave
       const autoSave = () => {

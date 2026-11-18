@@ -806,6 +806,7 @@ export class RestService {
     dialogPortalFormHostObjectID: string,
     refreshPropertyID: string,
     businessObjectID?: string,
+    mainFormStateData?: IData,
   ) {
     let path = 'refreshForm';
     //TODO v8.2 derzeit funktionierit nur auf web
@@ -819,6 +820,7 @@ export class RestService {
       DialogPortalFormHostObjectID: string;
       RefreshPropertyReferenceID: string;
       BusinessObjectID?: string;
+      mainFormStateData?: IData;
     } = {
       FormID: formId,
       DialogPortalFormHostObjectID: dialogPortalFormHostObjectID,
@@ -828,6 +830,7 @@ export class RestService {
     if (businessObjectID) {
       requestData.BusinessObjectID = businessObjectID;
     }
+    if (mainFormStateData) requestData.mainFormStateData = mainFormStateData;
     const apiResponse: ApiResponse = await this.post(
       formState.formid,
       path,

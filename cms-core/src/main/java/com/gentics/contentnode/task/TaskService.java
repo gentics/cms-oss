@@ -58,7 +58,9 @@ public final class TaskService {
 		Viewer viewer = Viewer.current();
 		List<ResolvableUserTaskModel> tasks = new ArrayList<>();
 		for (StoredTask task : TaskFactory.listForRecipient(viewer.userId, viewer.groupIds)) {
-			tasks.add(toModel(task, viewer));
+			if (canViewObjects(task.objects)) {
+				tasks.add(toModel(task, viewer));
+			}
 		}
 		return tasks;
 	}
@@ -72,7 +74,7 @@ public final class TaskService {
 		Viewer viewer = Viewer.current();
 		List<ResolvableUserTaskModel> tasks = new ArrayList<>();
 		for (StoredTask task : TaskFactory.listCreatedBy(viewer.userId)) {
-			if (!Objects.equals(task.assigneeUserId, viewer.userId)) {
+			if (!Objects.equals(task.assigneeUserId, viewer.userId) && canViewObjects(task.objects)) {
 				tasks.add(toModel(task, viewer));
 			}
 		}
@@ -318,10 +320,34 @@ public final class TaskService {
 			throw notFound(id);
 		}
 		StoredTask task = TaskFactory.get(numericId).orElseThrow(() -> notFound(id));
-		if (!isRecipient(task, viewer) && !isCreator(task, viewer)) {
+		if ((!isRecipient(task, viewer) && !isCreator(task, viewer)) || !canViewObjects(task.objects)) {
 			throw notFound(id);
 		}
 		return task;
+	}
+
+	/**
+	 * Recipients only see a task while they may see all its objects, since permissions can change after it was assigned
+	 * and group members may be restricted to other nodes
+	 */
+	private static boolean canViewObjects(List<TaskObject> objects) throws NodeException {
+		if (objects == null) {
+			return true;
+		}
+		Transaction t = TransactionManager.getCurrentTransaction();
+		for (TaskObject object : objects) {
+			Class<? extends NodeObject> clazz = OBJECT_TYPES.get(object.getType());
+			if (clazz == null) {
+				return false;
+			}
+			try (ChannelTrx cTrx = new ChannelTrx(object.getNodeId())) {
+				NodeObject loaded = t.getObject(clazz, object.getId());
+				if (loaded == null || !t.canView(loaded)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	private static boolean isRecipient(StoredTask task, Viewer viewer) {
@@ -410,6 +436,9 @@ public final class TaskService {
 		if (assignee != null && assignee.getType() == TaskAssignee.Type.user && assignee.getId() != viewer.userId) {
 			recipientPerms = new PermHandler();
 			recipientPerms.initForUser(assignee.getId());
+		} else if (assignee != null && assignee.getType() == TaskAssignee.Type.group) {
+			// every member has at least the permissions of the group
+			recipientPerms = t.getGroupPermHandler(assignee.getId());
 		}
 
 		for (TaskObject object : objects) {

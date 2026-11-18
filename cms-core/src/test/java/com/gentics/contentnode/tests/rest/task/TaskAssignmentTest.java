@@ -1,7 +1,9 @@
 package com.gentics.contentnode.tests.rest.task;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,8 +14,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.task.TaskAction;
 import com.gentics.contentnode.rest.model.task.TaskAssignee;
 import com.gentics.contentnode.rest.model.task.TaskSource;
@@ -36,6 +42,21 @@ public class TaskAssignmentTest extends AbstractTaskTest {
 	public static void setupBlindUser() throws NodeException {
 		UserGroup blind = supply(() -> Creator.createUsergroup("Task blind", "", creators));
 		blindUser = supply(() -> Creator.createUser("task.blind", "task", "Task", "Blind", "", Arrays.asList(blind)));
+	}
+
+	/**
+	 * Group that may see the test page until a test revokes the permission
+	 */
+	private static UserGroup readers;
+
+	private static SystemUser reader;
+
+	@BeforeClass
+	public static void setupReaders() throws NodeException {
+		readers = supply(() -> Creator.createUsergroup("Task readers", "", creators));
+		reader = supply(() -> Creator.createUser("task.reader", "task", "Task", "Reader", "", Arrays.asList(readers)));
+		String view = new Permission(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString();
+		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(readers), view));
 	}
 
 	/**
@@ -222,6 +243,49 @@ public class TaskAssignmentTest extends AbstractTaskTest {
 				new UserTaskModel().setAssignee(user(blindUser.getId())))), Status.BAD_REQUEST);
 
 		assertThat(as(blindUser, () -> list(null))).as("Tasks of the user who may not see the page").isEmpty();
+	}
+
+	/**
+	 * Test that a task with objects cannot be sent to a group that may not see them
+	 * @throws NodeException
+	 */
+	@Test
+	public void testAssignToGroupWithoutViewPermissionFails() throws NodeException {
+		UserGroup blind = supply(() -> blindUser.getUserGroups().get(0));
+		assertStatus(failure(creator, () -> new TaskResourceImpl()
+				.create(task("Fix the page").setObjects(List.of(pageObject())).setAssignee(group(blind.getId())))),
+				Status.BAD_REQUEST);
+
+		UserTaskModel created = as(creator, () -> new TaskResourceImpl()
+				.create(task("Fix the page").setObjects(List.of(pageObject()))).getTask());
+		assertStatus(failure(creator, () -> new TaskResourceImpl().update(created.getId(),
+				new UserTaskModel().setAssignee(group(blind.getId())))), Status.BAD_REQUEST);
+
+		assertThat(as(blindUser, () -> list(null))).as("Tasks of a member of the group that may not see the page").isEmpty();
+	}
+
+	/**
+	 * Test that a member no longer sees a group task after the group lost the permission on its objects
+	 * @throws NodeException
+	 */
+	@Test
+	public void testTaskHiddenWhenPermissionRevoked() throws NodeException {
+		UserTaskModel created = as(creator, () -> new TaskResourceImpl()
+				.create(task("Fix the page").setObjects(List.of(pageObject())).setAssignee(group(readers.getId()))).getTask());
+		assertThat(as(reader, () -> list(null))).as("Tasks of a member who may see the page").extracting(UserTaskModel::getId)
+				.containsExactly(created.getId());
+
+		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(readers),
+				PermHandler.EMPTY_PERM));
+
+		assertThat(as(reader, () -> list(null))).as("Tasks of the member after the permission was revoked").isEmpty();
+		assertThatThrownBy(() -> as(reader, () -> new TaskResourceImpl().get(created.getId())))
+				.as("Loading the task after the permission was revoked").isInstanceOf(EntityNotFoundException.class);
+
+		TaskFilterParameterBean assignedByMe = new TaskFilterParameterBean();
+		assignedByMe.assignedBy = "me";
+		assertThat(as(creator, () -> list(assignedByMe))).as("Tasks the creator sent, who still may see the page")
+				.extracting(UserTaskModel::getId).containsExactly(created.getId());
 	}
 
 	private static TaskAssignee user(int id) {

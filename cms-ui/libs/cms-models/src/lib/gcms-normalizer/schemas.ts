@@ -34,6 +34,7 @@ export class GcmsNormalizationSchemas implements Record<NormalizableEntityType, 
     readonly package = new schema.Entity('package', {}, { processStrategy: normalizrPreProcessEntity });
     readonly page = new schema.Entity('page', {}, { processStrategy: normalizrPreProcessEntity });
     readonly languageVariantPage = new schema.Entity('page', {}, { processStrategy: GcmsNormalizationSchemas.pageProcessStrategy });
+    readonly portalImplementation = new schema.Entity('portalImplementation', {}, { processStrategy: normalizrPreProcessEntity });
     readonly role = new schema.Entity('role', {}, { processStrategy: normalizrPreProcessEntity });
     readonly schedule = new schema.Entity('schedule', {}, { processStrategy: normalizrPreProcessEntity });
     readonly scheduleExecution = new schema.Entity('scheduleExecution', {}, { processStrategy: normalizrPreProcessEntity });
@@ -61,6 +62,9 @@ export class GcmsNormalizationSchemas implements Record<NormalizableEntityType, 
 
         // CR_Fragment
         this.contentRepositoryFragment.define({});
+
+        // Portal Implementation
+        this.portalImplementation.define({});
 
         // DataSource
         this.dataSource.define({});

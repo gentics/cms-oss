@@ -72,6 +72,7 @@ import com.gentics.contentnode.object.PublishableNodeObjectInFolder;
 import com.gentics.contentnode.object.Role;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.UserGroup.ReductionType;
 import com.gentics.contentnode.object.cr.CrFragment;
@@ -1216,6 +1217,8 @@ public class PermHandler {
 			return canView(null, ContentRepository.class, null) && checkPermissionBit(ContentRepository.TYPE_CONTENTREPOSITORY, object.getId(), PERM_VIEW);
 		} else if (object instanceof CrFragment) {
 			return canView(null, CrFragment.class, null) && checkPermissionBit(CrFragment.TYPE_CR_FRAGMENT, object.getId(), PERM_VIEW);
+		} else if (object instanceof PortalImplementation) {
+			return canView(null, PortalImplementation.class, null) && checkPermissionBit(PortalImplementation.TYPE_PORTAL_IMPLEMENTATION, object.getId(), PERM_VIEW);
 		} else if (object instanceof Datasource) {
 			if (!canView(null, Datasource.class, null)) {
 				return false;
@@ -1429,6 +1432,8 @@ public class PermHandler {
 				return checkPermissionBit(ContentRepository.TYPE_CONTENTREPOSITORY, object.getId(), PERM_CONTENTREPOSITORY_UPDATE);
 			} else if (object instanceof CrFragment) {
 				return checkPermissionBit(CrFragment.TYPE_CR_FRAGMENT, object.getId(), PERM_CONTENTREPOSITORY_UPDATE);
+			} else if (object instanceof PortalImplementation) {
+				return checkPermissionBit(PortalImplementation.TYPE_PORTAL_IMPLEMENTATION, object.getId(), PERM_CONTENTREPOSITORY_UPDATE);
 			} else if (object instanceof Datasource) {
 				return true;
 			} else if (object instanceof Role) {
@@ -1517,6 +1522,8 @@ public class PermHandler {
 				return checkPermissionBit(ContentRepository.TYPE_CONTENTREPOSITORY, object.getId(), PERM_CONTENTREPOSITORY_DELETE);
 			} else if (object instanceof CrFragment) {
 				return checkPermissionBit(CrFragment.TYPE_CR_FRAGMENT, object.getId(), PERM_CONTENTREPOSITORY_DELETE);
+			} else if (object instanceof PortalImplementation) {
+				return checkPermissionBit(PortalImplementation.TYPE_PORTAL_IMPLEMENTATION, object.getId(), PERM_CONTENTREPOSITORY_DELETE);
 			} else if (object instanceof Datasource) {
 				return true;
 			} else if (object instanceof ObjectTagDefinition) {
@@ -1695,6 +1702,9 @@ public class PermHandler {
 		} else if (CrFragment.class.isAssignableFrom(clazz)) {
 			return (checkPermissionBit(TYPE_ADMIN, null, PERM_VIEW) && checkPermissionBit(TYPE_CONADMIN, null, PERM_VIEW)
 					&& checkPermissionBit(CrFragment.TYPE_CR_FRAGMENTS, null, PERM_VIEW));
+		} else if (PortalImplementation.class.isAssignableFrom(clazz)) {
+			return (checkPermissionBit(TYPE_ADMIN, null, PERM_VIEW) && checkPermissionBit(TYPE_CONADMIN, null, PERM_VIEW)
+					&& checkPermissionBit(PortalImplementation.TYPE_PORTAL_IMPLEMENTATIONS, null, PERM_VIEW));
 		} else if (Datasource.class.isAssignableFrom(clazz)) {
 			return (checkPermissionBit(TYPE_ADMIN, null, PERM_VIEW) && checkPermissionBit(TYPE_CONADMIN, null, PERM_VIEW)
 					&& checkPermissionBit(Datasource.TYPE_DATASOURCE, null, PERM_VIEW));
@@ -1785,6 +1795,8 @@ public class PermHandler {
 			return checkPermissionBit(ContentRepository.TYPE_CONTENTREPOSITORIES, null, PERM_CONTENTREPOSITORY_CREATE);
 		} else if (CrFragment.class.isAssignableFrom(clazz)) {
 			return checkPermissionBit(CrFragment.TYPE_CR_FRAGMENTS, null, PERM_CONTENTREPOSITORY_CREATE);
+		} else if (PortalImplementation.class.isAssignableFrom(clazz)) {
+			return checkPermissionBit(PortalImplementation.TYPE_PORTAL_IMPLEMENTATIONS, null, PERM_CONTENTREPOSITORY_CREATE);
 		} else if (Datasource.class.isAssignableFrom(clazz)) {
 			return true;
 		} else if (Node.class.isAssignableFrom(clazz)) {

@@ -573,6 +573,7 @@ public class Publisher implements Runnable {
 					meshPublishController.begin();
 					meshPublishController.checkSchemasAndProjects();
 					meshPublishController.waitForMigrations();
+					meshPublishController.publishPortalImplementations();
 
 					meshPublishController.removeOfflineObjects();
 

@@ -16,6 +16,7 @@ export * from './image/image.operations';
 export * from './markuplanguage/markuplanguage.operations';
 export * from './node/node.operations';
 export * from './page/page.operations';
+export * from './portal-implementation/portal-implementation.operations';
 export * from './role/role.operations';
 export * from './schedule/schedule.operations';
 export * from './schedule-execution/schedule-execution.operations';

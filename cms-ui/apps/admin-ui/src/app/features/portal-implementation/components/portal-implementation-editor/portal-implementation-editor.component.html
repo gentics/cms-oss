@@ -1,0 +1,53 @@
+<div class="gtx-entity-detail">
+  <gtx-tabs pure [activeId]="editorTab">
+    <gtx-tab
+      [id]="Tabs.PROPERTIES"
+      gtxDetailTabLink
+      [title]="'shared.title_properties' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [title]="'shared.title_properties_of_entity' | gtxI18n: { entityName: entity?.name }"
+          saveActionAllowedId="portalImplementation.updatePortalImplementationInstance"
+          [saveActionAllowedInstanceId]="entity?.id"
+          [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
+          (saveClick)="tabHandles?.[Tabs.PROPERTIES]?.save?.()"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
+
+        <div class="gtx-entity-details-tab-content-body">
+          @if (entity) {
+            <gtx-portal-implementation-properties
+              class="properties"
+              [formControl]="fgProperties"
+              [pureInitialValue]="true"
+              [(initialValue)]="entityIsClean"
+            ></gtx-portal-implementation-properties>
+          }
+        </div>
+      </div>
+    </gtx-tab>
+
+    <gtx-tab
+      [id]="Tabs.FILES"
+      gtxDetailTabLink
+      [title]="'portal_implementation.title_files' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [title]="'portal_implementation.title_files_of_entity' | gtxI18n: { entityName: entity?.name }"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
+
+        <div class="gtx-entity-details-tab-content-body">
+          @if (entity && editorTab === Tabs.FILES) {
+            <gtx-portal-implementation-file-table
+              [showSearch]="true"
+              [portalImplementationId]="entity.id"
+            ></gtx-portal-implementation-file-table>
+          }
+        </div>
+      </div>
+    </gtx-tab>
+  </gtx-tabs>
+</div>

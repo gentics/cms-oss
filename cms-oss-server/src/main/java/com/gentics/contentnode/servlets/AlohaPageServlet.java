@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -305,6 +306,15 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 
 				String template = RenderUtils.getPreviewTemplate(page, renderMode);
 				renderedPage = page.render(template, renderResult, renderedProperties, null, CnMapPublisher.LINKTRANSFORMER, null);
+
+				if (template != null) {
+					// the preview was rendered by the portal, so set the cookie for proxying static files to the portal
+					Cookie previewNodeCookie = new Cookie(RenderUtils.PORTAL_PREVIEW_NODE_COOKIE,
+							Integer.toString(RenderUtils.getPortalPreviewNodeId(page)));
+					previewNodeCookie.setPath("/");
+					previewNodeCookie.setHttpOnly(true);
+					response.addCookie(previewNodeCookie);
+				}
 			} catch (NodeException e) {
 				halt("Error while rendering page", response);
 				logger.error("Error while rendering page", e);

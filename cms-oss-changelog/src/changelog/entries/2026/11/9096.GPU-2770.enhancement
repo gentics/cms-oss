@@ -1,0 +1,4 @@
+When the preview of a page is rendered by the portal (using the Mesh preview URL of the node),
+static files referenced by the preview (@/static/...@) are now fetched from the portal.
+Files that exist in the @files@ folder of a devtool package are still served from the package.
+Fetching static files from the portal requires a valid CMS session and view permission on the node.

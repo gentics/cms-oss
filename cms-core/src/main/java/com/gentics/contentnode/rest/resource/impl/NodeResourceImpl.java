@@ -1025,6 +1025,12 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				if (reqNode.getMeshPreviewUrlProperty() != null) {
 					newNode.setMeshPreviewUrlProperty(reqNode.getMeshPreviewUrlProperty());
 				}
+				if (reqNode.getPortalType() != null) {
+					newNode.setPortalType(reqNode.getPortalType());
+				}
+				if (reqNode.getPortalTypeProperty() != null) {
+					newNode.setPortalTypeProperty(reqNode.getPortalTypeProperty());
+				}
 
 				if (reqNode.getInsecurePreviewUrl() != null) {
 					newNode.setInsecurePreviewUrl(reqNode.getInsecurePreviewUrl());
@@ -1303,6 +1309,14 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 				if (reqNode.getMeshPreviewUrlProperty() != null) {
 					node.setMeshPreviewUrlProperty(reqNode.getMeshPreviewUrlProperty());
+				}
+
+				if (reqNode.getPortalType() != null) {
+					node.setPortalType(reqNode.getPortalType());
+				}
+
+				if (reqNode.getPortalTypeProperty() != null) {
+					node.setPortalTypeProperty(reqNode.getPortalTypeProperty());
 				}
 
 				if (reqNode.getInsecurePreviewUrl() != null) {

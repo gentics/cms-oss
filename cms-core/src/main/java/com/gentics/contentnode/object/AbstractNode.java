@@ -24,6 +24,7 @@ import com.gentics.contentnode.factory.object.FolderFactory;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.Editor;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
+import com.gentics.contentnode.rest.model.PortalType;
 
 public abstract class AbstractNode extends AbstractContentObject implements Node, ExtensibleObject<Node> {
 
@@ -448,6 +449,21 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 
 	@Override
 	public void resolveMeshPreviewUrlProperty() throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setPortalType(PortalType portalType) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setPortalTypeProperty(String portalTypeProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void resolvePortalTypeProperty() throws ReadOnlyException {
 		failReadOnly();
 	}
 

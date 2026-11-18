@@ -140,6 +140,12 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     /** Preview URL property of Mesh Portal */
     meshPreviewUrlProperty: string;
 
+    /** Type of the portal, which renders the content of the node. If `portalTypeProperty` is set, this is the resolved value. */
+    portalType?: NodePortalType;
+
+    /** Property containing the portal type */
+    portalTypeProperty?: string;
+
     /** Mesh Project, this node publishes into */
     meshProject: string;
 
@@ -196,5 +202,15 @@ export enum NodePreviewurlType {
 }
 
 export const NODE_PREVIEW_URL_PROPERTY_PREFIX = 'NODE_PREVIEWURL';
+
+/**
+ * Type of the portal, which renders the content of a node
+ */
+export enum NodePortalType {
+    JAVA = 'Java',
+    PHP = 'PHP',
+}
+
+export const NODE_PORTAL_TYPE_PROPERTY_PREFIX = 'NODE_PORTALTYPE';
 // export const NODE_HOSTNAME_REGEXP = /^[0-9a-z]([-.]?[0-9a-z:])*$/;
 // export const NODE_PATH_REGEXP = /^\/?([a-zA-Z0-9._-]{1,64}\/?){0,127}$/;

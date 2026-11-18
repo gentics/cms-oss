@@ -49,6 +49,47 @@
             formControlName="meshProjectName"
           ></gtx-input>
           <gtx-select
+            [label]="('node.portal_type_type' | gtxI18n) + ' *'"
+            [clearable]="false"
+            formControlName="portalTypeDefinition"
+            >
+            @for (type of PORTAL_TYPE_DEFINITIONS; track type.id) {
+              <gtx-option
+                [value]="type.id"
+              >{{ type.label | gtxI18n }}</gtx-option>
+            }
+          </gtx-select>
+          @if (form?.controls?.portalType?.enabled) {
+            <gtx-select
+              [label]="('node.portal_type' | gtxI18n) + ' *'"
+              [placeholder]="'node.portal_type' | gtxI18n"
+              [clearable]="false"
+              formControlName="portalType"
+              >
+              @for (type of PORTAL_TYPES; track type) {
+                <gtx-option
+                  [value]="type"
+                >{{ type }}</gtx-option>
+              }
+            </gtx-select>
+          }
+          @if (form?.controls?.portalTypeProperty?.enabled) {
+            <gtx-input
+              type="text"
+              [required]="true"
+              [label]="('node.portal_type_property' | gtxI18n)"
+              [placeholder]="'node.portal_type_property' | gtxI18n"
+              formControlName="portalTypeProperty"
+            ></gtx-input>
+            @if (form?.controls?.portalTypeProperty?.errors?.[VALIDATOR_REGEX_ERROR_PROPERTY]) {
+              <span
+                class="container-validator-errors"
+                >
+                {{ 'node.portal_type_property_pattern' | gtxI18n }}
+              </span>
+            }
+          }
+          <gtx-select
             [label]="('node.mesh_preview_url_type' | gtxI18n) + ' *'"
             [value]="previewType"
             [clearable]="false"

@@ -831,3 +831,4 @@
 2026-08-06	CH-1750	NOP	SQL	INSERT INTO type (id, name, description, auto, javaclass) VALUES (45, 'Groovy', 'Execute Groovy Scripts', 0, 'com.gentics.contentnode.object.parttype.groovy.GroovyPartType'); ## Add new part type for executing Groovy scripts
 2026-10-30	CH-1753	PK	SQL	DELETE FROM perm WHERE o_type = 142; ## Remove the permissions of the removed license management (permission type licensing)
 2026-11-06  CH-1752 NOP SQL INSERT INTO nodesetup (name, intvalue) VALUES ('job:fixmigratedadminemailtemplate', 10000); ## add job to migrate forms
+2026-11-18  CH-1758 NOP SQL ALTER TABLE node ADD COLUMN portal_type VARCHAR(16) NOT NULL DEFAULT '' AFTER mesh_preview_url_property, ADD COLUMN portal_type_property VARCHAR(255) NOT NULL DEFAULT '' AFTER portal_type; ## add portal type (Java/PHP) of the node

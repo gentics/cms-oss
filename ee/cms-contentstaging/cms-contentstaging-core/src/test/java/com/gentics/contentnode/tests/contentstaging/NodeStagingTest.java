@@ -51,6 +51,7 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.NodeFeature;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
+import com.gentics.contentnode.rest.model.PortalType;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
@@ -144,6 +145,62 @@ public class NodeStagingTest implements ContentStagingMethods {
 
 		// test staging of properties, which support property substitution
 		testAttribute("meshPreviewUrl", node, Node::getMeshPreviewUrlProperty, Node::setMeshPreviewUrlProperty, "${sys:mesh.preview.url}", "${sys:mesh.alternative.preview.url}");
+	}
+
+	/**
+	 * Test staging of the portal type (value and property)
+	 * @throws NodeException
+	 */
+	@Test
+	public void testStagedPortalType() throws NodeException {
+		Node node = create(Node.class, n -> {
+			n.setFolder(create(Folder.class, f -> {
+				f.setName("Staged Node");
+				f.setPublishDir("/");
+			}).doNotSave().build());
+
+			n.setHostname("staged.node");
+			n.setPublishDir("/");
+			n.setBinaryPublishDir("/");
+		}).build();
+
+		// create package
+		createContentPackage(PACKAGE_NAME);
+
+		try {
+			System.setProperty("NODE_PORTALTYPE_STAGING_A", "Java");
+			System.setProperty("NODE_PORTALTYPE_STAGING_B", "PHP");
+
+			// the value is the same on all systems, so it is staged
+			testAttribute("portalType", node, Node::getPortalType, Node::setPortalType, PortalType.Java, PortalType.PHP);
+
+			testAttribute("portalTypeProperty", node, Node::getPortalTypeProperty, Node::setPortalTypeProperty,
+					"${sys:NODE_PORTALTYPE_STAGING_A}", "${sys:NODE_PORTALTYPE_STAGING_B}");
+			node = execute(NodeObject::reload, node);
+			assertThat(execute(Node::getPortalType, node)).as("Portal type resolved from the staged property").isEqualTo(PortalType.PHP);
+
+			// when a property is staged, the (resolved) value from the exporting system must not overwrite the value resolved on the importing system,
+			// also when the importing system already has the same property
+			GlobalId nodeGlobalId = execute(Node::getGlobalId, node);
+			System.setProperty("NODE_PORTALTYPE_STAGING_A", "php");
+			node = update(node, n -> n.setPortalTypeProperty("${sys:NODE_PORTALTYPE_STAGING_A}")).build();
+			assertThat(execute(Node::getPortalType, node)).as("Exported portal type").isEqualTo(PortalType.PHP);
+			assertResponseOK(new ContentStagingResourceImpl().add(PACKAGE_NAME, "node", nodeGlobalId.toString(), false));
+
+			// simulate the importing system, where the property resolves to another value
+			System.setProperty("NODE_PORTALTYPE_STAGING_A", "java");
+			node = update(node, Node::resolvePortalTypeProperty).build();
+			assertThat(execute(Node::getPortalType, node)).as("Portal type on the importing system").isEqualTo(PortalType.Java);
+
+			importContentPackage(PACKAGE_NAME);
+
+			node = execute(NodeObject::reload, node);
+			assertThat(execute(Node::getPortalTypeProperty, node)).as("Staged portal type property").isEqualTo("${sys:NODE_PORTALTYPE_STAGING_A}");
+			assertThat(execute(Node::getPortalType, node)).as("Portal type after import").isEqualTo(PortalType.Java);
+		} finally {
+			System.clearProperty("NODE_PORTALTYPE_STAGING_A");
+			System.clearProperty("NODE_PORTALTYPE_STAGING_B");
+		}
 	}
 
 	/**

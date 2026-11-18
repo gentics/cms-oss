@@ -1,0 +1,1 @@
+Nodes have the new setting "Portal Type" (Java or PHP) in the portal configuration. It can be selected directly or read from a system property or environment variable (${env:NODE_PORTALTYPE_...} or ${sys:NODE_PORTALTYPE_...}) and is transferred by Content Staging. In the Administration UI, the portal type is mandatory when Mesh ContentRepositories are activated.

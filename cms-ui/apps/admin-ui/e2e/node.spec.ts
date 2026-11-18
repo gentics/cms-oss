@@ -8,11 +8,13 @@ import {
     navigateToApp,
     NODE_MINIMAL,
     onRequest,
+    pickSelectValue,
     selectTab,
     selectTableRow,
     TestSize,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
+import { NodePortalType } from '@gentics/cms-models';
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
 import { findEntityTableActionButton, navigateToModule } from './helpers';
@@ -21,6 +23,7 @@ const SELECTORS = {
     MASTER: 'gtx-node-master',
     EDITOR: 'gtx-node-editor',
     MESH_PROJECT_NAME_INPUT: 'gtx-node-properties gtx-input[formcontrolname="meshProjectName"] input',
+    PORTAL_TYPE_SELECT: 'gtx-node-properties gtx-select[formcontrolname="portalType"]',
     WIZARD: 'gtx-create-node-wizard gtx-wizard',
     TAB_LINK: 'gtx-tabs .tab-link',
     NAME_INPUT: 'gtx-node-properties gtx-input[formcontrolname="name"] input',
@@ -109,6 +112,38 @@ test.describe('Node Settings', () => {
                 await expect(input).toHaveValue(MESH_PROJECT_NAME);
             });
         });
+
+        test('should show the saved portal type when opening node settings', {
+            annotation: [{
+                type: 'ticket',
+                description: 'GPU-2775',
+            }],
+        }, async ({ page }) => {
+            const node = IMPORTER.get(NODE_MINIMAL);
+
+            await test.step('Set portalType via REST', async () => {
+                await IMPORTER.client.node.update(node.id, {
+                    node: {
+                        portalType: NodePortalType.PHP,
+                    },
+                }).send();
+            });
+
+            await test.step('Open the node settings', async () => {
+                const master = await navigateToModule(page, 'nodes');
+                const masterTable = master.locator(SELECTORS.MASTER).or(master);
+
+                const row = await findTableRowById(masterTable, node.id);
+                await clickTableRow(row);
+
+                await expect(page.locator(SELECTORS.EDITOR)).toBeVisible();
+            });
+
+            await test.step('portalType select should show the saved value', async () => {
+                await expect(page.locator(`${SELECTORS.PORTAL_TYPE_SELECT} gtx-dropdown-trigger .view-value`))
+                    .toHaveAttribute('data-value', NodePortalType.PHP);
+            });
+        });
     });
 
     test.describe('Create Node Wizard', () => {
@@ -139,7 +174,46 @@ test.describe('Node Settings', () => {
         async function fillRequiredProperties(page: Page): Promise<void> {
             await page.locator(SELECTORS.NAME_INPUT).fill(NODE_NAME);
             await page.locator(SELECTORS.HOST_INPUT).fill(NODE_HOST);
+            // GPU-2775: the portal type is required, when Mesh ContentRepositories are enabled
+            await pickSelectValue(page.locator(SELECTORS.PORTAL_TYPE_SELECT), NodePortalType.JAVA);
         }
+
+        test.describe('Portal Type', () => {
+            test('should not allow selecting the following steps without a portal type', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'GPU-2775',
+                }],
+            }, async ({ page }) => {
+                await page.locator(SELECTORS.NAME_INPUT).fill(NODE_NAME);
+                await page.locator(SELECTORS.HOST_INPUT).fill(NODE_HOST);
+
+                await expect(findTab(WIZARD_STEP.PUBLISHING)).toHaveClass(CLASS_DISABLED);
+
+                await pickSelectValue(page.locator(SELECTORS.PORTAL_TYPE_SELECT), NodePortalType.PHP);
+
+                await expect(findTab(WIZARD_STEP.PUBLISHING)).not.toHaveClass(CLASS_DISABLED);
+            });
+
+            test('should create the node with the selected portal type', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'GPU-2775',
+                }],
+            }, async ({ page }) => {
+                await fillRequiredProperties(page);
+
+                const languagesTab = await selectTab(wizard, WIZARD_STEP.LANGUAGES);
+                await selectTableRow(languagesTab.locator(SELECTORS.LANGUAGE_ROW).first());
+
+                const createReq = waitForResponseFrom(page, 'PUT', '/rest/node');
+                await clickModalAction(wizard, 'next');
+                const response = await createReq;
+
+                expect(response.request().postDataJSON().node.portalType).toBe(NodePortalType.JAVA);
+                expect((await response.json()).node.portalType).toBe(NodePortalType.JAVA);
+            });
+        });
 
         test.describe('Tab Navigation', () => {
             test('should not allow selecting the following steps while the current step is invalid', {

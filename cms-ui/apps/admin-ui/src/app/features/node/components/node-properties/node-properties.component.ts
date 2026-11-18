@@ -5,10 +5,12 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import {
     Feature,
     NODE_HOSTNAME_PROPERTY_PREFIX,
+    NODE_PORTAL_TYPE_PROPERTY_PREFIX,
     NODE_PREVIEW_URL_PROPERTY_PREFIX,
     Node,
     NodeFeature,
     NodeHostnameType,
+    NodePortalType,
     NodePreviewurlType,
     Raw,
 } from '@gentics/cms-models';
@@ -25,9 +27,11 @@ import {
 
 export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty'
   | 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId'
-  | 'defaultFormFolderId' | 'pubDirSegment' | 'publishImageVariants'> & {
+  | 'defaultFormFolderId' | 'pubDirSegment' | 'publishImageVariants' | 'portalType' | 'portalTypeProperty'> & {
       description?: string;
       previewType: NodePreviewurlType;
+      /** Whether the portal type is set as value or as property */
+      portalTypeDefinition: NodePreviewurlType;
       hostType: NodeHostnameType;
   };
 
@@ -75,6 +79,21 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
             label: 'node.mesh_preview_url_type_property',
         },
     ];
+
+    /** selectable options for node input portalTypeDefinition */
+    public readonly PORTAL_TYPE_DEFINITIONS: { id: NodePreviewurlType; label: string }[] = [
+        {
+            id: NodePreviewurlType.VALUE,
+            label: 'node.portal_type_type_value',
+        },
+        {
+            id: NodePreviewurlType.PROPERTY,
+            label: 'node.portal_type_type_property',
+        },
+    ];
+
+    /** selectable options for node input portalType */
+    public readonly PORTAL_TYPES: NodePortalType[] = [NodePortalType.JAVA, NodePortalType.PHP];
 
     @Input()
     public mode: NodePropertiesMode = NodePropertiesMode.CREATE;
@@ -125,6 +144,9 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
 
         this.subscriptions.push(this.appState.select((state) => state.features.global[Feature.MESH_CR]).subscribe((featureEnabled) => {
             this.meshCrEnabled = featureEnabled;
+            // the portal type controls are required, but only shown when Mesh CRs are enabled.
+            // The raw value is needed, because the value of the (still disabled) portalTypeDefinition decides which control gets enabled.
+            this.configureForm(this.form?.getRawValue());
             this.changeDetector.markForCheck();
         }));
     }
@@ -177,6 +199,16 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
                 ? NodePreviewurlType.PROPERTY
                 : NodePreviewurlType.VALUE,
             ),
+            portalTypeDefinition: new FormControl<NodePreviewurlType>(this.safeValue('portalTypeDefinition') ?? (this.safeValue('portalTypeProperty')
+                ? NodePreviewurlType.PROPERTY
+                : NodePreviewurlType.VALUE),
+            ),
+            portalType: new FormControl(this.safeValue('portalType'), Validators.required),
+            portalTypeProperty: new FormControl(this.safeValue('portalTypeProperty'), [
+                Validators.required,
+                Validators.maxLength(255),
+                createPropertyPatternValidator(NODE_PORTAL_TYPE_PROPERTY_PREFIX),
+            ]),
             meshProjectName: new FormControl(this.safeValue('meshProjectName'), Validators.maxLength(255)),
             meshPreviewUrl: new FormControl(this.safeValue('meshPreviewUrl'), Validators.maxLength(255)),
             meshPreviewUrlProperty: new FormControl(this.safeValue('meshPreviewUrlProperty'), [
@@ -236,6 +268,16 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
             });
         }
 
+        setControlsEnabled(this.form, ['portalTypeDefinition'], this.meshCrEnabled, {
+            emitEvent: loud,
+        });
+        setControlsEnabled(this.form, ['portalType'], this.meshCrEnabled && value.portalTypeDefinition !== NodePreviewurlType.PROPERTY, {
+            emitEvent: loud,
+        });
+        setControlsEnabled(this.form, ['portalTypeProperty'], this.meshCrEnabled && value.portalTypeDefinition === NodePreviewurlType.PROPERTY, {
+            emitEvent: loud,
+        });
+
         if (value.hostType) {
             setControlsEnabled(this.form, ['host'], value.hostType !== NodeHostnameType.PROPERTY, {
                 emitEvent: loud,
@@ -255,6 +297,7 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
             ...value,
             hostProperty: value.hostProperty || '',
             meshPreviewUrlProperty: value.meshPreviewUrlProperty || '',
+            portalTypeProperty: value.portalTypeProperty || '',
         };
     }
 }

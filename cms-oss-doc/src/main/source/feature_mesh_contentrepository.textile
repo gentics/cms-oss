@@ -410,6 +410,18 @@ objects published into Gentics Mesh.
 When the URL is set and a page must be rendered in the CMS (for preview or in edit mode), the CMS will transform the page into a Mesh Node and +POST+ that to the preview URL.
 The response is then used as template for rendering the page in edit or preview mode.
 
+h3. Portal Type
+
+The properties dialog of Nodes in the CMS have a field _Portal Type_, which defines the type of the portal that renders the objects of the node published into Gentics Mesh.
+The possible values are +Java+ (Gentics Portal | java) and +PHP+ (Gentics Portal | php).
+
+The portal type can either be selected directly or be read from a system property or environment variable.
+The property must be given in the format +${env:NODE_PORTALTYPE_...}+ or +${sys:NODE_PORTALTYPE_...}+, the name must start with +NODE_PORTALTYPE_+.
+The value of the property is matched case-insensitively (e.g. +java+ is accepted as +Java+). If the value is no portal type, the portal type of the node is not set and a warning is logged.
+The property is resolved when the node is saved and when the CMS is started.
+
+The field is mandatory in the Administration UI. Nodes created over the REST API without a portal type have no portal type.
+
 h3. Synchronize Mesh roles
 
 The datasource used in the "Roles Property":#roles-property has to be filled with the Mesh roles, that should be available for selection.

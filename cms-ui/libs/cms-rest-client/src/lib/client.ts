@@ -231,6 +231,9 @@ export class GCMSRestClient implements GCMSRootAPI {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             Authorization: `Bearer ${bearerToken}`,
         }),
+        // the token goes into the body, a query parameter would end up in the access logs
+        validatePasswordToken: (token) => this.executeMappedJsonRequest(POST, '/auth/password/validate', { token }),
+        setPassword: (body) => this.executeMappedJsonRequest(POST, '/auth/password', body),
     } as const;
 
     public cluster: GCMSClusterAPI = {
@@ -580,7 +583,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         subGroups: (id, options) => this.executeMappedJsonRequest(GET, `/group/${id}/groups`, null, options),
 
         listUsers: (id, options) => this.executeMappedJsonRequest(GET, `/group/${id}/users`, null, options),
-        createUser: (id, body) => this.executeMappedJsonRequest(PUT, `/group/${id}/users`, body),
+        createUser: (id, body, options) => this.executeMappedJsonRequest(PUT, `/group/${id}/users`, body, options),
         assignUser: (id, userId) => this.executeMappedJsonRequest(PUT, `/group/${id}/users/${userId}`),
         unassignUser: (id, userId) => this.executeMappedJsonRequest(DELETE, `/group/${id}/users/${userId}`),
 
@@ -904,6 +907,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         get: (id) => this.executeMappedJsonRequest(GET, `/user/${id}`),
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/user/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/user/${id}`),
+        createPasswordLink: (id) => this.executeMappedJsonRequest(POST, `/user/${id}/passwordLink`),
 
         me: (options) => this.executeMappedJsonRequest(GET, '/user/me', null, options),
         getFullUserData: () => this.executeMappedJsonRequest(GET, '/user/me/data'),

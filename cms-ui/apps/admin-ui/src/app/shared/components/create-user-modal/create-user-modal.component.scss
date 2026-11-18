@@ -2,3 +2,14 @@
     margin-top: 0.75rem;
 }
 
+.gtx-create-user-modal-password-link {
+    width: 100%;
+    padding: 0.75rem;
+}
+
+// the link is long and has no spaces: wrapped anywhere, so that all of it is visible and can be selected
+.gtx-create-user-modal-password-link-url ::ng-deep textarea {
+    font-family: monospace;
+    word-break: break-all;
+}
+

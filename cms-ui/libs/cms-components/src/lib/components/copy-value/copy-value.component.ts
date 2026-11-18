@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { cancelEvent } from '@gentics/common';
 import { BaseComponent } from '@gentics/ui-core';
+import { copyTextToClipboard } from '../../utils/clipboard/clipboard';
 
 @Component({
     selector: 'gtx-copy-value',
@@ -50,29 +51,9 @@ export class CopyValueComponent extends BaseComponent implements OnDestroy {
         let error: Error | null = null;
 
         try {
-            await navigator.clipboard.writeText(this.value);
+            await copyTextToClipboard(this.value);
         } catch (err) {
             error = err;
-        }
-
-        // In case the writeText didn't work (due to unsecure connection or otherwise)
-        if (error != null) {
-            // Workaround to trigger a copy
-            const textArea = document.createElement('textarea');
-            textArea.value = this.value;
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                document.execCommand('copy');
-                // Clear the error, as we don't want to display that to the user/mark this as a failure
-                error = null;
-            } catch (err) {
-                error = err;
-            }
-
-            document.body.removeChild(textArea);
         }
 
         // If there's no error we can animate a "success"

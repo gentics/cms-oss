@@ -181,8 +181,10 @@ public final class TaskService {
 			checkRecipient(request.getAssignee(), viewer);
 			setRecipient(task, request.getAssignee());
 		}
-		if (request.getObjects() != null) {
-			task.objects = checkObjects(request.getObjects(), currentAssignee(task), viewer);
+		// a new recipient must be allowed to see the stored objects too, not only objects sent with this request
+		if (request.getObjects() != null || request.getAssignee() != null) {
+			task.objects = checkObjects(request.getObjects() != null ? request.getObjects() : task.objects, currentAssignee(task),
+					viewer);
 		}
 		if (request.getType() != null) {
 			task.type = request.getType();
@@ -203,6 +205,9 @@ public final class TaskService {
 			applyGenaix(task, request.getGenaix());
 		}
 		if (request.getStatus() != null && request.getStatus() != task.status) {
+			if (!isOwner(task, viewer)) {
+				throw forbidden(I18NHelper.get("task.forbidden", id));
+			}
 			task.status = request.getStatus();
 			task.completedAt = task.status.isFinal() ? Integer.valueOf(now) : null;
 		}
@@ -238,7 +243,6 @@ public final class TaskService {
 		if (!canClaim(task, viewer)) {
 			throw conflict(I18NHelper.get("task.claim.notpossible", id));
 		}
-		task.originGroupId = task.assigneeGroupId;
 		task.assigneeGroupId = null;
 		task.assigneeUserId = viewer.userId;
 		task.status = TaskStatus.inProgress;
@@ -330,8 +334,19 @@ public final class TaskService {
 		return Objects.equals(task.creatorId, viewer.userId);
 	}
 
+	/**
+	 * Only the user the task is assigned to may start, complete or dismiss it
+	 */
+	private static boolean isOwner(StoredTask task, Viewer viewer) {
+		return Objects.equals(task.assigneeUserId, viewer.userId);
+	}
+
+	/**
+	 * Members of the group may also take a task another member claimed
+	 */
 	private static boolean canClaim(StoredTask task, Viewer viewer) {
-		return !task.status.isFinal() && task.assigneeGroupId != null && viewer.groupIds.contains(task.assigneeGroupId);
+		return !task.status.isFinal() && task.originGroupId != null && viewer.groupIds.contains(task.originGroupId)
+				&& !isOwner(task, viewer);
 	}
 
 	private static boolean canUnclaim(StoredTask task, Viewer viewer) {
@@ -347,12 +362,11 @@ public final class TaskService {
 			actions.add(TaskAction.open);
 			return actions;
 		}
-		boolean recipient = isRecipient(task, viewer);
 		if (task.objects != null && !task.objects.isEmpty()) {
 			actions.add(TaskAction.open);
 		}
 		if (!task.status.isFinal()) {
-			if (recipient) {
+			if (isOwner(task, viewer)) {
 				actions.add(TaskAction.startSession);
 				actions.add(TaskAction.complete);
 				actions.add(TaskAction.dismiss);

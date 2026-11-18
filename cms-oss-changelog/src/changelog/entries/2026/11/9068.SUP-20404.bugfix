@@ -1,0 +1,1 @@
+Rendering Handlebars tags no longer fails sporadically with a ConcurrentModificationException, when several publish worker threads render pages at the same time.

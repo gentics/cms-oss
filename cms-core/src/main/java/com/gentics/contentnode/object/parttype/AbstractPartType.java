@@ -11,9 +11,9 @@ import java.beans.Introspector;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,9 +42,10 @@ public abstract class AbstractPartType implements PartType, Resolvable, Serializ
 	public static final String ALOHA_EDITABLE_ID_PREFIX = "GENTICS_EDITABLE_";
 
 	/**
-	 * Static map holding the maps of resolvable keys and getter methods per PartType implementation class
+	 * Static map holding the maps of resolvable keys and getter methods per PartType implementation class.
+	 * This is shared between all threads (e.g. the publish workers), so it must be thread-safe.
 	 */
-	protected final static Map<Class<? extends AbstractPartType>, Map<String, Method>> resolvableKeys = new HashMap<>();
+	protected final static Map<Class<? extends AbstractPartType>, Map<String, Method>> resolvableKeys = new ConcurrentHashMap<>();
 
 	/**
 	 * Method to get the map of resolvable keys and getter methods for a specific PartType implementation class.

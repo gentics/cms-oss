@@ -494,7 +494,7 @@ describe('GroupOperations', () => {
 
     describe('createUserWithPasswordLink()', () => {
 
-        it('creates the user with the option and emits the token of the password link fetched afterwards', () => {
+        it('creates the user with the option, without fetching the password link', () => {
             const mockResponse: GroupUserCreateResponse = {
                 responseInfo: { responseCode: ResponseCode.OK },
                 user: mockUserRaw,
@@ -503,33 +503,46 @@ describe('GroupOperations', () => {
             };
             const payload: GroupUserCreateRequest = { login: 'linkuser', firstName: 'Link', lastName: 'User', email: 'link@example.com' };
             client.group.createUser.and.returnValue(observableOf(mockResponse));
+
+            let created: User<Raw>;
+            groupOperations.createUserWithPasswordLink(TEST_GROUP_ID, payload).pipe(
+                takeUntil(stopper.stopper$),
+            ).subscribe((result) => created = result);
+
+            expect(client.group.createUser).toHaveBeenCalledWith(TEST_GROUP_ID, payload, { passwordLink: true });
+            expect(client.user.createPasswordLink).not.toHaveBeenCalled();
+            expect(created.id).toBe(mockUserRaw.id);
+            expect(entityManager.addEntity).toHaveBeenCalledTimes(1);
+            assertNotificationWasShown({ message: 'shared.item_created' });
+        });
+
+        it('handles errors properly', fakeAsync(() => {
+            assertErrorHandlingWorks(() => groupOperations.createUserWithPasswordLink(TEST_GROUP_ID,
+                { login: 'linkuser', firstName: 'Link', lastName: 'User', email: 'link@example.com' }), client.group.createUser);
+        }));
+
+    });
+
+    describe('createPasswordLink()', () => {
+
+        it('emits the token of a new password link of the user', () => {
             client.user.createPasswordLink.and.returnValue(observableOf({
                 responseInfo: { responseCode: ResponseCode.OK },
                 token: 'the-token',
                 expiresAt: 1700000001,
             }));
 
-            let created: { user: User<Raw>; passwordToken: string };
-            groupOperations.createUserWithPasswordLink(TEST_GROUP_ID, payload).pipe(
+            let token: string;
+            groupOperations.createPasswordLink(mockUserRaw.id).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe((result) => created = result);
+            ).subscribe((result) => token = result);
 
-            expect(client.group.createUser).toHaveBeenCalledWith(TEST_GROUP_ID, payload, { passwordLink: true });
             expect(client.user.createPasswordLink).toHaveBeenCalledWith(mockUserRaw.id);
-            expect(created.passwordToken).toBe('the-token');
-            expect(created.user.id).toBe(mockUserRaw.id);
-            expect(entityManager.addEntity).toHaveBeenCalledTimes(1);
-            assertNotificationWasShown({ message: 'shared.item_created' });
+            expect(token).toBe('the-token');
         });
 
-        it('handles errors of fetching the password link properly', fakeAsync(() => {
-            client.group.createUser.and.returnValue(observableOf({
-                responseInfo: { responseCode: ResponseCode.OK },
-                user: mockUserRaw,
-                messages: [],
-            }));
-            assertErrorHandlingWorks(() => groupOperations.createUserWithPasswordLink(TEST_GROUP_ID,
-                { login: 'linkuser', firstName: 'Link', lastName: 'User', email: 'link@example.com' }), client.user.createPasswordLink);
+        it('handles errors properly', fakeAsync(() => {
+            assertErrorHandlingWorks(() => groupOperations.createPasswordLink(mockUserRaw.id), client.user.createPasswordLink);
         }));
 
     });

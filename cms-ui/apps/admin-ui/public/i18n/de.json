@@ -874,6 +874,8 @@
         "password_link_copy_button": "Link kopieren",
         "password_link_copied": "Der Link wurde kopiert",
         "password_link_copy_failed": "Der Link konnte nicht kopiert werden",
+        "password_link_failed": "Der Benutzer wurde angelegt, aber der Link zum Setzen des Passworts konnte nicht erstellt werden. Sie können es erneut versuchen oder den Dialog schließen und das Passwort in den Benutzerdetails setzen.",
+        "password_link_retry_button": "Link erneut erstellen",
         "previous_button": "Zurück",
         "reload_button": "Die Seite neuladen",
         "send_message_groups": "Gruppen",

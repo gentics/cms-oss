@@ -1157,57 +1157,27 @@ const RendererScreen: React.FC<{
     const rowIdForRequest = isCopy ? undefined : rowID;
     const duplicateRowID = isCopy ? rowID : undefined;
 
-    const showError = true;
     uiState.loading = true;
     updateState(StatesToUpdateEnum.UIState);
     // TODO v8.2 Considering whether to only one fullscreen overlay for the whole aciton
 
-    // without intermediate saving (formSettings.disableSave) the dialog form is loaded without saving the main form first
-    if (props.mockForm || formState.formSettings?.disableSave === true) {
-      await formEventsUtils.loadDialogForm(
-        uiState,
-        formState,
-        restService,
-        updateState,
-        handleInitFormHooks,
-        refreshPropertyID,
-        scrollReference,
-        editModeDialogFormID,
-        dialogPortalFormHostObjectID,
-        refreshPropertyID,
-        rowIdForRequest,
-        duplicateRowID,
-        createAfterIndex,
-        props.mockForm,
-      );
-      return;
-    }
-    await formEventsUtils.saveForm(
+    // the main form is not saved before the dialog form opens: its data is kept in the
+    // dialog snapshot and restored by revertToMainFormFromDialogForm
+    await formEventsUtils.loadDialogForm(
       uiState,
       formState,
-      updateState,
       restService,
-      false,
-      true,
-      async () =>
-        await formEventsUtils.loadDialogForm(
-          uiState,
-          formState,
-          restService,
-          updateState,
-          handleInitFormHooks,
-          refreshPropertyID,
-          scrollReference,
-          editModeDialogFormID,
-          dialogPortalFormHostObjectID,
-          refreshPropertyID,
-          rowIdForRequest,
-          duplicateRowID,
-          createAfterIndex,
-          props.mockForm,
-        ),
-      () => {},
-      showError,
+      updateState,
+      handleInitFormHooks,
+      refreshPropertyID,
+      scrollReference,
+      editModeDialogFormID,
+      dialogPortalFormHostObjectID,
+      refreshPropertyID,
+      rowIdForRequest,
+      duplicateRowID,
+      createAfterIndex,
+      props.mockForm,
     );
   };
 

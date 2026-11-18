@@ -43,9 +43,12 @@ export function useCmsFeature(name: string) {
     return useQuery({ queryKey: cmsKeys.feature(name), queryFn: () => isCmsFeatureActive(name), staleTime: 5 * 60 * 1000, retry: false });
 }
 
-/** The CMS nodes the user can see (`listCmsNodes`); they rarely change, so 5 minutes fresh. */
-export function useCmsNodes() {
-    return useQuery({ queryKey: cmsKeys.nodes(), queryFn: listCmsNodes, staleTime: 5 * 60 * 1000 });
+/**
+ * The CMS nodes the user can see (`listCmsNodes`); they rarely change, so 5 minutes fresh. With `enabled: false`
+ * nothing is requested (e.g. an image picker without a node).
+ */
+export function useCmsNodes({ enabled = true }: { enabled?: boolean } = {}) {
+    return useQuery({ queryKey: cmsKeys.nodes(), queryFn: listCmsNodes, staleTime: 5 * 60 * 1000, enabled });
 }
 
 /**

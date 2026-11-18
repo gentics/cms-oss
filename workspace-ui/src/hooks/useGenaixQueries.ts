@@ -389,6 +389,21 @@ export function usePlanTransition(sessionId: string, planId: string): PlanTransi
 }
 
 /**
+ * POST /sessions/{session_id}/files: uploads one file into the session as a source, outside a message, e.g. an image
+ * picked to answer a question (`ImageReferenceField`); `onProgress` gets the share sent, 0 to 1. The session's uploads
+ * are read again, as after a turn with files (`useSendTurn`). Never retried: a repeat would upload twice.
+ */
+export function useUploadSessionFile(sessionId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ file, onProgress }: { file: File; onProgress?: (fraction: number) => void }) => uploadSessionFile(sessionId, file, 'source', onProgress),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.uploads(sessionId) }),
+        retry: false,
+    });
+}
+
+/**
  * POST /sessions/{session_id}/runs/{run_id}/cancel: Stop. Once accepted the run shows as
  * `cancelling` in `useWorkspaceEventStore` until `run.cancelled` arrives. Retried like a query: the
  * call is idempotent.

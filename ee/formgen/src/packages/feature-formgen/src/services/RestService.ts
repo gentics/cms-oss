@@ -807,6 +807,7 @@ export class RestService {
     refreshPropertyID: string,
     businessObjectID?: string,
     mainFormStateData?: IData,
+    deletedRowIds?: string[],
   ) {
     let path = 'refreshForm';
     //TODO v8.2 derzeit funktionierit nur auf web
@@ -821,6 +822,7 @@ export class RestService {
       RefreshPropertyReferenceID: string;
       BusinessObjectID?: string;
       mainFormStateData?: IData;
+      deletedRowIds?: string[];
     } = {
       FormID: formId,
       DialogPortalFormHostObjectID: dialogPortalFormHostObjectID,
@@ -831,6 +833,7 @@ export class RestService {
       requestData.BusinessObjectID = businessObjectID;
     }
     if (mainFormStateData) requestData.mainFormStateData = mainFormStateData;
+    if (deletedRowIds?.length) requestData.deletedRowIds = deletedRowIds;
     const apiResponse: ApiResponse = await this.post(
       formState.formid,
       path,

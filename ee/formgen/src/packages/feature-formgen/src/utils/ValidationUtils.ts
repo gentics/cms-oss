@@ -833,6 +833,11 @@ export const handleValidation = (
 
     const previousData = formState.data;
     formState.data = responseFormData;
+    // ActaNova now knows the current rows and renumbers the positional row IDs (<uuid>_<index>),
+    // so old IDs would hit other rows in refreshForm. A dialog form shares this formState: keep them there.
+    if (!uiState.dialogForm?.isDialogFormOpen) {
+      formState.deletedAggregateRowIds = undefined;
+    }
 
     // ---------- 4. Helpers ----------
     const isEmpty = (val: any): boolean =>

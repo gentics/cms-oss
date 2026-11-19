@@ -365,6 +365,9 @@ export interface FormState {
   formgenSettings?: FormgenSettings;
   // Form-level settings from the load response (formSettings).
   formSettings?: FormSettings;
+  // IDs of deleted aggregate rows: ActaNova only learns about them with the submit, so they are
+  // sent with refreshForm to keep them out of the refreshed aggregate.
+  deletedAggregateRowIds?: string[];
 }
 
 export interface FormgenSettings {

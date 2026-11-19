@@ -108,6 +108,10 @@ class MockClient implements RecursivePartial<InterfaceOf<GCMSRestClientService>>
         setPermission: createSpy('setPermission'),
         setInstancePermission: createSpy('setInstancePermission'),
     };
+
+    user = {
+        createPasswordLink: createSpy('createPasswordLink'),
+    };
 }
 
 class MockPermissionsService implements Partial<PermissionsService> {
@@ -484,6 +488,48 @@ describe('GroupOperations', () => {
 
         it('handles errors properly', fakeAsync(() => {
             assertErrorHandlingWorks(() => groupOperations.createUser(2, mockUserRaw[0]), client.group.createUser);
+        }));
+
+    });
+
+    describe('createUserWithPasswordLink()', () => {
+
+        it('creates the user with the option and emits the token of the password link fetched afterwards', () => {
+            const mockResponse: GroupUserCreateResponse = {
+                responseInfo: { responseCode: ResponseCode.OK },
+                user: mockUserRaw,
+                messages: [],
+                expiresAt: 1700000000,
+            };
+            const payload: GroupUserCreateRequest = { login: 'linkuser', firstName: 'Link', lastName: 'User', email: 'link@example.com' };
+            client.group.createUser.and.returnValue(observableOf(mockResponse));
+            client.user.createPasswordLink.and.returnValue(observableOf({
+                responseInfo: { responseCode: ResponseCode.OK },
+                token: 'the-token',
+                expiresAt: 1700000001,
+            }));
+
+            let created: { user: User<Raw>; passwordToken: string };
+            groupOperations.createUserWithPasswordLink(TEST_GROUP_ID, payload).pipe(
+                takeUntil(stopper.stopper$),
+            ).subscribe((result) => created = result);
+
+            expect(client.group.createUser).toHaveBeenCalledWith(TEST_GROUP_ID, payload, { passwordLink: true });
+            expect(client.user.createPasswordLink).toHaveBeenCalledWith(mockUserRaw.id);
+            expect(created.passwordToken).toBe('the-token');
+            expect(created.user.id).toBe(mockUserRaw.id);
+            expect(entityManager.addEntity).toHaveBeenCalledTimes(1);
+            assertNotificationWasShown({ message: 'shared.item_created' });
+        });
+
+        it('handles errors of fetching the password link properly', fakeAsync(() => {
+            client.group.createUser.and.returnValue(observableOf({
+                responseInfo: { responseCode: ResponseCode.OK },
+                user: mockUserRaw,
+                messages: [],
+            }));
+            assertErrorHandlingWorks(() => groupOperations.createUserWithPasswordLink(TEST_GROUP_ID,
+                { login: 'linkuser', firstName: 'Link', lastName: 'User', email: 'link@example.com' }), client.user.createPasswordLink);
         }));
 
     });

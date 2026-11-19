@@ -16,6 +16,11 @@ public class UserLoadResponse extends GenericResponse {
 	private User user;
 
 	/**
+	 * Expiry of the password link of a created user
+	 */
+	private Integer expiresAt;
+
+	/**
 	 * Create an empty instance
 	 */
 	public UserLoadResponse() {}
@@ -54,5 +59,23 @@ public class UserLoadResponse extends GenericResponse {
 	 */
 	public User getUser() {
 		return user;
+	}
+
+	/**
+	 * Expiry of the link, with which the created user sets their password, as Unix timestamp in seconds. Only set when
+	 * a user was created with the query parameter {@code passwordLink=true}. The link itself is never part of this
+	 * response, it is issued by {@code POST /user/{id}/passwordLink}.
+	 * @return expiry or null
+	 */
+	public Integer getExpiresAt() {
+		return expiresAt;
+	}
+
+	/**
+	 * Set the expiry of the password link
+	 * @param expiresAt Unix timestamp in seconds
+	 */
+	public void setExpiresAt(Integer expiresAt) {
+		this.expiresAt = expiresAt;
 	}
 }

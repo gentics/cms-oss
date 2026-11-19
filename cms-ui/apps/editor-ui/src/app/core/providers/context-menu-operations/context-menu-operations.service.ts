@@ -438,7 +438,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         const copy = structuredClone(data);
 
         copy.adminEmailSubject = this.purgeKeysFrom(copy.adminEmailSubject, languagesToDelete);
-        copy.successUrlI18n = this.purgeKeysFrom(copy.successUrlI18n, languagesToDelete);
+        copy.successUrl = this.purgeKeysFrom(copy.successUrl, languagesToDelete);
 
         Object.values(copy.schema?.properties || {}).forEach((prop) => {
             Object.keys(prop).forEach((key) => {

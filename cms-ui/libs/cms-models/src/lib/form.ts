@@ -70,11 +70,11 @@ export interface EditableFormData {
      * when a user has successfully submitted the form.
      * Must be null/empty if {@link successPageId}/{@link successNodeId} is used.
      */
-    successUrlI18n: I18nString;
+    successUrl: I18nString;
     /**
      * The ID of the page, where to redirect to,
      * when a user has successfully submitted the form.
-     * Must be null/0 if {@link successUrlI18n} is used.
+     * Must be null/0 if {@link successUrl} is used.
      * Must be used with {@link successNodeId}.
      */
     successPageId: number;

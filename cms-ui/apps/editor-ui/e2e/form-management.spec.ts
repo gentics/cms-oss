@@ -288,7 +288,7 @@ test.describe('Form Management', () => {
             expect(saveData.data.successPageId).toEqual(SUCCESS_PAGE.id);
             expect(saveData.data.successNodeId).toEqual(SUCCESS_PAGE.masterNodeId);
             // Clears potentially saved old URLs
-            expect(saveData.data.successUrlI18n).toEqual({});
+            expect(saveData.data.successUrl).toEqual({});
         });
 
         await test.step('Validate loading of set page', async () => {
@@ -311,7 +311,7 @@ test.describe('Form Management', () => {
 
             // Change it to use a success url instead
             await form.locator('gtx-radio-button[data-id="success-url"] label').click();
-            await form.locator('[formControlName="successUrlI18n"] input').fill(SUCCESS_URL);
+            await form.locator('[formControlName="successUrl"] input').fill(SUCCESS_URL);
 
             await page.waitForTimeout(500);
 
@@ -322,10 +322,60 @@ test.describe('Form Management', () => {
             const saveData = await saveRes.request().postDataJSON() as FormSaveRequest;
 
             // Saves the correct data for the URL
-            expect(saveData.data.successUrlI18n[LANGUAGE_EN]).toEqual(SUCCESS_URL);
+            expect(saveData.data.successUrl[LANGUAGE_EN]).toEqual(SUCCESS_URL);
             // Clears the old selected page
             expect(saveData.data.successPageId).toEqual(0);
             expect(saveData.data.successNodeId).toEqual(0);
+        });
+    });
+
+    test('should store an external success url as successUrl', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20415',
+        }],
+    }, async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
+        const SUCCESS_URL = 'https://gentics.com/thank-you';
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, EDITING_FORM.id);
+        await itemAction(item, 'properties');
+
+        const form = page.locator('gtx-form-properties');
+
+        await test.step('Set and save external success url', async () => {
+            await form.locator('gtx-radio-button[data-id="success-url"] label').click();
+            await form.locator('.confirmation-page-setting.lang-select gtx-i18n-input input').fill(SUCCESS_URL);
+
+            await page.waitForTimeout(500);
+
+            const saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+            await editorAction(page, 'save');
+            const saveRes = await saveReq;
+            expect(saveRes.ok()).toBe(true);
+        });
+
+        await test.step('Validate stored form data', async () => {
+            const loaded = await IMPORTER.client.form.get(EDITING_FORM.id).send();
+            const data = loaded.item.data as unknown as Record<string, unknown>;
+
+            expect(data['successUrl']).toEqual({ [LANGUAGE_EN]: SUCCESS_URL });
+            expect(data['successUrlI18n']).toBeUndefined();
         });
     });
 

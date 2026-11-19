@@ -151,7 +151,7 @@ export class FormPropertiesComponent
         this.useInternalSuccessPage = this.isPageUsed(
             this.item?.data?.successPageId,
             this.item?.data?.successNodeId,
-            this.item?.data?.successUrlI18n,
+            this.item?.data?.successUrl,
         );
         this.useEmailPageTemplate = this.isPageUsed(
             this.item?.data?.adminEmailPageId,
@@ -168,7 +168,7 @@ export class FormPropertiesComponent
             flowId: new FormControl(this.item?.data?.flowId || this.safeValue(['data', 'flowId'])),
             captchaId: new FormControl(this.item?.data.flowId || this.safeValue(['data', 'captchaId'])),
             templateContext: new FormControl(this.item?.data?.templateContext || this.safeValue(['data', 'templateContext'])),
-            successUrlI18n: new FormControl(this.item?.data?.successUrlI18n || this.safeValue(['data', 'successUrlI18n'])),
+            successUrl: new FormControl(this.item?.data?.successUrl || this.safeValue(['data', 'successUrl'])),
             successPageId: new FormControl(this.item?.data?.successPageId || this.safeValue(['data', 'successPageId'])),
             successNodeId: new FormControl(this.item?.data?.successNodeId || this.safeValue(['data', 'successNodeId'])),
             adminEmailAddress: new FormControl(this.item?.data?.adminEmailAddress || this.safeValue(['data', 'adminEmailAddress'])),
@@ -229,7 +229,7 @@ export class FormPropertiesComponent
         this.useInternalSuccessPage = doUse;
 
         setControlsEnabled(this.formData, ['successPageId', 'successNodeId'], doUse, { emitEvent: false });
-        setControlsEnabled(this.formData, ['successUrlI18n'], !doUse, { emitEvent: false });
+        setControlsEnabled(this.formData, ['successUrl'], !doUse, { emitEvent: false });
 
         this.form.markAsDirty();
         this.form.updateValueAndValidity({ emitEvent: true });

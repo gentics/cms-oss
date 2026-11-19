@@ -946,7 +946,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                         adminEmailPageId: props.data.adminEmailPageId ?? 0,
                         adminEmailNodeId: props.data.adminEmailNodeId ?? 0,
                         // Don't send null, always an empty object to clear it properly
-                        successUrlI18n: props.data.successUrlI18n ?? {},
+                        successUrl: props.data.successUrl ?? {},
                         adminEmailSubject: props.data.adminEmailSubject ?? {},
                     },
                 }, postUpdateBehavior);

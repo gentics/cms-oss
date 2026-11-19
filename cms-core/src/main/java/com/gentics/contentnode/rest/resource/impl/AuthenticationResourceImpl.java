@@ -25,6 +25,7 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
+import com.gentics.contentnode.rest.model.request.PasswordTokenRequest;
 import com.gentics.contentnode.rest.model.request.SetPasswordRequest;
 import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -45,7 +46,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -324,11 +324,12 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	}
 
 	@Override
-	@GET
-	@Path("/password")
-	public GenericResponse validatePasswordToken(@QueryParam("token") String token) throws NodeException {
+	@POST
+	@Path("/password/validate")
+	public GenericResponse validatePasswordToken(PasswordTokenRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			GenericResponse response = PasswordTokens.verify(token).isPresent()
+			// a POST without body arrives as null and is rejected like any other invalid token
+			GenericResponse response = PasswordTokens.verify(request != null ? request.getToken() : null).isPresent()
 					? new GenericResponse(null, ResponseInfo.ok("Password token is valid"))
 					: invalidPasswordToken();
 			trx.success();

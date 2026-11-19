@@ -33,11 +33,14 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
     /** Will be set when the create call is sent */
     loading = false;
 
-    /** User created with a password link, set once the link is shown */
+    /** User created with a password link. Once set, the modal shows the link instead of the form */
     createdUser: User<Normalized> | null = null;
 
     /** Link with which the created user sets the password */
     passwordLinkUrl: string | null = null;
+
+    /** Fetching the link for the created user failed, it can be fetched again */
+    passwordLinkFailed = false;
 
     private passwordLinkSubscription: Subscription;
 
@@ -153,22 +156,19 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
         const passwordLink: boolean = this.form.value.passwordLink;
         const created: Promise<User<Normalized>> = passwordLink
             ? this.groupData.createUserWithPasswordLink(this.userPayload(false), this.userGroupIds).toPromise()
-                .then(({ user, passwordToken }) => {
-                    // the modal stays open to show the link, it is closed with the created user
-                    this.createdUser = user;
-                    this.passwordLinkUrl = this.passwordLinkUrlFor(passwordToken);
-                    return null;
-                })
             : this.groupData.createUser(this.userPayload(true), this.userGroupIds).toPromise();
 
         created
             .then((entityCreated) => {
-                this.loading = false;
-                if (entityCreated) {
+                if (!passwordLink) {
+                    this.loading = false;
                     this.closeFn(entityCreated);
-                } else {
-                    this.changeDetector.markForCheck();
+                    return;
                 }
+                // the user exists from here on, even if fetching the link fails: the modal stays open to show the
+                // link or to fetch it again, and is closed with the user
+                this.createdUser = entityCreated;
+                return this.fetchPasswordLink();
             }, () => {
                 // keep the password fields disabled when the link was chosen
                 this.form.enable({ emitEvent: false });
@@ -191,9 +191,31 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
         }
     }
 
-    /** Close the modal after the password link was shown */
+    /** Fetch the link for the created user again, after it failed */
+    buttonRetryPasswordLinkClicked(): Promise<void> {
+        return this.fetchPasswordLink();
+    }
+
+    /** Close the modal after the user was created with a password link */
     buttonCloseClicked(): void {
         this.closeFn(this.createdUser);
+    }
+
+    private async fetchPasswordLink(): Promise<void> {
+        this.loading = true;
+        this.passwordLinkFailed = false;
+        this.changeDetector.markForCheck();
+
+        try {
+            const token = await this.groupData.createPasswordLink(this.createdUser.id).toPromise();
+            this.passwordLinkUrl = this.passwordLinkUrlFor(token);
+        } catch {
+            // the operation has already shown the error
+            this.passwordLinkFailed = true;
+        } finally {
+            this.loading = false;
+            this.changeDetector.markForCheck();
+        }
     }
 
     private userPayload(withPassword: boolean): GroupUserCreateRequest {

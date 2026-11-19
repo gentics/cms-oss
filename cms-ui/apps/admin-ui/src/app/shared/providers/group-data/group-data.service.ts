@@ -13,7 +13,7 @@ import {
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { forkJoin, Observable, of, OperatorFunction } from 'rxjs';
-import { first, map, switchMap, tap } from 'rxjs/operators';
+import { first, map, switchMap } from 'rxjs/operators';
 import { LOAD_FLATTENED, masterLoading } from '../../../common';
 import { EntityManagerService, GroupOperations, UserOperations } from '../../../core';
 import { AppStateService } from '../../../state';
@@ -63,19 +63,18 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
     }
 
     /**
-     * Create a user who sets the password with a link. Emits the user and the token for the link.
+     * Create a user who sets the password with a link, in all given groups. The link is fetched afterwards with
+     * `createPasswordLink()`, so that a failure there leaves the user complete, with all groups assigned.
      */
-    createUserWithPasswordLink(
-        user: GroupUserCreateRequest,
-        userGroupIds: number[],
-    ): Observable<{ user: User<Normalized>; passwordToken: string }> {
-        let passwordToken: string;
-        return this.createUserInGroups(userGroupIds, (groupId) => this.entityOperations.createUserWithPasswordLink(groupId, user).pipe(
-            tap((created) => passwordToken = created.passwordToken),
-            map((created) => created.user),
-        )).pipe(
-            map((created) => ({ user: created, passwordToken })),
-        );
+    createUserWithPasswordLink(user: GroupUserCreateRequest, userGroupIds: number[]): Observable<User<Normalized>> {
+        return this.createUserInGroups(userGroupIds, (groupId) => this.entityOperations.createUserWithPasswordLink(groupId, user));
+    }
+
+    /**
+     * Issue a new token for the password link of the user, which replaces any earlier token.
+     */
+    createPasswordLink(userId: number): Observable<string> {
+        return this.entityOperations.createPasswordLink(userId);
     }
 
     /**

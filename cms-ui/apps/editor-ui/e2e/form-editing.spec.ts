@@ -25,6 +25,7 @@ import {
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    pickSelectValue,
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
@@ -262,6 +263,74 @@ test.describe('Form Editing', () => {
                     [LANGUAGE_EN]: VALUE_TEXT,
                 },
             }]);
+        });
+    });
+
+    test('should be able to clear the selected email template of the user email element', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20463',
+        }],
+    }, async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
+        const MAIL_TEMPLATE = 'useremail';
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                ],
+            },
+        ]);
+
+        await test.step('Open Editor', async () => {
+            const list = findList(page, ITEM_TYPE_FORM);
+            const item = findItem(list, EDITING_FORM.id);
+            await itemAction(item, 'edit');
+        });
+
+        const grid = page.locator('content-frame gtx-form-grid');
+        let mailTemplateSelect: Locator;
+
+        await test.step('Select the email template', async () => {
+            const el = await fgAddControl(grid, 'usermail');
+
+            await expect(el).toBeVisible();
+            await el.click();
+            await expect(el).toContainClass('is-selected');
+
+            const editSidebar = fgFindEditSidebar(grid);
+            await expect(editSidebar).toBeVisible();
+
+            const definitionTab = await fgSelectElementTab(editSidebar, 'definition');
+            mailTemplateSelect = definitionTab.locator('gtx-select[data-control="mailtemplate"]');
+
+            await pickSelectValue(mailTemplateSelect, MAIL_TEMPLATE);
+        });
+
+        await test.step('Save and validate the selected email template', async () => {
+            const req = await saveForm(page);
+            const props = Object.values(req.data.schema?.properties || {});
+            expect(props).toHaveLength(1);
+            expect((props[0].formGridOptions as Record<string, unknown>).mailtemplate).toEqual(MAIL_TEMPLATE);
+        });
+
+        await test.step('Clear the email template', async () => {
+            const clearButton = mailTemplateSelect.locator('[data-action="clear"]');
+            await expect(clearButton).toBeVisible();
+            await clearButton.click();
+        });
+
+        await test.step('Save and validate the cleared email template', async () => {
+            const req = await saveForm(page);
+            const props = Object.values(req.data.schema?.properties || {});
+            expect(props).toHaveLength(1);
+            expect((props[0].formGridOptions as Record<string, unknown>).mailtemplate).toBeNull();
         });
     });
 

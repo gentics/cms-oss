@@ -84,7 +84,7 @@ public interface TaskResource {
 	 * @throws Exception
 	 * @HTTP 200 The task was updated.
 	 * @HTTP 400 The recipient is not allowed.
-	 * @HTTP 403 Only the creator may change other fields than the status.
+	 * @HTTP 403 Only the creator may change other fields than the status, only the user the task is assigned to may change the status.
 	 * @HTTP 404 The task does not exist or is not visible.
 	 * @HTTP 409 The task is virtual.
 	 */
@@ -107,13 +107,13 @@ public interface TaskResource {
 	GenericResponse delete(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * Assign a group task to the current user
+	 * Assign a group task to the current user, also when another member of the group claimed it
 	 * @param id task ID
 	 * @return updated task
 	 * @throws Exception
 	 * @HTTP 200 The task was claimed.
 	 * @HTTP 404 The task does not exist or is not visible.
-	 * @HTTP 409 The task is no group task or was already claimed.
+	 * @HTTP 409 The task is no group task, is closed or is already assigned to the current user.
 	 */
 	@POST
 	@Path("/{id}/claim")

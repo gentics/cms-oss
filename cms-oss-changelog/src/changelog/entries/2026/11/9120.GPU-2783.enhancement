@@ -1,0 +1,1 @@
+The MCP server has four new tools for the tasks of the current user: @list_tasks@, @create_task@, @update_task@ and @delete_task@. They use the REST endpoint @/rest/task@ and follow its permissions. A stored task can be addressed by its ID or by its external key, and @create_task@ with an external key updates the existing task instead of creating a second one.

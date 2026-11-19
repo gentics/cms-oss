@@ -126,6 +126,22 @@ export async function logoutFromCms(): Promise<void> {
     await httpRequest<unknown>('/rest/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' } });
 }
 
+/**
+ * The UI language of the CMS session, e.g. `de`: `GET /rest/i18n/get`. A new session starts with the
+ * language the user chose last in the CMS's own UI. An answer with a `responseInfo.responseCode` other
+ * than `OK`, or without a language, is thrown as an `HttpError`.
+ */
+export async function getCmsUiLanguage(): Promise<string> {
+    const url = '/rest/i18n/get';
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; code?: string }>(url, CMS_GET);
+
+    if (response.responseInfo?.responseCode !== 'OK' || !response.code) {
+        throw new HttpError(url, 200, response);
+    }
+
+    return response.code;
+}
+
 /** The Keycloak settings the CMS offers its UIs (`GET /rest/keycloak`, the `cms-keycloak` module). */
 export interface CmsKeycloakConfig {
     'auth-server-url': string;
@@ -182,6 +198,8 @@ export interface CmsNode {
     folderId: number;
     type?: 'node' | 'channel';
     inheritedFromName?: string;
+    /** The node's website, with its protocol, e.g. `https://www.example.com` (the CMS adds `http(s)://` to the host name). */
+    host?: string;
 }
 
 /** The CMS object types the composer's @-menu searches. */
@@ -375,6 +393,8 @@ export interface CmsPage {
     language?: string;
     cdate: number;
     edate: number;
+    /** Where the page lies on the node's website, e.g. `/Content.Node/news/page.html`; filled whatever the CMS's features. */
+    publishPath?: string;
 }
 
 /** The page `id`, in `nodeId` if given: `GET /rest/page/load/{id}`, read only (no `update`, so it is not locked). */
@@ -383,6 +403,66 @@ export async function loadCmsPage(id: number, nodeId?: number, signal?: AbortSig
     const { page } = await httpRequest<{ page: CmsPage }>(`/rest/page/load/${id}${params}`, { ...CMS_GET, signal });
 
     return page;
+}
+
+/**
+ * A part's value of a tag, as `GET /rest/page/load` lists it, as far as a direct edit needs it. `id` is the
+ * id of the stored value, the one an editable in the preview carries (`GENTICS_EDITABLE_<id>`); `type` is
+ * e.g. `STRING`, `RICHTEXT`, `PAGE` or `IMAGE`.
+ */
+export interface CmsProperty {
+    id?: number;
+    type: string;
+    stringValue?: string;
+    pageId?: number;
+    imageId?: number;
+    nodeId?: number;
+}
+
+/** A tag of a page with its parts' values (`properties`, by part keyword). */
+export interface CmsTag {
+    id: number;
+    name: string;
+    constructId?: number;
+    active?: boolean;
+    properties?: Record<string, CmsProperty>;
+}
+
+// Throws a CMS answer whose `responseInfo.responseCode` is not `OK` as an `HttpError`, which `errorMessageKey`
+// names by that code (`errors.cms.LOCKED`, …).
+function checkCmsResponse(url: string, response: { responseInfo?: { responseCode?: string } }) {
+    if (response.responseInfo?.responseCode !== 'OK') {
+        throw new HttpError(url, 200, response);
+    }
+}
+
+/** The tags of the page `id`, by name, in `nodeId` if given: `GET /rest/page/load/{id}`, read only. */
+export async function loadCmsPageTags(id: number, nodeId?: number, signal?: AbortSignal): Promise<Record<string, CmsTag>> {
+    const params = nodeId === undefined ? '' : `?${new URLSearchParams({ nodeId: String(nodeId) })}`;
+    const url = `/rest/page/load/${id}${params}`;
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; page?: { tags?: Record<string, CmsTag> } }>(url, { ...CMS_GET, signal });
+
+    checkCmsResponse(url, response);
+
+    return response.page?.tags ?? {};
+}
+
+/**
+ * Saves one tag of the page `id`: `POST /rest/page/save/{id}` with only that tag and `unlock: true`. The CMS
+ * locks the page for the save itself and needs the `edit` permission; it changes only the tags sent, and in
+ * them only the parts sent. A tag without `active` would be switched on, so `tag` carries the one it was
+ * loaded with. The CMS keeps a new version of the page.
+ */
+export async function saveCmsPageTag(id: number, tag: CmsTag): Promise<void> {
+    const url = `/rest/page/save/${id}`;
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string } }>(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page: { tags: { [tag.name]: tag } }, unlock: true }),
+    });
+
+    checkCmsResponse(url, response);
 }
 
 /**

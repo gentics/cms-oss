@@ -110,6 +110,11 @@ export function errorMessageKey(error: unknown): string {
         return `errors.genaix.${fieldCode}`;
     }
 
+    // A `revise` message without a plan to revise (rc.5; contract, `MessageCreate.options.plan_id`).
+    if (error instanceof GenaixApiError && error.problem?.errors?.some(({ pointer }) => pointer === '/options/plan_id')) {
+        return 'errors.genaix.revise_plan_missing';
+    }
+
     if (error instanceof GenaixApiError && isKnown(GENAIX_CODES, error.genaixCode)) {
         return `errors.genaix.${error.genaixCode}`;
     }

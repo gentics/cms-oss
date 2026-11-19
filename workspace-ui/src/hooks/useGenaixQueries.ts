@@ -251,9 +251,10 @@ export function useStartSession() {
     });
 }
 
-/** A turn from the chat composer; `replyTo` answers the run's pending interaction with it. */
+/** A turn from the chat composer; `replyTo` answers the run's pending interaction with it, `options` e.g. revises a plan. */
 export interface SendTurnInput extends StartSessionInput {
     replyTo?: { interaction_id: string; answer: InteractionAnswer };
+    options?: MessageCreateBody['options'];
 }
 
 /**
@@ -268,7 +269,7 @@ export function useSendTurn(sessionId: string) {
     const { mutateAsync: sendMessage } = useSendMessage(sessionId);
 
     return useMutation({
-        mutationFn: async ({ parts, files, onFileProgress, replyTo }: SendTurnInput) => {
+        mutationFn: async ({ parts, files, onFileProgress, replyTo, options }: SendTurnInput) => {
             const fileParts = await uploadFileParts(sessionId, files, onFileProgress);
             const fileIds = fileParts.map((part) => part.file_id);
 
@@ -280,6 +281,7 @@ export function useSendTurn(sessionId: string) {
             return sendMessage({
                 parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts],
                 ...(replyTo && { reply_to_interaction: replyTo }),
+                ...(options && { options }),
             });
         },
         retry: false,

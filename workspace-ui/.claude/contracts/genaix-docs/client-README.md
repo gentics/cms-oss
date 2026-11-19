@@ -4,12 +4,26 @@ A tiny client that consumes the stage 1 GenAIx API v1 contract end to end: a cha
 interface, a part-aware composer, structured message-part rendering, the live event
 stream, interactions, MCP connections, quality gates and the session lifecycle.
 
-Tracks `1.0.0-rc.5` (living plans, agreed 2026-10-15). Its identity handling is the direct mode, which rc.3
-introduced and rc.4 and rc.5 keep. A session is one conversation and its work a set of plans: the
+Tracks the `1.0.0-rc.6` draft (forms, guidelines, user administration and reference fields) on top of
+`1.0.0-rc.5` (living plans, agreed 2026-10-15). Its identity handling is the direct mode, which rc.3
+introduced and rc.4, rc.5 and rc.6 keep. A session is one conversation and its work a set of plans: the
 client keys its state on `plan_id`, draws a card per plan, accepts a proposed plan or a revised
 version of it with a `plan` part (as proposed or adjusted in the card), revises a plan with a
 message (`options.mode: revise`), and calls the plan transitions; the session itself only archives
 and unarchives. Starting `content_edit` with `continued_from` is not implemented here.
+
+## Reference fields and new objects (1.0.0-rc.6)
+
+A `form` property with `format: context-reference` and a `choice` with `reference_types` draw a
+picker, never a text input: a type selector over the listed types, an id, a node (the session's node
+when left empty), and an upload where `session_file` is listed. The upload goes to
+`POST /sessions/{id}/files` with `mode: source`, the question's `expires_at` keeps running, and the
+answer is one `ContextReference`, in `values` or as `reference` with an empty `selected`. A real client
+would browse the CMS here.
+
+Chips and icons cover `form` (marked external when `external: true`), `user`, `group` and `guideline`.
+The glance counts `delete` items, forms and guidelines, and never an external form as created or
+deleted. The client does not delete a guideline after a discard, because GenAIx does.
 
 ## Plans (1.0.0-rc.4, living since 1.0.0-rc.5)
 
@@ -243,6 +257,9 @@ at the time of writing, covering:
   none in a side run; the view following the open plan and a selected card; the plan
   part (accept as proposed, adjusted items, its plain rendering and validation); the
   plan cards offering only the actions a status allows
+- rc.6: the glance and chips for the new objects, the picker of a reference field and of a `choice`,
+  the `ContextReference` a picker makes, and S4: the lookup before the create, the group read instead
+  of a preview, one `confirm` between that read and the first write, no invitation
 - rc.5, from the transcripts: every plan names its modules in `workflows`, every item one
   of them, every step id is `<workflow>/<id>`, every execute run names its module, and a
   gate check's id is `<workflow>/chk-<gate-id>`. S8 is asserted by what happens in it rather

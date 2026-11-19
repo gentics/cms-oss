@@ -381,6 +381,18 @@ describe('GenAIx query hooks', () => {
             ]);
         });
 
+        it('posts the turn\'s options with it', async () => {
+            const fetchMock = stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));
+            const options = { mode: 'revise' as const, plan_id: 'p-1' };
+
+            const { result } = renderHook(() => useSendTurn('s-1'), { wrapper });
+
+            act(() => result.current.mutate({ parts, files: [], options }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({ parts, options });
+        });
+
         it('uploads the files first, then posts the message with a file_ref per file', async () => {
             const log: string[] = [];
             const fetchMock = stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));

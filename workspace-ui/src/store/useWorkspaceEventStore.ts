@@ -116,6 +116,15 @@ export function cmsRefKey({ connection_id: connectionId, type, id }: CmsObjectRe
     return `${connectionId ?? ''}:${type}:${id}`;
 }
 
+/**
+ * Whether `a` and `b` are the same CMS object: the same type and id, and the same connection when both name one.
+ * GenAIx records an object with its connection (`publications`, `cms_objects`), a preview names it without
+ * (`CmsObjectRef.connection_id`: absent on a reference the client supplied), so `cmsRefKey` alone keeps them apart.
+ */
+export function isSameCmsObject(a: CmsObjectRef, b: CmsObjectRef): boolean {
+    return a.type === b.type && a.id === b.id && (!a.connection_id || !b.connection_id || a.connection_id === b.connection_id);
+}
+
 /** The page a preview shows, as one string (`cmsRefKey`). */
 export function previewKey({ cms_ref: cmsRef }: LivePreview): string {
     return cmsRefKey(cmsRef);
@@ -217,7 +226,10 @@ interface WorkspaceEventState {
      * (`isSessionWorking`) until the stream tells about that run. A run it told about already is not awaited.
      */
     awaitRun: (sessionId: string, runId: string) => void;
-    /** After `POST …/runs/{run_id}/cancel` was accepted: the run is `cancelling` until `run.cancelled`. */
+    /**
+     * After `POST …/runs/{run_id}/cancel` was accepted: the run is `cancelling` until `run.cancelled`; a run still
+     * awaited (`awaitRun`) is not awaited any more.
+     */
     markRunCancelling: (sessionId: string, runId: string) => void;
     /** Drops the given messages (`persistedMessageKeys`), once the refetched history contains them. */
     clearMessages: (sessionId: string, keys: string[]) => void;
@@ -678,6 +690,11 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
     ))),
 
     markRunCancelling: (sessionId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => {
+        // A run cancelled before the stream told about it is not awaited any more: nothing holds the session for it.
+        if (session.awaitedRunIds?.includes(runId)) {
+            return { ...session, awaitedRunIds: session.awaitedRunIds.filter((id) => id !== runId) };
+        }
+
         if (!session.runs?.some(({ id }) => id === runId)) {
             return session;
         }

@@ -16,7 +16,8 @@ void i18n
             },
         },
 
-        lng: 'en',
+        // German until the CMS names the user's language (`useCmsUiLanguage`).
+        lng: 'de',
         fallbackLng: 'en',
 
         defaultNS: 'common',

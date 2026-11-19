@@ -31,6 +31,14 @@ return [
 
 The example shows how to execute the script from the Groovy Part Type while rendering the Handlebars Part Type and how to use the script result.
 
+When the Groovy Part of another tag is executed from a Handlebars template, the script is executed in the context of the referenced tag
+(just like rendering the referenced tag). In the following example, the Groovy Part @script@ of the object property @object.roles@ of the parent folder
+is executed. Within the script, @cms.tag@ is the object property @object.roles@ and @cms.folder@ is the parent folder:
+
+<shell filename="hbs">
+{{cms.folder.parent.object.roles.parts.script.execute}}
+</shell>
+
 h3. Groovy Scripts in Devtool Packages
 
 In order to make code reusable, it can be put into Groovy scripts or even classes as part of devtool packages. For better understanding

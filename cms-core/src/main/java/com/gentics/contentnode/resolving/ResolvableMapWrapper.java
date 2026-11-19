@@ -33,6 +33,7 @@ import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.parttype.UrlPartType;
+import com.gentics.contentnode.object.parttype.groovy.GroovyPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.render.Renderable;
@@ -198,7 +199,38 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 	@Override
 	public Object get(String key) {
+		if (isGroovyExecute(key)) {
+			// executing a groovy script must be done in the context of the resolved objects (like rendering)
+			try (RenderContext renderContext = new RenderContext()) {
+				return wrap(wrapped.get(key), getSubContext(), this, false);
+			} catch (NodeException e) {
+				logger.error("Error while resolving {" + key + "}", e);
+				return null;
+			}
+		}
 		return wrap(wrapped.get(key), getSubContext(), this, false);
+	}
+
+	/**
+	 * Check whether resolving the given key from the wrapped object will execute a groovy script
+	 * @param key key
+	 * @return true for "execute" on a {@link GroovyPartType} (or a {@link Value} of a {@link GroovyPartType})
+	 */
+	protected boolean isGroovyExecute(String key) {
+		if (!"execute".equals(key)) {
+			return false;
+		}
+		if (wrapped instanceof GroovyPartType) {
+			return true;
+		}
+		if (wrapped instanceof Value value) {
+			try {
+				return value.getPartType() instanceof GroovyPartType;
+			} catch (NodeException e) {
+				logger.error("Error while getting part type of {" + value + "}", e);
+			}
+		}
+		return false;
 	}
 
 	/**

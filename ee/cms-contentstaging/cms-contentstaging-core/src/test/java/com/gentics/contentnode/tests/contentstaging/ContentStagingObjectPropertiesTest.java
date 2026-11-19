@@ -16,7 +16,10 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -28,14 +31,17 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
@@ -45,22 +51,29 @@ import com.gentics.contentnode.object.parttype.ShortTextPartType;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.ContentPackageListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.staging.StagingError;
+import com.gentics.contentnode.staging.StagingErrorKind;
+import com.gentics.contentnode.staging.StagingErrors;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
 
+import jakarta.ws.rs.core.Response.Status;
+
 /**
  * Test cases for handling object properties with content staging
  */
 @GCNFeature(set = { Feature.CONTENT_STAGING })
-public class ContentStagingObjectPropertiesTest {
+public class ContentStagingObjectPropertiesTest implements ContentStagingMethods {
 	public final static String RESTRICTED_SHORT_NAME = "restricted_property";
 
 	public final static String RESTRICTED_LONG_NAME = "object." + RESTRICTED_SHORT_NAME;
@@ -161,13 +174,15 @@ public class ContentStagingObjectPropertiesTest {
 	 * Test importing a folder with an object property, that is restricted to other nodes
 	 */
 	@Test
-	public void testImportRestrictedForFolder() throws NodeException {
+	public void testImportRestrictedForFolder() throws NodeException, IOException {
 		String contentPackageName = "TestPackage";
 
 		// create node to be imported later
 		Node testNode = supply(() -> createNode());
 		Folder testFolder = execute(n -> createFolder(n.getFolder(), "Test Folder"), testNode);
 		GlobalId testFolderId = execute(Folder::getGlobalId, testFolder);
+		// the root folder of the node is contained in the package and also has the restricted object property
+		GlobalId rootFolderId = execute(n -> n.getFolder().getGlobalId(), testNode);
 
 		// assert
 		consume(f -> {
@@ -197,27 +212,15 @@ public class ContentStagingObjectPropertiesTest {
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package
-		operate(() -> {
-			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
-			assertResponseOK(response);
-		});
-
-		// assert
-		consume(id -> {
-			Folder f = TransactionManager.getCurrentTransaction().getObject(Folder.class, id);
-			Set<String> objectTagNames = f.getObjectTags().values().stream().map(ObjectTag::getName)
-					.collect(Collectors.toSet());
-			assertThat(objectTagNames).as("Object Tags after import").containsOnly(UNRESTRICTED_LONG_NAME);
-		}, testFolderId);
+		// import package must fail, because the restricted object property cannot be imported
+		assertImportFailsNotAllowed(testFolderId, Folder.class, rootFolderId);
 	}
 
 	/**
 	 * Test importing a page with an object property, that is restricted to other nodes
 	 */
 	@Test
-	public void testImportRestrictedForPage() throws NodeException {
+	public void testImportRestrictedForPage() throws NodeException, IOException {
 		String contentPackageName = "TestPackage";
 
 		// create node to be imported later
@@ -253,27 +256,15 @@ public class ContentStagingObjectPropertiesTest {
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package
-		operate(() -> {
-			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
-			assertResponseOK(response);
-		});
-
-		// assert
-		consume(id -> {
-			Page o = TransactionManager.getCurrentTransaction().getObject(Page.class, id);
-			Set<String> objectTagNames = o.getObjectTags().values().stream().map(ObjectTag::getName)
-					.collect(Collectors.toSet());
-			assertThat(objectTagNames).as("Object Tags after import").containsOnly(UNRESTRICTED_LONG_NAME);
-		}, testPageId);
+		// import package must fail, because the restricted object property cannot be imported
+		assertImportFailsNotAllowed(testPageId, Page.class);
 	}
 
 	/**
 	 * Test importing a file with an object property, that is restricted to other nodes
 	 */
 	@Test
-	public void testImportRestrictedForFile() throws NodeException {
+	public void testImportRestrictedForFile() throws NodeException, IOException {
 		String contentPackageName = "TestPackage";
 
 		// create node to be imported later
@@ -309,21 +300,8 @@ public class ContentStagingObjectPropertiesTest {
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package
-		operate(() -> {
-			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
-			assertResponseOK(response);
-		});
-
-		// assert
-		consume(id -> {
-			com.gentics.contentnode.object.File o = TransactionManager.getCurrentTransaction()
-					.getObject(com.gentics.contentnode.object.File.class, id);
-			Set<String> objectTagNames = o.getObjectTags().values().stream().map(ObjectTag::getName)
-					.collect(Collectors.toSet());
-			assertThat(objectTagNames).as("Object Tags after import").containsOnly(UNRESTRICTED_LONG_NAME);
-		}, testFileId);
+		// import package must fail, because the restricted object property cannot be imported
+		assertImportFailsNotAllowed(testFileId, com.gentics.contentnode.object.File.class);
 	}
 
 	/**
@@ -368,19 +346,114 @@ public class ContentStagingObjectPropertiesTest {
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package
+		// import package must fail, because the restricted object property cannot be imported
+		assertImportFailsNotAllowed(testImageId, ImageFile.class);
+	}
+
+	/**
+	 * Test importing an image with a filled object property, that is not assigned to the target node.
+	 * The import must fail (instead of silently dropping the value) and must import the value,
+	 * once the object property has been assigned to the target node.
+	 * @throws IOException
+	 */
+	@Test
+	public void testImportRestrictedValueForImageAfterAssigning() throws NodeException, IOException {
+		String value = "Restricted alt text";
+
+		// create image with a value in the object property, which is not restricted at this time
+		// (clearing the nodes would leave the "restricted" flag set, so the restriction is removed explicitly)
+		Node testNode = supply(() -> createNode());
+		restrictedImageDef = Builder.update(restrictedImageDef, upd -> {
+			upd.setRestricted(false);
+		}).build();
+		byte[] imageData = IOUtils.toByteArray(GenericTestUtils.getPictureResource("blume.jpg"));
+		int testFolderId = execute(n -> n.getFolder().getId(), testNode);
+		ImageFile testImage = Builder.create(ImageFile.class, create -> {
+			create.setFolderId(testFolderId);
+			create.setFileStream(new ByteArrayInputStream(imageData));
+			create.setName("testimage.jpg");
+			// the file type determines whether the object tags for images (and not for files) are used
+			create.setFiletype("image/jpeg");
+			ObjectTag tag = create.getObjectTag(RESTRICTED_SHORT_NAME);
+			assertThat(tag).as("Object tag %s (available: %s)", RESTRICTED_SHORT_NAME, create.getObjectTags().keySet()).isNotNull();
+			tag.setEnabled(true);
+			tag.getValues().getByKeyname("text").setValueText(value);
+		}).build();
+		GlobalId testImageId = execute(ImageFile::getGlobalId, testImage);
+
+		// export
 		operate(() -> {
 			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
+			StagedContentPackage pack = new StagedContentPackage();
+			pack.setName(CONTENT_PACKAGE_NAME);
+			resource.create(pack);
+
+			ContentPackageLoadResponse response = resource.add(CONTENT_PACKAGE_NAME, "image", testImageId.toString(),
+					false);
 			assertResponseOK(response);
 		});
 
-		// assert
+		// delete the image (the target node still exists)
+		consume(o -> o.delete(true), testImage);
+
+		// assign object property only to the other node
+		restrictedImageDef = Builder.update(restrictedImageDef, upd -> {
+			upd.getNodes().clear();
+			upd.getNodes().add(node);
+		}).build();
+
+		// import package must fail, because the object property is not assigned to the target node
+		assertImportFailsNotAllowed(testImageId, ImageFile.class);
+
+		// assign object property also to the target node
+		restrictedImageDef = Builder.update(restrictedImageDef, upd -> {
+			upd.getNodes().add(testNode);
+		}).build();
+
+		// import package succeeds now and contains the value
+		operate(() -> {
+			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
+			GenericResponse response = resource.importIntoCms(CONTENT_PACKAGE_NAME, 0, false);
+			assertResponseOK(response);
+		});
 		consume(id -> {
 			ImageFile o = TransactionManager.getCurrentTransaction().getObject(ImageFile.class, id);
-			Set<String> objectTagNames = o.getObjectTags().values().stream().map(ObjectTag::getName)
-					.collect(Collectors.toSet());
-			assertThat(objectTagNames).as("Object Tags after import").containsOnly(UNRESTRICTED_LONG_NAME);
+			assertThat(o).as("Imported image").isNotNull();
+			ObjectTag tag = o.getObjectTag(RESTRICTED_SHORT_NAME);
+			assertThat(tag).as("Restricted object tag after import").isNotNull();
+			assertThat(tag.isEnabled()).as("Restricted object tag enabled").isTrue();
+			assertThat(tag.getValues().getByKeyname("text").getValueText()).as("Restricted object tag value").isEqualTo(value);
 		}, testImageId);
+	}
+
+	/**
+	 * Try to import the content package {@link #CONTENT_PACKAGE_NAME} and assert that the import fails because of
+	 * {@link StagingErrorKind#NOT_ALLOWED} errors for the restricted object property, exactly one for each of the given
+	 * objects, and that the staged object was not imported.
+	 * @param objectId global ID of the staged object
+	 * @param clazz class of the staged object
+	 * @param otherObjectIds global IDs of other objects in the package, which also have the restricted object property
+	 * @throws NodeException
+	 * @throws IOException
+	 */
+	protected void assertImportFailsNotAllowed(GlobalId objectId, Class<? extends NodeObject> clazz, GlobalId... otherObjectIds) throws NodeException, IOException {
+		List<String> expectedIds = new ArrayList<>();
+		expectedIds.add(objectId.toString());
+		Arrays.stream(otherObjectIds).map(GlobalId::toString).forEach(expectedIds::add);
+
+		String message = supply(() -> I18NHelper.get("content.staging.import.errors", CONTENT_PACKAGE_NAME, Integer.toString(expectedIds.size())));
+		tryImportContentPackage(CONTENT_PACKAGE_NAME, Status.INTERNAL_SERVER_ERROR, ResponseCode.FAILURE,
+				"Error while importing", new Message(Message.Type.CRITICAL, message));
+
+		NodeObject importedObject = supply(t -> t.getObject(clazz, objectId));
+		assertThat(importedObject).as("Object after failed import").isNull();
+
+		File errorsFile = supply(() -> (File) new ContentStagingResourceImpl().getImportErrors(CONTENT_PACKAGE_NAME).getEntity());
+		List<StagingError> errors = new ObjectMapper().readValue(errorsFile, StagingErrors.class).getErrors();
+		assertThat(errors).as("Import errors").extracting(StagingError::getGlobalId).containsExactlyInAnyOrderElementsOf(expectedIds);
+		for (StagingError error : errors) {
+			assertThat(error.getKind()).as("Error kind").isEqualTo(StagingErrorKind.NOT_ALLOWED);
+			assertThat(error.getError()).as("Error message").contains(RESTRICTED_LONG_NAME);
+		}
 	}
 }

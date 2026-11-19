@@ -1172,6 +1172,13 @@ public class StagingModelBuilder {
 						if (defId > 0) {
 							ObjectTagDefinition definition = t.getObject(ObjectTagDefinition.class, defId);
 							if (definition != null && !definition.isVisibleIn(owningNode)) {
+								// the value cannot be imported, because the object property is not assigned to the node
+								String nodeName = owningNode != null ? I18NHelper.getName(owningNode, false).orElse(null) : null;
+								StagingError stagingError = new StagingError(ownerId, ownerPath.toString(),
+										I18NHelper.get("content.staging.import.object_property_not_allowed", tagName, nodeName),
+										StagingErrorKind.NOT_ALLOWED);
+								stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.not_allowed"));
+								mismatches.add(stagingError);
 								continue;
 							}
 						}

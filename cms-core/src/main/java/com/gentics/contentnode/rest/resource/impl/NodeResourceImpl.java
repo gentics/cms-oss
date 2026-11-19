@@ -912,9 +912,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			final Node newNode = t.createObject(Node.class);
 			Folder rootFolder = t.createObject(Folder.class);
 			Integer masterId = ObjectTransformer.getInteger(reqNode.getMasterId(), 0);
+			Folder master = null;
 
 			if (masterId > 0) {
-				Folder master = t.getObject(Folder.class, masterId);
+				master = t.getObject(Folder.class, masterId);
 
 				if (master != null) {
 					rootFolder.setChannelMaster(master);
@@ -1030,6 +1031,16 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				}
 				if (reqNode.getPortalTypeProperty() != null) {
 					newNode.setPortalTypeProperty(reqNode.getPortalTypeProperty());
+				}
+				// a new channel starts with the portal type of its master, unless the request sets one.
+				// A property is taken over as property, so that it is resolved for the channel.
+				if (master != null && reqNode.getPortalType() == null && reqNode.getPortalTypeProperty() == null) {
+					Node masterNode = master.getNode();
+					if (org.apache.commons.lang3.StringUtils.isNotBlank(masterNode.getPortalTypeProperty())) {
+						newNode.setPortalTypeProperty(masterNode.getPortalTypeProperty());
+					} else {
+						newNode.setPortalType(masterNode.getPortalType());
+					}
 				}
 
 				if (reqNode.getInsecurePreviewUrl() != null) {

@@ -3,6 +3,7 @@ import {
     clickTableRow,
     EntityImporter,
     findTableRowById,
+    isVariant,
     loginWithForm,
     matchRequest,
     navigateToApp,
@@ -14,7 +15,7 @@ import {
     TestSize,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { NodePortalType } from '@gentics/cms-models';
+import { Feature, NodePortalType, Variant } from '@gentics/cms-models';
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
 import { findEntityTableActionButton, navigateToModule } from './helpers';
@@ -24,6 +25,7 @@ const SELECTORS = {
     EDITOR: 'gtx-node-editor',
     MESH_PROJECT_NAME_INPUT: 'gtx-node-properties gtx-input[formcontrolname="meshProjectName"] input',
     PORTAL_TYPE_SELECT: 'gtx-node-properties gtx-select[formcontrolname="portalType"]',
+    MASTER_SELECT: 'gtx-node-properties gtx-select[formcontrolname="inheritedFromId"]',
     WIZARD: 'gtx-create-node-wizard gtx-wizard',
     TAB_LINK: 'gtx-tabs .tab-link',
     NAME_INPUT: 'gtx-node-properties gtx-input[formcontrolname="name"] input',
@@ -212,6 +214,59 @@ test.describe('Node Settings', () => {
 
                 expect(response.request().postDataJSON().node.portalType).toBe(NodePortalType.JAVA);
                 expect((await response.json()).node.portalType).toBe(NodePortalType.JAVA);
+            });
+
+            test.describe('Channel', () => {
+                test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
+                test('should preselect the portal type of the master and allow changing it', {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'GPU-2775',
+                    }],
+                }, async ({ page }) => {
+                    const master = IMPORTER.get(NODE_MINIMAL);
+
+                    await test.step('Enable multichannelling and set the portal type of the master', async () => {
+                        await IMPORTER.setupFeatures({ [Feature.MULTICHANNELLING]: true });
+                        await IMPORTER.client.node.update(master.id, {
+                            node: {
+                                portalType: NodePortalType.PHP,
+                            },
+                        }).send();
+                    });
+
+                    await test.step('Open the Create Node Wizard again, so that the feature is loaded', async () => {
+                        await page.reload();
+                        const module = await navigateToModule(page, 'nodes');
+                        await findEntityTableActionButton(module, 'create').click();
+                        wizard = page.locator(SELECTORS.WIZARD);
+                        await expect(findTab(WIZARD_STEP.PROPERTIES)).toHaveClass(CLASS_ACTIVE);
+                    });
+
+                    await test.step('Selecting the master preselects its portal type', async () => {
+                        await page.locator(SELECTORS.NAME_INPUT).fill(NODE_NAME);
+                        await page.locator(SELECTORS.HOST_INPUT).fill(NODE_HOST);
+                        await pickSelectValue(page.locator(SELECTORS.MASTER_SELECT), master.id);
+
+                        await expect(page.locator(`${SELECTORS.PORTAL_TYPE_SELECT} gtx-dropdown-trigger .view-value`))
+                            .toHaveAttribute('data-value', NodePortalType.PHP);
+                    });
+
+                    await test.step('The channel is created with the changed portal type', async () => {
+                        await pickSelectValue(page.locator(SELECTORS.PORTAL_TYPE_SELECT), NodePortalType.JAVA);
+
+                        const languagesTab = await selectTab(wizard, WIZARD_STEP.LANGUAGES);
+                        await selectTableRow(languagesTab.locator(SELECTORS.LANGUAGE_ROW).first());
+
+                        const createReq = waitForResponseFrom(page, 'PUT', '/rest/node');
+                        await clickModalAction(wizard, 'next');
+                        const response = await createReq;
+
+                        expect(response.request().postDataJSON().node.portalType).toBe(NodePortalType.JAVA);
+                        expect((await response.json()).node.portalType).toBe(NodePortalType.JAVA);
+                    });
+                });
             });
         });
 

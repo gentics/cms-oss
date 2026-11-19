@@ -165,6 +165,57 @@ public class NodePortalTypeTest {
 	}
 
 	/**
+	 * Test that the resolvable "portalType" returns the lower case name of the portal type, which is what gtx_form accepts as "type"
+	 * @throws NodeException
+	 */
+	@Test
+	public void testResolvableValue() throws NodeException {
+		node = update(node, update -> {
+			update.setPortalType(PortalType.PHP);
+		}).build();
+		assertThat(resolvePortalType()).as("Resolved portalType for PHP").isEqualTo("php");
+
+		node = update(node, update -> {
+			update.setPortalType(PortalType.Java);
+		}).build();
+		assertThat(resolvePortalType()).as("Resolved portalType for Java").isEqualTo("java");
+	}
+
+	/**
+	 * Test that the resolvable "portalType" uses the property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testResolvableProperty() throws NodeException {
+		System.setProperty(PROPERTY_NAME, "PHP");
+
+		node = update(node, update -> {
+			update.setPortalType(PortalType.Java);
+			update.setPortalTypeProperty(PROPERTY);
+		}).build();
+		assertThat(resolvePortalType()).as("Resolved portalType").isEqualTo("php");
+	}
+
+	/**
+	 * Test that the resolvable "portalType" is null, when no portal type is set
+	 * @throws NodeException
+	 */
+	@Test
+	public void testResolvableNotSet() throws NodeException {
+		assertThat(resolvePortalType()).as("Resolved portalType").isNull();
+	}
+
+	/**
+	 * Resolve "portalType" on the node (reloaded from the database)
+	 * @return resolved value
+	 * @throws NodeException
+	 */
+	protected String resolvePortalType() throws NodeException {
+		Node reloaded = reload();
+		return Trx.supply(() -> (String) reloaded.get("portalType"));
+	}
+
+	/**
 	 * Load the node again (from the database, not from the cache)
 	 * @return node
 	 * @throws NodeException

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -91,6 +92,16 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 		resolvableProperties.put("utf8", new Property(new String[] { "utf8" }) {
 			public Object get(AbstractNode node, String key) {
 				return node.isUtf8();
+			}
+		});
+		resolvableProperties.put("portalType", new Property(new String[] { "portal_type", "portal_type_property" }) {
+			/**
+			 * Lower case, because this is what the gtx_form helper accepts as "type"
+			 */
+			@Override
+			public Object get(AbstractNode node, String key) {
+				PortalType portalType = node.getEffectivePortalType();
+				return portalType != null ? portalType.name().toLowerCase(Locale.ROOT) : null;
 			}
 		});
 		resolvableProperties.put("alohaeditor", new Property(new String[] { "alohaeditor" }) {

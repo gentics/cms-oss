@@ -1,0 +1,5 @@
+{{#if cms.node.portalType ~}}
+{{#gtx_form cms.tag.parts.form type=cms.node.portalType}}{{{this}}}{{else}}{{gtx_i18n de="Kein Formular ausgewählt" en="No form selected"}}{{/gtx_form}}
+{{~else ~}}
+{{#gtx_form cms.tag.parts.form}}{{{this}}}{{else}}{{gtx_i18n de="Kein Formular ausgewählt" en="No form selected"}}{{/gtx_form}}
+{{~/if}}

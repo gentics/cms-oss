@@ -24,6 +24,7 @@ import {
     generateValidatorProvider,
     setControlsEnabled,
 } from '@gentics/ui-core';
+import { distinctUntilChanged } from 'rxjs/operators';
 
 export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty'
   | 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId'
@@ -167,6 +168,25 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
                 }),
             );
         }
+    }
+
+    protected override initializeForm(): void {
+        super.initializeForm();
+
+        // A new channel starts with the portal type of its master, which can be changed afterwards
+        this.subscriptions.push(this.form.controls.inheritedFromId.valueChanges.pipe(
+            distinctUntilChanged(),
+        ).subscribe((masterId) => {
+            const master = this.nodes?.find((node) => node.id === masterId);
+            if (this.mode !== NodePropertiesMode.CREATE || !master || (!master.portalType && !master.portalTypeProperty)) {
+                return;
+            }
+            this.form.patchValue({
+                portalTypeDefinition: master.portalTypeProperty ? NodePreviewurlType.PROPERTY : NodePreviewurlType.VALUE,
+                portalType: master.portalType ?? null,
+                portalTypeProperty: master.portalTypeProperty || '',
+            });
+        }));
     }
 
     protected loadNodesIfNeeded(): void {

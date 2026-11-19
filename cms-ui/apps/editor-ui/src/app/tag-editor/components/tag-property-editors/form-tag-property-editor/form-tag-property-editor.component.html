@@ -6,6 +6,7 @@
             [disabled]="readOnly || !formFeatureActive"
             [allowedSelection]="'form'"
             [selectMultiple]="false"
+            [onlyInCurrentNode]="true"
             [value]="formFeatureActive ? (selectedInternalForm.selectedItem$ | async) : null"
             (valueChange)="changeSelectedForm($event)"
         ></gtx-browse-box>

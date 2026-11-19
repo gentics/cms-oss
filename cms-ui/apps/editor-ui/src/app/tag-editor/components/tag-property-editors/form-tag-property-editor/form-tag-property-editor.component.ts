@@ -178,7 +178,12 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDest
         if (this.form) {
             contentLanguage = this.form.languages[0];
         }
-        this.repositoryBrowserClient.openRepositoryBrowser({ allowedSelection: 'form', selectMultiple: false, contentLanguage })
+        this.repositoryBrowserClient.openRepositoryBrowser({
+            onlyInCurrentNode: true,
+            allowedSelection: 'form',
+            selectMultiple: false,
+            contentLanguage,
+        })
             .then((selectedForm) => this.changeSelectedForm(selectedForm));
     }
 

@@ -853,6 +853,7 @@
         "logged_out_by_backend_title": "Logged Out",
         "message_time": "on {{date}} at {{time}}",
         "message_title": "Message",
+        "old_password_label": "Current password",
         "new_password_label": "New password",
         "next_button": "Next",
         "previous_button": "Previous",

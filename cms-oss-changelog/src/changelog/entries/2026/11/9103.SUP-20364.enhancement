@@ -1,0 +1,4 @@
+Users can now change their own password with the new REST endpoint POST /rest/user/password,
+which verifies the current password first and needs no administration permissions.
+Passwords of single sign-on users (e.g. Keycloak) and support users cannot be changed this way.
+The "Change password" dialogs in the Editor UI and Admin UI now ask for the current password.

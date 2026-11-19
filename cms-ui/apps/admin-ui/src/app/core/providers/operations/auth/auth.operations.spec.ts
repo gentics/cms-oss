@@ -403,4 +403,84 @@ describe('AuthOperations', () => {
 
     });
 
+    describe('changeOwnPassword()', () => {
+
+        let changePwdStartDispatched: boolean;
+        let changePwdSuccessDispatched: boolean;
+        let changePwdErrorDispatched: boolean;
+
+        beforeEach(() => {
+            changePwdStartDispatched = false;
+            changePwdSuccessDispatched = false;
+            changePwdErrorDispatched = false;
+
+            state.trackActions().pipe(
+                ofActionDispatched(ChangePasswordStart as ActionType),
+                takeUntil(stopper.stopper$),
+            ).subscribe(() => changePwdStartDispatched = true);
+
+            state.trackActions().pipe(
+                ofActionDispatched(ChangePasswordSuccess as ActionType),
+                takeUntil(stopper.stopper$),
+            ).subscribe(() => changePwdSuccessDispatched = true);
+
+            state.trackActions().pipe(
+                ofActionDispatched(ChangePasswordError as ActionType),
+                takeUntil(stopper.stopper$),
+            ).subscribe((action: ChangePasswordError) => {
+                changePwdErrorDispatched = true;
+                expect(action.errorMsg).toEqual(ERROR_MSG);
+            });
+        });
+
+        it('works for a success response', fakeAsync(() => {
+            spyOn(client.user, 'changePassword').and.returnValue(
+                observableOf<Response>({
+                    responseInfo: { responseCode: ResponseCode.OK },
+                    messages: [],
+                }).pipe(delay(0)),
+            );
+            spyOn(client.user, 'update');
+
+            let result: boolean;
+            authOps.changeOwnPassword('oldPwd', 'newPwd').then(r => result = r);
+            expect(changePwdStartDispatched).toBe(true);
+            expect(client.user.changePassword).toHaveBeenCalledWith({
+                oldPassword: 'oldPwd',
+                newPassword: 'newPwd',
+            });
+            expect(client.user.update).not.toHaveBeenCalled();
+
+            tick();
+            expect(result).toBe(true);
+            expect(changePwdSuccessDispatched).toBe(true);
+            expect(changePwdErrorDispatched).toBe(false);
+        }));
+
+        it('works for an error response', fakeAsync(() => {
+            const error = new GCMSRestClientRequestError(ERROR_MSG, null, 400);
+            spyOn(client.user, 'changePassword').and.returnValue(
+                observableOf(null).pipe(
+                    delay(0),
+                    map(() => { throw error; }),
+                ),
+            );
+
+            let result: boolean;
+            authOps.changeOwnPassword('wrongPwd', 'newPwd').then(r => result = r);
+            expect(changePwdStartDispatched).toBe(true);
+            expect(client.user.changePassword).toHaveBeenCalledWith({
+                oldPassword: 'wrongPwd',
+                newPassword: 'newPwd',
+            });
+
+            tick();
+            expect(result).toBe(false);
+            expect(changePwdSuccessDispatched).toBe(false);
+            expect(changePwdErrorDispatched).toBe(true);
+            expect(errorHandler.catch).toHaveBeenCalledWith(error);
+        }));
+
+    });
+
 });

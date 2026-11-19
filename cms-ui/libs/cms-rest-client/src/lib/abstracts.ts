@@ -5,6 +5,7 @@ import {
     BaseListOptionsWithPaging,
     BulkLinkUpdateRequest,
     CancelPageEditOptions,
+    ChangePasswordRequest,
     ChannelSyncRequest,
     ClusterInformationResponse,
     Construct,
@@ -1062,6 +1063,7 @@ export interface AbstractUserAPI extends BasicAPI {
     getUserData: (key: string) => UserDataResponse;
     setUserData: (key: string, body: any) => Response;
     deleteUserData: (key: string) => Response;
+    changePassword: (body: ChangePasswordRequest) => Response;
 
     listGroups: (id: number | string, options?: GroupListOptions) => GroupListResponse;
     assignToGroup: (id: number | string, groupId: number | string) => GroupResponse;

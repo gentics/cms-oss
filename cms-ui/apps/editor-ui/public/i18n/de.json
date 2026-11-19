@@ -813,6 +813,7 @@
         "link_templates_to_folder_modal_title": "Vorlagen mit Ordner \"{{folderName}}\" verknüpfen",
         "link_templates_to_folder_modal_no_templates": "Mit Node \"{{nodeName}}\" sind keine Vorlagen verknüpft",
         "link_templates_to_folder_modal_checkbox_apply_recursively_label": "Auf Unterordner anwenden",
+        "old_password_label": "Aktuelles Passwort",
         "new_password_label": "Neues Passwort",
         "object_has_no_links": "{{type}} verknüpft nicht auf andere Objekte",
         "object_not_used": "{{type}} wird in keinen anderen Objekten verwendet",

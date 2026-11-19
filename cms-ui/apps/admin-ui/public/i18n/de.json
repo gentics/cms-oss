@@ -853,6 +853,7 @@
         "logged_out_by_backend_title": "Automatisch abgemeldet",
         "message_time": "am {{date}} um {{time}}",
         "message_title": "Nachricht",
+        "old_password_label": "Aktuelles Passwort",
         "new_password_label": "Neues Passwort",
         "next_button": "Weiter",
         "previous_button": "Zurück",

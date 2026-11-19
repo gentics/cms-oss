@@ -813,6 +813,7 @@
         "link_templates_to_folder_modal_title": "Link templates to folder \"{{folderName}}\"",
         "link_templates_to_folder_modal_no_templates": "No templates linked to node \"{{nodeName}}\"",
         "link_templates_to_folder_modal_checkbox_apply_recursively_label": "Apply to subfolders",
+        "old_password_label": "Current password",
         "new_password_label": "New password",
         "object_has_no_links": "This {{type}} does not link to any other objects",
         "object_not_used": "This {{type}} is not used in any other objects",

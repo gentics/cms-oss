@@ -14,6 +14,7 @@ import jakarta.ws.rs.QueryParam;
 
 import com.gentics.contentnode.rest.model.ContentLanguage;
 import com.gentics.contentnode.rest.model.NodeFeature;
+import com.gentics.contentnode.rest.model.PortalImplementationListResponse;
 import com.gentics.contentnode.rest.model.request.NodeCopyRequest;
 import com.gentics.contentnode.rest.model.request.NodeFeatureRequest;
 import com.gentics.contentnode.rest.model.request.NodeSaveRequest;
@@ -673,6 +674,82 @@ public interface NodeResource {
 		@ResponseCode(code = 404, condition = "The node or object property was not found.")
 	})
 	GenericResponse removeObjectProperty(@PathParam("nodeId") String nodeId, @PathParam("objectPropertyId") String opId) throws Exception;
+
+	/**
+	 * Get the Portal Implementations assigned to this node. For channels, the Portal Implementations assigned to the master node are returned.<br>
+	 * Only Portal Implementations, the user is allowed to view are returned.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>type</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>type</code></li>
+	 * <li><code>cdate</code></li>
+	 * <li><code>edate</code></li>
+	 * </ul>
+	 * @param nodeId Node ID (local or global)
+	 * @param filter filter parameters
+	 * @param sorting sorting parameters
+	 * @param paging paging parameters
+	 * @param perms permissions parameters
+	 * @return Response containing the Portal Implementations assigned to this node
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/{nodeId}/portalimplementations")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "Portal Implementations were returned."),
+		@ResponseCode(code = 404, condition = "The node was not found.")
+	})
+	PortalImplementationListResponse getPortalImplementations(@PathParam("nodeId") String nodeId, @BeanParam FilterParameterBean filter,
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception;
+
+	/**
+	 * Assign a Portal Implementation to a node. For channels, the Portal Implementation is assigned to the master node.
+	 * The user needs the permission to update the constructs of the node and to view the Portal Implementation.
+	 * @param nodeId Node ID (local or global)
+	 * @param portalImplementationId Portal Implementation ID (local ID, global ID or keyword)
+	 * @return Generic response
+	 * @throws Exception
+	 */
+	@PUT
+	@Path("/{nodeId}/portalimplementations/{portalImplementationId}")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "Portal Implementation was assigned."),
+		@ResponseCode(code = 403, condition = "Insufficient permission on the node or the Portal Implementation."),
+		@ResponseCode(code = 404, condition = "The node or Portal Implementation was not found.")
+	})
+	GenericResponse addPortalImplementation(@PathParam("nodeId") String nodeId, @PathParam("portalImplementationId") String portalImplementationId)
+			throws Exception;
+
+	/**
+	 * Remove a Portal Implementation from a node. For channels, the Portal Implementation is removed from the master node.
+	 * The user needs the permission to update the constructs of the node and to view the Portal Implementation.
+	 * @param nodeId Node ID (local or global)
+	 * @param portalImplementationId Portal Implementation ID (local ID, global ID or keyword)
+	 * @return Generic response
+	 * @throws Exception
+	 */
+	@DELETE
+	@Path("/{nodeId}/portalimplementations/{portalImplementationId}")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "Portal Implementation was removed."),
+		@ResponseCode(code = 403, condition = "Insufficient permission on the node or the Portal Implementation."),
+		@ResponseCode(code = 404, condition = "The node or Portal Implementation was not found.")
+	})
+	GenericResponse removePortalImplementation(@PathParam("nodeId") String nodeId, @PathParam("portalImplementationId") String portalImplementationId)
+			throws Exception;
 
 	/**
 	 * Load settings specific to the specified node.

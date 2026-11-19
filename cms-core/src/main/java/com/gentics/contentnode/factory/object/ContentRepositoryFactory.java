@@ -876,6 +876,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 						mp.waitForNodeMigrations();
 					}
 
+					// check (and repair) the portal implementations (requires valid schemas and projects)
+					if (valid) {
+						valid &= mp.checkPortalImplementations(repair);
+					}
+
 					// update the contentrepository record
 					DBUtils.executeUpdate("UPDATE contentrepository SET checkstatus = ?, checkdate = ?, checkresult = ? WHERE id = ?", new Object[] {
 							valid ? ContentRepository.DATACHECK_STATUS_OK : ContentRepository.DATACHECK_STATUS_ERROR,

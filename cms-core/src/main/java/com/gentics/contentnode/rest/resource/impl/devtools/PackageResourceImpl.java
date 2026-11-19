@@ -60,6 +60,7 @@ import com.gentics.contentnode.devtools.MainPackageSynchronizer;
 import com.gentics.contentnode.devtools.ObjectTagDefinitionSynchronizer;
 import com.gentics.contentnode.devtools.PackageObject;
 import com.gentics.contentnode.devtools.PackageSynchronizer;
+import com.gentics.contentnode.devtools.PortalImplementationSynchronizer;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.devtools.Synchronizer.Status;
@@ -72,10 +73,12 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.PortalImplementationFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.Construct;
@@ -83,6 +86,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
@@ -111,6 +115,7 @@ import com.gentics.contentnode.rest.model.response.DatasourceLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ObjectPropertyLoadResponse;
+import com.gentics.contentnode.rest.model.response.PortalImplementationResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
@@ -121,6 +126,7 @@ import com.gentics.contentnode.rest.model.response.devtools.PagedContentReposito
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedDatasourceInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedObjectPropertyInPackageListResponse;
+import com.gentics.contentnode.rest.model.response.devtools.PagedPortalImplementationInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedTemplateInPackageListResponse;
 import com.gentics.contentnode.rest.resource.devtools.PackageResource;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
@@ -1079,6 +1085,77 @@ public class PackageResourceImpl implements PackageResource {
 
 	@Override
 	@GET
+	@Path("/packages/{name}/portal_implementations")
+	public PagedPortalImplementationInPackageListResponse listPortalImplementations(@PathParam("name") String name, @BeanParam FilterParameterBean filter,
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed,
+			@BeanParam PermsParameterBean perms) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PackageSynchronizer packageSynchronizer = getPackage(name);
+			trx.success();
+			return ListBuilder.from(packageSynchronizer.getObjects(PortalImplementation.class), PortalImplementationSynchronizer.TRANSFORM2REST)
+					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o.getObject()))
+					.filter(ResolvableFilter.get(filter, "keyword", "name"))
+					.perms(permFunction(perms, PackageObject::getObject, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
+					.sort(ResolvableComparator.get(sorting, "keyword", "name"))
+					.page(paging).to(new PagedPortalImplementationInPackageListResponse());
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/packages/{name}/portal_implementations/{portal_implementation}")
+	public PortalImplementationResponse getPortalImplementation(@PathParam("name") String name,
+			@PathParam("portal_implementation") String portalImplementation) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PackageSynchronizer packageSynchronizer = getPackage(name);
+
+			PackageObject<PortalImplementation> portalImplementationInPackage = getPortalImplementation(packageSynchronizer, portalImplementation);
+			return new PortalImplementationResponse(PortalImplementation.TRANSFORM2REST.apply(portalImplementationInPackage.getObject()),
+					new ResponseInfo(ResponseCode.OK, ""));
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("/packages/{name}/portal_implementations/{portal_implementation}")
+	public Response addPortalImplementation(@PathParam("name") String name, @PathParam("portal_implementation") String portalImplementation)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PackageSynchronizer packageSynchronizer = getPackage(name);
+
+			PortalImplementation nodeObject = getPortalImplementation(portalImplementation);
+			// check for duplicates
+			if (packageSynchronizer.getObjects(PortalImplementation.class).contains(new PackageObject<>(nodeObject))) {
+				throw new DuplicateEntityException(I18NHelper.get("devtools_package.add_portal_implementation.duplicate", nodeObject.getKeyword(), name));
+			}
+			packageSynchronizer.synchronize(nodeObject, true);
+
+			trx.success();
+			return Response.created(null).build();
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("/packages/{name}/portal_implementations/{portal_implementation}")
+	public Response removePortalImplementation(@PathParam("name") String name, @PathParam("portal_implementation") String portalImplementation)
+			throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PackageSynchronizer packageSynchronizer = getPackage(name);
+
+			PackageObject<PortalImplementation> portalImplementationInPackage = getPortalImplementation(packageSynchronizer, portalImplementation);
+			if (!ObjectTransformer.isEmpty(portalImplementationInPackage.getPackageName())) {
+				throw new CannotModifySubpackageException(I18NHelper.get("devtools_package.remove.subpackage"));
+			}
+			packageSynchronizer.remove(portalImplementationInPackage.getObject(), true);
+
+			trx.success();
+			return Response.noContent().build();
+		}
+	}
+
+	@Override
+	@GET
 	@Path("/nodes/{nodeId}/packages")
 	public PackageListResponse listNodePackages(@PathParam("nodeId") String nodeId, @BeanParam FilterParameterBean filter,
 			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging) throws NodeException {
@@ -1355,6 +1432,26 @@ public class PackageResourceImpl implements PackageResource {
 				try {
 					return o != null && t.canView(o)
 							&& (o.getName().toString().toLowerCase().contains(lowerCaseTerm));
+				} catch (NodeException e) {
+					return false;
+				}
+			}).limit(10).map(o -> new AutocompleteItem(o.getName(), Integer.toString(o.getId()))).collect(Collectors.toList());
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/autocomplete/portal_implementations")
+	public List<AutocompleteItem> autocompletePortalImplementations(@QueryParam("term") String term) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			String lowerCaseTerm = ObjectTransformer.getString(term, "").toLowerCase();
+			// get all IDs
+			Set<Integer> portalImplementationIds = DBUtils.select("SELECT id FROM " + C.Tables.PORTAL_IMPLEMENTATION, DBUtils.IDS);
+
+			Transaction t = TransactionManager.getCurrentTransaction();
+			return t.getObjects(PortalImplementation.class, portalImplementationIds).stream().filter(o -> {
+				try {
+					return t.canView(o) && (o.getKeyword().toLowerCase().contains(lowerCaseTerm) || o.getName().toLowerCase().contains(lowerCaseTerm));
 				} catch (NodeException e) {
 					return false;
 				}
@@ -1696,6 +1793,36 @@ public class PackageResourceImpl implements PackageResource {
 	}
 
 	/**
+	 * Get the Portal Implementation with either local ID or global ID or keyword
+	 * @param portalImplementation local ID or global ID or keyword
+	 * @return Portal Implementation
+	 * @throws NodeException
+	 */
+	protected PortalImplementation getPortalImplementation(String portalImplementation) throws NodeException {
+		PortalImplementation nodeObject = PortalImplementationFactory.get(portalImplementation);
+		if (nodeObject == null) {
+			throw new EntityNotFoundException(I18NHelper.get("portal_implementation.notfound", portalImplementation));
+		}
+		return nodeObject;
+	}
+
+	/**
+	 * Get the Portal Implementation with either local ID or global ID or keyword from the package
+	 * @param synchronizer package synchronizer
+	 * @param portalImplementation local ID or global ID or keyword
+	 * @return Portal Implementation
+	 * @throws NodeException
+	 */
+	protected PackageObject<PortalImplementation> getPortalImplementation(PackageSynchronizer synchronizer, String portalImplementation)
+			throws NodeException {
+		return synchronizer.getObjects(PortalImplementation.class).stream().filter(c -> {
+			return portalImplementation.equals(ObjectTransformer.getString(c.getObject().getId(), null))
+					|| portalImplementation.equals(ObjectTransformer.getString(c.getObject().getGlobalId(), null))
+					|| portalImplementation.equals(c.getObject().getKeyword());
+		}).findFirst().orElseThrow(() -> new EntityNotFoundException(I18NHelper.get("portal_implementation.notfound", portalImplementation)));
+	}
+
+	/**
 	 * Get sorted paged list of packages
 	 * @param packageNames set of package names
 	 * @param query optional query for filtering
@@ -1714,7 +1841,8 @@ public class PackageResourceImpl implements PackageResource {
 		}
 
 		return ListBuilder.from(packageSet, p -> p.pack).filter(ResolvableFilter.get(filter, "name")).sort(
-				ResolvableComparator.get(sorting, "name", "constructs", "datasources", "templates", "objectProperties", "crFragments", "contentRepositories"))
+				ResolvableComparator.get(sorting, "name", "constructs", "datasources", "templates", "objectProperties", "crFragments", "contentRepositories",
+						"portalImplementations"))
 				.page(paging).to(new PackageListResponse());
 	}
 
@@ -1756,6 +1884,8 @@ public class PackageResourceImpl implements PackageResource {
 				return pack.getCrFragments();
 			} else if ("contentRepositories".equals(key)) {
 				return pack.getContentRepositories();
+			} else if ("portalImplementations".equals(key)) {
+				return pack.getPortalImplementations();
 			}
 			return null;
 		}

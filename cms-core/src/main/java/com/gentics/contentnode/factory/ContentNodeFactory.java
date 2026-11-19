@@ -18,6 +18,8 @@ import com.gentics.contentnode.factory.object.ObjectTagDefinitionFactory;
 import com.gentics.contentnode.factory.object.OverviewFactory;
 import com.gentics.contentnode.factory.object.PageFactory;
 import com.gentics.contentnode.factory.object.PartFactory;
+import com.gentics.contentnode.factory.object.PortalImplementationFactory;
+import com.gentics.contentnode.factory.object.PortalImplementationFileFactory;
 import com.gentics.contentnode.factory.object.PublishWorkflowFactory;
 import com.gentics.contentnode.factory.object.RegexFactory;
 import com.gentics.contentnode.factory.object.RoleFactory;
@@ -101,6 +103,8 @@ public class ContentNodeFactory {
 		factory.registerObjectFactory(new UserGroupFactory());
 		factory.registerObjectFactory(new PublishWorkflowFactory());
 		factory.registerObjectFactory(new ContentRepositoryFactory());
+		factory.registerObjectFactory(new PortalImplementationFactory());
+		factory.registerObjectFactory(new PortalImplementationFileFactory());
 		factory.registerObjectFactory(new RegexFactory());
 		factory.registerObjectFactory(new RoleFactory());
 		factory.registerObjectFactory(new SchedulerFactory());

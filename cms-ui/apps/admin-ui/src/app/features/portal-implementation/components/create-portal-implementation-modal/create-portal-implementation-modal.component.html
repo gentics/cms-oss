@@ -1,0 +1,30 @@
+<div class="modal-title">
+    <h5>{{ 'portal_implementation.create_title' | gtxI18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
+    <gtx-portal-implementation-properties
+        [formControl]="form"
+    ></gtx-portal-implementation-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!form.valid || loading"
+        (click)="buttonCreateEntityClicked()"
+        gtxActionAllowed="portalImplementation.createPortalImplementation"
+    >
+        {{ 'portal_implementation.create_button' | gtxI18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | gtxI18n }}
+    </gtx-button>
+</div>

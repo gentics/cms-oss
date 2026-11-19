@@ -201,7 +201,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
 import jakarta.ws.rs.core.Response.Status;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -2035,12 +2037,18 @@ public class PageResourceImpl implements PageResource {
 
 			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false,
 					false)) {
-				String content = page.render(RenderUtils.getPreviewTemplate(page, RenderType.EM_PREVIEW),
-						new RenderResult(), null, null, null, null);
-				trx.success();
-				return Response.status(Status.OK)
+				String previewTemplate = RenderUtils.getPreviewTemplate(page, RenderType.EM_PREVIEW);
+				String content = page.render(previewTemplate, new RenderResult(), null, null, null, null);
+				ResponseBuilder responseBuilder = Response.status(Status.OK)
 						.type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8")
-						.entity(content).build();
+						.entity(content);
+				if (previewTemplate != null) {
+					// the preview was rendered by the portal, so set the cookie for proxying static files to the portal
+					responseBuilder.cookie(new NewCookie.Builder(RenderUtils.PORTAL_PREVIEW_NODE_COOKIE)
+							.value(Integer.toString(RenderUtils.getPortalPreviewNodeId(page))).path("/").httpOnly(true).build());
+				}
+				trx.success();
+				return responseBuilder.build();
 			}
 		}
 	}

@@ -29,6 +29,8 @@ function entityIdentifierToEditableEntity(identifier: NormalizableEntityType): E
             return EditableEntity.OBJECT_PROPERTY;
         case 'objectPropertyCategory':
             return EditableEntity.OBJECT_PROPERTY_CATEGORY;
+        case 'portalImplementation':
+            return EditableEntity.PORTAL_IMPLEMENTATION;
         case 'role':
             return EditableEntity.ROLE;
         case 'schedule':

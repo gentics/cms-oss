@@ -1,0 +1,1 @@
+Fixed an issue where executing the Groovy Part of another tag from a Handlebars template (e.g. {{cms.folder.parent.object.roles.parts.script.execute}}) ran the script in the context of the currently rendered tag. The script is now executed in the context of the referenced tag and object, just like rendering the referenced tag.

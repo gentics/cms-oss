@@ -1395,6 +1395,8 @@ export const revertToMainFormFromDialogForm = async (
     // the main form is not saved before the dialog opens: the plugin merges the refreshed
     // property into this snapshot, so the entries of the main form are kept
     mainState.formState.data,
+    // rows deleted in the browser are still known to ActaNova until the submit: the plugin removes them
+    mainState.formState.deletedAggregateRowIds,
   );
   utils.endANRequest(uiState, updateState);
   if (!apiResponse.success) {

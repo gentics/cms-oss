@@ -2,5 +2,6 @@ Content Staging: When importing objects with values in object properties, which 
 to the node of the object in the target system, the values were silently dropped although the
 import was reported as successful.
 This has been fixed: the import now fails with an error of kind "NOT_ALLOWED" for each affected
-object, naming the object property and the node. Assign the object property to the node and
-repeat the import to import the values.
+object in an existing node, naming the object property and the node. Assign the object property
+to the node and repeat the import to import the values. When the node is created by the import,
+the object property is assigned to the new node automatically and the values are imported.

@@ -42,6 +42,7 @@ import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1571,11 +1572,17 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		AtomicReference<Pair<String, String>> returnedPair = new AtomicReference<>();
 
 		int processed = 0;
+		AtomicBoolean created = new AtomicBoolean();
 		if (filename.endsWith(NODE_EXTENSION)) {
+			// the inflater is called before the node is saved, so it can determine whether the node is created by this import
 			processed = importFromStageable(currentPath, pathRoot, Node.class, new StoredNode(), (s, n) -> {
 				returnedPair.set(Pair.of(s.getId(), s.getRootFolderId()));
+				created.set(n.isNew());
 				StagingModelBuilder.getNode(s, n);
 			}, maybeHaveOrphans, null, Optional.of((s, n) -> {
+				if (created.get()) {
+					StagingModelBuilder.markCreatedByImport(n);
+				}
 				StagingModelBuilder.setFeatures(s, n);
 				StagingModelBuilder.setFormTypes(s, n);
 				StagingModelBuilder.setConstructs(s, n);
@@ -1586,8 +1593,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		} else if (filename.endsWith(CHANNEL_EXTENSION)) {
 			processed = importFromStageable(currentPath, pathRoot, Node.class, new StoredChannel(), (s, n) -> {
 				returnedPair.set(Pair.of(s.getId(), s.getRootFolderId()));
+				created.set(n.isNew());
 				StagingModelBuilder.getChannel(s, n);
-			}, maybeHaveOrphans, null, Optional.of((s, n) -> StagingModelBuilder.setFeatures(s, n)));
+			}, maybeHaveOrphans, null, Optional.of((s, n) -> {
+				if (created.get()) {
+					StagingModelBuilder.markCreatedByImport(n);
+				}
+				StagingModelBuilder.setFeatures(s, n);
+			}));
 		}
 		logger.info(" ... processed = " + processed);
 		progress.incDone(processed);
@@ -2746,7 +2759,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			FileUtils.deleteQuietly(packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME).toFile());
 
 			Set<StagingError> errors = new TreeSet<>();
-			try (TrxAttribute trxAttr = TrxAttribute.with(NodeFactory.UNLOCK_AT_TRX_COMMIT, true)) {
+			try (TrxAttribute trxAttr = TrxAttribute.with(NodeFactory.UNLOCK_AT_TRX_COMMIT, true);
+					TrxAttribute createdNodesAttr = TrxAttribute.with(StagingModelBuilder.IMPORT_CREATED_NODE_OBJECT_GLOBAL_IDS, new HashSet<Integer>())) {
 				List<Path> haveOrphans = new ArrayList<>();
 				try {
 					Map<String, Path> encounteredIDs = new HashMap<>();

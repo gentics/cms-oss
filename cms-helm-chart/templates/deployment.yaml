@@ -80,6 +80,9 @@ spec:
                 name: {{ template "cms.fullname" . }}
                 key: node-user-password
                 {{- end }}
+          {{- with include "gentics-common.otelEnv" (dict "root" . "local" .Values.otel "extraEnv" .Values.cms.extraEnv "defaultServiceName" "Gentics CMS" "defaultAgentPath" "/cms/opentelemetry-javaagent.jar") }}
+          {{- . | nindent 10 }}
+          {{- end }}
           {{- if .Values.cms.extraEnv }}
           {{- toYaml .Values.cms.extraEnv | nindent 10 }}
           {{- end }}

@@ -41,6 +41,7 @@ RUN adduser -D -u 1000 -G root -h /cms node && \
     apk add --no-cache bash rsync curl iputils busybox-extras tar nano mariadb-client
 
 ADD --chown=1000:0 ./target/cms-server*jar /cms/cms-server.jar
+ADD --chown=1000:0 ./target/opentelemetry-javaagent.jar /cms/opentelemetry-javaagent.jar
 ADD --chown=1000:0 entrypoint.sh /cms/
 
 RUN chmod u+x,g+x /cms/entrypoint.sh

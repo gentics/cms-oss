@@ -14,5 +14,5 @@ icon: https://www.gentics.com/genticscms/assets/images/gentics/gentics_logo.png
 
 dependencies:
   - name: gentics-common
-    version: 0.1.0
+    version: 0.2.0
     repository: "https://repo.gentics.com/repository/helm/"

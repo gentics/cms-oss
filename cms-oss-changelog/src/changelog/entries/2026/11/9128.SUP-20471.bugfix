@@ -1,0 +1,4 @@
+Editor User Interface: Fixed form controls inside groups, mandatory groups and conditional
+containers not being displayed in the form editor. Elements can now be dragged out of such
+containers, and an element that cannot be dropped at the target position stays at its
+original position instead of being removed.

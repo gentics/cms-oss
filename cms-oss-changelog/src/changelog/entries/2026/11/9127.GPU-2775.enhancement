@@ -1,0 +1,1 @@
+Forms: New default construct "gtxform". It renders a form for the portal of the node, Java or PHP, depending on the node's portal type.

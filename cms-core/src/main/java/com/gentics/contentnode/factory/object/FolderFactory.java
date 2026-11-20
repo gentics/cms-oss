@@ -109,6 +109,7 @@ import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
+import com.gentics.contentnode.rest.model.PortalType;
 import com.gentics.contentnode.rest.model.request.Permission;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -4909,6 +4910,17 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected String meshPreviewUrlProperty;
 
+		/**
+		 * Name of the portal type, empty when not set. Stored as String (and not as {@link PortalType}), because the column also holds the empty value.
+		 */
+		@DataField("portal_type")
+		@Updateable
+		protected String portalType;
+
+		@DataField("portal_type_property")
+		@Updateable
+		protected String portalTypeProperty;
+
 		@DataField("insecure_preview_url")
 		@Updateable
 		protected boolean insecurePreviewUrl;
@@ -5306,6 +5318,24 @@ public class FolderFactory extends AbstractFactory {
 		public String getMeshPreviewUrlProperty() {
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 				return meshPreviewUrlProperty;
+			} else {
+				return "";
+			}
+		}
+
+		@Override
+		public PortalType getPortalType() {
+			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				return PortalType.parse(portalType);
+			} else {
+				return null;
+			}
+		}
+
+		@Override
+		public String getPortalTypeProperty() {
+			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				return portalTypeProperty;
 			} else {
 				return "";
 			}
@@ -6557,6 +6587,45 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setPortalType(PortalType portalType) throws ReadOnlyException {
+			String name = portalType != null ? portalType.name() : "";
+			if (!NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				name = "";
+			}
+			if (!StringUtils.isEqual(this.portalType, name)) {
+				this.portalType = name;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setPortalTypeProperty(String portalTypeProperty) throws ReadOnlyException {
+			if (!NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				portalTypeProperty = "";
+			}
+			if (!StringUtils.isEqual(this.portalTypeProperty, portalTypeProperty)) {
+				this.portalTypeProperty = portalTypeProperty;
+				this.modified = true;
+				resolvePortalTypeProperty();
+			}
+		}
+
+		@Override
+		public void resolvePortalTypeProperty() throws ReadOnlyException {
+			// if portalTypeProperty is not empty, resolve and set portalType also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.portalTypeProperty)) {
+				String resolved = substituteSingleProperty(this.portalTypeProperty, Node.NODE_PORTALTYPE_FILTER);
+				PortalType resolvedType = PortalType.parse(resolved);
+				if (resolvedType == null) {
+					// an invalid value must not prevent saving the node, so it is only logged
+					logger.warn(String.format("Portal type property '%s' resolves to '%s', which is no portal type. The portal type is not set.",
+							this.portalTypeProperty, resolved));
+				}
+				setPortalType(resolvedType);
+			}
+		}
+
+		@Override
 		public void setInsecurePreviewUrl(boolean insecurePreviewUrl) {
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY) && this.insecurePreviewUrl != insecurePreviewUrl) {
 				this.insecurePreviewUrl = insecurePreviewUrl;
@@ -6636,6 +6705,8 @@ public class FolderFactory extends AbstractFactory {
 
 				meshPreviewUrl = ObjectTransformer.getString(meshPreviewUrl, "");
 				meshPreviewUrlProperty = ObjectTransformer.getString(meshPreviewUrlProperty, "");
+				portalType = ObjectTransformer.getString(portalType, "");
+				portalTypeProperty = ObjectTransformer.getString(portalTypeProperty, "");
 				meshProjectName = ObjectTransformer.getString(meshProjectName, "");
 				hostProperty = ObjectTransformer.getString(hostProperty, "");
 
@@ -6914,7 +6985,7 @@ public class FolderFactory extends AbstractFactory {
 
 		// get all existing nodes, which have a _property set
 		List<Node> nodes = Trx.supply(t -> t.getObjects(Node.class, DBUtils.select(
-				"SELECT id FROM node WHERE host_property != '' OR mesh_preview_url_property != ''",
+				"SELECT id FROM node WHERE host_property != '' OR mesh_preview_url_property != '' OR portal_type_property != ''",
 				DBUtils.IDLIST)));
 
 		// resolve the properties, because their value might have changed
@@ -6925,6 +6996,7 @@ public class FolderFactory extends AbstractFactory {
 					update = t.getObject(update, true);
 					update.resolveHostnameProperty();
 					update.resolveMeshPreviewUrlProperty();
+					update.resolvePortalTypeProperty();
 					update.save();
 				}, node);
 			} catch (NodeException e) {

@@ -17,7 +17,6 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,12 +30,10 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
@@ -44,30 +41,23 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.ObjectTag;
+import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.parttype.ShortTextPartType;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.Message;
-import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.ContentPackageListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
-import com.gentics.contentnode.staging.StagingError;
-import com.gentics.contentnode.staging.StagingErrorKind;
-import com.gentics.contentnode.staging.StagingErrors;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
-
-import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Test cases for handling object properties with content staging
@@ -158,6 +148,8 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 		for (ObjectTagDefinition prop : usedDefs) {
 			Builder.update(prop, upd -> {
 				upd.getNodes().clear();
+				// clearing the nodes leaves the "restricted" flag set, so it is reset explicitly
+				upd.setRestricted(false);
 			}).build();
 		}
 
@@ -171,7 +163,8 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 	}
 
 	/**
-	 * Test importing a folder with an object property, that is restricted to other nodes
+	 * Test importing a folder with an object property, that is restricted to other nodes, into a node, which is created by the import.
+	 * The import must succeed and assign the object property to the created node.
 	 */
 	@Test
 	public void testImportRestrictedForFolder() throws NodeException, IOException {
@@ -205,6 +198,7 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 		});
 
 		// delete node
+		GlobalId testNodeId = execute(Node::getGlobalId, testNode);
 		consume(Node::delete, testNode);
 
 		// restrict object property to other node
@@ -212,12 +206,13 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package must fail, because the restricted object property cannot be imported
-		assertImportFailsNotAllowed(testFolderId, Folder.class, rootFolderId);
+		// import package must succeed and assign the restricted object property to the created node
+		restrictedFolderDef = assertImportAssigns(restrictedFolderDef, testNodeId, Folder.class, testFolderId, null, rootFolderId);
 	}
 
 	/**
-	 * Test importing a page with an object property, that is restricted to other nodes
+	 * Test importing a page with an object property, that is restricted to other nodes, into a node, which is created by the import.
+	 * The import must succeed and assign the object property to the created node.
 	 */
 	@Test
 	public void testImportRestrictedForPage() throws NodeException, IOException {
@@ -249,6 +244,7 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 		});
 
 		// delete node
+		GlobalId testNodeId = execute(Node::getGlobalId, testNode);
 		consume(Node::delete, testNode);
 
 		// restrict object property to other node
@@ -256,12 +252,13 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package must fail, because the restricted object property cannot be imported
-		assertImportFailsNotAllowed(testPageId, Page.class);
+		// import package must succeed and assign the restricted object property to the created node
+		restrictedPageDef = assertImportAssigns(restrictedPageDef, testNodeId, Page.class, testPageId, null);
 	}
 
 	/**
-	 * Test importing a file with an object property, that is restricted to other nodes
+	 * Test importing a file with an object property, that is restricted to other nodes, into a node, which is created by the import.
+	 * The import must succeed and assign the object property to the created node.
 	 */
 	@Test
 	public void testImportRestrictedForFile() throws NodeException, IOException {
@@ -293,6 +290,7 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 		});
 
 		// delete node
+		GlobalId testNodeId = execute(Node::getGlobalId, testNode);
 		consume(Node::delete, testNode);
 
 		// restrict object property to other node
@@ -300,12 +298,13 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package must fail, because the restricted object property cannot be imported
-		assertImportFailsNotAllowed(testFileId, com.gentics.contentnode.object.File.class);
+		// import package must succeed and assign the restricted object property to the created node
+		restrictedFileDef = assertImportAssigns(restrictedFileDef, testNodeId, com.gentics.contentnode.object.File.class, testFileId, null);
 	}
 
 	/**
-	 * Test importing an image with an object property, that is restricted to other nodes
+	 * Test importing an image with an object property, that is restricted to other nodes, into a node, which is created by the import.
+	 * The import must succeed and assign the object property to the created node.
 	 * @throws IOException 
 	 */
 	@Test
@@ -339,6 +338,7 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 		});
 
 		// delete node
+		GlobalId testNodeId = execute(Node::getGlobalId, testNode);
 		consume(Node::delete, testNode);
 
 		// restrict object property to other node
@@ -346,14 +346,14 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package must fail, because the restricted object property cannot be imported
-		assertImportFailsNotAllowed(testImageId, ImageFile.class);
+		// import package must succeed and assign the restricted object property to the created node
+		restrictedImageDef = assertImportAssigns(restrictedImageDef, testNodeId, ImageFile.class, testImageId, null);
 	}
 
 	/**
-	 * Test importing an image with a filled object property, that is not assigned to the target node.
-	 * The import must fail (instead of silently dropping the value) and must import the value,
-	 * once the object property has been assigned to the target node.
+	 * Test importing an image with a filled object property, that is not assigned to the existing target node.
+	 * The import must succeed, assign the object property to the target node and import the value
+	 * (instead of silently dropping the value).
 	 * @throws IOException
 	 */
 	@Test
@@ -402,58 +402,140 @@ public class ContentStagingObjectPropertiesTest implements ContentStagingMethods
 			upd.getNodes().add(node);
 		}).build();
 
-		// import package must fail, because the object property is not assigned to the target node
-		assertImportFailsNotAllowed(testImageId, ImageFile.class);
-
-		// assign object property also to the target node
-		restrictedImageDef = Builder.update(restrictedImageDef, upd -> {
-			upd.getNodes().add(testNode);
-		}).build();
-
-		// import package succeeds now and contains the value
-		operate(() -> {
-			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(CONTENT_PACKAGE_NAME, 0, false);
-			assertResponseOK(response);
-		});
-		consume(id -> {
-			ImageFile o = TransactionManager.getCurrentTransaction().getObject(ImageFile.class, id);
-			assertThat(o).as("Imported image").isNotNull();
-			ObjectTag tag = o.getObjectTag(RESTRICTED_SHORT_NAME);
-			assertThat(tag).as("Restricted object tag after import").isNotNull();
-			assertThat(tag.isEnabled()).as("Restricted object tag enabled").isTrue();
-			assertThat(tag.getValues().getByKeyname("text").getValueText()).as("Restricted object tag value").isEqualTo(value);
-		}, testImageId);
+		// import package must succeed, assign the object property to the target node and import the value
+		GlobalId testNodeId = execute(Node::getGlobalId, testNode);
+		restrictedImageDef = assertImportAssigns(restrictedImageDef, testNodeId, ImageFile.class, testImageId, value);
 	}
 
 	/**
-	 * Try to import the content package {@link #CONTENT_PACKAGE_NAME} and assert that the import fails because of
-	 * {@link StagingErrorKind#NOT_ALLOWED} errors for the restricted object property, exactly one for each of the given
-	 * objects, and that the staged object was not imported.
-	 * @param objectId global ID of the staged object
-	 * @param clazz class of the staged object
-	 * @param otherObjectIds global IDs of other objects in the package, which also have the restricted object property
-	 * @throws NodeException
-	 * @throws IOException
+	 * Test importing a folder with a filled object property, that is not assigned to the existing target node.
+	 * The import must succeed, assign the object property to the target node and import the value.
 	 */
-	protected void assertImportFailsNotAllowed(GlobalId objectId, Class<? extends NodeObject> clazz, GlobalId... otherObjectIds) throws NodeException, IOException {
-		List<String> expectedIds = new ArrayList<>();
-		expectedIds.add(objectId.toString());
-		Arrays.stream(otherObjectIds).map(GlobalId::toString).forEach(expectedIds::add);
+	@Test
+	public void testImportRestrictedValueForFolderIntoExistingNode() throws NodeException {
+		Node testNode = supply(() -> createNode());
+		Folder testFolder = execute(n -> createFolder(n.getFolder(), "Test Folder"), testNode);
 
-		String message = supply(() -> I18NHelper.get("content.staging.import.errors", CONTENT_PACKAGE_NAME, Integer.toString(expectedIds.size())));
-		tryImportContentPackage(CONTENT_PACKAGE_NAME, Status.INTERNAL_SERVER_ERROR, ResponseCode.FAILURE,
-				"Error while importing", new Message(Message.Type.CRITICAL, message));
+		restrictedFolderDef = assertImportIntoExistingNodeAssigns(testNode, testFolder, "folder", Folder.class, restrictedFolderDef);
+	}
 
-		NodeObject importedObject = supply(t -> t.getObject(clazz, objectId));
-		assertThat(importedObject).as("Object after failed import").isNull();
+	/**
+	 * Test importing a page with a filled object property, that is not assigned to the existing target node.
+	 * The import must succeed, assign the object property to the target node and import the value.
+	 */
+	@Test
+	public void testImportRestrictedValueForPageIntoExistingNode() throws NodeException {
+		Node testNode = supply(() -> createNode());
+		Page testPage = execute(n -> createPage(n.getFolder(), template, "Test Page"), testNode);
 
-		File errorsFile = supply(() -> (File) new ContentStagingResourceImpl().getImportErrors(CONTENT_PACKAGE_NAME).getEntity());
-		List<StagingError> errors = new ObjectMapper().readValue(errorsFile, StagingErrors.class).getErrors();
-		assertThat(errors).as("Import errors").extracting(StagingError::getGlobalId).containsExactlyInAnyOrderElementsOf(expectedIds);
-		for (StagingError error : errors) {
-			assertThat(error.getKind()).as("Error kind").isEqualTo(StagingErrorKind.NOT_ALLOWED);
-			assertThat(error.getError()).as("Error message").contains(RESTRICTED_LONG_NAME);
+		restrictedPageDef = assertImportIntoExistingNodeAssigns(testNode, testPage, "page", Page.class, restrictedPageDef);
+	}
+
+	/**
+	 * Test importing a file with a filled object property, that is not assigned to the existing target node.
+	 * The import must succeed, assign the object property to the target node and import the value.
+	 */
+	@Test
+	public void testImportRestrictedValueForFileIntoExistingNode() throws NodeException {
+		Node testNode = supply(() -> createNode());
+		com.gentics.contentnode.object.File testFile = execute(n -> createFile(n.getFolder(), "testfile.txt", "Test File Contents".getBytes()), testNode);
+
+		restrictedFileDef = assertImportIntoExistingNodeAssigns(testNode, testFile, "file", com.gentics.contentnode.object.File.class, restrictedFileDef);
+	}
+
+	/**
+	 * Fill the restricted object property of the given object, export the object into the content package {@link #CONTENT_PACKAGE_NAME},
+	 * delete the object (but not its node), restrict the object property to the other node and import the package.
+	 * Assert that the import assigns the object property to the node of the object and imports the value.
+	 * @param testNode node of the object, which still exists at the time of the import
+	 * @param object object holding the restricted object property
+	 * @param type type of the object for adding it to the content package
+	 * @param clazz class of the object
+	 * @param def restricted object property definition
+	 * @return updated definition
+	 * @throws NodeException
+	 */
+	protected <T extends ObjectTagContainer> ObjectTagDefinition assertImportIntoExistingNodeAssigns(Node testNode, T object, String type,
+			Class<T> clazz, ObjectTagDefinition def) throws NodeException {
+		String value = "Restricted value";
+		GlobalId testNodeId = execute(Node::getGlobalId, testNode);
+		GlobalId objectId = execute(NodeObject::getGlobalId, object);
+
+		// fill the object property
+		Builder.update(object, upd -> {
+			ObjectTag tag = upd.getObjectTag(RESTRICTED_SHORT_NAME);
+			assertThat(tag).as("Object tag %s (available: %s)", RESTRICTED_SHORT_NAME, upd.getObjectTags().keySet()).isNotNull();
+			tag.setEnabled(true);
+			tag.getValues().getByKeyname("text").setValueText(value);
+		}).build();
+
+		// export
+		operate(() -> {
+			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
+			StagedContentPackage pack = new StagedContentPackage();
+			pack.setName(CONTENT_PACKAGE_NAME);
+			resource.create(pack);
+
+			ContentPackageLoadResponse response = resource.add(CONTENT_PACKAGE_NAME, type, objectId.toString(), false);
+			assertResponseOK(response);
+		});
+
+		// delete the object (the node still exists)
+		consume(o -> o.delete(true), object);
+
+		// restrict object property to other node
+		ObjectTagDefinition restrictedDef = Builder.update(def, upd -> {
+			upd.getNodes().add(node);
+		}).build();
+
+		return assertImportAssigns(restrictedDef, testNodeId, clazz, objectId, value);
+	}
+
+	/**
+	 * Import the content package {@link #CONTENT_PACKAGE_NAME} and assert that it succeeds, that the given restricted object property
+	 * is assigned to exactly the other node and the node with given global ID, and that the imported objects have the object tag.
+	 * @param def restricted object property definition
+	 * @param nodeId global ID of the node, to which the object property must be assigned by the import
+	 * @param clazz class of the staged objects
+	 * @param objectId global ID of the staged object
+	 * @param expectedValue expected value of the object tag of the staged object (null to not check the value)
+	 * @param otherObjectIds global IDs of other objects of the same class in the package, which also have the restricted object property
+	 * @return reloaded definition
+	 * @throws NodeException
+	 */
+	protected ObjectTagDefinition assertImportAssigns(ObjectTagDefinition def, GlobalId nodeId, Class<? extends ObjectTagContainer> clazz,
+			GlobalId objectId, String expectedValue, GlobalId... otherObjectIds) throws NodeException {
+		operate(() -> importContentPackage(CONTENT_PACKAGE_NAME));
+
+		Node importedNode = supply(t -> t.getObject(Node.class, nodeId));
+		assertThat(importedNode).as("Node after import").isNotNull();
+
+		ObjectTagDefinition reloadedDef = execute(d -> d.reload(), def);
+		consume(d -> {
+			assertThat(d.isRestricted()).as("Object property restricted after import").isTrue();
+			assertThat(d.getNodes()).as("Nodes of the object property after import").containsOnly(node, importedNode);
+		}, reloadedDef);
+
+		List<GlobalId> ids = new ArrayList<>();
+		ids.add(objectId);
+		ids.addAll(Arrays.asList(otherObjectIds));
+		for (GlobalId id : ids) {
+			consume(globalId -> {
+				ObjectTagContainer imported = TransactionManager.getCurrentTransaction().getObject(clazz, globalId);
+				assertThat(imported).as("Imported object %s", globalId).isNotNull();
+				ObjectTag tag = imported.getObjectTag(RESTRICTED_SHORT_NAME);
+				assertThat(tag).as("Restricted object tag of %s after import", globalId).isNotNull();
+			}, id);
 		}
+
+		if (expectedValue != null) {
+			consume(globalId -> {
+				ObjectTag tag = TransactionManager.getCurrentTransaction().getObject(clazz, globalId).getObjectTag(RESTRICTED_SHORT_NAME);
+				assertThat(tag.isEnabled()).as("Restricted object tag enabled").isTrue();
+				assertThat(tag.getValues().getByKeyname("text").getValueText()).as("Restricted object tag value").isEqualTo(expectedValue);
+			}, objectId);
+		}
+
+		return reloadedDef;
 	}
 }

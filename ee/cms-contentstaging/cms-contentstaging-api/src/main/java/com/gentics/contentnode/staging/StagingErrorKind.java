@@ -13,7 +13,6 @@ public enum StagingErrorKind implements Serializable {
 	NO_BINARY,
 	INTEGRITY,
 	CONFIGURATION,
-	NOT_ALLOWED,
 	OTHER;
 
 	public static StagingErrorKind fromValue(String value) {

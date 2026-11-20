@@ -69,14 +69,15 @@ pages, because the web tier reads those from disk per request. A change to `open
 to `examples/`, to `mcp/tools.json` or to a mock's source needs the restart, because each
 mock loads the contracts once at startup.
 
-## A further contract version under /rc4/
+## Further contract versions
 
-The root URLs serve the current contract, `1.0.0-rc.5` (agreed 2026-10-15). Further versions
+The root URLs serve the current contract, `1.0.0-rc.6`, a draft not yet agreed. Further versions
 are served under a path prefix each, with their own sources, built site and API mock:
 
 | Prefix | Version | API mock |
 |---|---|---|
-| `/rc4/` | `1.0.0-rc.4`, the previous release candidate | container `genaix-mock-rc4`, port 8081 |
+| `/rc5/` | `1.0.0-rc.5`, agreed 2026-10-15 | container `genaix-mock-rc5`, port 8082 |
+| `/rc4/` | `1.0.0-rc.4` | container `genaix-mock-rc4`, port 8081 |
 
 Each has `/<prefix>/docs/`, `/<prefix>/html/`, `/<prefix>/client/`, `/<prefix>/openapi.yaml`
 and its own API mock at `/<prefix>/api/v1`. Every HTML page carries a small **Contract**

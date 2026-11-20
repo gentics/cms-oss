@@ -111,37 +111,6 @@ import jakarta.ws.rs.core.Response.Status;
  * Staging specific model builder
  */
 public class StagingModelBuilder {
-	/**
-	 * Name of the transaction attribute, which holds the set of IDs of the nodes, which were created by the running import
-	 */
-	public final static String IMPORT_CREATED_NODE_OBJECT_GLOBAL_IDS = "contentstaging.import.createdNodeObjectGlobalIds";
-
-	/**
-	 * Mark the given node object as created by the running import (if the transaction attribute {@link #IMPORT_CREATED_NODE_OBJECT_GLOBAL_IDS} is set)
-	 * @param nodeObject node object
-	 * @throws NodeException
-	 */
-	@SuppressWarnings("unchecked")
-	public static void markCreatedByImport(NodeObject nodeObject) throws NodeException {
-		Object createdNodeIds = TransactionManager.getCurrentTransaction().getAttributes().get(IMPORT_CREATED_NODE_OBJECT_GLOBAL_IDS);
-		if (createdNodeIds instanceof Set) {
-			((Set<GlobalId>) createdNodeIds).add(nodeObject.getGlobalId());
-		}
-	}
-
-	/**
-	 * Check whether the given node object was created by the running import
-	 * @param nodeObject node object (may be null)
-	 * @return true iff the node is not null and was marked with {@link #markCreatedByImport(Node)}
-	 * @throws NodeException
-	 */
-	public static boolean isCreatedByImport(NodeObject nodeObject) throws NodeException {
-		if (nodeObject == null) {
-			return false;
-		}
-		Object createdNodeIds = TransactionManager.getCurrentTransaction().getAttributes().get(IMPORT_CREATED_NODE_OBJECT_GLOBAL_IDS);
-		return createdNodeIds instanceof Set && ((Set<?>) createdNodeIds).contains(nodeObject.getGlobalId());
-	}
 
 	/**
 	 * Inflate the staging image Model with its node object.
@@ -1203,22 +1172,14 @@ public class StagingModelBuilder {
 						if (defId > 0) {
 							ObjectTagDefinition definition = t.getObject(ObjectTagDefinition.class, defId);
 							if (definition != null && !definition.isVisibleIn(owningNode)) {
-								if (isCreatedByImport(owningNode)) {
-									// the node was created by this import, so the object property is assigned to it
-									ObjectTagDefinition editable = TransactionManager.getCurrentTransaction().getObject(definition, true);
-									editable.getNodes().add(owningNode);
-									editable.save();
-									editable.unlock();
-								} else {
-									// the value cannot be imported, because the object property is explicitly unassigned from the node
-									String nodeName = owningNode != null ? I18NHelper.getName(owningNode, false).orElse(null) : null;
-									StagingError stagingError = new StagingError(ownerId, ownerPath.toString(),
-											I18NHelper.get("content.staging.import.object_property_not_allowed", tagName, nodeName),
-											StagingErrorKind.NOT_ALLOWED);
-									stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.not_allowed"));
-									mismatches.add(stagingError);
-									continue;
-								}
+								// the value cannot be imported, because the object property is not assigned to the node
+								String nodeName = owningNode != null ? I18NHelper.getName(owningNode, false).orElse(null) : null;
+								StagingError stagingError = new StagingError(ownerId, ownerPath.toString(),
+										I18NHelper.get("content.staging.import.object_property_not_allowed", tagName, nodeName),
+										StagingErrorKind.NOT_ALLOWED);
+								stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.not_allowed"));
+								mismatches.add(stagingError);
+								continue;
 							}
 						}
 

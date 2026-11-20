@@ -1,0 +1,58 @@
+/* Task row (design.md §12 "Listenzeile"). */
+.task {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 9px 14px;
+  transition: background-color var(--duration-state) var(--easing);
+
+  &:hover {
+    background: rgba(var(--interactive-rgb), .05);
+  }
+}
+
+.name {
+  overflow: hidden;
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  white-space: nowrap;
+  text-decoration: none;
+  text-overflow: ellipsis;
+}
+
+a.name:hover,
+a.name:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.meta {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  color: var(--interactive);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}

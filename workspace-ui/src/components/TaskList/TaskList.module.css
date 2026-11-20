@@ -1,6 +1,5 @@
-/* "Open to-dos" card (design.md §11 "Dashboard", §3.2 to-do row hover; final_draft.html `.todos`).
-   Where it sits (top right from 1360 px) is up to the page that mounts it. */
-.todos {
+/* "Open tasks" card (design.md §11 "Dashboard"); the page that mounts it places it. */
+.tasks {
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -41,38 +40,6 @@
   & li + li {
     border-top: 1px solid var(--border-subtle);
   }
-}
-
-.todo {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 9px 14px;
-  color: var(--fg-primary);
-  text-decoration: none;
-  transition: background-color var(--duration-state) var(--easing);
-
-  &:hover {
-    background: rgba(var(--interactive-rgb), .05);
-  }
-}
-
-.name {
-  overflow: hidden;
-  font-size: var(--font-size-base);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.meta {
-  color: var(--fg-muted);
-  font-size: var(--font-size-xs);
-}
-
-.more {
-  display: flex;
-  padding: 4px 8px;
-  border-top: 1px solid var(--border-subtle);
 }
 
 .state {

@@ -12,6 +12,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
  * token (except the prefixes `invalid_`, `mismatch_` and `unreachable_`, which test its error cases).
  * It grants `GET /rest/perm/publish/page/{id}`, so the dev user may publish every page. It answers
  * `GET /rest/i18n/get` with English, so the Workspace runs in English.
+ * It answers `GET /rest/task` and `GET /rest/task/count` with no tasks.
  * Every other `/rest` call still has no CMS behind it.
  */
 function devCmsStub(): Plugin {
@@ -35,6 +36,8 @@ function devCmsStub(): Plugin {
 
             answer('/rest/user/me', 'GET', { user: { id: 0, login: 'dev', firstName: 'Dev', lastName: 'User' } });
             answer('/rest/auth/logout', 'POST', { responseInfo: { responseCode: 'OK' } });
+            answer('/rest/task', 'GET', { items: [], numItems: 0, hasMoreItems: false, responseInfo: { responseCode: 'OK' } });
+            answer('/rest/task/count', 'GET', { counts: {}, responseInfo: { responseCode: 'OK' } });
             answer('/rest/i18n/get', 'GET', { responseInfo: { responseCode: 'OK' }, code: 'en' });
 
             server.middlewares.use('/rest/perm/publish/page', (req, res, next) => {

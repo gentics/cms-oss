@@ -33,6 +33,8 @@ export const cmsKeys = {
     publishPermission: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId, 'perm', 'publish'] as const,
     templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
     languages: (nodeId: number) => ['cms', 'nodes', nodeId, 'languages'] as const,
+    tasks: () => ['cms', 'tasks'] as const,
+    users: () => ['cms', 'users'] as const,
 };
 
 /**

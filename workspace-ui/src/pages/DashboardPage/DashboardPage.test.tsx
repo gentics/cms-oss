@@ -10,6 +10,7 @@ import { CMS_USER_QUERY_KEY } from '@/hooks/useCmsAuth';
 import { routeTree } from '@/router';
 import type { CmsUser } from '@/services/cmsApiService/cmsApiService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { taskFixture, withTasks } from '@/test/cmsTasks';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 
 import '@/i18n';
@@ -92,25 +93,18 @@ describe('DashboardPage', () => {
         expect(fetchMock.mock.calls.map(([input]) => String(input))).not.toContain('/rest/user/me');
     });
 
-    it('shows the open to-dos and folds out the recent sessions', async () => {
+    it('shows the open tasks and folds out the recent sessions', async () => {
         const user = userEvent.setup();
-        const todo = sessionFixture({ id: 's-1', title: 'Prices 2026', status: 'active' });
         const recent = sessionFixture({ id: 's-2', title: 'Careers page' });
+        const task = taskFixture({ id: '7', source: 'genaix', type: 'genaixReadyToPublish', title: 'Prices 2026', genaix: { sessionId: 's-1' }, actions: ['open'] });
 
-        // The to-do queries (rc.4: `plan_status` for review) and the recent sessions, which take neither filter.
-        stubSessionRoutes((url) => {
-            if (url.searchParams.has('plan_status') || url.searchParams.has('status')) {
-                return { items: url.searchParams.get('plan_status') === 'review_requested' ? [todo] : [], next_cursor: null };
-            }
-
-            return { items: [recent, todo], next_cursor: null };
-        });
+        vi.stubGlobal('fetch', withTasks(stubSessionRoutes(() => ({ items: [recent], next_cursor: null })), [task]));
         renderDashboard();
 
-        const todos = await screen.findByRole('region', { name: 'Open to-dos' });
+        const tasks = await screen.findByRole('region', { name: 'Open tasks' });
 
-        expect(await within(todos).findByRole('link', { name: /Prices 2026/ })).toBeInTheDocument();
-        expect(within(todos).getByRole('heading', { name: 'Waiting for review' })).toBeInTheDocument();
+        expect(await within(tasks).findByRole('link', { name: /Prices 2026/ })).toHaveAttribute('href', '/sessions/s-1');
+        expect(within(tasks).getByRole('heading', { name: 'Ready to publish' })).toBeInTheDocument();
 
         await user.click(screen.getByRole('button', { name: 'Recent sessions' }));
 

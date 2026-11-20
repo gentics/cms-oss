@@ -30,6 +30,7 @@ import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,8 +42,11 @@ import com.gentics.contentnode.etc.PropertyTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.AbstractFactory;
 import com.gentics.contentnode.factory.object.FileFactory;
 import com.gentics.contentnode.factory.object.FileSizeException;
+import com.gentics.contentnode.logger.LogCollector;
+import com.gentics.contentnode.logger.StringListAppender;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -889,6 +893,32 @@ public class FileEditSandboxTest {
 
 			trx.success();
 		}
+	}
+
+	/**
+	 * Test that an unparsable max filesize configuration (e.g. a value with unit) is logged as warning and no limit is applied
+	 * @throws Exception
+	 */
+	@Test
+	public void testInvalidMaxFileSizeIsLogged() throws Exception {
+		String invalidValue = "64MB";
+		List<String> logMessages = new ArrayList<>();
+
+		testContext.startTransactionWithPermissions(true);
+
+		try (PropertyTrx propTrx = new PropertyTrx("contentnode.maxfilesize", invalidValue);
+				LogCollector logCollector = new LogCollector(AbstractFactory.class.getName(),
+						new StringListAppender(PatternLayout.newBuilder().withPattern("%m").build(), logMessages))) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			File newFile = t.createObject(File.class);
+			newFile.setName("newfile.bin");
+			newFile.setFileStream(generateDataFile(1025));
+			newFile.setFolderId(FOLDER_ID);
+			newFile.save();
+		}
+
+		assertTrue("Warning about the invalid max filesize configuration must be logged, but got " + logMessages,
+				logMessages.stream().anyMatch(message -> message.contains("max filesize") && message.contains(invalidValue)));
 	}
 
 	/**

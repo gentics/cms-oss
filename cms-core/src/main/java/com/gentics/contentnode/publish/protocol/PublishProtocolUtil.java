@@ -66,14 +66,16 @@ public class PublishProtocolUtil {
 
 			DBUtils.update("UPDATE " + tableName + " SET unpublished_date = ?, unpublisher = ? WHERE id = ?", 0, 0,
 					object.getId());
-			DBUtils.update("UPDATE " + tableName + " SET pdate = ?, publisher = ? WHERE id = ?", timestamp, publisherId,
-					object.getId());
+			// the stored future publisher is used only once, else it would overwrite the publisher of every later publish
+			DBUtils.update("UPDATE " + tableName + " SET pdate = ?, publisher = ?, future_publisher = ? WHERE id = ?", timestamp,
+					publisherId, 0, object.getId());
 		} else if (PublishState.OFFLINE.getValue() == logEntry.getState()) {
 			var unpublisherId = object.getFutureUnpublisher() != null ? object.getFutureUnpublisher().getId() : userId;
 			logEntry.setUser(unpublisherId);
 
-			DBUtils.update("UPDATE " + tableName + " SET unpublished_date = ?, unpublisher = ? WHERE id = ?", timestamp,
-					unpublisherId, object.getId());
+			// the stored future unpublisher is used only once, else it would overwrite the unpublisher of every later offline
+			DBUtils.update("UPDATE " + tableName + " SET unpublished_date = ?, unpublisher = ?, future_unpublisher = ? WHERE id = ?", timestamp,
+					unpublisherId, 0, object.getId());
 		}
 	}
 

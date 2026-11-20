@@ -1,0 +1,5 @@
+Content Staging: When importing objects with values in object properties, which are not assigned
+to the node of the object in the target system, the values were silently dropped although the
+import was reported as successful.
+This has been fixed: the import now assigns the object property to the node of the object and
+imports the values.

@@ -4,11 +4,16 @@
   position: relative;
   display: grid;
   flex: 1;
-  grid-template-columns: var(--w-left, 292px) 9px minmax(320px, 1fr) 9px var(--w-right, 46%);
+  grid-template-columns: minmax(0, var(--w-left, 292px)) 9px minmax(320px, 1fr) 9px var(--w-right, 46%);
   min-height: 0;
   overflow: clip;
   isolation: isolate;
   background: var(--bg-canvas);
+}
+
+/* A column shown or hidden slides (design.md §10, preview column 420 ms); only where asked (`animatesColumns`). */
+.layout.animated {
+  transition: grid-template-columns var(--duration-column) var(--easing);
 }
 
 .layout.leftHidden {
@@ -17,7 +22,7 @@
 
 /* No preview yet: the right column and its splitter take no room (draft `.layout.nopv`). */
 .layout.rightHidden {
-  grid-template-columns: var(--w-left, 292px) 9px minmax(320px, 1fr) 0 0;
+  grid-template-columns: minmax(0, var(--w-left, 292px)) 9px minmax(320px, 1fr) 0 0;
 }
 
 .layout.leftHidden.rightHidden {
@@ -27,6 +32,8 @@
 .layout.resizing {
   cursor: col-resize;
   user-select: none;
+  /* Dragged by a splitter: the column follows the mouse at once. */
+  transition: none;
 }
 
 /* The columns reach 4 px under the splitters, so lines in their content meet the splitter line.
@@ -68,10 +75,11 @@
   background: var(--bg-surface);
 }
 
-/* Narrow windows: the columns get tighter, nothing becomes an overlay. */
+/* Narrow windows: the columns get tighter, nothing becomes an overlay. Should they still not fit, the left column
+   gives way first (`minmax(0, …)`), so the chat and the preview keep their room. */
 @media (max-width: 1180px) {
   .layout {
-    grid-template-columns: var(--w-left, 228px) 9px minmax(280px, 1fr) 9px var(--w-right, 42%);
+    grid-template-columns: minmax(0, var(--w-left, 228px)) 9px minmax(280px, 1fr) 9px var(--w-right, 42%);
   }
 
   .layout.leftHidden {
@@ -79,7 +87,7 @@
   }
 
   .layout.rightHidden {
-    grid-template-columns: var(--w-left, 228px) 9px minmax(280px, 1fr) 0 0;
+    grid-template-columns: minmax(0, var(--w-left, 228px)) 9px minmax(280px, 1fr) 0 0;
   }
 
   .layout.leftHidden.rightHidden {
@@ -89,7 +97,7 @@
 
 @media (max-width: 900px) {
   .layout {
-    grid-template-columns: var(--w-left, 200px) 9px minmax(240px, 1fr) 9px var(--w-right, 40%);
+    grid-template-columns: minmax(0, var(--w-left, 200px)) 9px minmax(240px, 1fr) 9px var(--w-right, 40%);
   }
 
   .layout.leftHidden {
@@ -97,7 +105,7 @@
   }
 
   .layout.rightHidden {
-    grid-template-columns: var(--w-left, 200px) 9px minmax(240px, 1fr) 0 0;
+    grid-template-columns: minmax(0, var(--w-left, 200px)) 9px minmax(240px, 1fr) 0 0;
   }
 
   .layout.leftHidden.rightHidden {

@@ -10,8 +10,8 @@ const BASE = `/rest/proxy/genaix/sessions/${SESSION}`;
 
 const page9142 = { type: 'page', id: 9142, node_id: 3, name: 'Neue Nutzungsbedingungen' };
 
-// The plan's state in `status`; once it is published, its page is too.
-function planState(status: string) {
+// The plan's state in `status`; once it is published, its page is too (`isPagePublished`, earlier during a publish run).
+function planState(status: string, isPagePublished = status === 'published') {
     return {
         workflows: [{ id: 'content_create', version: '1.0.0' }],
         state: status === 'published' ? 'done' : status === 'released' ? 'awaiting_approval' : 'done',
@@ -23,7 +23,7 @@ function planState(status: string) {
         cms_objects: [],
         publications: [{
             cms_ref: page9142,
-            status: status === 'published' ? 'published' : 'pending',
+            status: isPagePublished ? 'published' : 'pending',
             approval_chain: [{ id: 'ap-1', label: 'Author releases the draft', actor: { type: 'user' }, status: status === 'done' ? 'pending' : 'done' }],
         }],
         preview: { cms_ref: page9142, preview_url: 'http://127.0.0.1:5173/alohapage?realid=9142&nodeid=3&mode=view', mode: 'view' },
@@ -34,17 +34,22 @@ function planState(status: string) {
  * Stubs the session, its plan and the transitions; returns the actions posted, in order. The event
  * stream announces the plan with `plan.updated`, once at the start and again after each transition,
  * as GenAIx does; each request ends after its events, and the client reconnects.
+ *
+ * `asRun`: the publish goes as GenAIx's publish run does: the transition answers with the plan still `released`,
+ * then `publications.updated` says the page is published, and the plan turns `published` with a `plan.updated`
+ * 100 ms later; `GET …/plans/{plan_id}` answers the state at the time of the request, 300 ms later.
  */
-async function stubReview(page: Page) {
+async function stubReview(page: Page, { asRun = false } = {}) {
     const actions: string[] = [];
     let status = 'done';
+    let isPagePublished = false;
     const frames: string[] = [];
-    const announce = () => {
+    const push = (type: string, data: object) => {
         const seq = frames.length + 1;
-        const data = { seq, ts: '2026-10-13T09:00:00Z', session_id: SESSION, plan_id: PLAN, type: 'plan.updated', plan: planState(status).plan };
 
-        frames.push(`id: ${seq}\nevent: plan.updated\ndata: ${JSON.stringify(data)}\n\n`);
+        frames.push(`id: ${seq}\nevent: ${type}\ndata: ${JSON.stringify({ seq, ts: '2026-10-13T09:00:00Z', session_id: SESSION, plan_id: PLAN, type, ...data })}\n\n`);
     };
+    const announce = () => push('plan.updated', { plan: planState(status, isPagePublished || status === 'published').plan });
 
     announce();
 
@@ -58,11 +63,31 @@ async function stubReview(page: Page) {
     await page.route((url) => url.pathname === `${BASE}/plans`, (route) => route.fulfill({
         json: { items: [{ id: PLAN, workflows: ['content_create'], status, version: 2, summary: '', created_at: '2026-10-13T09:00:00Z' }] },
     }));
-    await page.route((url) => url.pathname === `${BASE}/plans/${PLAN}`, (route) => route.fulfill({ json: planState(status) }));
+    await page.route((url) => url.pathname === `${BASE}/plans/${PLAN}`, async (route) => {
+        const json = planState(status, isPagePublished || status === 'published');
+
+        if (asRun) {
+            await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+
+        return route.fulfill({ json });
+    });
     await page.route((url) => url.pathname === `${BASE}/plans/${PLAN}/transitions`, (route) => {
         const { action } = route.request().postDataJSON() as { action: string };
 
         actions.push(action);
+
+        if (asRun && action === 'publish') {
+            isPagePublished = true;
+            push('publications.updated', { publications: planState(status, true).publications });
+            setTimeout(() => {
+                status = 'published';
+                announce();
+            }, 100);
+
+            return route.fulfill({ json: planState(status).plan });
+        }
+
         status = action === 'release' ? 'released' : action === 'publish' ? 'published' : status;
         announce();
 
@@ -107,5 +132,18 @@ test.describe('Review & release', () => {
         await expect(page.getByRole('link', { name: 'Open this session' })).toBeVisible();
 
         expect(actions).toEqual(['release', 'publish']);
+    });
+
+    test('says the plan went out also when the plan turns published while its state is still being read', async ({ page }) => {
+        await stubReview(page, { asRun: true });
+        await page.goto(`#/sessions/${SESSION}/review`);
+
+        const panel = page.getByRole('region', { name: 'Review' });
+
+        await panel.getByRole('button', { name: 'Release' }).click();
+        await panel.getByRole('button', { name: 'Publish' }).click();
+
+        await expect(page).toHaveURL(new RegExp(`#/sessions/${SESSION}/published\\?plan=${PLAN}$`));
+        await expect(page.getByRole('heading', { level: 1, name: 'Published' })).toBeVisible();
     });
 });

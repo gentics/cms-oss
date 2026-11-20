@@ -27,7 +27,10 @@
     },
     "preview": {
         "title": "Preview",
-        "open": "Open",
+        "draft": "Preview",
+        "draftTitle": "Open the preview in the CMS",
+        "live": "Live",
+        "liveTitle": "Open the published page",
         "frameTitle": "Preview of the page in the CMS",
         "viewport": "Preview width",
         "desktop": "Desktop",
@@ -67,7 +70,8 @@
         },
         "edit": {
             "write": "Write it yourself",
-            "label": "New text",
+            "characters_one": "{{count}} character",
+            "characters_other": "{{count}} characters",
             "cancel": "Cancel",
             "apply": "Apply",
             "unchanged": "Nothing changed, so nothing was sent."
@@ -98,6 +102,20 @@
             "empty": "No pages found.",
             "failed": "The pages could not be loaded."
         },
+        "save": {
+            "saved": "Saved in the CMS.",
+            "failed": "Saving in the CMS failed.",
+            "hint": "Reference it in the chat to have it changed there.",
+            "refused": {
+                "noEditable": "This spot cannot be saved directly in the CMS.",
+                "formatting": "It has formatting, links or embedded elements that plain text would lose.",
+                "unsupportedContent": "It holds elements or formatting the editor cannot keep.",
+                "unclearPart": "It is not clear which of its parts to write.",
+                "pageTarget": "Only a link tag can point to a CMS page.",
+                "noImagePart": "Its image part cannot be found.",
+                "notFound": "The CMS no longer has this part."
+            }
+        },
         "settings": {
             "open": "Page settings",
             "title": "Page settings",
@@ -115,6 +133,19 @@
             "created": "Created",
             "edited": "Last edited"
         }
+    },
+    "inlineEditor": {
+        "formatting": "Formatting",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "strike": "Strikethrough",
+        "subscript": "Subscript",
+        "superscript": "Superscript",
+        "link": "Link",
+        "url": "URL",
+        "applyLink": "Apply",
+        "removeLink": "Remove link"
     },
     "workspace": {
         "resizeLeft": "Width of the left column",
@@ -137,6 +168,7 @@
         "startFailed": "The session could not be started"
     },
     "composer": {
+        "sideQuestion": "Side question",
         "file": "File",
         "verbatim": "Verbatim",
         "typeInstead": "Type instead",
@@ -189,20 +221,12 @@
         "pageElement": {
             "naming": " – part \"{{tagName}}\" ({{constructName}}): ",
             "namingWithoutType": " – part \"{{tagName}}\": ",
-            "replaceWith": " – part \"{{tagName}}\" ({{constructName}}), replace its text with: ",
-            "replaceWithWithoutType": " – part \"{{tagName}}\", replace its text with: ",
             "replaceImageWith": " – part \"{{tagName}}\" ({{constructName}}), replace its image with: ",
             "replaceImageWithWithoutType": " – part \"{{tagName}}\", replace its image with: ",
             "namingTextBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
             "namingWithoutTypeTextBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"): ",
-            "replaceWithTextBlock": " – part \"{{tagName}}\" ({{constructName}}), block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: ",
-            "replaceWithWithoutTypeTextBlock": " – part \"{{tagName}}\", block {{position}} of {{count}} ({{kind}} \"{{excerpt}}\"), replace its text with: ",
             "namingLink": " – part \"{{tagName}}\" ({{constructName}}), link {{position}} of {{count}} (\"{{excerpt}}\"): ",
-            "namingWithoutTypeLink": " – part \"{{tagName}}\", link {{position}} of {{count}} (\"{{excerpt}}\"): ",
-            "changeLinkLink": " – part \"{{tagName}}\" ({{constructName}}), link {{position}} of {{count}} (\"{{excerpt}}\"), change it:",
-            "changeLinkWithoutTypeLink": " – part \"{{tagName}}\", link {{position}} of {{count}} (\"{{excerpt}}\"), change it:",
-            "linkText": "Link text",
-            "linkTarget": "Target"
+            "namingWithoutTypeLink": " – part \"{{tagName}}\", link {{position}} of {{count}} (\"{{excerpt}}\"): "
         },
         "pageSettings": {
             "change": " – change its page settings:",
@@ -211,6 +235,7 @@
     },
     "chat": {
         "placeholder": "What should happen?",
+        "placeholderWhileRunning": "Waiting for reply – type your next step",
         "send": "Send",
         "sendFailed": "The message could not be sent",
         "sender": {
@@ -506,7 +531,7 @@
         "noMatch": "No session matches “{{query}}”.",
         "untitled": "Untitled session",
         "delete": "Delete “{{title}}”",
-        "deleted": "“{{title}}” deleted",
+        "deleted": "“<name/>” deleted",
         "undo": "Undo",
         "archiveFailed": "Deleting the session failed",
         "restoreFailed": "Restoring the session failed"
@@ -519,6 +544,7 @@
         "manyInReview_one": "{{count}} page sent to review",
         "manyInReview_other": "{{count}} pages sent to review",
         "openPage": "Open the page",
+        "openPreview": "Open the preview",
         "openSession": "Open this session",
         "newSession": "Start a new session",
         "placeholder": "What’s next?",
@@ -530,6 +556,7 @@
         "title": "Review",
         "pageTitle": "Review & release",
         "back": "Back to the chat",
+        "openPublished": "Open “{{name}}” on the website",
         "open": "Review & release",
         "loading": "Loading the plan…",
         "noPlan": "This session has no plan to review yet.",
@@ -743,6 +770,15 @@
             "heading": "Feedback for this spot",
             "close": "Done"
         },
+        "cardLayout": {
+            "title": "Card layout",
+            "open": "Change link",
+            "heading": "Link",
+            "cancel": "Cancel",
+            "label": "Link text",
+            "value": "Terms of use",
+            "apply": "Apply"
+        },
         "dialog": {
             "title": "Dialog",
             "open": "Open dialog",
@@ -849,7 +885,8 @@
             "rate_limited": "Too many requests. Please try again shortly.",
             "service_unavailable": "The AI service is currently unavailable.",
             "plan_not_revisable": "This plan is closed for good and can no longer be changed.",
-            "dependency_order": "A step comes before a step it depends on."
+            "dependency_order": "A step comes before a step it depends on.",
+            "revise_plan_missing": "There is no plan to revise."
         },
         "cms": {
             "AUTHREQUIRED": "Please log in to the CMS.",

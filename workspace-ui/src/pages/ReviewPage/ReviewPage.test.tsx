@@ -246,6 +246,26 @@ describe('ReviewPage', () => {
             expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', expect.stringContaining('realid=8644'));
         });
 
+        it('finds each page\'s preview when GenAIx names the page with its connection and the preview without', async () => {
+            const user = userEvent.setup();
+            const recorded = (entry: Publication): Publication => ({ ...entry, cms_ref: { ...entry.cms_ref, connection_id: 'c-1' } });
+
+            stubRoutes({ ...state, publications: [recorded(shipping.publication), recorded(service.publication)], previews: [shipping.preview, service.preview], preview: service.preview });
+            planUpdated(['pl-2', 'done']);
+
+            renderReview();
+
+            const pages = await screen.findByRole('navigation', { name: 'Pages' });
+
+            // The page previewed last is the one shown, with its preview.
+            expect(within(pages).getByRole('link', { name: /Serviceinformationen/ })).toHaveAttribute('aria-current', 'page');
+            expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', expect.stringContaining('realid=9011'));
+
+            await user.click(within(pages).getByRole('link', { name: /Versand und Lieferung/ }));
+
+            expect(await screen.findByTitle('Preview of the page in the CMS')).toHaveAttribute('src', expect.stringContaining('realid=8644'));
+        });
+
         it('lists no pages for a plan that wrote one', async () => {
             stubRoutes({ ...state, publications: [service.publication] });
             planUpdated(['pl-2', 'done']);

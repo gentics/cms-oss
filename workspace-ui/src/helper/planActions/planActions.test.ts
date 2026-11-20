@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Plan, Workflow } from '@/services/apiService/genaix/types';
 
-import { hasGatedActions, isAcceptedOnCard, isFirstDraft, planActions, planPresence, writtenPagesOf } from './planActions';
+import { hasGatedActions, isAcceptedOnCard, isFirstDraft, planActions, planPresence, reviseOptions, writtenPagesOf } from './planActions';
 
 describe('planActions', () => {
     it('leaves the gated transitions out unless asked for them (the review page)', () => {
@@ -97,5 +97,31 @@ describe('writtenPagesOf', () => {
             { type: 'image', id: 5, operation: 'created' },
             { type: 'page', id: 6 },
         ]).map(({ id }) => id)).toEqual([1, 2, 3]);
+    });
+});
+
+describe('reviseOptions', () => {
+    const plan = (status: Plan['status']): Plan => ({ id: 'pl-1', workflows: [{ id: 'content_edit', version: '1.0.0' }], status, version: 2, summary: '', items: [] });
+
+    it('revises a proposed or finished plan without an active run', () => {
+        for (const status of ['proposed', 'done', 'released', 'published', 'review_requested'] as const) {
+            expect(reviseOptions(plan(status), false)).toEqual({ mode: 'revise', plan_id: 'pl-1' });
+        }
+    });
+
+    it('sends no options while a run of the plan is active', () => {
+        expect(reviseOptions(plan('proposed'), true)).toBeUndefined();
+        expect(reviseOptions(plan('done'), true)).toBeUndefined();
+    });
+
+    it('sends no options after a failed or cancelled run, so the next message retries it', () => {
+        expect(reviseOptions(plan('accepted'), false)).toBeUndefined();
+        expect(reviseOptions(plan('drafting'), false)).toBeUndefined();
+    });
+
+    it('sends no options without a plan, or for a closed one', () => {
+        expect(reviseOptions(undefined, false)).toBeUndefined();
+        expect(reviseOptions(plan('discarded'), false)).toBeUndefined();
+        expect(reviseOptions(plan('superseded'), false)).toBeUndefined();
     });
 });

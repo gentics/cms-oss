@@ -2409,7 +2409,15 @@ public class FileFactory extends AbstractFactory {
 
 				// Get GCN Filesizelimit
 				NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-				int filesizelimit = ObjectTransformer.getInt(prefs.getProperty("contentnode.maxfilesize"), -1);
+				int filesizelimit = -1;
+				String maxfilesize = prefs.getProperty("contentnode.maxfilesize");
+				if (org.apache.commons.lang3.StringUtils.isNotBlank(maxfilesize)) {
+					try {
+						filesizelimit = Integer.parseInt(maxfilesize.trim());
+					} catch (NumberFormatException e) {
+						logger.warn(String.format("Could not parse max filesize config '%s'", maxfilesize), e);
+					}
+				}
 
 				// check whether the current user is member of one of the groups defined in NO_MAXFILESIZE
 				String[] noFilesizeLimitGroupIds = prefs.getProperties("no_max_filesize");

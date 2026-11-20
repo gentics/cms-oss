@@ -26,11 +26,14 @@ Additionally, if the content based mimetype detection fails for a file, the mime
 
 h3. General settings
 
-You can enforce a max filesize for uplading files:
+You can enforce a max filesize for uploading files. The value must be given in bytes as a plain integer:
 
 <shell filename="conf/*.yml">
-maxfilesize: "64MB"
+# 64 MiB = 64 * 1024 * 1024 bytes
+maxfilesize: 67108864
 </shell>
+
+NOTE: Values with units (e.g. "64MB") are not supported. If the configured value is not a valid number of bytes, a warning will be logged and no file size limit will be applied.
 
 h4. JPG / CMYK
 

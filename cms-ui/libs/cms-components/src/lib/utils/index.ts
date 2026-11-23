@@ -1,4 +1,5 @@
 export * from './base-urls/base-urls';
+export * from './clipboard/clipboard';
 export * from './download-from-blob/download-from-blob';
 export * from './forms/forms';
 export * from './i18n';

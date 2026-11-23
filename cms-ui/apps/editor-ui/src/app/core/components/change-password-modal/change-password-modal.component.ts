@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { BaseModal } from '@gentics/ui-core';
+import { PASSWORD_VALIDATORS, passwordsAreEqual } from '../../../common/utils/password-validators';
 import { ApplicationStateService, AuthActionsService } from '../../../state';
 
 @Component({
@@ -21,32 +22,13 @@ export class ChangePasswordModal extends BaseModal<void> {
     ) {
         super();
 
-        const passwordValidators = [
-            Validators.required,
-            Validators.minLength(4),
-            Validators.maxLength(20),
-            Validators.pattern('^[\\w\\-\\.@]+$'),
-        ];
-
-        this.password1 = new UntypedFormControl('', passwordValidators);
-        this.password2 = new UntypedFormControl('', passwordValidators);
+        this.password1 = new UntypedFormControl('', PASSWORD_VALIDATORS);
+        this.password2 = new UntypedFormControl('', PASSWORD_VALIDATORS);
 
         this.form = new UntypedFormGroup({
             password1: this.password1,
             password2: this.password2,
-        }, this.areEqual);
-    }
-
-    /**
-     * Validator which checks that both passwords contain equal values.
-     */
-    areEqual(group: UntypedFormGroup): { areEqual: boolean } {
-        let valid = group.get('password1').value === group.get('password2').value;
-        if (valid) {
-            return null;
-        } else {
-            return { areEqual: true };
-        }
+        }, passwordsAreEqual);
     }
 
     changePassword(): void {

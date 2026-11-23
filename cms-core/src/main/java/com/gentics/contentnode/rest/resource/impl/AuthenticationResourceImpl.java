@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.auth.PasswordTokens;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.LoginService;
 import com.gentics.contentnode.etc.MaintenanceMode;
@@ -18,15 +19,19 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
+import com.gentics.contentnode.rest.model.request.PasswordTokenRequest;
+import com.gentics.contentnode.rest.model.request.SetPasswordRequest;
 import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
+import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.resource.AuthenticationResource;
@@ -316,6 +321,58 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		}
 
 		return response;
+	}
+
+	@Override
+	@POST
+	@Path("/password/validate")
+	public GenericResponse validatePasswordToken(PasswordTokenRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			// a POST without body arrives as null and is rejected like any other invalid token
+			GenericResponse response = PasswordTokens.verify(request != null ? request.getToken() : null).isPresent()
+					? new GenericResponse(null, ResponseInfo.ok("Password token is valid"))
+					: invalidPasswordToken();
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/password")
+	public GenericResponse setPassword(SetPasswordRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Optional<SystemUser> optUser = PasswordTokens.verify(request.getToken());
+			if (optUser.isEmpty()) {
+				return invalidPasswordToken();
+			}
+
+			// checked after the token, so that an invalid token never learns whether its password would be accepted
+			if (!PasswordTokens.isValidPassword(request.getPassword())) {
+				return new GenericResponse(
+						new Message(Message.Type.WARNING, "password", I18NHelper.get("rest.auth.password_invalid")),
+						new ResponseInfo(ResponseCode.INVALIDDATA, "Password does not satisfy the password rule"));
+			}
+
+			Transaction t = trx.getTransaction();
+			SystemUser user = t.getObject(optUser.get(), true);
+			int userId = ObjectTransformer.getInt(user.getId(), -1);
+			user.setPassword(SystemUserFactory.hashPassword(request.getPassword(), userId));
+			user.save();
+			PasswordTokens.clear(userId);
+
+			trx.success();
+			return new GenericResponse(null, ResponseInfo.ok("Password was set"));
+		}
+	}
+
+	/**
+	 * Response for a password token that cannot be used, the same for every reason
+	 * @return response
+	 */
+	private GenericResponse invalidPasswordToken() {
+		return new GenericResponse(new Message(Message.Type.CRITICAL, I18NHelper.get("rest.auth.password_token_invalid")),
+				new ResponseInfo(ResponseCode.FAILURE, "Password token is not valid"));
 	}
 
 	/**

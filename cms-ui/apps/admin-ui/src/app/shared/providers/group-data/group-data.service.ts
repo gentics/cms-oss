@@ -59,10 +59,32 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
     }
 
     createUser(user: GroupUserCreateRequest, userGroupIds: number[]): Observable<User<Normalized>> {
+        return this.createUserInGroups(userGroupIds, (groupId) => this.entityOperations.createUser(groupId, user));
+    }
+
+    /**
+     * Create a user who sets the password with a link, in all given groups. The link is fetched afterwards with
+     * `createPasswordLink()`, so that a failure there leaves the user complete, with all groups assigned.
+     */
+    createUserWithPasswordLink(user: GroupUserCreateRequest, userGroupIds: number[]): Observable<User<Normalized>> {
+        return this.createUserInGroups(userGroupIds, (groupId) => this.entityOperations.createUserWithPasswordLink(groupId, user));
+    }
+
+    /**
+     * Issue a new token for the password link of the user, which replaces any earlier token.
+     */
+    createPasswordLink(userId: number): Observable<string> {
+        return this.entityOperations.createPasswordLink(userId);
+    }
+
+    /**
+     * Create the user in the first group with the given function, then assign it to the other groups.
+     */
+    private createUserInGroups(userGroupIds: number[], create: (groupId: number) => Observable<User<Raw>>): Observable<User<Normalized>> {
         // create in group and then assign to groups if provided more than one group id
         const groupIdsToBeAssigned = [...userGroupIds];
         const initialGroupId = groupIdsToBeAssigned.shift();
-        return this.entityOperations.createUser(initialGroupId, user).pipe(
+        return create(initialGroupId).pipe(
             switchMap((newUser: User<Raw>) => {
                 // if additional groups to assign
                 if (groupIdsToBeAssigned.length > 0) {

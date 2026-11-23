@@ -44,12 +44,14 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.auth.PasswordTokens;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.SystemUser;
@@ -72,6 +74,7 @@ import com.gentics.contentnode.rest.model.response.GroupLoadResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.NodeRestrictionResponse;
+import com.gentics.contentnode.rest.model.response.PasswordLinkResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.UserDataResponse;
@@ -577,10 +580,40 @@ public class UserResourceImpl implements UserResource {
 				int userId = ObjectTransformer.getInt(user.getId(), -1);
 
 				user.setPassword(SystemUserFactory.hashPassword(item.getPassword(), userId));
+				// a password set here replaces the one the user would set with an open link
+				PasswordTokens.clear(userId);
 			}
 
 			user.save();
 			UserLoadResponse response = new UserLoadResponse(null, ResponseInfo.ok("Successfully updated SystemUser"), SystemUser.TRANSFORM2REST.apply(user));
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/{id}/passwordLink")
+	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
+	@RequiredPerm(type = SystemUser.TYPE_USERADMIN, bit = PermHandler.PERM_VIEW)
+	public PasswordLinkResponse createPasswordLink(@PathParam("id") String id) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			// the link sets the password, so it needs the same permission as setting it with update()
+			SystemUser user = MiscUtils.load(SystemUser.class, id, ObjectPermission.edit);
+
+			if (user.isSupportUser()) {
+				return new PasswordLinkResponse(
+					new Message(Type.WARNING, "password", I18NHelper.get("rest.user.support_user_password")),
+					new ResponseInfo(ResponseCode.FAILURE, "Cannot change password of support user"));
+			}
+
+			int userId = ObjectTransformer.getInt(user.getId(), -1);
+			PasswordTokens.Issued issued = PasswordTokens.create(userId);
+			// the token must not reach the log
+			ActionLogger.logCmd(ActionLogger.EDIT, SystemUser.TYPE_SYSTEMUSER, userId, 0, "SystemUser.passwordLink");
+
+			PasswordLinkResponse response = new PasswordLinkResponse(null, ResponseInfo.ok("Issued password link"))
+					.setToken(issued.token()).setExpiresAt(issued.expiresAt());
 			trx.success();
 			return response;
 		}

@@ -9,6 +9,7 @@ import {
     NodeRequestOptions,
     NodeSaveRequest,
     PagedConstructListRequestOptions,
+    PortalImplementationListOptions,
     TemplateListRequest,
 } from '@gentics/cms-models';
 import { getExampleNodeData } from '@gentics/cms-models/testing';
@@ -232,6 +233,37 @@ describe('NodeApi', () => {
 
         /** Second params is 'undefined' because we pass an empty body for PUT */
         expect(apiBase.put).toHaveBeenCalledWith(`node/${NODE_ID}/constructs/${construct}`, undefined);
+    });
+
+    it('getNodePortalImplementations() sends the correct GET request', () => {
+        const options = { pageSize: 10 };
+        nodeApi.getNodePortalImplementations(NODE_ID, options);
+        expect(apiBase.get).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations`, options);
+    });
+
+    it('getNodePortalImplementations() sends the sort options as string', () => {
+        const options: PortalImplementationListOptions = {
+            sort: {
+                attribute: 'name',
+            },
+        };
+        nodeApi.getNodePortalImplementations(NODE_ID, options);
+        expect(apiBase.get).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations`, {
+            ...options,
+            sort: stringifyPagingSortOptions(options.sort),
+        });
+    });
+
+    it('removeNodePortalImplementation() sends the correct DELETE request', () => {
+        const portalImplementation = 4;
+        nodeApi.removeNodePortalImplementation(NODE_ID, portalImplementation);
+        expect(apiBase.delete).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations/${portalImplementation}`);
+    });
+
+    it('addNodePortalImplementation() sends the correct PUT request', () => {
+        const portalImplementation = 4;
+        nodeApi.addNodePortalImplementation(NODE_ID, portalImplementation);
+        expect(apiBase.put).toHaveBeenCalledWith(`node/${NODE_ID}/portalimplementations/${portalImplementation}`, undefined);
     });
 
     it('removeNodeTemplate() sends the correct DELETE request', () => {

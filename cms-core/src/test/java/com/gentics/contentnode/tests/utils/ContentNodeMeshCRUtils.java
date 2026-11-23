@@ -151,6 +151,15 @@ public class ContentNodeMeshCRUtils {
 	}
 
 	/**
+	 * Get name of the schema for portal implementations
+	 * @param projectName project name
+	 * @return schema name
+	 */
+	public static String getPortalImplementationSchemaName(String projectName) {
+		return String.format("%s_implementation", projectName);
+	}
+
+	/**
 	 * Clean the mesh instance be deleting all projects and schemas
 	 * @param client mesh rest client
 	 */
@@ -240,7 +249,8 @@ public class ContentNodeMeshCRUtils {
 	 * @return project response (null, if project does not exist and expected is false)
 	 */
 	public static ProjectResponse assertMeshProject(MeshRestClient client, String projectName, String schemaPrefix, String projectUuid, String implementationVersion, boolean expected) {
-		String[] schemaNames = { getFolderSchemaName(schemaPrefix), getFileSchemaName(schemaPrefix), getPageSchemaName(schemaPrefix) };
+		String[] schemaNames = { getFolderSchemaName(schemaPrefix), getFileSchemaName(schemaPrefix), getPageSchemaName(schemaPrefix),
+				getPortalImplementationSchemaName(schemaPrefix) };
 
 		Optional<ProjectResponse> optionalProject = client.findProjectByName(projectName).toSingle().map(Optional::of)
 				.onErrorResumeNext(t -> Single.just(Optional.empty())).blockingGet();

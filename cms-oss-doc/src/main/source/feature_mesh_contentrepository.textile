@@ -410,6 +410,24 @@ objects published into Gentics Mesh.
 When the URL is set and a page must be rendered in the CMS (for preview or in edit mode), the CMS will transform the page into a Mesh Node and +POST+ that to the preview URL.
 The response is then used as template for rendering the page in edit or preview mode.
 
+h4. Static files in the preview
+
+Static files referenced by the preview rendered by the portal (URLs starting with @/static/@) are fetched from the portal:
+
+* When the page is rendered by the portal, the CMS sets the cookie @gcms_portal_preview_node@ containing the ID of the node, which provides the preview URL.
+* Requests to @/static/[package]/files/...@ are served from the "devtool package":devtools_overview.html#static-files, if the file exists in the package.
+* All other requests to @/static/...@ are forwarded to the portal, if the cookie is set, the request contains a valid CMS session,
+  the user is allowed to view the node and the node has a preview URL set.
+  The request is forwarded to the protocol, host and port of the preview URL, keeping the path and the query string
+  (e.g. @https://portal:8080/static/css/main.css@ for the preview URL @https://portal:8080/preview@).
+  Only +GET+ and +HEAD+ requests are forwarded, and the cookies of the CMS are not sent to the portal.
+* Otherwise, the response is @401 Unauthorized@ (no valid session), @403 Forbidden@ (no permission on the node) or @404 Not Found@.
+
+h3. Portal Implementations
+
+"Portal Implementations":admin_portal_implementations.html assigned to a node are published into the node's Mesh project
+using the schema @[prefix]_implementation@. See "Publishing into Mesh ContentRepositories":admin_portal_implementations.html#publishing-into-mesh-contentrepositories for details.
+
 h3. Synchronize Mesh roles
 
 The datasource used in the "Roles Property":#roles-property has to be filled with the Mesh roles, that should be available for selection.

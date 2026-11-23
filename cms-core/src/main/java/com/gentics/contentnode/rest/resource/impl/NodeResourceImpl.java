@@ -63,6 +63,7 @@ import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.PackageObject;
 import com.gentics.contentnode.devtools.Synchronizer;
+import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
@@ -77,6 +78,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FolderFactory;
+import com.gentics.contentnode.factory.object.PortalImplementationFactory;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
@@ -87,6 +89,7 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
@@ -101,6 +104,7 @@ import com.gentics.contentnode.rest.model.Editor;
 import com.gentics.contentnode.rest.model.NodeFeature;
 import com.gentics.contentnode.rest.model.NodeFeatureModel;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
+import com.gentics.contentnode.rest.model.PortalImplementationListResponse;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.NodeCopyRequest;
 import com.gentics.contentnode.rest.model.request.NodeFeatureRequest;
@@ -2124,6 +2128,85 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 			trx.success();
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, null));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/{nodeId}/portalimplementations")
+	public PortalImplementationListResponse getPortalImplementations(@PathParam("nodeId") String nodeId, @BeanParam FilterParameterBean filter,
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Node node = getNode(nodeId, ObjectPermission.view);
+			List<PortalImplementation> portalImplementations = node.getPortalImplementations();
+
+			trx.success();
+			return ListBuilder.from(portalImplementations, PortalImplementation.TRANSFORM2REST)
+					.filter(PermFilter.get(ObjectPermission.view))
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "keyword", "name", "description", "type"))
+					.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
+					.sort(ResolvableComparator.get(sorting, "id", "globalId", "keyword", "name", "description", "type", "cdate", "edate"))
+					.page(paging).to(new PortalImplementationListResponse());
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("/{nodeId}/portalimplementations/{portalImplementationId}")
+	public GenericResponse addPortalImplementation(@PathParam("nodeId") String nodeId, @PathParam("portalImplementationId") String portalImplementationId)
+			throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			changePortalImplementationAssignment(nodeId, portalImplementationId, (node, impl) -> node.addPortalImplementation(impl));
+			trx.success();
+			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, null));
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("/{nodeId}/portalimplementations/{portalImplementationId}")
+	public GenericResponse removePortalImplementation(@PathParam("nodeId") String nodeId, @PathParam("portalImplementationId") String portalImplementationId)
+			throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			changePortalImplementationAssignment(nodeId, portalImplementationId, (node, impl) -> node.removePortalImplementation(impl));
+			trx.success();
+			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, null));
+		}
+	}
+
+	/**
+	 * Load the node and the Portal Implementation, check the permissions for changing the assignment and perform the change
+	 * @param nodeId node ID
+	 * @param portalImplementationId Portal Implementation ID (local ID, global ID or keyword)
+	 * @param change change of the assignment
+	 * @throws NodeException
+	 */
+	protected void changePortalImplementationAssignment(String nodeId, String portalImplementationId,
+			BiConsumer<Node, PortalImplementation> change) throws NodeException {
+		Node node = getNode(nodeId, ObjectPermission.view);
+		try (ChannelTrx cTrx = new ChannelTrx(node)) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			if (!t.getPermHandler().checkPermissionBit(Folder.TYPE_FOLDER, node.getFolder().getId(), PermHandler.PERM_NODE_CONSTRUCT_MODIFY)) {
+				I18nString message = new CNI18nString("rest.node.nopermission");
+				message.setParameter("0", nodeId);
+				throw new InsufficientPrivilegesException(message.toString(), node, PermType.updateconstructs);
+			}
+
+			PortalImplementation impl = PortalImplementationFactory.get(portalImplementationId);
+			if (impl == null) {
+				I18nString message = new CNI18nString("portal_implementation.notfound");
+				message.setParameter("0", portalImplementationId);
+				throw new EntityNotFoundException(message.toString());
+			}
+
+			if (!PermHandler.ObjectPermission.view.checkObject(impl)) {
+				I18nString message = new CNI18nString("portal_implementation.nopermission");
+				message.setParameter("0", portalImplementationId);
+				throw new InsufficientPrivilegesException(message.toString(), impl, PermType.read);
+			}
+
+			change.accept(node, impl);
 		}
 	}
 

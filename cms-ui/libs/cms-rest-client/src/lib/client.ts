@@ -32,6 +32,7 @@ import {
     GCMSPartTypeAPI,
     GCMSPermissionAPI,
     GCMSPolicyMapAPI,
+    GCMSPortalImplementationAPI,
     GCMSPublishProtocolAPI,
     GCMSRestClientConfig,
     GCMSRestClientInterceptorData,
@@ -385,6 +386,10 @@ export class GCMSRestClient implements GCMSRootAPI {
         assignObjectProperty: (name, opId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/objectproperties/${opId}`),
         unassignObjectProperty: (name, opId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/objectproperties/${opId}`),
 
+        listPortalImplementations: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/portal_implementations`, null, options),
+        assignPortalImplementation: (name, portalImplementationId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/portal_implementations/${portalImplementationId}`),
+        unassignPortalImplementation: (name, portalImplementationId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/portal_implementations/${portalImplementationId}`),
+
         listTemplates: (name, options) => this.executeMappedJsonRequest(GET, `/devtools/packages/${name}/templates`, null, options),
         assignTemplate: (name, templateId) => this.executeMappedJsonRequest(PUT, `/devtools/packages/${name}/templates/${templateId}`),
         unassignTemplate: (name, templateId) => this.executeMappedJsonRequest(DELETE, `/devtools/packages/${name}/templates/${templateId}`),
@@ -703,6 +708,10 @@ export class GCMSRestClient implements GCMSRootAPI {
         listObjectProperties: (id, options) => this.executeMappedJsonRequest(GET, `/node/${id}/objectproperties`, null, options),
         assignObjectProperty: (id, opId) => this.executeMappedJsonRequest(PUT, `/node/${id}/objectproperties/${opId}`),
         unassignObjectProperty: (id, opId) => this.executeMappedJsonRequest(DELETE, `/node/${id}/objectproperties/${opId}`),
+
+        listPortalImplementations: (id, options) => this.executeMappedJsonRequest(GET, `/node/${id}/portalimplementations`, null, options),
+        assignPortalImplementation: (id, portalImplementationId) => this.executeMappedJsonRequest(PUT, `/node/${id}/portalimplementations/${portalImplementationId}`),
+        unassignPortalImplementation: (id, portalImplementationId) => this.executeMappedJsonRequest(DELETE, `/node/${id}/portalimplementations/${portalImplementationId}`),
     } as const;
 
     public objectProperty: GCMSObjectPropertyAPI = {
@@ -818,6 +827,17 @@ export class GCMSRestClient implements GCMSRootAPI {
     public policyMap: GCMSPolicyMapAPI = {
         policy: (options) => this.executeMappedJsonRequest(GET, '/policyMap/policy', null, options),
         policyGroup: (type) => this.executeMappedJsonRequest(GET, `/policyMap/partType/${type}/policyGroup`),
+    } as const;
+
+    public portalImplementation: GCMSPortalImplementationAPI = {
+        list: (options) => this.executeMappedJsonRequest(GET, '/portalimplementations', null, options),
+        create: (body) => this.executeMappedJsonRequest(POST, '/portalimplementations', body),
+        get: (id) => this.executeMappedJsonRequest(GET, `/portalimplementations/${id}`),
+        update: (id, body) => this.executeMappedJsonRequest(PUT, `/portalimplementations/${id}`, body),
+        delete: (id) => this.executeMappedJsonRequest(DELETE, `/portalimplementations/${id}`),
+
+        listNodes: (id) => this.executeMappedJsonRequest(GET, `/portalimplementations/${id}/nodes`),
+        listFiles: (id, options) => this.executeMappedJsonRequest(GET, `/portalimplementations/${id}/files`, null, options),
     } as const;
 
     public publishProtocol: GCMSPublishProtocolAPI = {

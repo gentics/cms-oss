@@ -23,6 +23,7 @@ Devtools will handle the following object types:
 * _Templates_
 * _CR Fragments_
 * _ContentRepositories_
+* _Portal Implementations_ (including their files, see "Portal Implementations":admin_portal_implementations.html)
 * Static files (like JavaScript, CSS, images, ...)
 * Internal static files (used only be the CMS, but not in the frontend)
 * Handlebars helpers (as JavaScript files)
@@ -384,6 +385,38 @@ Example @gentics_structure.json@:
 </shell>
 
 Note: Some attributes are excepted from synchronization. See "Exceptions from synchronization":devtools_synchronization.html#exceptions-from-synchronization for details.
+
+h4. Portal Implementations
+
+|_>. Root directory                       | @/cms/packages/[package]/portal_implementations/@ |
+|_>. Object directory name                | _Keyword_ of the Portal Implementation                      |
+|_>. Contents of @gentics_structure.json@ | globalId, keyword, name, description, type                  |
+|_>. Additional files/directories         | @files/@ containing the files of the Portal Implementation (folders of the Portal Implementation are stored as directories) |
+
+Example:
+
+<shell>
+/cms/packages/[package]/portal_implementations/portal-java/gentics_structure.json
+/cms/packages/[package]/portal_implementations/portal-java/files/templates/contentpage.hbs
+/cms/packages/[package]/portal_implementations/portal-java/files/templates/startpage.hbs
+/cms/packages/[package]/portal_implementations/portal-java/files/queries/loadByPath.graphql
+/cms/packages/[package]/portal_implementations/portal-java/files/queries/loadNavigation.graphql
+</shell>
+
+<shell filename="/cms/packages/[package]/portal_implementations/portal-java/gentics_structure.json">
+{
+  "globalId" : "3D6C.6a1b0c2e-bf45-11f0-9b5e-0242ac110002",
+  "keyword" : "portal-java",
+  "name" : "Java Portal",
+  "description" : "Handlebars templates and GraphQL queries of the Java portal",
+  "type" : "Java"
+}
+</shell>
+
+The keyword in @gentics_structure.json@ must be identical to the name of the directory.
+When synchronizing from the package into the CMS, files are created, updated or deleted, so that the files of the Portal Implementation match the files in the @files/@ directory.
+
+See "Portal Implementations":admin_portal_implementations.html for details.
 
 h4. Static files
 

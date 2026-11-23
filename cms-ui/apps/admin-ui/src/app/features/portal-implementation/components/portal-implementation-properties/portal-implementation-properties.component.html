@@ -1,0 +1,46 @@
+@if (form) {
+  <form
+    [formGroup]="form"
+    class="row small-12 medium-12"
+    >
+    <div class="columns small-6">
+      <gtx-input
+        type="text"
+        [required]="true"
+        [maxlength]="MAX_LENGTH"
+        [label]="('portal_implementation.keyword' | gtxI18n) + ' *'"
+        [placeholder]="'portal_implementation.keyword' | gtxI18n"
+        formControlName="keyword"
+      ></gtx-input>
+    </div>
+
+    <div class="columns small-6">
+      <gtx-input
+        type="text"
+        [required]="true"
+        [maxlength]="MAX_LENGTH"
+        [label]="('portal_implementation.name' | gtxI18n) + ' *'"
+        [placeholder]="'portal_implementation.name' | gtxI18n"
+        formControlName="name"
+      ></gtx-input>
+    </div>
+
+    <div class="columns small-6">
+      <gtx-select
+        [label]="('portal_implementation.type' | gtxI18n) + ' *'"
+        formControlName="type"
+        >
+        @for (type of TYPES; track type) {
+          <gtx-option [value]="type">{{ type }}</gtx-option>
+        }
+      </gtx-select>
+    </div>
+
+    <div class="columns small-12">
+      <gtx-textarea
+        [label]="'portal_implementation.description' | gtxI18n"
+        formControlName="description"
+      ></gtx-textarea>
+    </div>
+  </form>
+}

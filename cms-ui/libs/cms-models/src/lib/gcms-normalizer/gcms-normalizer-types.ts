@@ -19,6 +19,7 @@ import { ObjectProperty, ObjectPropertyBO } from '../object-property';
 import { ObjectPropertyCategory, ObjectPropertyCategoryBO } from '../object-property-category';
 import { Package, PackageBO } from '../package';
 import { Page } from '../page';
+import { PortalImplementation, PortalImplementationBO } from '../portal-implementation';
 import { Role, RoleBO } from '../role';
 import { Schedule, ScheduleBO } from '../schedule';
 import { ScheduleExecution } from '../schedule-execution';
@@ -53,6 +54,7 @@ export interface NormalizableEntityTypesMap<T extends ModelType = DefaultModelTy
     objectPropertyCategory: ObjectPropertyCategory<T>;
     package: Package<T>;
     page: Page<T>;
+    portalImplementation: PortalImplementation<T>;
     role: Role<T>;
     schedule: Schedule<T>;
     scheduleExecution: ScheduleExecution<T>;
@@ -92,6 +94,7 @@ export interface NormalizableEntityTypesMapBO<T extends ModelType = DefaultModel
     objectPropertyCategory: ObjectPropertyCategoryBO<T>;
     package: PackageBO<T>;
     page: Page<T>;
+    portalImplementation: PortalImplementationBO<T>;
     role: RoleBO<T>;
     schedule: ScheduleBO<T>;
     scheduleExecution: ScheduleExecution<T>;

@@ -8,6 +8,7 @@ import { DataSourceHandlerService } from '../data-source-handler/data-source-han
 import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
 import { ContentRepositoryFragmentOperations } from '../operations/cr-fragment/cr-fragment.operations';
+import { PortalImplementationOperations } from '../operations/portal-implementation/portal-implementation.operations';
 import { TemplateOperations } from '../operations/template/template.operations';
 
 /**
@@ -23,6 +24,7 @@ export class DevToolPackageManagerService {
         protected crFragments: ContentRepositoryFragmentOperations,
         protected dataSources: DataSourceHandlerService,
         protected objProps: ObjectPropertyHandlerService,
+        protected portalImplementations: PortalImplementationOperations,
         protected templates: TemplateOperations,
     ) {}
 
@@ -102,6 +104,8 @@ export class DevToolPackageManagerService {
                 return this.dataSources as any;
             case EditableEntity.OBJECT_PROPERTY:
                 return this.objProps as any;
+            case EditableEntity.PORTAL_IMPLEMENTATION:
+                return this.portalImplementations as any;
             case EditableEntity.TEMPLATE:
                 return this.templates as any;
             default:

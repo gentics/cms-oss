@@ -32,6 +32,8 @@ public class Package {
 
 	private int contentRepositories;
 
+	private int portalImplementations;
+
 	private Set<Package> subPackages;
 
 	/**
@@ -174,6 +176,22 @@ public class Package {
 	 */
 	public void setContentRepositories(int contentRepositories) {
 		this.contentRepositories = contentRepositories;
+	}
+
+	/**
+	 * Number of Portal Implementations contained in the package
+	 * @return number of Portal Implementations
+	 */
+	public int getPortalImplementations() {
+		return portalImplementations;
+	}
+
+	/**
+	 * Set the number of Portal Implementations
+	 * @param portalImplementations number of Portal Implementations
+	 */
+	public void setPortalImplementations(int portalImplementations) {
+		this.portalImplementations = portalImplementations;
 	}
 
 	/**

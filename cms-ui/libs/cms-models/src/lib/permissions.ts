@@ -37,6 +37,8 @@ export enum AccessControlledType {
     DEVTOOL_ADMIN = 'devtooladmin',
     CR_FRAGMENT_ADMIN = 'crfragmentadmin',
     CR_FRAGMENT = 'crfragment',
+    PORTAL_IMPLEMENTATION_ADMIN = 'portalimplementationadmin',
+    PORTAL_IMPLEMENTATION = 'portalimplementation',
     SEARCH_INDEX_MAINTENANCE = 'searchindexmaintenance',
     SYSTEM_MAINTANANCE = 'systemmaintenance',
     BUNDLE_ADMIN = 'bundleadmin',

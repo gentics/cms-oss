@@ -31,6 +31,7 @@ import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.rest.model.response.DatasourceLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ObjectPropertyLoadResponse;
+import com.gentics.contentnode.rest.model.response.PortalImplementationResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PackageFileListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedConstructInPackageListResponse;
@@ -38,6 +39,7 @@ import com.gentics.contentnode.rest.model.response.devtools.PagedContentReposito
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedDatasourceInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedObjectPropertyInPackageListResponse;
+import com.gentics.contentnode.rest.model.response.devtools.PagedPortalImplementationInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedTemplateInPackageListResponse;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -69,6 +71,7 @@ public interface PackageResource {
 	 * <li><code>objectProperties</code></li>
 	 * <li><code>crFragments</code></li>
 	 * <li><code>contentRepositories</code></li>
+	 * <li><code>portalImplementations</code></li>
 	 * </ul>
 	 * @param filter  filter parameters
 	 * @param sorting sorting parameters
@@ -732,6 +735,85 @@ public interface PackageResource {
 	Response removeContentRepository(@PathParam("name") String name, @PathParam("contentrepository") String contentrepository) throws Exception;
 
 	/**
+	 * Get the Portal Implementations in a package.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * @param name Package name
+	 * @param filter filter parameters
+	 * @param sorting sorting parameters
+	 * @param paging paging parameters
+	 * @param embed embed parameters
+	 * @param perms permissions parameters
+	 * @return List of Portal Implementations
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/packages/{name}/portal_implementations")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "List of Portal Implementations is returned."),
+		@ResponseCode(code = 404, condition = "Package {name} does not exist.")
+	})
+	PagedPortalImplementationInPackageListResponse listPortalImplementations(@PathParam("name") String name, @BeanParam FilterParameterBean filter,
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed,
+			@BeanParam PermsParameterBean perms) throws Exception;
+
+	/**
+	 * Get the Portal Implementation in a package
+	 * @param name Package name
+	 * @param portalImplementation Portal Implementation keyword, local ID or global ID
+	 * @return Portal Implementation response
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/packages/{name}/portal_implementations/{portal_implementation}")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "Portal Implementation is returned for package."),
+		@ResponseCode(code = 404, condition = "Either package {name} does not exist, or it does not contain {portal_implementation}.")
+	})
+	PortalImplementationResponse getPortalImplementation(@PathParam("name") String name, @PathParam("portal_implementation") String portalImplementation)
+			throws Exception;
+
+	/**
+	 * Add a Portal Implementation (including all its files) to a package
+	 * @param name Package name
+	 * @param portalImplementation Portal Implementation keyword, local ID or global ID
+	 * @return response
+	 * @throws Exception
+	 */
+	@PUT
+	@Path("/packages/{name}/portal_implementations/{portal_implementation}")
+	@StatusCodes({
+		@ResponseCode(code = 201, condition = "The Portal Implementation was added to the package."),
+		@ResponseCode(code = 404, condition = "Either the package {name} or the {portal_implementation} does not exist."),
+		@ResponseCode(code = 409, condition = "{portal_implementation} is already part of the package {name}.")
+	})
+	Response addPortalImplementation(@PathParam("name") String name, @PathParam("portal_implementation") String portalImplementation) throws Exception;
+
+	/**
+	 * Remove a Portal Implementation from a package
+	 * @param name Package name
+	 * @param portalImplementation Portal Implementation keyword, local ID or global ID
+	 * @return response
+	 * @throws Exception
+	 */
+	@DELETE
+	@Path("/packages/{name}/portal_implementations/{portal_implementation}")
+	@StatusCodes({
+		@ResponseCode(code = 204, condition = "The Portal Implementation was removed from the package."),
+		@ResponseCode(code = 404, condition = "Either package {name} does not exist, or it does not contain {portal_implementation}."),
+		@ResponseCode(code = 409, condition = "{portal_implementation} is contained in a subpackage and cannot be removed.")
+	})
+	Response removePortalImplementation(@PathParam("name") String name, @PathParam("portal_implementation") String portalImplementation) throws Exception;
+
+	/**
 	 * List packages assigned to a node. It is not possible to get packages to channels.<br>
 	 * The result can be filtered by
 	 * <ul>
@@ -746,6 +828,7 @@ public interface PackageResource {
 	 * <li><code>objectProperties</code></li>
 	 * <li><code>crFragments</code></li>
 	 * <li><code>contentRepositories</code></li>
+	 * <li><code>portalImplementations</code></li>
 	 * </ul>
 	 * @param nodeId Node ID (either global or local)
 	 * @param filter filter parameters
@@ -935,6 +1018,19 @@ public interface PackageResource {
 		@ResponseCode(code = 200, condition = "Autocomplete list is returned.")
 	})
 	List<AutocompleteItem> autocompleteContentRepositories(@QueryParam("term") String term) throws Exception;
+
+	/**
+	 * Endpoint for autocomplete UI components for Portal Implementations. Returns at most 10 Portal Implementations matching the given term
+	 * @param term term to match (keyword or name)
+	 * @return list of at most 10 Portal Implementations
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/autocomplete/portal_implementations")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "Autocomplete list is returned.")
+	})
+	List<AutocompleteItem> autocompletePortalImplementations(@QueryParam("term") String term) throws Exception;
 
 	/**
 	 * Get the current status information for the automatic synchronization.

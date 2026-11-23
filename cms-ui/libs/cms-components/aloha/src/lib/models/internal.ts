@@ -1,6 +1,6 @@
 import { ElementRef, EventEmitter } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
-import { AlohaComponent } from '@gentics/aloha-models';
+import { AlohaComponent, AlohaPlugin } from '@gentics/aloha-models';
 
 export interface RenderedAlohaComponent<C extends AlohaComponent, T> extends ControlValueAccessor {
     slot?: string;
@@ -16,4 +16,8 @@ export interface RenderedAlohaComponent<C extends AlohaComponent, T> extends Con
 export interface AlohaComponentRenderedEvent<C extends AlohaComponent, T> {
     name: string;
     component: RenderedAlohaComponent<C, T>;
+}
+
+export interface AlohaTextEditorPlugin extends AlohaPlugin {
+    init: (withLinks?: boolean) => void | Promise<void>;
 }

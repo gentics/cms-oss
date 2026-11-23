@@ -11,18 +11,95 @@ import {
     ViewChild,
 } from '@angular/core';
 import { AlohaComponent, AlohaSettings } from '@gentics/aloha-models';
-import { GCMS_UI_SERVICES_PROVIDER, I18nService } from '@gentics/cms-components';
+import {
+    extractRichContentLinks,
+    GCMS_UI_SERVICES_PROVIDER,
+    I18nService,
+    RichContentLink,
+    RichContentLinkType,
+    RichContentType,
+    toRichContentLinkTemplate,
+} from '@gentics/cms-components';
 import { CNWindow, GcmsUiBridge, GcmsUiServices, ModalCloseError } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { cancelEvent } from '@gentics/common';
+import { cancelEvent, randomId } from '@gentics/common';
 import { BaseFormElementComponent, UserAgentProvider } from '@gentics/ui-core';
 import { Store } from '@ngxs/store';
 import { isEqual, mergeWith } from 'lodash-es';
 import { distinctUntilChanged, filter } from 'rxjs';
 import { AlohaStateModel } from '../../models';
-import { AlohaComponentRenderedEvent, RenderedAlohaComponent } from '../../models/internal';
+import { AlohaComponentRenderedEvent, AlohaTextEditorPlugin, RenderedAlohaComponent } from '../../models/internal';
 import { AlohaIntegrationService, NormalizedToolbarSizeSettings } from '../../providers/aloha-integration/aloha-integration.service';
 import { AlohaOverlayService } from '../../providers/aloha-overlay/aloha-overlay.service';
+
+// General link attributes
+const ATTR_REPOSITORY = 'data-gentics-aloha-repository';
+const ATTR_OBJECT_ID = 'data-gentics-aloha-object-id';
+const ATTR_HREF = 'href';
+const ATTR_TARGET = 'target';
+
+// Internal Link attributes
+const ATTR_CHANNEL_ID = 'data-gcn-channelid';
+const ATTR_TARGET_LABEL = 'data-gcn-target-label';
+
+// Misc constants
+const REPO_INTERNAL_LINK = 'com.gentics.aloha.GCN.Page';
+const TYPE_PAGE = '10007';
+const TYPE_FILE = '10008';
+
+function elementToRichContentLink(el: HTMLAnchorElement): RichContentLink {
+    if (el.getAttribute(ATTR_REPOSITORY) !== REPO_INTERNAL_LINK) {
+        return {
+            type: RichContentType.LINK,
+            linkType: RichContentLinkType.URL,
+            displayText: el.textContent,
+            target: el.getAttribute(ATTR_TARGET),
+            url: el.getAttribute(ATTR_HREF),
+        };
+    }
+
+    const [typeId, itemId] = (el.getAttribute(ATTR_OBJECT_ID) || '').split('.');
+    return {
+        type: RichContentType.LINK,
+        linkType: typeId === TYPE_PAGE ? RichContentLinkType.PAGE : RichContentLinkType.FILE,
+        displayText: el.textContent,
+        target: el.getAttribute(ATTR_TARGET),
+        itemId: itemId,
+        nodeId: el.getAttribute(ATTR_CHANNEL_ID),
+    };
+}
+
+const PLACEHOLDER_PREFIX = 'gtx-rich-content-';
+
+/**
+ * Serializes the content of the editable to the stored format, where all links are
+ * replaced with their rich-content templates (i.E. `{{LINK|URL:http&col;//example.com|Example}}`).
+ *
+ * The templates are already escaped on their own, and must therefore be inserted *after* the
+ * HTML serialization. Inserting them as text-nodes would make the browser escape them again
+ * (`&col;` -> `&amp;col;`). Comments are serialized verbatim, which is why they are used as
+ * placeholders which are then replaced with the actual templates.
+ */
+function serializeEditableContent(editable: HTMLElement): string {
+    const clone = editable.cloneNode(true) as HTMLElement;
+    const doc = clone.ownerDocument;
+    const templates: string[] = [];
+    // Unique per call, so already present comments can't collide with the placeholders
+    const prefix = `${PLACEHOLDER_PREFIX}${randomId(12)}-`;
+
+    clone.querySelectorAll('a').forEach((el) => {
+        const idx = templates.push(toRichContentLinkTemplate(elementToRichContentLink(el))) - 1;
+        el.replaceWith(doc.createComment(`${prefix}${idx}`));
+    });
+
+    let content = clone.innerHTML;
+    templates.forEach((template, idx) => {
+        // Function replacer, to prevent special replacement patterns (`$&`, ...) from being applied
+        content = content.replace(`<!--${prefix}${idx}-->`, () => template);
+    });
+
+    return content;
+}
 
 enum IFrameState {
     NONE = 'none',
@@ -79,6 +156,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     @ViewChild('container')
     public container: ElementRef<HTMLDivElement>;
 
+    public renderedContent = '';
     public isFocused = false;
     public state = IFrameState.NONE;
     public contentHeight: number;
@@ -187,12 +265,45 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         // Only allow simple strings
         this.value = this.value || '';
 
+        const links = extractRichContentLinks(this.value);
+        this.renderedContent = links.map((part) => {
+            if (part == null || typeof part !== 'object') {
+                return part || '';
+            }
+            // Create a temp element, which we use to render the HTML directly in the browser
+            const el = document.createElement('a');
+            el.textContent = part.displayText;
+
+            if (part.target) {
+                el.setAttribute(ATTR_TARGET, part.target);
+            }
+
+            if (part.type === RichContentType.LINK) {
+                // External links are quite easy to handle luckily
+                if (part.linkType === RichContentLinkType.URL) {
+                    el.setAttribute(ATTR_HREF, part.url);
+                    return el.outerHTML;
+                }
+            }
+
+            el.setAttribute(ATTR_REPOSITORY, REPO_INTERNAL_LINK);
+            el.setAttribute(ATTR_TARGET_LABEL, part.displayText);
+            el.setAttribute(ATTR_OBJECT_ID, `${part.linkType === RichContentLinkType.PAGE ? TYPE_PAGE : TYPE_FILE}.${part.itemId}`);
+            el.setAttribute(ATTR_CHANNEL_ID, `${part.nodeId}`);
+            el.setAttribute(ATTR_HREF, part.linkType === RichContentLinkType.PAGE
+                ? `/alohapage?real=true&realid=${part.itemId}&nodeid=${part.nodeId}`
+                : `/rest/file/content/load/${part.itemId}?nodeId=${part.nodeId}`,
+            );
+
+            return el.outerHTML;
+        }).join('');
+
         if (this.isFocused) {
             return;
         }
         const editable = this.getEditable();
         if (editable) {
-            editable.innerHTML = this.value;
+            editable.innerHTML = this.renderedContent;
         }
         this.resizeHandler();
     }
@@ -270,6 +381,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                         childList: true,
                         subtree: true,
                         characterData: true,
+                        attributes: true,
                     });
 
                     this.sizeObserver = new ResizeObserver(this.resizeHandler);
@@ -283,6 +395,8 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                 }
             }
         };
+
+        const plugins = Array.from(new Set([...REQUIRED_PLUGINS, ...(this.plugins || DEFAULT_PLUGINS)]));
 
         // First wait for the iframe to load, as it replaces the `contentWindow`
         this.iframe.nativeElement.addEventListener('load', () => {
@@ -380,13 +494,11 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             cw.addEventListener('message', handler);
 
             cw.Aloha.trigger('gcmsui.ready', {});
-            cw.Aloha.require(['gcn/texteditor-plugin'], (plugin) => {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                plugin.init();
+            cw.Aloha.require(['gcn/texteditor-plugin'], (plugin: AlohaTextEditorPlugin) => {
+                plugin.init(plugins.includes('common/link'));
             });
         });
 
-        const plugins = Array.from(new Set([...REQUIRED_PLUGINS, ...(this.plugins || DEFAULT_PLUGINS)]));
         const settings = mergeWith({}, DEFAULT_SETTINGS, this.settings, {
             readonly: false,
             sidebar: {
@@ -396,7 +508,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             i18n: {
                 current: this.i18n.getCurrentLanguage(),
             },
-            // Config so the gcn ressources load properly
+            // Config so the gcn resources load properly
             requireConfig: {
                 paths: {
                     gcn: '../plugins/gcn/gcn/lib',
@@ -421,7 +533,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 <html>
     <head></head>
     <body>
-        <div id="main">${this.value || ''}</div>
+        <div id="main">${this.renderedContent || ''}</div>
         <script type="text/javascript">
             Aloha = {};
             Aloha.settings = ${JSON.stringify(settings)};
@@ -558,7 +670,8 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         if (!editable) {
             return;
         }
-        this.triggerChange(editable.innerHTML);
+
+        this.triggerChange(serializeEditableContent(editable));
         this.resizeHandler();
     };
 

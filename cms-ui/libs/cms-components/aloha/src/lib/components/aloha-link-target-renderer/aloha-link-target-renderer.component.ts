@@ -80,7 +80,7 @@ export class AlohaLinkTargetRendererComponent
         const lang = this.loadedTargetElement?.type === 'page' ? this.loadedTargetElement.language : null;
 
         this.gcmsUiServices.openRepositoryBrowser({
-            allowedSelection: ['page', 'file', 'image'],
+            allowedSelection: this.settings?.pickerTypes || ['page', 'file', 'image'],
             selectMultiple: false,
             title,
             startFolder: this.loadedTargetElement?.folderId,

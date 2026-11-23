@@ -365,40 +365,77 @@ describe('useWorkspaceEventStore', () => {
     });
 
     describe('workflow steps', () => {
-        // Since rc.4 a step belongs to a plan: `step.updated` carries `plan_id`.
-        it('keeps each step.updated by plan and step id, a later one replacing it', () => {
+        it('keeps the steps of each run of a plan apart, in the order the runs started, with an execute run\'s module', () => {
+            const run = (id: string, mode: string, planId: string | null, workflow: string | null = null) => ({
+                run: { id, status: 'running', mode, plan_id: planId, workflow, started_at: '2026-10-07T09:00:00Z', step_count: 0 },
+            });
+
             apply(
-                event(1, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'running' } }),
-                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-2', label: 'Derive folder', status: 'pending' } }),
-                event(3, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'done', detail: '14 pages' } }),
-                event(4, 'step.updated', { run_id: 'r-2', plan_id: 'p-2', step: { id: 'st-1', label: 'Read pages', status: 'running' } }),
+                event(1, 'run.started', { run_id: 'r-1', ...run('r-1', 'propose', 'p-1') }),
+                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'running' } }),
+                event(3, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
+                event(4, 'run.started', { run_id: 'r-2', ...run('r-2', 'execute', 'p-1', 'content_create') }),
+                event(5, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Create page draft', status: 'running' } }),
             );
 
-            expect(session().steps).toEqual({
-                'p-1': {
-                    'st-1': { id: 'st-1', label: 'Read source material', status: 'done', detail: '14 pages' },
-                    'st-2': { id: 'st-2', label: 'Derive folder', status: 'pending' },
-                },
-                'p-2': {
-                    'st-1': { id: 'st-1', label: 'Read pages', status: 'running' },
-                },
+            expect(session().stepRuns).toEqual([
+                { runId: 'r-1', planId: 'p-1', steps: { 'content_create/st-1': { id: 'content_create/st-1', label: 'Read source material', status: 'done' } } },
+                { runId: 'r-2', planId: 'p-1', workflow: 'content_create', steps: { 'content_create/st-2': { id: 'content_create/st-2', label: 'Create page draft', status: 'running' } } },
+            ]);
+        });
+
+        it('keeps no run of the session agent or a side run, which belong to no plan', () => {
+            apply(
+                event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running', mode: 'session', plan_id: null, started_at: '2026-10-07T09:00:00Z', step_count: 0 } }),
+                event(2, 'run.started', { run_id: 'r-2', run: { id: 'r-2', status: 'running', mode: 'side', plan_id: null, started_at: '2026-10-07T09:00:00Z', step_count: 0 } }),
+            );
+
+            expect(session().stepRuns).toBeUndefined();
+        });
+
+        it('keeps a step of a run whose run.started it did not see, and ignores a substep', () => {
+            apply(
+                event(1, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'plan/st-publish', label: 'Publish', status: 'running' } }),
+                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'plan/st-publish-1', label: 'Page 1', status: 'done' }, parent_step_id: 'plan/st-publish' }),
+            );
+
+            expect(session().stepRuns).toEqual([{ runId: 'r-1', planId: 'p-1', steps: { 'plan/st-publish': { id: 'plan/st-publish', label: 'Publish', status: 'running' } } }]);
+        });
+
+        it('marks the plan\'s latest run when plan.updated says its work is over, and no run for any other status', () => {
+            const plan = (seq: number, status: string) => event(seq, 'plan.updated', {
+                plan_id: 'p-1',
+                plan: { id: 'p-1', workflows: [{ id: 'content_create', version: '1.0.0' }], status, version: 1, summary: '', items: [] },
             });
+
+            apply(
+                event(1, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'content_create/st-1', label: 'Read source material', status: 'done' } }),
+                event(2, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Create page draft', status: 'running' } }),
+                plan(3, 'running'),
+            );
+
+            expect(session().stepRuns?.map(({ runId, closesPlan }) => [runId, closesPlan])).toEqual([['r-1', undefined], ['r-2', undefined]]);
+
+            apply(plan(4, 'done'));
+
+            expect(session().stepRuns?.map(({ runId, closesPlan }) => [runId, closesPlan])).toEqual([['r-1', undefined], ['r-2', true]]);
+
+            apply(
+                event(5, 'step.updated', { run_id: 'r-3', plan_id: 'p-1', step: { id: 'content_create/st-2', label: 'Derive', status: 'done' } }),
+                plan(6, 'discarded'),
+            );
+
+            expect(session().stepRuns?.map(({ runId, closesPlan }) => [runId, closesPlan])).toEqual([['r-1', undefined], ['r-2', true], ['r-3', true]]);
         });
 
-        it('ignores the update of a substep', () => {
-            apply(event(1, 'step.updated', { plan_id: 'p-1', step: { id: 'st-2-2', label: 'Check templates', status: 'done' }, parent_step_id: 'st-2' }));
+        it('resetSession drops the steps of the runs', () => {
+            apply(event(1, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'running' } }));
 
-            expect(session().steps).toBeUndefined();
-        });
-
-        it('resetSession drops the steps', () => {
-            apply(event(1, 'step.updated', { plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'running' } }));
-
-            expect(session().steps).toBeDefined();
+            expect(session().stepRuns).toBeDefined();
 
             useWorkspaceEventStore.getState().resetSession(SESSION);
 
-            expect(session().steps).toBeUndefined();
+            expect(session().stepRuns).toBeUndefined();
         });
     });
 

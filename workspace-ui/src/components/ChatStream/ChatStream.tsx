@@ -7,6 +7,7 @@ import { ConfirmedSettingsCard, InteractionCard } from '@/components/Interaction
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
+import type { StepLine } from '@/helper/workflowSteps/workflowSteps';
 import { useSessionMessages } from '@/hooks/useGenaixQueries';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import type { MessagePart, MessageRole, UserMessagePart, UserSettingPart } from '@/services/apiService/genaix/types';
@@ -159,8 +160,8 @@ function confirmationEntry(id: string, runId: string | undefined, parts: Parts):
  * The conversation of a session: the history (`GET …/messages`, every page), then what the event
  * stream added since (`useWorkspaceEventStore`), each message once. A message the stream has is shown
  * as streamed, also where the history lists it already while it is still in progress, until the
- * refetched history replaces it (`useSessionEvents`). Where the agent is in its workflow
- * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. A
+ * refetched history replaces it (`useSessionEvents`). A plan's steps (`WorkflowSteps`) go with the agent's
+ * latest block until they are through, then stay there, so they are in view without one per answer. A
  * confirmed settings review (`ConfirmedSettingsCard`) stands where its `interaction.resolved` came; an
  * agent message that went on streaming after it is shown split there (`splitMessage`).
  * How a run ended (`RunNotice`) follows the last message of that run; the answer of a side run (a message
@@ -192,7 +193,7 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
             confirmations: session.confirmations,
         };
     }));
-    const steps = useWorkflowSteps(sessionId);
+    const stepLines = useWorkflowSteps(sessionId);
     const scrollRef = useRef<HTMLDivElement>(null);
     const stickRef = useRef(true);
 
@@ -267,7 +268,14 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
     // TEMPORARY: a recoverable `error` is a warning and hidden for now (`withoutWarnings`).
     const unplaced: Notice[] = (notices ?? []).filter((notice) => notice.kind !== 'error');
 
+    // Each run's first agent message, where a steps line it took through stays.
+    const runStarts = new Map<string, number>();
+
     entries.forEach((entry, index) => {
+        if (entry.isAgent && entry.runId && !runStarts.has(entry.runId)) {
+            runStarts.set(entry.runId, placed.length);
+        }
+
         placed.push(...splitMessage(entry, cutsAfter(index), sessionId));
 
         if (entry.runId && !entries.slice(index + 1).some((next) => next.runId === entry.runId)) {
@@ -281,6 +289,30 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
                 .forEach((notice) => placed.push({ key: `notice-${notice.seq}`, node: <RunNotice notice={notice} /> }));
         }
     });
+
+    // A line that is through stays in the block where it stood then, its closing run's.
+    const stepsItem = ({ key, steps }: StepLine): Item => ({ key, node: <WorkflowSteps steps={steps} /> });
+    const blockStart = (index: number) => {
+        let start = index;
+
+        while (start > 0 && !placed[start - 1].hasOwnSender) {
+            start -= 1;
+        }
+
+        return start;
+    };
+    const anchorOf = ({ closingRunId, runIds }: StepLine): number | undefined => {
+        const runId = closingRunId ? [closingRunId, ...[...runIds].reverse()].find((id) => runStarts.has(id)) : undefined;
+
+        return runId === undefined ? undefined : blockStart(runStarts.get(runId)!);
+    };
+    const steps = stepLines.map((line, order) => ({ line, order, at: anchorOf(line) }));
+
+    // From the end, as each insertion shifts the places after it.
+    steps
+        .filter(({ at }) => at !== undefined)
+        .sort((a, b) => b.at! - a.at! || b.order - a.order)
+        .forEach(({ line, at }) => placed.splice(at!, 0, stepsItem(line)));
 
     const anchoredRuns = new Set(entries.map((entry) => entry.runId).filter(Boolean));
 
@@ -302,15 +334,15 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
         placed.push({ key: 'thinking', node: <ThinkingIndicator text={run?.statusText} /> });
     }
 
-    // Where the agent is in its workflow: first in its latest block, right under its avatar and name; at
-    // the end, opening the next block, while the user's turn is the last thing. One stable key, so the
-    // line stays open or closed as it moves down with the agent's turns.
-    if (steps.length > 0) {
+    // A line not through yet goes with the agent's latest block, or opens the next after the user's turn.
+    const moving = steps.filter(({ at }) => at === undefined).map(({ line }) => stepsItem(line));
+
+    if (moving.length > 0) {
         const latestBlock = placed.at(-1)?.hasOwnSender
             ? -1
             : placed.findLastIndex((item, index) => !item.hasOwnSender && (index === 0 || placed[index - 1].hasOwnSender));
 
-        placed.splice(latestBlock < 0 ? placed.length : latestBlock, 0, { key: 'workflow-steps', node: <WorkflowSteps steps={steps} /> });
+        placed.splice(latestBlock < 0 ? placed.length : latestBlock, 0, ...moving);
     }
 
     useLayoutEffect(() => {

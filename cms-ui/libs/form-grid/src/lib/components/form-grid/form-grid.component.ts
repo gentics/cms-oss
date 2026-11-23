@@ -28,6 +28,7 @@ import { BaseComponent, ISortableEvent, SortableGroup } from '@gentics/ui-core';
 import { TranslateStore } from '@ngx-translate/core';
 import { v4 as uuidV4 } from 'uuid';
 import {
+    ATTR_ELEMENT_IS_CONTROL,
     CLIPBOARD_MIME,
     CLIPBOARD_STORAGE_KEY,
     ElementContainerMoveEvent,
@@ -123,9 +124,10 @@ function moveNestedElement(
     fromId: string,
     toId: string,
     targetIndex: number,
+    parentInfo: { removed: boolean; added: boolean } = { removed: false, added: false },
 ): { removed: boolean; added: boolean } {
-    let removed = false;
-    let added = false;
+    let removed = parentInfo.removed;
+    let added = parentInfo.added;
 
     if (currentContainerId === fromId) {
         const idx = entries.findIndex((inner) => inner.id === element.id);
@@ -148,7 +150,7 @@ function moveNestedElement(
         if (!cur.elements) {
             continue;
         }
-        const res = moveNestedElement(cur.id, cur.elements, element, fromId, toId, targetIndex);
+        const res = moveNestedElement(cur.id, cur.elements, element, fromId, toId, targetIndex, { removed, added });
         removed = removed || res.removed;
         added = added || res.added;
     }
@@ -291,6 +293,13 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly elementParentMap = computed(() => {
         const data = this.elementsGroupData();
         return data.parentMap;
+    });
+
+    /**
+     * Set of type-names which refer to controls
+     */
+    public readonly controlTypeNames = computed(() => {
+        return new Set<string>(Object.keys(this.config().controls));
     });
 
     /** Whether the selected element has any missing translations across all form languages */
@@ -730,31 +739,76 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             return;
         }
 
-        const copy = structuredClone(this.uiSchema());
+        this.uiSchema.update((uiSchema) => {
+            const copy = structuredClone(uiSchema);
 
-        // Moving between containers can only be done within the same page, therefore safe
-        const page = copy.pages[event.pageIndex];
+            // Moving between containers can only be done within the same page, therefore safe
+            const page = copy.pages[event.pageIndex];
 
-        // Go through all elements (and nested ones), to find the from/to container elements in the page,
-        // then update the elements within that.
-        const { removed, added } = moveNestedElement(
-            this.ELEMENT_ROOT_CONTAINER_ID,
-            page.elements,
-            element,
-            event.fromContainerId,
-            event.toContainerId,
-            event.targetIndex,
-        );
+            // Go through all elements (and nested ones), to find the from/to container elements in the page,
+            // then update the elements within that.
+            const { removed, added } = moveNestedElement(
+                this.ELEMENT_ROOT_CONTAINER_ID,
+                page.elements,
+                element,
+                event.fromContainerId,
+                event.toContainerId,
+                event.targetIndex,
+            );
 
-        if (!removed) {
-            console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be removed from the source container`);
+            if (!removed) {
+                console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be removed from the source container`);
+            }
+            if (!added) {
+                console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be added from the target container`);
+            }
+
+            return copy;
+        });
+
+        if (event.fromContextId !== event.toContextId) {
+            // Since the element now has been moved within the ui-schema, we also have to check if we need
+            // to move it in the schema as well
+            this.schema.update((schema) => {
+                const copy = structuredClone(schema);
+
+                let schemaProp: FormSchemaProperty;
+
+                // First we remove it from the current parent element
+                if (event.fromContextId === this.ELEMENT_ROOT_CONTAINER_ID) {
+                    schemaProp = copy.properties[event.elementId];
+                    delete copy.properties[event.elementId];
+                } else {
+                    const parentProp = copy.properties[event.fromContextId];
+                    if (parentProp?.properties != null) {
+                        schemaProp = parentProp.properties[event.elementId];
+                        delete parentProp.properties[event.elementId];
+                    }
+                }
+
+                // Not a control element, no moving required
+                if (schemaProp == null) {
+                    return schema;
+                }
+
+                // Now we need to add it to the new parent
+                if (event.toContextId === this.ELEMENT_ROOT_CONTAINER_ID) {
+                    copy.properties[event.elementId] = schemaProp;
+                } else {
+                    const parentProp = copy.properties[event.toContextId];
+                    if (parentProp == null) {
+                        console.error(`Could not determine the target schema parent ${event.toContextId} while moving element ${event.elementId}`);
+                        return schema;
+                    }
+                    if (parentProp.properties == null || typeof parentProp.properties !== 'object') {
+                        parentProp.properties = {};
+                    }
+                    parentProp.properties[event.elementId] = schemaProp;
+                }
+
+                return copy;
+            });
         }
-        if (!added) {
-            console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be added from the target container`);
-        }
-
-        // After all has been updated, push it as one change
-        this.uiSchema.set(copy);
     }
 
     public moveElementBetweenPages(event: ElementInterPageMoveEvent): void {

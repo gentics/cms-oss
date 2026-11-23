@@ -8,7 +8,9 @@ import {
   useWindowDimensions,
   TouchableWithoutFeedback,
   UIManager,
-  Easing
+  Easing,
+  ViewInstance,
+  TextInputInstance,
 } from 'react-native';
 import {
   IOverlayConfirmationState,
@@ -289,7 +291,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
     return [];
   });
 
-  const elementRef = useRef<View>(null);
+  const elementRef = useRef<ViewInstance>(null);
 
   // +----------------------------------------------------------------------+
   // | Animation Definitions (States, Components & Hooks) for hover effects |
@@ -383,7 +385,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
 
   const [savedElementCount, setSavedElementCount] = useState(-1);
   // Ref, der an den neuen Aggregat-Input weitergegeben wird:
-  const newAggregateInputRef = useRef<TextInput>(null);
+  const newAggregateInputRef = useRef<TextInputInstance>(null);
 
   useEffect(() => {
     if (

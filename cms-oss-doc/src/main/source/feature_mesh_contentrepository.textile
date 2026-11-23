@@ -428,6 +428,23 @@ h3. Portal Implementations
 "Portal Implementations":admin_portal_implementations.html assigned to a node are published into the node's Mesh project
 using the schema @[prefix]_implementation@. See "Publishing into Mesh ContentRepositories":admin_portal_implementations.html#publishing-into-mesh-contentrepositories for details.
 
+h3. Portal Type
+
+The properties dialog of Nodes in the CMS have a field _Portal Type_, which defines the type of the portal that renders the objects of the node published into Gentics Mesh.
+The possible values are +Java+ (Gentics Portal | java) and +PHP+ (Gentics Portal | php).
+
+The portal type can either be selected directly or be read from a system property or environment variable.
+The property must be given in the format +${env:NODE_PORTALTYPE_...}+ or +${sys:NODE_PORTALTYPE_...}+, the name must start with +NODE_PORTALTYPE_+.
+The value of the property is matched case-insensitively (e.g. +java+ is accepted as +Java+). If the value is no portal type, the portal type of the node is not set and a warning is logged.
+The property is resolved when the node is saved and when the CMS is started.
+
+The field is mandatory in the Administration UI. Nodes created over the REST API without a portal type have no portal type.
+
+A new channel starts with the portal type of its master: the Administration UI preselects it, and a channel created over the REST API without a portal type gets the portal type (or the property) of its master.
+The portal type of the channel can be changed afterwards. Note that the preview of pages in a channel is always rendered by the preview URL of the master, so a channel with another portal type than its master may show its forms incorrectly in the preview.
+
+The portal type is available for rendering as +node.portalType+ (see "Meta Attributes":meta_attributes.html), which is used by the default form construct (see "Default Form Construct":feature_forms.html#default-form-construct).
+
 h3. Synchronize Mesh roles
 
 The datasource used in the "Roles Property":#roles-property has to be filled with the Mesh roles, that should be available for selection.

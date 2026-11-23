@@ -328,6 +328,11 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             previewType: this.entity?.meshPreviewUrlProperty
                 ? NodePreviewurlType.PROPERTY
                 : NodePreviewurlType.VALUE,
+            portalType: this.entity?.portalType,
+            portalTypeProperty: this.entity?.portalTypeProperty,
+            portalTypeDefinition: this.entity?.portalTypeProperty
+                ? NodePreviewurlType.PROPERTY
+                : NodePreviewurlType.VALUE,
             name: this.entity?.name,
             publishImageVariants: this.entity?.publishImageVariants,
             defaultFileFolderId: this.entity?.defaultFileFolderId,

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { TextInput } from 'react-native';
+import { TextInput, TextInputInstance } from 'react-native';
 import {
   CommonValidation,
   FormState,
@@ -62,7 +62,7 @@ function InputElement(props: IFormComponentAttributes) {
 
   const schema = utils.getSchemaForElement(props.formState.schema, props.id);
   const isNumber = schema.type === 'number';
-  const elementRef = useRef<TextInput>(null);
+  const elementRef = useRef<TextInputInstance>(null);
   const styles = useMemo(() => mergeStyles(inputElementStyles, customInputElementStyles), []);
   const lang = restService?.getFullCulture?.() || 'de-AT';
 

@@ -70,6 +70,8 @@ public class Node extends ContentNodeItem implements Serializable {
 	private Integer urlRenderWayFiles;
 	private String meshPreviewUrl;
 	private String meshPreviewUrlProperty;
+	private PortalType portalType;
+	private String portalTypeProperty;
 	private Boolean insecurePreviewUrl;
 	private String meshProject;
 	private String meshProjectName;
@@ -607,6 +609,39 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public void setMeshPreviewUrlProperty(String meshPreviewUrlProperty) {
 		this.meshPreviewUrlProperty = meshPreviewUrlProperty;
+	}
+
+	/**
+	 * Type of the portal, which renders the content of the node. If {@link #getPortalTypeProperty()} is set, this is the resolved value.
+	 * @return portal type or null, if not set
+	 */
+	public PortalType getPortalType() {
+		return portalType;
+	}
+
+	/**
+	 * Set the portal type
+	 * @param portalType portal type
+	 */
+	public void setPortalType(PortalType portalType) {
+		this.portalType = portalType;
+	}
+
+	/**
+	 * Property containing the portal type. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable},
+	 * the name must start with NODE_PORTALTYPE_. The resolved value is matched case-insensitively against the portal types.
+	 * @return portal type property
+	 */
+	public String getPortalTypeProperty() {
+		return portalTypeProperty;
+	}
+
+	/**
+	 * Set the portal type property
+	 * @param portalTypeProperty portal type property
+	 */
+	public void setPortalTypeProperty(String portalTypeProperty) {
+		this.portalTypeProperty = portalTypeProperty;
 	}
 
 	/**

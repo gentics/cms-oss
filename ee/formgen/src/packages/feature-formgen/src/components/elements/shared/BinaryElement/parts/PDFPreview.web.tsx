@@ -44,6 +44,7 @@ export const PDFPreview = ({
         onLoadError={onError}
         onSourceError={onError}
         loading={<Loading></Loading>}
+        suspense={false}
       >
         <Page
           width={width}

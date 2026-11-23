@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, TouchableOpacity, Platform, Linking } from "react-native";
+import { View, TouchableOpacity, Platform, Linking, ViewInstance } from "react-native";
 import {
   FormState,
   IFormGridOptions,
@@ -52,8 +52,8 @@ function BinaryElement(props: IFormComponentAttributes) {
     [],
   );
 
-  const dropRef = useRef<View>(null);
-  const elementRef = useRef<View>(null);
+  const dropRef = useRef<ViewInstance>(null);
+  const elementRef = useRef<ViewInstance>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
   // Keep latest props for window event handlers to avoid stale closures

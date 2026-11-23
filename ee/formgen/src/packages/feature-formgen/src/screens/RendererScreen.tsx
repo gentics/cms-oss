@@ -15,7 +15,9 @@ import {
   TouchableOpacity,
   UIManager,
   useWindowDimensions,
-  View
+  View,
+  ScrollViewInstance,
+  ViewInstance,
 } from 'react-native';
 import { Host } from 'react-native-portalize';
 import CMSFormCaptcha from '../components/elements/cms/CmsCaptcha/CMSFormCaptcha';
@@ -32,6 +34,7 @@ import { useFormMirrorStore } from '../state/useFormMirrorState';
 import {
   ApiResponse,
   FormgenSettings,
+  FormSettings,
   FormState,
   IData,
   IDataFields,
@@ -57,6 +60,7 @@ import {
 import * as formEventsUtils from '../utils/FormEventsUtils';
 import * as mockFormularUtils from '../utils/MockFormularUtils';
 import * as overlayUtils from '../utils/OverlayUtils';
+import { handleActaNovaProblem } from '../utils/ActaNovaProblemUtils';
 import { changeToPage } from '../utils/UiUtils';
 import * as utils from '../utils/Utils';
 import {
@@ -86,6 +90,7 @@ interface FormResponseBody {
   captchaConfig?: any;
   successUrl?: { [language: string]: string };
   formgenSettings?: FormgenSettings;
+  formSettings?: FormSettings;
 }
 
 const RendererScreen: React.FC<{
@@ -275,9 +280,9 @@ const RendererScreen: React.FC<{
   const [reportResult, setReportResult] = useState<IReportResult | null>(null);
 
   // Neuer Ref für den ScrollView
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
   // Neuer Ref für den ErrorBlock
-  const errorBlockRef = useRef<View>(null);
+  const errorBlockRef = useRef<ViewInstance>(null);
   // ref of the first error element
   const firstErrorElementRef = useRef<any>(null);
   const firstErrorElementInfo = useRef<any>(null);
@@ -757,8 +762,18 @@ const RendererScreen: React.FC<{
       // Reset any existing expert search result so the new form starts clean.
       setReportResult(null);
       setHasSearched(false);
+      // The reset closed every overlay: show the loading overlay as on the first load.
+      if (!props.isFormgridPreview) {
+        overlayUtils.setOverlay(
+          uiState,
+          formState,
+          OverlayTypeEnum.FULL_SCREEN_LOADING,
+          updateState,
+          { loadingText: IOverlayFullScreenTextEnum.LoadPage },
+        );
+      }
     }
-    
+
     const formId = newFormId
       ? newFormId
       : data && data.data && data.data.formID
@@ -875,13 +890,15 @@ const RendererScreen: React.FC<{
         requestInitializeData,
       );
       if (!apiResponse.success) {
-        overlayUtils.setOverlay(
-          uiState,
-          formState,
-          OverlayTypeEnum.LOAD_FORM,
-          updateState,
-          { response: apiResponse },
-        );
+        if (!handleActaNovaProblem(apiResponse, uiState, formState, updateState)) {
+          overlayUtils.setOverlay(
+            uiState,
+            formState,
+            OverlayTypeEnum.LOAD_FORM,
+            updateState,
+            { response: apiResponse },
+          );
+        }
         return apiResponse;
       }
 
@@ -892,6 +909,7 @@ const RendererScreen: React.FC<{
       formState.captchaConfig = mapCaptchaConfig(responseBody.captchaConfig);
       formState.successUrl = responseBody.successUrl;
       formState.formgenSettings = responseBody.formgenSettings;
+      formState.formSettings = responseBody.formSettings;
       uiState.lastPage = responseBody.uiSchema.pages.length;
       const missingFlowResponse2 = applyFormFlow(responseBody);
       if (missingFlowResponse2) return missingFlowResponse2;
@@ -1139,56 +1157,27 @@ const RendererScreen: React.FC<{
     const rowIdForRequest = isCopy ? undefined : rowID;
     const duplicateRowID = isCopy ? rowID : undefined;
 
-    const showError = true;
     uiState.loading = true;
     updateState(StatesToUpdateEnum.UIState);
     // TODO v8.2 Considering whether to only one fullscreen overlay for the whole aciton
 
-    if (props.mockForm) {
-      await formEventsUtils.loadDialogForm(
-        uiState,
-        formState,
-        restService,
-        updateState,
-        handleInitFormHooks,
-        refreshPropertyID,
-        scrollReference,
-        editModeDialogFormID,
-        dialogPortalFormHostObjectID,
-        refreshPropertyID,
-        rowIdForRequest,
-        duplicateRowID,
-        createAfterIndex,
-        props.mockForm,
-      );
-      return;
-    }
-    await formEventsUtils.saveForm(
+    // the main form is not saved before the dialog form opens: its data is kept in the
+    // dialog snapshot and restored by revertToMainFormFromDialogForm
+    await formEventsUtils.loadDialogForm(
       uiState,
       formState,
-      updateState,
       restService,
-      false,
-      true,
-      async () =>
-        await formEventsUtils.loadDialogForm(
-          uiState,
-          formState,
-          restService,
-          updateState,
-          handleInitFormHooks,
-          refreshPropertyID,
-          scrollReference,
-          editModeDialogFormID,
-          dialogPortalFormHostObjectID,
-          refreshPropertyID,
-          rowIdForRequest,
-          duplicateRowID,
-          createAfterIndex,
-          props.mockForm,
-        ),
-      () => {},
-      showError,
+      updateState,
+      handleInitFormHooks,
+      refreshPropertyID,
+      scrollReference,
+      editModeDialogFormID,
+      dialogPortalFormHostObjectID,
+      refreshPropertyID,
+      rowIdForRequest,
+      duplicateRowID,
+      createAfterIndex,
+      props.mockForm,
     );
   };
 
@@ -1364,6 +1353,11 @@ const RendererScreen: React.FC<{
           }
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1453,6 +1447,11 @@ const RendererScreen: React.FC<{
           }
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1499,6 +1498,11 @@ const RendererScreen: React.FC<{
           callback(null);
         },
         (exception: any) => {
+          if (handleActaNovaProblem(exception, uiState, formState, updateState)) {
+            // the overlay takes over, only end the loading of the field
+            callback(null);
+            return;
+          }
           utils.setANFieldLoadError(formState, jsonPath, true);
           updateState(StatesToUpdateEnum.ALL);
           callback(null);
@@ -1716,6 +1720,9 @@ const RendererScreen: React.FC<{
         },
         (request: ApiResponse) => {
           // on exception
+          if (handleActaNovaProblem(request, uiState, formState, updateState)) {
+            return;
+          }
           overlayUtils.setOverlay(
             uiState,
             formState,
@@ -1862,7 +1869,8 @@ const RendererScreen: React.FC<{
       props.isLoggedIn &&
       !uiState.isReadOnlyForm &&
       formState.schema.formType !== 'redirectForm' &&
-      !formState.paymentState
+      !formState.paymentState &&
+      formState.formSettings?.disableSave !== true
     ) {
       //add background save / autosave
       const autoSave = () => {

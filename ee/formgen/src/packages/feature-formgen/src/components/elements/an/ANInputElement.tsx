@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, TextInput, TouchableOpacity, Platform } from 'react-native';
+import { View, TextInput, TouchableOpacity, Platform, TextInputInstance } from 'react-native';
 import {
   CommonValidation,
   FormState,
@@ -45,7 +45,7 @@ function ANInputElement(props: IFormComponentAttributes) {
 
   const schema = utils.getSchemaForElement(props.formState.schema, props.id);
   const isNumber = schema.type === 'number';
-  const elementRef = useRef<TextInput>(null);
+  const elementRef = useRef<TextInputInstance>(null);
   const styles = useMemo(() => mergeStyles(inputElementStyles, customInputElementStyles), []);
   const lang = restService?.getFullCulture?.() || "de-AT";
   const setMirrorFormState = useFormMirrorStore((state) => state.setFormState);

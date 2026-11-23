@@ -734,8 +734,7 @@ export async function fgFindPaletteItem(grid: Locator, paletteId: string, isCont
     const leftSidePanel = grid.locator('.editor-panel.editor-panel--left');
 
     // If it isn't expanded, we have to open it, otherwise we can't see the controls
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    if (!leftSidePanel.evaluate((el) => el.classList.contains('expanded'))) {
+    if (!await leftSidePanel.evaluate((el) => el.classList.contains('expanded'))) {
         await leftSidePanel.locator('.panel-header .panel-toggle-btn').click();
     }
 
@@ -819,7 +818,9 @@ async function fgComputeDropTarget(grid: Locator, target?: FGDropTarget): Promis
     } else {
         const ent = entries[target.position];
         targetPosition = {
-            x: (ent.rect.x - containerRect.x) + DRAG_THRESHOLD,
+            // Stay horizontally well within the entry: Its left edge may be overlapped by the
+            // (expanded) palette panel, which would then receive the drop instead.
+            x: (ent.rect.x - containerRect.x) + (ent.rect.width * 0.3),
             y: (ent.rect.y - containerRect.y) + DRAG_THRESHOLD,
         };
     }
@@ -905,6 +906,30 @@ export async function fgMoveElementToPage(grid: Locator, source: Locator, pageIn
     // SortableJS animates the insertion (and ignores events while doing so), so give it a moment before dropping.
     await page.waitForTimeout(200);
     await page.mouse.up();
+}
+
+/**
+ * Starts dragging an existing element and keeps holding it, so the state of the grid *during* a
+ * drag (i.E. which containers are blocked) can be inspected in the `whileDragging` callback.
+ * The element is released at the position it was picked up from afterwards.
+ */
+export async function fgHoldDrag(grid: Locator, source: Locator, whileDragging: () => Promise<void>): Promise<void> {
+    const page = grid.page();
+    // Grab it near its own header, for the same reasons as in `fgMoveElement`.
+    const sourceBox = await source.boundingBox();
+    const startX = sourceBox.x + 20;
+    const startY = sourceBox.y + 20;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX + (DRAG_THRESHOLD * 5), startY + (DRAG_THRESHOLD * 5), { steps: 5 });
+
+    try {
+        await whileDragging();
+    } finally {
+        await page.mouse.move(startX, startY, { steps: 5 });
+        await page.mouse.up();
+    }
 }
 
 export async function fgAddBlock(grid: Locator, blockId: string, target: FGDropTarget): Promise<Locator> {

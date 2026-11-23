@@ -4,6 +4,7 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
+  ViewInstance,
 } from 'react-native';
 import {
   CommonValidation,
@@ -44,7 +45,7 @@ function ANBooleanElement(props: IFormComponentAttributes) {
 
   const formState = props.formState;
 
-  const elementRef = useRef<View>(null);
+  const elementRef = useRef<ViewInstance>(null);
 
   useEffect(() => {
     props.updateFirstErrorElementRef && props.updateFirstErrorElementRef(props, elementRef);

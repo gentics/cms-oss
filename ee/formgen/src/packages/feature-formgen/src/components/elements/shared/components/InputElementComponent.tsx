@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TextInput, Text, Platform } from 'react-native';
+import { View, TextInput, Text, Platform, TextInputInstance } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -156,7 +156,7 @@ interface SharedInputComponentProps {
   unitPosition?: UnitPosition;
 
   // Refs & Styles
-  elementRef: React.RefObject<TextInput | null>;
+  elementRef: React.RefObject<TextInputInstance | null>;
   styles: any;
   t: any;
 }

@@ -202,6 +202,8 @@ export interface StagedNode extends StagingBase, Pick<Node,
   | 'omitPageExtension'
   | 'pageLanguageCode'
   | 'meshPreviewUrlProperty'
+  | 'portalType'
+  | 'portalTypeProperty'
 > {
     // Use global IDs instead of local ones
     /** Global/UUID of the content-repository */

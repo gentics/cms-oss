@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, TextInput } from 'react-native';
+import { View, TextInput, TextInputInstance } from 'react-native';
 import {
   ICommonOverlayProps,
   IOverlayCustomOptionExtraProps,
@@ -30,7 +30,7 @@ const CustomOptionOverlay: React.FC<ICommonOverlayProps> = (
 
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const inputStyles = useMemo(
     () => mergeStyles(inputElementStyles, customInputElementStyles),
     [],

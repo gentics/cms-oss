@@ -85,6 +85,7 @@ For nodes and channels, not all of the attributes are handled in the same way wh
 | Publish directory segments      | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
 | Mesh Preview URL                | !images/gcn_icons/remove.gif! | !images/gcn_icons/remove.gif! |        |
 | Allow insecure Mesh Preview URL | !images/gcn_icons/remove.gif! | !images/gcn_icons/remove.gif! |        |
+| Portal Type                     | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     | If the portal type is read from a property, the property is staged and resolved on the importing system |
 | Disable publishing              | !images/gcn_icons/remove.gif! | !images/gcn_icons/remove.gif! | New nodes will have the "disable publishing" flag set after importing |
 | Publish files to filesystem     | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
 | Publish pages to filesystem     | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |

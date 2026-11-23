@@ -539,7 +539,6 @@ test.describe('Page Management', () => {
     }, async ({ page }) => {
         const NICE_URL = '/test';
 
-        // Needs the nice-url feature to be enabled
         await IMPORTER.setupFeatures({
             [Feature.NICE_URLS]: true,
         });

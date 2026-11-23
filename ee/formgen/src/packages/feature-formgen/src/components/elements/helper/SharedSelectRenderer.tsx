@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { View, TouchableOpacity, Dimensions, TextInput } from 'react-native';
+import { View, TouchableOpacity, Dimensions, TextInput, TextInputInstance } from 'react-native';
 import { FormElementWrapper } from './FormElementWrapper';
 import * as utils from '../../../utils/Utils';
 import * as overlayUtils from '../../../utils/OverlayUtils';
@@ -81,7 +81,7 @@ function SharedSelectRenderer({
   // Tracks that the user activated the custom option even before entering text,
   // so its indicator shows as selected immediately on click (radio semantics).
   const [customSelected, setCustomSelected] = useState(false);
-  const customInputRef = useRef<TextInput>(null);
+  const customInputRef = useRef<TextInputInstance>(null);
   const customInputStyles = useMemo(
     () => mergeStyles(inputElementStyles, customInputElementStyles),
     [],

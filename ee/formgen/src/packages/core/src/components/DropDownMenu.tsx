@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, ReactNode } from 'react';
-import { View, StyleSheet, Animated, Modal, TouchableOpacity, TouchableWithoutFeedback, Dimensions, Platform } from 'react-native';
+import { View, StyleSheet, Animated, Modal, TouchableOpacity, TouchableWithoutFeedback, Dimensions, Platform, ViewInstance } from 'react-native';
 import { customComponentsTheme } from '../styles/theme';
 import { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { IDropDownSelectOption } from '../types/interfaces';
@@ -50,7 +50,7 @@ const DropDownMenu:  React.FC<DropdownMenuProps> = ({
   const opacity = useSharedValue(0);
   const windowWidth = Dimensions.get('window').width;
 
-  const triggerRef = useRef<View>(null);
+  const triggerRef = useRef<ViewInstance>(null);
 
   useEffect(() => {
     if (triggerRef.current && visible) {

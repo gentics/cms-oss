@@ -35,6 +35,7 @@ const INTIIAL_FEATURES_STATE: FeaturesState = {
     [Feature.AUTOMATIC_TRANSLATION]: false,
     [Feature.UPLOAD_FILE_PROPERTIES]: false,
     [Feature.UPLOAD_IMAGE_PROPERTIES]: false,
+    [Feature.COPY_TAGS]: false,
 
     nodeFeatures: {},
 };

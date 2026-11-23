@@ -1,0 +1,22 @@
+{
+  "version": "6.4.13",
+  "date": "12.11.2026",
+  "changeLogEntryFileNames": [
+    "9049.SUP-19976.bugfix",
+    "9056.SUP-19708.documentation",
+    "9046.SUP-20134.bugfix",
+    "8962.SUP-20139.bugfix",
+    "9064.SUP-20153.bugfix",
+    "9069.SUP-19974.bugfix",
+    "9041.SUP-19845.bugfix",
+    "9034.SUP-19822.bugfix",
+    "9063.SUP-20316.bugfix",
+    "9027.SUP-20293.bugfix",
+    "9033.SUP-19821.bugfix",
+    "9070.SUP-20172.bugfix"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "12.11.2026",
+    "alohaeditor-version": "2.1.22"
+  }
+}

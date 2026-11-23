@@ -146,6 +146,13 @@
 										<exclude>META-INF/*.RSA</exclude>
 									</excludes>
 								</filter>
+								<filter>
+									<!-- The default form construct needs the gtx_form helper, which only exists in the EE -->
+									<artifact>com.gentics.cms-oss:cms-core</artifact>
+									<excludes>
+										<exclude>packages/DefaultElements/constructs/gtxform/**</exclude>
+									</excludes>
+								</filter>
 							</filters>
 							<transformers>
 								<transformer

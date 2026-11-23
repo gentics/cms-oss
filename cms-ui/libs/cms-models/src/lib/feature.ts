@@ -56,6 +56,11 @@ export enum Feature {
      * Has to be activated for the nodes as well, see {@link NodeFeature.UPLOAD_IMAGE_PROPERTIES}.
      */
     UPLOAD_IMAGE_PROPERTIES = 'upload_image_properties',
+    /**
+     * If this feature is activated, tags which are copied and pasted in the Aloha Editor are created as new tags,
+     * instead of keeping the reference to the original tag.
+     */
+    COPY_TAGS = 'copy_tags',
 }
 
 /**

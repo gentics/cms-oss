@@ -2059,6 +2059,8 @@ public class ModelBuilder {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 			node.setMeshPreviewUrl(nodeNode.getMeshPreviewUrl());
 			node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
+			node.setPortalType(nodeNode.getPortalType());
+			node.setPortalTypeProperty(nodeNode.getPortalTypeProperty());
 			node.setInsecurePreviewUrl(nodeNode.isInsecurePreviewUrl());
 			node.setMeshProject(nodeNode.getMeshProject());
 			node.setMeshProjectName(nodeNode.getMeshProjectName());

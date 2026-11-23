@@ -1,9 +1,11 @@
 import { FormElement } from '@gentics/cms-models';
-import { ElementMoveData, UNIQUE_ID_GLUE } from '../models';
+import { ElementMoveData, FormGridEditMode, UNIQUE_ID_GLUE } from '../models';
 
 /**
  * Helper function which checks if a move is allowed for a certain container.
  * @param moveData The data of the element that is currently being moved
+ * @param mode The edit mode of the form-grid
+ * @param controlTypeNames A set of names which determine if a type is a control or not
  * @param wl The whitelist of the container element it's supposed to move to
  * @param containerContextId The context-id of the container the element it's supposed to move to
  * @param rootId The root container-id
@@ -13,6 +15,8 @@ import { ElementMoveData, UNIQUE_ID_GLUE } from '../models';
  */
 export function blockDragForElement(
     moveData: ElementMoveData,
+    mode: FormGridEditMode,
+    controlTypeNames: Set<string>,
     wl: string[],
     containerContextId: string,
     rootId: string,
@@ -22,6 +26,21 @@ export function blockDragForElement(
     // Block if we have no data, to prevent potentially wrong drops
     if (!moveData) {
         return true;
+    }
+
+    // Always prevent dragging while in preview mode
+    if (mode === FormGridEditMode.NONE) {
+        return true;
+    }
+
+    // In restricted mode, you're not allowed to edit the schema values,
+    // therefore check if we're trying to move a control element.
+    // If we do, and we attempt to change the context of it, then we have to block it.
+    if (mode === FormGridEditMode.RESTRICTED) {
+        const isControl = controlTypeNames.has(moveData.elementType);
+        if (isControl && moveData.contextId !== containerContextId) {
+            return true;
+        }
     }
 
     // Checking the whitelist
@@ -79,7 +98,7 @@ export function blockDragForElement(
             elementType: child.formGridOptions?.type,
             inserting: moveData.inserting,
         };
-        if (blockDragForElement(childMoveData, wl, containerContextId, rootId, elMap)) {
+        if (blockDragForElement(childMoveData, mode, controlTypeNames, wl, containerContextId, rootId, elMap)) {
             return true;
         }
     }

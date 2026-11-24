@@ -266,6 +266,25 @@ describe('PageUrlTagPropertyEditor', () => {
             }),
         );
 
+        it('displays the breadcrumbs path of the set internal page',
+            componentTest(() => TestComponent, (fixture, instance) => {
+                const tag: EditableTag = mockEditableTag<PageTagPartProperty>([
+                    {
+                        type: TagPropertyType.PAGE,
+                        typeId: TagPartType.UrlPage,
+                        pageId: PAGE_A.id,
+                    },
+                ]);
+
+                validateInit(fixture, instance, tag);
+                fixture.detectChanges();
+
+                const breadcrumbPath = (fixture.nativeElement as HTMLElement).querySelector('gtx-browse-box .breadcrumb-path');
+                expect(breadcrumbPath).toBeTruthy();
+                expect(breadcrumbPath?.textContent).toEqual('GCN5 Demo > News');
+            }),
+        );
+
         it('initializes properly for set internal page that is no longer available and internal page',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const tag: EditableTag = mockEditableTag<PageTagPartProperty>([

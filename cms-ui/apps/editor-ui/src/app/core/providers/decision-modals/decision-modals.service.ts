@@ -24,6 +24,7 @@ import {
     MultiDeleteResult,
     PageLanguageVariantMap,
 } from '../../../shared/components/multi-delete-modal/multi-delete-modal.component';
+import { MoveFormsWarningModal } from '../../../shared/components/move-forms-warning-modal/move-forms-warning-modal.component';
 import { MultiMoveModal } from '../../../shared/components/multi-move-modal/multi-move-modal.component';
 import { MultiRestoreModalComponent } from '../../../shared/components/multi-restore-modal/multi-restore-modal.component';
 import { PublishPagesModalComponent } from '../../../shared/components/publish-pages-modal/publish-pages-modal.component';
@@ -411,6 +412,20 @@ export class DecisionModalsService {
         }
 
         return this.modalService.fromComponent(MultiMoveModal, null, { items, targetFolder, targetNode })
+            .then((modal) => modal.open());
+    }
+
+    /**
+     * Asks the user to confirm moving the forms to another node/channel, as pages
+     * which link to these forms may break by doing so.
+     * Resolves to the forms which should be moved, or rejects if the user cancelled.
+     */
+    confirmMoveFormsToOtherNode(forms: Form[], targetFolder: Folder, targetNode: Node): Promise<Form[]> {
+        if (!forms?.length) {
+            return Promise.resolve([]);
+        }
+
+        return this.modalService.fromComponent(MoveFormsWarningModal, null, { forms, targetFolder, targetNode })
             .then((modal) => modal.open());
     }
 

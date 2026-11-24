@@ -1,0 +1,34 @@
+<div class="modal-title">
+    <h5>{{ 'modal.move_forms_warning_title' | gtxI18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <p class="warning">
+        <icon class="warning-icon">warning</icon>
+        <span>{{ ('modal.move_forms_warning_body_' + (forms.length === 1 ? 'singular' : 'plural')) | gtxI18n:{
+            count: forms.length,
+            channel: targetNode?.name,
+            folder: targetFolder?.name
+        } }}</span>
+    </p>
+
+    <div class="list forms-to-move">
+        @for (form of forms; track form.id) {
+            <gtx-contents-list-item class="form" [attr.data-id]="form.id">
+                <div class="item-icon">
+                    <icon>{{ 'form' | gtxTypeIcon }}</icon>
+                </div>
+                <div class="item-primary">
+                    <span class="item-name">{{ form.name }}</span>
+                </div>
+            </gtx-contents-list-item>
+        }
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button type="secondary" flat data-action="cancel" (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+    <gtx-button type="warning" class="confirm-button" data-action="confirm" (click)="confirm()">
+        {{ 'modal.move_forms_warning_confirm_button' | gtxI18n:{ count: forms.length } }}
+    </gtx-button>
+</div>

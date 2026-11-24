@@ -9,6 +9,7 @@ import {
     FolderItemType,
     FolderListOptions,
     FolderListResponse,
+    Form,
     FormListResponse,
     GcmsPermission,
     Image,
@@ -30,6 +31,7 @@ import {
 import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, Observable, of } from 'rxjs';
+import { MoveFormsWarningModal } from '../../../shared/components/move-forms-warning-modal/move-forms-warning-modal.component';
 import { MultiDeleteModal, MultiDeleteResult } from '../../../shared/components/multi-delete-modal/multi-delete-modal.component';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
@@ -39,7 +41,7 @@ import { LocalizationsService } from '../localizations/localizations.service';
 import { PermissionService } from '../permissions/permission.service';
 import { DecisionModalsService } from './decision-modals.service';
 import { I18nService, TranslateParameters } from '@gentics/cms-components';
-import { EditMode } from '@gentics/cms-integration-api-models';
+import { EditMode, ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 
 describe('DecisionModalsService', () => {
 
@@ -920,6 +922,56 @@ describe('DecisionModalsService', () => {
             expect(resolved).toBe(false);
         }));
 
+    });
+
+    describe('confirmMoveFormsToOtherNode()', () => {
+
+        const FORM_ONE = { id: 1, type: 'form', name: 'Form One' } as Form;
+        const FORM_TWO = { id: 2, type: 'form', name: 'Form Two' } as Form;
+        const TARGET_FOLDER = { id: OTHERFOLDER, type: 'folder', name: 'Target' } as Folder;
+        const TARGET_NODE = { id: OTHERNODE, type: 'node', name: 'Other Node' } as Node;
+
+        it('opens the warning modal with the forms, target folder and target node', async () => {
+            modalService.mockResult([FORM_ONE, FORM_TWO]);
+
+            await decisionModalsService.confirmMoveFormsToOtherNode([FORM_ONE, FORM_TWO], TARGET_FOLDER, TARGET_NODE);
+
+            expect(modalService.fromComponent as jasmine.Spy).toHaveBeenCalledOnceWith(MoveFormsWarningModal, null, {
+                forms: [FORM_ONE, FORM_TWO],
+                targetFolder: TARGET_FOLDER,
+                targetNode: TARGET_NODE,
+            });
+        });
+
+        it('resolves to the forms when the user confirms', async () => {
+            modalService.mockResult([FORM_ONE]);
+
+            const result = await decisionModalsService.confirmMoveFormsToOtherNode([FORM_ONE], TARGET_FOLDER, TARGET_NODE);
+
+            expect(result).toEqual([FORM_ONE]);
+        });
+
+        it('rejects when the user cancels the modal', async () => {
+            const closeError = new ModalCloseError(ModalClosingReason.CANCEL);
+            modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
+                .and.returnValue(Promise.resolve({
+                    open: (): Promise<any> => Promise.reject(closeError),
+                }));
+
+            await expectAsync(decisionModalsService.confirmMoveFormsToOtherNode([FORM_ONE], TARGET_FOLDER, TARGET_NODE))
+                .toBeRejectedWith(closeError);
+        });
+
+        it('does not open a modal if there are no forms to move', async () => {
+            modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent');
+
+            const emptyResult = await decisionModalsService.confirmMoveFormsToOtherNode([], TARGET_FOLDER, TARGET_NODE);
+            const nullResult = await decisionModalsService.confirmMoveFormsToOtherNode(null, TARGET_FOLDER, TARGET_NODE);
+
+            expect(emptyResult).toEqual([]);
+            expect(nullResult).toEqual([]);
+            expect(modalService.fromComponent).not.toHaveBeenCalled();
+        });
     });
 
 });

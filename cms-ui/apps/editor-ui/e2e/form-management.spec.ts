@@ -14,6 +14,7 @@ import {
     CONSTRUCT_TEST_FORM,
     EntityImporter,
     findNotification,
+    FOLDER_A,
     FORM_ONE,
     FORM_TWO,
     GroupImportData,
@@ -23,6 +24,7 @@ import {
     IMPORT_TYPE_USER,
     ImportPermissions,
     isVariant,
+    ITEM_TYPE_FOLDER,
     ITEM_TYPE_FORM,
     ITEM_TYPE_PAGE,
     LANGUAGE_DE,
@@ -30,6 +32,7 @@ import {
     loginWithForm,
     matchRequest,
     navigateToApp,
+    NODE_FULL,
     NODE_MINIMAL,
     openContext,
     PAGE_ONE,
@@ -39,14 +42,17 @@ import {
     UserImportData,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { expect, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import {
     editorAction,
     expectItemOffline,
     expectItemPublished,
     findItem,
     findList,
+    findRepoBrowserItem,
+    findRepoBrowserList,
     itemAction,
+    selectItem,
     selectNode,
     toggleDisplayAllCheckbox,
 } from './helpers';
@@ -622,5 +628,164 @@ test.describe('Form Management', () => {
         const list = findList(page, ITEM_TYPE_FORM);
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', false);
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', true);
+    });
+
+    test.describe('Moving', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20217',
+        }],
+    }, () => {
+        const MOVE_WARNING_MODAL = 'gtx-move-forms-warning-modal';
+
+        test.beforeEach(async ({ page }) => {
+            // Setting up the content of two nodes takes longer than the default timeout
+            test.slow();
+
+            await test.step('Second Node Setup', async () => {
+                // The forms are moved from the minimal node into the full node
+                await IMPORTER.setupTest(TestSize.FULL);
+                await IMPORTER.setupFeatures(TestSize.FULL, {
+                    [NodeFeature.FORMS]: true,
+                });
+                await IMPORTER.client.form.assignConfiguration(FORM_TYPE_GENERIC, IMPORTER.get(NODE_FULL).id).send();
+                await IMPORTER.importData([FORM_TWO]);
+            });
+
+            const formPermissions = [
+                { type: GcmsPermission.READ, value: true },
+                { type: GcmsPermission.READ_ITEMS, value: true },
+                { type: GcmsPermission.VIEW_FORM, value: true },
+                { type: GcmsPermission.CREATE_FORM, value: true },
+                { type: GcmsPermission.UPDATE_FORM, value: true },
+                { type: GcmsPermission.DELETE_FORM, value: true },
+            ];
+            await setupWithPermissions(page, [NODE_MINIMAL, NODE_FULL].map((node) => ({
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(node).folderId}`,
+                subObjects: true,
+                perms: formPermissions,
+            })));
+        });
+
+        /**
+         * Collects all requests which would move the given form, so that tests can verify
+         * that no move has been triggered.
+         */
+        function trackMoveRequests(page: Page, formId: number): string[] {
+            const requests: string[] = [];
+            page.on('request', (req) => {
+                if (matchRequest('PUT', new RegExp(`/rest/form/${formId}/folder/\\d+`))(req)) {
+                    requests.push(req.url());
+                }
+            });
+            return requests;
+        }
+
+        /** Triggers the move via the given action and selects the root folder of the other node in the repository browser. */
+        async function moveToOtherNode(page: Page, action: () => Promise<void>): Promise<void> {
+            await action();
+
+            const repoBrowser = page.locator('repository-browser');
+            await repoBrowser.waitFor();
+            await selectNode(repoBrowser, IMPORTER.get(NODE_FULL).id);
+            await clickModalAction(repoBrowser, 'confirm');
+            await repoBrowser.waitFor({ state: 'detached' });
+        }
+
+        async function getFormFolderId(formId: number): Promise<number> {
+            const res = await IMPORTER.client.form.get(formId).send();
+            return res.item.folderId;
+        }
+
+        function findModalForms(modal: Locator): Locator {
+            return modal.locator('.forms-to-move gtx-contents-list-item');
+        }
+
+        test('should ask for confirmation and not move the form when cancelled', async ({ page }) => {
+            const FORM = IMPORTER.get(FORM_ONE);
+            const moveRequests = trackMoveRequests(page, FORM.id);
+
+            const list = findList(page, ITEM_TYPE_FORM);
+            await moveToOtherNode(page, () => itemAction(findItem(list, FORM.id), 'move'));
+
+            const modal = page.locator(MOVE_WARNING_MODAL);
+            await expect(modal).toBeVisible();
+            await expect(findModalForms(modal)).toHaveCount(1);
+            await expect(modal.locator(`.forms-to-move gtx-contents-list-item[data-id="${FORM.id}"] .item-name`)).toHaveText(FORM.name);
+
+            await clickModalAction(modal, 'cancel');
+            await modal.waitFor({ state: 'detached' });
+
+            expect(moveRequests).toHaveLength(0);
+            expect(await getFormFolderId(FORM.id)).toEqual(FORM.folderId);
+            await expect(findItem(list, FORM.id)).toBeVisible();
+        });
+
+        test('should move the form to the other node when confirmed', async ({ page }) => {
+            const FORM = IMPORTER.get(FORM_ONE);
+            const TARGET_NODE = IMPORTER.get(NODE_FULL);
+
+            const list = findList(page, ITEM_TYPE_FORM);
+            await moveToOtherNode(page, () => itemAction(findItem(list, FORM.id), 'move'));
+
+            const modal = page.locator(MOVE_WARNING_MODAL);
+            await expect(modal).toBeVisible();
+
+            const moveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${FORM.id}/folder/${TARGET_NODE.folderId}`));
+            await clickModalAction(modal, 'confirm');
+            await moveReq;
+            await modal.waitFor({ state: 'detached' });
+
+            expect(await getFormFolderId(FORM.id)).toEqual(TARGET_NODE.folderId);
+        });
+
+        test('should list all selected forms in the confirmation', async ({ page }) => {
+            const FIRST_FORM = IMPORTER.get(FORM_ONE);
+            const SECOND_FORM = IMPORTER.get(FORM_TWO);
+            const TARGET_NODE = IMPORTER.get(NODE_FULL);
+
+            const list = findList(page, ITEM_TYPE_FORM);
+            await selectItem(findItem(list, FIRST_FORM.id));
+            await selectItem(findItem(list, SECOND_FORM.id));
+
+            await moveToOtherNode(page, () => list.locator('gtx-form-list-header .group-actions [data-action="move"] button').click());
+
+            const modal = page.locator(MOVE_WARNING_MODAL);
+            await expect(modal).toBeVisible();
+            await expect(findModalForms(modal)).toHaveCount(2);
+            await expect(modal.locator(`.forms-to-move [data-id="${FIRST_FORM.id}"] .item-name`)).toHaveText(FIRST_FORM.name);
+            await expect(modal.locator(`.forms-to-move [data-id="${SECOND_FORM.id}"] .item-name`)).toHaveText(SECOND_FORM.name);
+
+            const firstMoveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${FIRST_FORM.id}/folder/${TARGET_NODE.folderId}`));
+            const secondMoveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${SECOND_FORM.id}/folder/${TARGET_NODE.folderId}`));
+            await clickModalAction(modal, 'confirm');
+            await Promise.all([firstMoveReq, secondMoveReq]);
+
+            expect(await getFormFolderId(FIRST_FORM.id)).toEqual(TARGET_NODE.folderId);
+            expect(await getFormFolderId(SECOND_FORM.id)).toEqual(TARGET_NODE.folderId);
+        });
+
+        test('should not ask for confirmation when moving the form within the same node', async ({ page }) => {
+            const FORM = IMPORTER.get(FORM_ONE);
+            const TARGET_FOLDER = IMPORTER.get(FOLDER_A);
+
+            const list = findList(page, ITEM_TYPE_FORM);
+            await itemAction(findItem(list, FORM.id), 'move');
+
+            const repoBrowser = page.locator('repository-browser');
+            await repoBrowser.waitFor();
+            // Navigate into the target folder of the same node
+            await findRepoBrowserItem(findRepoBrowserList(repoBrowser, ITEM_TYPE_FOLDER), TARGET_FOLDER.id)
+                .locator('.item-name a')
+                .click();
+
+            const moveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${FORM.id}/folder/${TARGET_FOLDER.id}`));
+            await clickModalAction(repoBrowser, 'confirm');
+            await moveReq;
+
+            await expect(page.locator(MOVE_WARNING_MODAL)).not.toBeAttached();
+            expect(await getFormFolderId(FORM.id)).toEqual(TARGET_FOLDER.id);
+        });
     });
 });

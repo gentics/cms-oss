@@ -1,0 +1,25 @@
+@import "variables";
+@import "list-styles";
+@import "flex-modal";
+
+@include flex-modal;
+
+.modal-content {
+    min-height: 100px;
+    max-height: calc(96vh - 100px);
+}
+
+.warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+
+    .warning-icon {
+        color: $gtx-color-warning;
+        flex: 0 0 auto;
+    }
+}
+
+gtx-contents-list-item .item-icon {
+    height: 25px;
+}

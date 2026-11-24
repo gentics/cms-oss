@@ -4154,6 +4154,14 @@ public class FolderFactory extends AbstractFactory {
 				if (localizationFound[0]) {
 					return OpResult.fail(Folder.class, "folder.move.localization.error");
 				}
+
+				// === Let the registered services check, whether the contents of the moved folder structure may be moved to the other node
+				for (FolderService service : folderFactoryServiceLoader) {
+					OpResult serviceResult = service.checkMoveToOtherNode(this, target, subFolderIds);
+					if (serviceResult != null && !serviceResult.isOK()) {
+						return serviceResult;
+					}
+				}
 			}
 
 			if (targetChannel != null) {

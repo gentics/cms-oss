@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -108,12 +109,15 @@ import com.gentics.contentnode.object.Page.OnlineStatusChange;
 import com.gentics.contentnode.object.PublishWorkflow;
 import com.gentics.contentnode.object.PublishWorkflowStep;
 import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.UserGroup.ReductionType;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.page.PageCopyOpResult;
+import com.gentics.contentnode.object.parttype.CmsFormPartType;
+import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.page.PageCopyOpResultInfo;
 import com.gentics.contentnode.object.utility.PageComparator;
 import com.gentics.contentnode.perm.PermHandler;
@@ -1639,6 +1643,35 @@ public class PageFactory extends AbstractFactory {
 			}
 		}
 
+		/**
+		 * Check whether the given page has tags (content tags or object tags) with parts of type {@link CmsFormPartType}, which link to a form.
+		 * @param page page to check
+		 * @param msgKey message key for the failure message (parameters are the page location and the names of the tags linking to forms)
+		 * @return failed result, if the page has linked forms, null otherwise
+		 * @throws NodeException
+		 */
+		protected PageCopyOpResult checkLinkedForms(Page page, String msgKey) throws NodeException {
+			List<Tag> tags = new ArrayList<>();
+			tags.addAll(page.getContentTags().values());
+			tags.addAll(page.getObjectTags().values());
+
+			Set<String> tagNames = new TreeSet<>();
+			for (Tag tag : tags) {
+				for (Value value : tag.getValues()) {
+					PartType partType = value.getPartType();
+					if (partType instanceof CmsFormPartType && ((CmsFormPartType) partType).getTarget() != null) {
+						tagNames.add(tag.getName());
+						break;
+					}
+				}
+			}
+
+			if (tagNames.isEmpty()) {
+				return null;
+			}
+			return PageCopyOpResult.fail(msgKey, I18NHelper.getLocation(page), String.join(", ", tagNames));
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see com.gentics.contentnode.object.Page#copyTo(com.gentics.contentnode.object.Folder, boolean, java.lang.Integer, java.lang.Integer)
@@ -1682,6 +1715,16 @@ public class PageFactory extends AbstractFactory {
 				try (ChannelTrx trx1 = new ChannelTrx(targetChannelId)) {
 					if (!t.canCreate(targetFolder, Page.class, this.getLanguage())) {
 						return PageCopyOpResult.fail("page_copy.missing_create_perms_for_target", I18NHelper.getLocation(targetFolder));
+					}
+				}
+
+				// Pages with linked forms must not be copied to another node. Language variants are checked in the recursive calls to copyTo
+				if (!getOwningNode().equals(targetFolder.getOwningNode())) {
+					try (ChannelTrx trx1 = new ChannelTrx(sourceChannelId)) {
+						PageCopyOpResult formCheck = checkLinkedForms(this, "page_copy.linked_form");
+						if (formCheck != null) {
+							return formCheck;
+						}
 					}
 				}
 
@@ -2519,6 +2562,22 @@ public class PageFactory extends AbstractFactory {
 			try (ChannelTrx trx = new ChannelTrx(getChannel())) {
 				languageVariants = getLanguageVariants(false);
 			}
+
+			// pages with linked forms must not be moved to another node (check all language variants that would be moved)
+			if (!getOwningNode().equals(target.getOwningNode())) {
+				List<Page> pagesToMove = new ArrayList<>();
+				pagesToMove.add(this);
+				if (allLanguages) {
+					pagesToMove.addAll(languageVariants);
+				}
+				for (Page pageToMove : pagesToMove) {
+					PageCopyOpResult formCheck = checkLinkedForms(pageToMove, "page.move.linked_form");
+					if (formCheck != null) {
+						return formCheck;
+					}
+				}
+			}
+
 			if (allLanguages) {
 				// when moving to another node, check whether all languages are activated in the other node
 				if (!getOwningNode().equals(target.getOwningNode())) {

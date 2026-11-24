@@ -4,7 +4,7 @@ import { Type } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { I18nNotificationService, I18nService, TranslatedNotificationOptions, TranslateParameters } from '@gentics/cms-components';
-import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { EditMode, ModalCloseError, ModalClosingReason, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
     AllowedSelectionTypeMap,
@@ -19,6 +19,7 @@ import {
     ItemInNode,
     ItemType,
     ItemTypeMap,
+    Node,
     Page,
     Raw,
     TagInContainer,
@@ -698,11 +699,157 @@ describe('ContextMenuOperationsService', () => {
         });
     });
 
+    describe('moveItems', () => {
+
+        const SOURCE_FOLDER_ID = 1000;
+        const OTHER_FOLDER_ID = 1001;
+        const OTHER_NODE_ID = 456;
+
+        const FORM_ONE = { id: ITEM_ID, type: 'form', name: 'Form One' } as Form;
+        const FORM_TWO = { id: DIFFERENT_ITEM_ID, type: 'form', name: 'Form Two' } as Form;
+        const PAGE_ONE = { id: ITEM_ID, type: 'page', name: 'Page One' } as Page;
+
+        const OTHER_NODE = { id: OTHER_NODE_ID, type: 'node', name: 'Other Node' } as any;
+        const ACTIVE_NODE = { id: ACTIVE_NODE_ID, type: 'node', name: 'Active Node' } as any;
+
+        let moveMultipleItemsSpy: jasmine.Spy;
+        let confirmMoveFormsSpy: jasmine.Spy;
+        let moveItemsToFolderSpy: jasmine.Spy;
+        let listNavigateSpy: jasmine.Spy;
+        let errorCatchSpy: jasmine.Spy;
+
+        function targetFolder(folderId: number, nodeId: number): Folder<Raw> {
+            return { id: folderId, nodeId, type: 'folder', name: 'Target' } as Folder<Raw>;
+        }
+
+        function selectTarget(folder: Folder<Raw>): void {
+            repositoryBrowserClient.openRepositoryBrowser = jasmine.createSpy('openRepositoryBrowser')
+                .and.returnValue(Promise.resolve(folder));
+        }
+
+        beforeEach(() => {
+            spyOn(entityResolver, 'getNode').and.callFake((id: number) => id === OTHER_NODE_ID ? OTHER_NODE : ACTIVE_NODE);
+
+            // Pass all items through the inherited/localized check
+            moveMultipleItemsSpy = jasmine.createSpy('decisionModals.moveMultipleItems')
+                .and.callFake((items: InheritableItem[]) => Promise.resolve(items));
+            decisionModalsService.moveMultipleItems = moveMultipleItemsSpy;
+
+            confirmMoveFormsSpy = jasmine.createSpy('decisionModals.confirmMoveFormsToOtherNode')
+                .and.callFake((forms: Form[]) => Promise.resolve(forms));
+            decisionModalsService.confirmMoveFormsToOtherNode = confirmMoveFormsSpy;
+
+            moveItemsToFolderSpy = jasmine.createSpy('folderActions.moveItemsToFolder')
+                .and.returnValue(Promise.resolve(true));
+            folderActions.moveItemsToFolder = moveItemsToFolderSpy;
+
+            listNavigateSpy = jasmine.createSpy('navigate').and.returnValue(Promise.resolve(true));
+            navigationService.list = jasmine.createSpy('navigationService.list')
+                .and.returnValue({ ...mockInstructions(), navigate: listNavigateSpy });
+
+            errorCatchSpy = jasmine.createSpy('errorHandler.catch');
+            (errorHandler as any).catch = errorCatchSpy;
+        });
+
+        it('asks for confirmation when moving forms to another node and moves them when confirmed', async () => {
+            const target = targetFolder(OTHER_FOLDER_ID, OTHER_NODE_ID);
+            selectTarget(target);
+
+            await contextMenuOperationsService.moveItems('form', [FORM_ONE, FORM_TWO], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(confirmMoveFormsSpy).toHaveBeenCalledOnceWith([FORM_ONE, FORM_TWO], target, OTHER_NODE);
+            expect(moveItemsToFolderSpy).toHaveBeenCalledOnceWith('form', [FORM_ONE.id, FORM_TWO.id], OTHER_FOLDER_ID, OTHER_NODE_ID);
+            expect(navigationService.list).toHaveBeenCalledWith(OTHER_NODE_ID, OTHER_FOLDER_ID);
+            expect(listNavigateSpy).toHaveBeenCalled();
+        });
+
+        it('only asks for confirmation for the forms which can actually be moved', async () => {
+            const target = targetFolder(OTHER_FOLDER_ID, OTHER_NODE_ID);
+            selectTarget(target);
+            // FORM_TWO is filtered out (e.g. inherited)
+            moveMultipleItemsSpy.and.returnValue(Promise.resolve([FORM_ONE]));
+
+            await contextMenuOperationsService.moveItems('form', [FORM_ONE, FORM_TWO], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(confirmMoveFormsSpy).toHaveBeenCalledOnceWith([FORM_ONE], target, OTHER_NODE);
+            expect(moveItemsToFolderSpy).toHaveBeenCalledOnceWith('form', [FORM_ONE.id], OTHER_FOLDER_ID, OTHER_NODE_ID);
+        });
+
+        it('does not move the forms when the user cancels the confirmation', async () => {
+            selectTarget(targetFolder(OTHER_FOLDER_ID, OTHER_NODE_ID));
+            confirmMoveFormsSpy.and.returnValue(Promise.reject(new ModalCloseError(ModalClosingReason.CANCEL)));
+
+            await contextMenuOperationsService.moveItems('form', [FORM_ONE], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(confirmMoveFormsSpy).toHaveBeenCalled();
+            expect(moveItemsToFolderSpy).not.toHaveBeenCalled();
+            expect(navigationService.list).not.toHaveBeenCalled();
+            // Cancelling is not an error
+            expect(errorCatchSpy).not.toHaveBeenCalled();
+        });
+
+        it('does not move anything when the confirmation resolves without forms', async () => {
+            selectTarget(targetFolder(OTHER_FOLDER_ID, OTHER_NODE_ID));
+            confirmMoveFormsSpy.and.returnValue(Promise.resolve([]));
+
+            await contextMenuOperationsService.moveItems('form', [FORM_ONE], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(moveItemsToFolderSpy).not.toHaveBeenCalled();
+            expect(navigationService.list).not.toHaveBeenCalled();
+        });
+
+        it('does not ask for confirmation when moving forms within the same node', async () => {
+            selectTarget(targetFolder(OTHER_FOLDER_ID, ACTIVE_NODE_ID));
+
+            await contextMenuOperationsService.moveItems('form', [FORM_ONE], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(confirmMoveFormsSpy).not.toHaveBeenCalled();
+            expect(moveItemsToFolderSpy).toHaveBeenCalledOnceWith('form', [FORM_ONE.id], OTHER_FOLDER_ID, ACTIVE_NODE_ID);
+        });
+
+        it('does not ask for confirmation when moving other item types to another node', async () => {
+            selectTarget(targetFolder(OTHER_FOLDER_ID, OTHER_NODE_ID));
+
+            await contextMenuOperationsService.moveItems('page', [PAGE_ONE], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(confirmMoveFormsSpy).not.toHaveBeenCalled();
+            expect(moveItemsToFolderSpy).toHaveBeenCalledOnceWith('page', [PAGE_ONE.id], OTHER_FOLDER_ID, OTHER_NODE_ID);
+        });
+
+        it('does nothing when the current folder is selected as target', async () => {
+            selectTarget(targetFolder(SOURCE_FOLDER_ID, ACTIVE_NODE_ID));
+
+            await contextMenuOperationsService.moveItems('form', [FORM_ONE], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(moveMultipleItemsSpy).not.toHaveBeenCalled();
+            expect(confirmMoveFormsSpy).not.toHaveBeenCalled();
+            expect(moveItemsToFolderSpy).not.toHaveBeenCalled();
+        });
+
+        it('reports errors of the move request', async () => {
+            selectTarget(targetFolder(OTHER_FOLDER_ID, OTHER_NODE_ID));
+            const error = new Error('move failed');
+            moveItemsToFolderSpy.and.returnValue(Promise.reject(error));
+
+            await contextMenuOperationsService.moveItems('form', [FORM_ONE], ACTIVE_NODE_ID, SOURCE_FOLDER_ID);
+
+            expect(errorCatchSpy).toHaveBeenCalledWith(error);
+        });
+    });
+
 });
 
 class MockDecisionModalsService {
     selectItemsToDelete(items: InheritableItem[]): Promise<MultiDeleteResult> {
         throw new Error('selectItemsToDelete called but not mocked');
+    }
+
+    moveMultipleItems(items: InheritableItem[], targetFolder: Folder, targetNode: Node): Promise<InheritableItem[]> {
+        throw new Error('moveMultipleItems called but not mocked');
+    }
+
+    confirmMoveFormsToOtherNode(forms: Form[], targetFolder: Folder, targetNode: Node): Promise<Form[]> {
+        throw new Error('confirmMoveFormsToOtherNode called but not mocked');
     }
 }
 
@@ -745,6 +892,10 @@ class MockFolderActions implements Partial<FolderActionsService> {
     getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<Template[] | null> {
         throw new Error('getTemplates called but not mocked');
     }
+
+    moveItemsToFolder(type: FolderItemType, ids: number[], targetFolderId: number, targetNodeId: number): Promise<boolean> {
+        throw new Error('moveItemsToFolder called but not mocked');
+    }
 }
 
 class MockI18nNotification implements Partial<I18nNotificationService> {
@@ -786,6 +937,10 @@ class MockNavigationService {
     }
 
     modal(): InstructionActions {
+        return mockInstructions();
+    }
+
+    list(nodeId?: number, folderId?: number): InstructionActions {
         return mockInstructions();
     }
 }

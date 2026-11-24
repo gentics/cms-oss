@@ -39,6 +39,7 @@ export * from './list-filter/list-filter.component';
 export * from './list-item-details/list-item-details.component';
 export * from './masonry-grid/masonry-grid.component';
 export * from './message-properties/message-properties.component';
+export * from './move-forms-warning-modal/move-forms-warning-modal.component';
 export * from './multi-delete-modal/multi-delete-modal.component';
 export * from './multi-move-modal/multi-move-modal.component';
 export * from './multi-restore-modal/multi-restore-modal.component';

@@ -879,7 +879,20 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 if (folder && (folder.id !== currentFolderId || folder.nodeId !== activeNodeId)) {
                     const node = this.entityResolver.getNode(folder.nodeId);
                     return this.decisionModals.moveMultipleItems(items as InheritableItem[], folder, node)
-                        .then((items) => this.folderActions.moveItemsToFolder(itemType, items.map((item) => item.id), folder.id, folder.nodeId))
+                        .then((items) => {
+                            // Moving forms to another node/channel may break pages which link to them,
+                            // therefore the user has to explicitly confirm it.
+                            if (itemType === 'form' && folder.nodeId !== activeNodeId) {
+                                return this.decisionModals.confirmMoveFormsToOtherNode(items as any as Form[], folder, node);
+                            }
+                            return items;
+                        })
+                        .then((items: Item[]) => {
+                            if (!items?.length) {
+                                return false;
+                            }
+                            return this.folderActions.moveItemsToFolder(itemType, items.map((item) => item.id), folder.id, folder.nodeId);
+                        })
                         .then((success) => success && this.navigationService.list(folder.nodeId, folder.id).navigate());
                 }
             })

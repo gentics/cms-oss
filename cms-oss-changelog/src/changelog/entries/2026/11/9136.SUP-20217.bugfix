@@ -1,0 +1,1 @@
+When copying or moving a page, an additional validation is performed, that no forms are referenced. Unless all references have been removed, the action will not be permitted.

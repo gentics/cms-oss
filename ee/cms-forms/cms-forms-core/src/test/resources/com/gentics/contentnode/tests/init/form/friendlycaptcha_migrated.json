@@ -8,7 +8,7 @@
 	"successNodeId": 42,
 	"successUrl": {},
 	"templateContext": "",
-	"captchaId": "friendly_auto",
+	"captchaId": "friendlycaptcha_auto",
 	"schema": {
 		"properties": {}
 	},

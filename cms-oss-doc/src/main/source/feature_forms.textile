@@ -101,9 +101,9 @@ Each option is defined by a +value+ (the identifier stored on the form) and a lo
 |_. Value |_. Label (en) |_. Label (de) |_. Description |
 | +recaptcha_checkbox+ | Recaptcha: Checkbox | Recaptcha: Häckchen | Google reCAPTCHA rendered as an explicit "I'm not a robot" checkbox |
 | +recaptcha_invisible+ | Recaptcha: Background | Recaptcha: Hintergrund | Google reCAPTCHA that runs invisibly in the background (no checkbox) |
-| +friendly_auto+ | Friendly Captcha | Friendly Captcha | Friendly Captcha that starts its verification automatically |
-| +friendly_button+ | Friendly Captcha: Button | Friendly Captcha: Button | Friendly Captcha triggered via a button |
-| +friendly_background+ | Friendly Captcha: Background | Friendly Captcha: Hintergrund | Friendly Captcha that runs in the background |
+| +friendlycaptcha_auto+ | Friendly Captcha | Friendly Captcha | Friendly Captcha that starts its verification automatically |
+| +friendlycaptcha_button+ | Friendly Captcha: Button | Friendly Captcha: Button | Friendly Captcha triggered via a button |
+| +friendlycaptcha_background+ | Friendly Captcha: Background | Friendly Captcha: Hintergrund | Friendly Captcha that runs in the background |
 
 IMPORTANT: +captchaOptions+ only selects *which* captcha variant is used. The provider credentials and endpoints themselves — e.g. the reCAPTCHA / Friendly Captcha *site key*, *secret / verification key* and the verification URL — are *not* part of the form configuration. They must be configured in the forms plugin configuration (+config.yml+ of the forms plugin), the same place where e.g. the +binary+ +allowedTypes+ are defined.
 

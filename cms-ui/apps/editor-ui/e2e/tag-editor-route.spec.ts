@@ -1,17 +1,33 @@
 import { TagEditorChangeMessage } from "@gentics/cms-integration-api-models";
-import { AccessControlledType, Construct, GcmsPermission, Node, OverviewTagPartProperty, Template } from "@gentics/cms-models";
+import {
+    AccessControlledType,
+    CmsFormTagPartProperty,
+    Construct,
+    Form,
+    GcmsPermission,
+    Node,
+    NodeFeature,
+    OverviewTagPartProperty,
+    TagPropertyType,
+    Template,
+    Variant,
+} from "@gentics/cms-models";
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
+    CONSTRUCT_TEST_FORM,
     CONSTRUCT_TEST_OVERVIEW,
     createClient,
     EntityImporter,
     FOLDER_A,
+    FORM_ONE,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_USER,
+    isVariant,
+    ITEM_TYPE_FORM,
     loginWithForm,
     navigateToApp,
     NODE_MINIMAL,
@@ -20,7 +36,7 @@ import {
     UserImportData,
     wait
 } from "@gentics/e2e-utils";
-import { expect, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import { findRepoBrowserItem, findRepoBrowserList, selectItem, selectNode } from "./helpers";
 
 test.describe('Tag Editor Route', () => {
@@ -95,6 +111,7 @@ test.describe('Tag Editor Route', () => {
                         { type: GcmsPermission.PUBLISH_PAGES, value: true },
                         { type: GcmsPermission.READ_TEMPLATES, value: true },
                         { type: GcmsPermission.UPDATE_TEMPLATES, value: true },
+                        { type: GcmsPermission.VIEW_FORM, value: true },
                     ],
                 },
                 {
@@ -111,6 +128,34 @@ test.describe('Tag Editor Route', () => {
             ]);
         });
     });
+
+    /**
+     * Collects all `tag-editor-change` messages which the tag-editor route posts to the window.
+     */
+    async function collectTagEditorMessages(page: Page): Promise<TagEditorChangeMessage[]> {
+        const messages: TagEditorChangeMessage[] = [];
+        await page.exposeFunction('logTagEditorMessage', (msg: TagEditorChangeMessage) => {
+            messages.push(msg);
+        });
+
+        await page.evaluate(() => {
+            window.addEventListener('message', (event: MessageEvent<TagEditorChangeMessage>) => {
+                // Ignore invalid messages
+                if (
+                    event.data == null
+                    || typeof event.data !== 'object'
+                    || event.data.type !== 'tag-editor-change'
+                ) {
+                    return;
+                }
+
+                const { type: _, ...msg } = event.data;
+                (window as any).logTagEditorMessage(msg);
+            });
+        });
+
+        return messages;
+    }
 
     test('template overview-tag', {
         annotation: [{
@@ -219,6 +264,103 @@ test.describe('Tag Editor Route', () => {
         expect(overviewProps.overview.selectedNodeItemIds[0]).toEqual({
             objectId: FOLDER.id,
             nodeId: NODE.id,
+        });
+    });
+
+    test.describe('form-tag', () => {
+        test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
+        const FORM_TYPE_GENERIC = 'generic';
+        const FORM_TAG_NAME = 'formTag';
+        const FORM_PART_KEYWORD = 'form';
+
+        let FORM: Form;
+        let TEMPLATE: Template;
+
+        test.beforeEach(async () => {
+            await test.step('Form Setup', async () => {
+                await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                    [NodeFeature.FORMS]: true,
+                });
+                await IMPORTER.client.form.assignConfiguration(FORM_TYPE_GENERIC, NODE.id).send();
+                await IMPORTER.importData([FORM_ONE]);
+                FORM = IMPORTER.get(FORM_ONE);
+            });
+
+            await test.step('Template with empty Form-Tag Setup', async () => {
+                const FORM_CONSTRUCT: Construct = IMPORTER.get(CONSTRUCT_TEST_FORM);
+                TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID);
+
+                // Add a new form-tag to the template for our testing purpose
+                await IMPORTER.client.template.update(TEMPLATE.id, {
+                    unlock: true,
+                    template: {
+                        templateTags: {
+                            ...TEMPLATE.templateTags,
+                            [FORM_TAG_NAME]: {
+                                name: FORM_TAG_NAME,
+                                active: true,
+                                constructId: FORM_CONSTRUCT.id,
+                                editableInPage: false,
+                                mandatory: false,
+                            } as any,
+                        },
+                    },
+                }).send();
+            });
+        });
+
+        test('should only allow picking forms from the current node', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20309',
+            }],
+        }, async ({ page }) => {
+            await navigateToApp(page, `/tag-editor/${NODE.id}/template/${TEMPLATE.id}/${FORM_TAG_NAME}`);
+            await loginWithForm(page, TEST_USER);
+
+            await expect(page.locator('tag-editor-host')).toBeAttached();
+            const messages = await collectTagEditorMessages(page);
+
+            const editor = page.locator('tag-editor-host form-tag-property-editor');
+            const browseBox = editor.locator('gtx-browse-box');
+            await expect(browseBox.locator('[data-action="browse"]')).toBeEnabled();
+            await expect(browseBox.locator('.display-value')).toHaveAttribute('data-value', '');
+
+            const repoBrowser = page.locator('repository-browser');
+
+            await test.step('Repo-Browser is restricted to the current node', async () => {
+                await browseBox.locator('[data-action="browse"]').click();
+                await expect(repoBrowser).toBeVisible();
+
+                const breadcrumb = repoBrowser.locator('repository-browser-breadcrumb');
+                await expect(breadcrumb.locator('gtx-breadcrumbs')).toBeVisible();
+                // The node-selector must not be available, as the user should not be able to switch the node
+                await expect(breadcrumb.locator('node-selector')).not.toBeAttached();
+                // Breadcrumbs should start in the node of the template
+                await expect(breadcrumb.locator('gtx-breadcrumbs')).toContainText(NODE.name);
+            });
+
+            await test.step('Select form of the current node', async () => {
+                const formList = findRepoBrowserList(repoBrowser, ITEM_TYPE_FORM);
+                const formItem = findRepoBrowserItem(formList, FORM.id);
+                await expect(formItem).toBeVisible();
+                await selectItem(formItem);
+
+                await clickModalAction(repoBrowser, 'confirm');
+                await repoBrowser.waitFor({ state: 'detached' });
+            });
+
+            await test.step('Form is correctly selected', async () => {
+                await expect(browseBox.locator('.display-value')).toHaveText(FORM.name);
+                await expect(browseBox.locator('.display-value')).toHaveAttribute('data-value', new RegExp(`^form:${FORM.id}(:\\d+)?$`));
+
+                await expect.poll(() => messages.length).toBeGreaterThanOrEqual(1);
+                const lastMessage = messages[messages.length - 1];
+                const formProp = lastMessage.tag.properties[FORM_PART_KEYWORD] as CmsFormTagPartProperty;
+                expect(formProp.type).toEqual(TagPropertyType.CMSFORM);
+                expect(formProp.formId).toEqual(FORM.id);
+            });
         });
     });
 });

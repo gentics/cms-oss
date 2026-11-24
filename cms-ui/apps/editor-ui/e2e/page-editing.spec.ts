@@ -1373,12 +1373,7 @@ test.describe('Page Editing', () => {
                 await createExternalLink(page, async (form) => {
                     await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
 
-                    const targetSelect = form.locator('[data-slot="target"]');
-                    // Clearing is done with the clear button, not with an additional empty option
-                    await expect(targetSelect.locator('gtx-select .clear-button')).toBeVisible();
-                    const dropdown = await openContext(targetSelect.locator('gtx-dropdown-list'));
-                    await expect(dropdown.locator('.select-option[data-id=""]')).toHaveCount(0);
-                    await dropdown.locator(`.select-option[data-id="${LINK_TARGET}"]`).click();
+                    await pickSelectValue(form.locator('[data-slot="target"] gtx-select'), '');
                 });
 
                 const linkElement = mainEditable.locator('a');
@@ -1393,7 +1388,7 @@ test.describe('Page Editing', () => {
                     }).click();
 
                     const modal = page.locator('gtx-dynamic-form-modal');
-                    await modal.locator('[data-slot="target"] gtx-select .clear-button').click();
+                    await pickSelectValue(modal.locator('[data-slot="target"] gtx-select'), '');
                     await clickModalAction(modal, 'confirm');
                 });
 
@@ -1438,7 +1433,6 @@ test.describe('Page Editing', () => {
 
                         const targetSelect = form.locator('[data-slot="target"]');
                         await expect(targetSelect.locator('gtx-select')).toBeVisible();
-                        await expect(targetSelect.locator('gtx-select .clear-button')).toHaveCount(0);
                         await pickSelectValue(targetSelect, LINK_TARGET);
                     });
 
@@ -1499,7 +1493,7 @@ test.describe('Page Editing', () => {
                     }).click();
 
                     const modal = page.locator('gtx-dynamic-form-modal');
-                    await modal.locator('[data-slot="target"] gtx-select .clear-button').click();
+                    await pickSelectValue(modal.locator('[data-slot="target"] gtx-select'), '');
                     await clickModalAction(modal, 'confirm');
 
                     await expect(linkElement).not.toHaveAttribute('target');

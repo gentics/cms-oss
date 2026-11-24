@@ -126,12 +126,6 @@ define('gcn/gcn-links', [
 				if (context.controls.target.options == null) {
 					context.controls.target.options = {};
 				}
-				// No target is a valid value (the browser default), so a selected target may be removed again,
-				// unless the "target" part of the link tagtype is required.
-				var targetPart = ((GCNLinks.magicLink && GCNLinks.magicLink.parts) || []).find(function (part) {
-					return part.keyword === 'target';
-				});
-				context.controls.target.options.clearable = !(targetPart && targetPart.mandatory);
 			}
 
 			var originalValidateFn = context.controls.url.validate;

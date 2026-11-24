@@ -237,7 +237,7 @@ export class FormGridElementsContainerComponent {
         // The rendered items (and therefore the DOM) are based on the display-items,
         // so the index has to be resolved from there and not from the elements.
         const items = this.displayItems();
-        const index = items.findIndex((item) => item.element === element);
+        const index = items.findIndex((item) => item.element.id === element.id);
         if (index < 0) {
             return;
         }
@@ -393,7 +393,7 @@ export class FormGridElementsContainerComponent {
 
                 // Resolve the index by reference, as the element ID may be missing (broken/migrated data)
                 // and the index of the rendered items may differ from the index in the elements.
-                const index = this.elements().indexOf(element);
+                const index = this.elements().findIndex((el) => el.id === element.id);
                 if (index < 0) {
                     return;
                 }
@@ -464,7 +464,7 @@ export class FormGridElementsContainerComponent {
             const remainingItems = items.filter((_, idx) => idx !== event.oldIndex);
             const following = remainingItems[event.newIndex]?.element;
             const sorted = this.elements().filter((el) => el !== moved);
-            const followingIdx = following != null ? sorted.indexOf(following) : -1;
+            const followingIdx = following != null ? sorted.findIndex((el) => el.id === following.id) : -1;
             sorted.splice(followingIdx < 0 ? sorted.length : followingIdx, 0, moved);
 
             // Persist back into the current page (this.pages is usually a reference to uiSchema.pages,
@@ -531,7 +531,7 @@ export class FormGridElementsContainerComponent {
 
         this.elements.update((data) => {
             // Resolved by reference, as the element ID may be missing (broken/migrated data)
-            const idx = data.indexOf(item.element);
+            const idx = data.findIndex((el) => el.id === item.element.id);
 
             if (idx < 0) {
                 return data;
@@ -572,7 +572,7 @@ export class FormGridElementsContainerComponent {
             return elements.length;
         }
 
-        const idx = elements.indexOf(items[displayIndex].element);
+        const idx = elements.findIndex((el) => el.id === items[displayIndex].element.id);
         return idx < 0 ? elements.length : idx;
     }
 

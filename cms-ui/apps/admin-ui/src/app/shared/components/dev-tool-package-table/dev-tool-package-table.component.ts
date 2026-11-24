@@ -93,7 +93,7 @@ export class DevToolPackageTableComponent
             fieldPath: 'contentRepositories',
             align: 'right',
             sortable: true,
-            sortValue: 'cotnentRepositories',
+            sortValue: 'contentRepositories',
         },
     ];
 

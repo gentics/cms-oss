@@ -46,6 +46,16 @@ function entityIdentifierToEditableEntity(identifier: NormalizableEntityType): E
     }
 }
 
+/** Translation keys of the plural entity names, as used in the modal title. */
+const ENTITY_PLURAL_TRANSLATION_KEYS: Partial<Record<NormalizableEntityType, string>> = {
+    construct: 'construct.construct_plural',
+    contentRepository: 'content_repository.plural',
+    contentRepositoryFragment: 'content_repository_fragment.content_repository_fragment_plural',
+    dataSource: 'data_source.plural',
+    objectProperty: 'common.objectProperty_plural',
+    template: 'template.template_plural',
+};
+
 @Component({
     selector: 'gtx-assign-entity-to-package-modal',
     templateUrl: './assign-entity-to-package-modal.component.html',
@@ -59,6 +69,11 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
 
     /** Name of the entity */
     entityIdentifier: NormalizableEntityType;
+
+    /** Translation key of the plural entity name */
+    get entityNamePluralKey(): string {
+        return ENTITY_PLURAL_TRANSLATION_KEYS[this.entityIdentifier] ?? `${this.entityIdentifier}.${this.entityIdentifier}_plural`;
+    }
 
     /** IDs of constructs to be (un)assigned to/from groups */
     packageChildEntityIds$: Observable<string[]>;

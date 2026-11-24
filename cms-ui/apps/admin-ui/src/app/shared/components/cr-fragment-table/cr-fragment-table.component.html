@@ -28,6 +28,7 @@
         flat
         size="small"
         type="primary"
+        data-action="assign-to-package"
         [disabled]="disabled || !canManagePackage"
         (click)="handleAssignToPackageButton()"
         >
@@ -51,7 +52,7 @@
 
 @if (selectable) {
   <div class="entity-table-selection">
-    {{ 'content_repository_fragment.info_selected_contentRepositoryFragment' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+    {{ 'content_repository_fragment.info_selected_content_repository_fragment' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
   </div>
 }
 

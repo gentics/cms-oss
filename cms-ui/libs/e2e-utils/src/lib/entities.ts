@@ -875,6 +875,109 @@ export const FORM_THREE: FormImportData = {
     },
 };
 
+/**
+ * Form which contains an element, which can't be resolved with the form-type configuration
+ * (unknown block type and no ID), as it can happen with broken/migrated data.
+ * The unknown element is placed in front of the other elements, so that the indices of the
+ * rendered elements would differ from the stored ones, if the element were not displayed.
+ */
+export const FORM_FOUR: FormImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FORM,
+    [IMPORT_ID]: 'formFour',
+
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
+
+    languages: [LANGUAGE_DE, LANGUAGE_EN],
+
+    name: 'Form Four',
+    description: 'Test Form four',
+    formType: 'generic',
+    data: {
+        schema: {
+            key: '',
+            version: '',
+            properties: {
+                inputA: {
+                    type: 'string',
+                },
+                inputB: {
+                    type: 'string',
+                },
+                inputC: {
+                    type: 'string',
+                },
+            },
+        },
+        'ui-schema': {
+            key: '',
+            version: '',
+            pages: [
+                {
+                    pagename: {
+                        de: 'Beispiel',
+                        en: 'Example',
+                    },
+                    elements: [
+                        {
+                            id: 'inputA',
+                            label: {
+                                de: 'Eingabefeld A',
+                                en: 'Input field A',
+                            },
+                            type: 'property',
+                            uiSchemaPage: 0,
+                            formGridOptions: {
+                                type: 'string',
+                                numberOfColumns: 12,
+                            },
+                        },
+                        {
+                            // Intentionally without an ID and with a type, which is not in the configuration
+                            label: {
+                                de: 'Unbekannter Block',
+                                en: 'Unknown block',
+                            },
+                            type: 'property',
+                            uiSchemaPage: 0,
+                            formGridOptions: {
+                                type: 'unknownblock',
+                                numberOfColumns: 12,
+                            },
+                        } as any,
+                        {
+                            id: 'inputB',
+                            label: {
+                                de: 'Eingabefeld B',
+                                en: 'Input field B',
+                            },
+                            type: 'property',
+                            uiSchemaPage: 0,
+                            formGridOptions: {
+                                type: 'string',
+                                numberOfColumns: 6,
+                            },
+                        },
+                        {
+                            id: 'inputC',
+                            label: {
+                                de: 'Eingabefeld C',
+                                en: 'Input field C',
+                            },
+                            type: 'property',
+                            uiSchemaPage: 0,
+                            formGridOptions: {
+                                type: 'string',
+                                numberOfColumns: 6,
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+};
+
 export const EXT_FORM_ONE: FormImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_FORM,
     [IMPORT_ID]: 'extFormOne',

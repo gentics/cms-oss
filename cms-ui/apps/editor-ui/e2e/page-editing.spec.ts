@@ -3,6 +3,7 @@ import { Page as CmsPage, Feature, PageSaveRequest, Raw, StringTagPartProperty, 
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
+    CONSTRUCT_ALOHA_LINK,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
     CONSTRUCT_TEST_INLINE_TEXT,
@@ -1281,6 +1282,236 @@ test.describe('Page Editing', () => {
                     await expect(form.locator('[data-slot="url"] .anchor-input input')).toHaveValue('');
                     await expect(form.locator('[data-slot="title"] input')).toHaveValue('');
                     await expect(form.locator('[data-slot="lang"] input')).toHaveValue('');
+                });
+            });
+
+            async function createExternalLinkSaveAndReopen(page: Page, url: string): Promise<Locator> {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+
+                await createExternalLink(page, async (form) => {
+                    await form.locator('[data-slot="url"] .target-input input').fill(url);
+                });
+
+                // The link only becomes an actual `gtxalohapagelink` tag (rendered by the `gtx_alohalink` helper)
+                // once the page is saved and loaded again.
+                const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                await editorAction(page, 'save');
+                await saveReq;
+                await editorAction(page, 'close');
+                await page.locator('content-frame').waitFor({ state: 'detached' });
+                await openEditingPageInEditmode(page);
+
+                const linkElement = mainEditable.locator('a');
+                await expect(linkElement).toHaveText(LINK_TEXT);
+                return linkElement;
+            }
+
+            test('should not add an empty anchor to a link without anchor', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20359',
+                }],
+            }, async ({ page }) => {
+                const LINK_URL = 'https://example.com/';
+
+                const linkElement = await createExternalLinkSaveAndReopen(page, LINK_URL);
+
+                await expect(linkElement).toHaveAttribute('href', LINK_URL);
+                await expect(linkElement).not.toHaveAttribute('data-gentics-gcn-anchor');
+
+                await test.step('Re-open the link dialog of the saved link and confirm it unchanged', async () => {
+                    await linkElement.click();
+
+                    const insertLinkButton = findAlohaComponent(page, {
+                        slot: 'insertLink',
+                        action: 'secondary',
+                        type: 'toggle-split-button',
+                    });
+                    await insertLinkButton.click();
+
+                    const modal = page.locator('gtx-dynamic-form-modal');
+                    await expect(modal.locator('[data-slot="url"] .anchor-input input')).toHaveValue('');
+                    await clickModalAction(modal, 'confirm');
+                });
+
+                await expect(linkElement).toHaveAttribute('href', LINK_URL);
+                await expect(linkElement).not.toHaveAttribute('data-gentics-gcn-anchor');
+            });
+
+            for (const LINK_URL of ['mailto:info@example.com', 'tel:+49 1 234-567', '/relative/path.html']) {
+                test(`should keep the external link "${LINK_URL}" after saving`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-20359',
+                    }],
+                }, async ({ page }) => {
+                    const linkElement = await createExternalLinkSaveAndReopen(page, LINK_URL);
+
+                    await expect(linkElement).toHaveAttribute('href', LINK_URL);
+                    await expect(linkElement).toHaveAttribute('data-gentics-gcn-url', encodeURIComponent(LINK_URL));
+                });
+            }
+
+            test('should allow to clear the link target', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20359',
+                }],
+            }, async ({ page }) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_URL = 'https://example.com/';
+                const LINK_TARGET = '_blank';
+
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+
+                await createExternalLink(page, async (form) => {
+                    await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
+
+                    await pickSelectValue(form.locator('[data-slot="target"] gtx-select'), '');
+                });
+
+                const linkElement = mainEditable.locator('a');
+                await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
+
+                await test.step('Clear the target in the link dialog', async () => {
+                    await linkElement.click();
+                    await findAlohaComponent(page, {
+                        slot: 'insertLink',
+                        action: 'secondary',
+                        type: 'toggle-split-button',
+                    }).click();
+
+                    const modal = page.locator('gtx-dynamic-form-modal');
+                    await pickSelectValue(modal.locator('[data-slot="target"] gtx-select'), '');
+                    await clickModalAction(modal, 'confirm');
+                });
+
+                await expect(linkElement).toHaveText(LINK_TEXT);
+                await expect(linkElement).not.toHaveAttribute('target');
+            });
+
+            test('should not allow to clear the link target if the target part is required', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20359',
+                }],
+            }, async ({ page }) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_URL = 'https://example.com/';
+                const LINK_TARGET = '_blank';
+
+                // `gtxalohapagelink`, which is the link tagtype used by the editor
+                const construct = (await IMPORTER.client.construct.get(CONSTRUCT_ALOHA_LINK).send()).construct;
+                const setTargetRequired = (required: boolean) => IMPORTER.client.construct.update(construct.id, {
+                    parts: construct.parts.map((part) => part.keyword === 'target' ? { ...part, mandatory: required } : part),
+                }).send();
+
+                try {
+                    await test.step('Make the target part required and re-open the page', async () => {
+                        await setTargetRequired(true);
+                        // The constructs are loaded when the page is opened
+                        await editorAction(page, 'close');
+                        await page.locator('content-frame').waitFor({ state: 'detached' });
+                        await openEditingPageInEditmode(page);
+                    });
+
+                    await mainEditable.click();
+                    await mainEditable.clear();
+                    await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                    expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+
+                    await createExternalLink(page, async (form) => {
+                        await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
+
+                        const targetSelect = form.locator('[data-slot="target"]');
+                        await expect(targetSelect.locator('gtx-select')).toBeVisible();
+                        await pickSelectValue(targetSelect, LINK_TARGET);
+                    });
+
+                    await expect(mainEditable.locator('a')).toHaveAttribute('target', LINK_TARGET);
+                } finally {
+                    await setTargetRequired(construct.parts.find((part) => part.keyword === 'target')?.mandatory ?? false);
+                }
+            });
+
+            test('should remove the target of a saved link when it is cleared', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20359',
+                }],
+            }, async ({ page }) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_URL = 'https://example.com/';
+                const LINK_TARGET = '_blank';
+
+                // The link is only stored in the `gtxalohapagelink` tag once the page is saved,
+                // and only rendered from it once the page is loaded again.
+                async function saveAndReopen(): Promise<void> {
+                    const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                    await editorAction(page, 'save');
+                    await saveReq;
+                    await editorAction(page, 'close');
+                    await page.locator('content-frame').waitFor({ state: 'detached' });
+                    await openEditingPageInEditmode(page);
+                }
+
+                await test.step('Create a link with a target and save it', async () => {
+                    await mainEditable.click();
+                    await mainEditable.clear();
+                    await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                    expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+
+                    await createExternalLink(page, async (form) => {
+                        await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
+                        await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
+                    });
+
+                    await saveAndReopen();
+
+                    const linkElement = mainEditable.locator('a');
+                    await expect(linkElement).toHaveText(LINK_TEXT);
+                    await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
+                });
+
+                await test.step('Clear the target of the saved link', async () => {
+                    const linkElement = mainEditable.locator('a');
+                    await linkElement.click();
+                    await findAlohaComponent(page, {
+                        slot: 'insertLink',
+                        action: 'secondary',
+                        type: 'toggle-split-button',
+                    }).click();
+
+                    const modal = page.locator('gtx-dynamic-form-modal');
+                    await pickSelectValue(modal.locator('[data-slot="target"] gtx-select'), '');
+                    await clickModalAction(modal, 'confirm');
+
+                    await expect(linkElement).not.toHaveAttribute('target');
+                });
+
+                await test.step('Save, re-open and check that the target is gone', async () => {
+                    await saveAndReopen();
+
+                    const linkElement = mainEditable.locator('a');
+                    await expect(linkElement).toHaveText(LINK_TEXT);
+                    await expect(linkElement).toHaveAttribute('href', LINK_URL);
+                    await expect(linkElement).not.toHaveAttribute('target');
                 });
             });
         });

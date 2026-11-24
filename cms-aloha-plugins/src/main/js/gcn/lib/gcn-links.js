@@ -122,6 +122,12 @@ define('gcn/gcn-links', [
 			}
 			context.controls.url.options.showPicker = true;
 
+			if (context.controls.target) {
+				if (context.controls.target.options == null) {
+					context.controls.target.options = {};
+				}
+			}
+
 			var originalValidateFn = context.controls.url.validate;
 			context.controls.url.validate = function (value) {
 				// If it's an internal link, we do the validation here
@@ -157,8 +163,13 @@ define('gcn/gcn-links', [
 
 			plugin.hrefChange(link);
 
-			// Add the anchor attribute immediatelly to make sure the information is available when reopening the dialog before saving the page (which replaces the link with an actual gtxalohalink tag).
-			link.setAttribute(ATTR_ANCHOR, formData.url.anchor);
+			if (formData.url && formData.url.anchor) {
+				// Add the anchor attribute immediatelly to make sure the information is available when reopening the dialog before saving the page (which replaces the link with an actual gtxalohalink tag).
+				link.setAttribute(ATTR_ANCHOR, formData.url.anchor);
+			} else {
+				// The anchor has been cleared (or never been set), so a previous value must not be kept.
+				link.removeAttribute(ATTR_ANCHOR);
+			}
 
 			return link;
 		};
@@ -182,7 +193,10 @@ define('gcn/gcn-links', [
 	function extractLinkTargetFromElement(data, link) {
 		var objId = link.getAttribute(ATTR_OBJECT_ID);
 		// Anchor value is always stored separately
-		data.url.anchor = link.getAttribute(ATTR_ANCHOR);
+		const anchor = link.getAttribute(ATTR_ANCHOR);
+		if (anchor) {
+			data.url.anchor = anchor;
+		}
 
 		// Not actually an internal link
 		if (objId == null || objId === '') {
@@ -294,8 +308,10 @@ define('gcn/gcn-links', [
 		element.setAttribute(ATTR_CHANNEL_ID, data.url.internalTargetNodeId);
 		element.setAttribute(ATTR_URL, data.url.href);
 		element.setAttribute(ATTR_HREF, link);
-		element.setAttribute(ATTR_ANCHOR, data.url.anchor);
 		element.setAttribute(ATTR_HREF_LANG, data.lang || data.url.internalTargetLang);
+		if (data.url.anchor) {
+			element.setAttribute(ATTR_ANCHOR, data.url.anchor);
+		}
 	};
 
 	/**

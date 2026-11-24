@@ -229,7 +229,8 @@
 			text: $link.html(),
 			anchor: $link.attr(ATTR_LINK_ANCHOR) || '',
 			title: $link.attr(ATTR_LINK_TITLE) || '',
-			target: $link.attr(ATTR_LINK_TARGET),
+			// Must not be undefined, as tag.part() would only read the old value then, instead of clearing it
+			target: $link.attr(ATTR_LINK_TARGET) || '',
 			language: $link.attr(ATTR_LINK_LANGUAGE) || '',
 			'class': cleanBlockClasses($link.attr('class')),
 			channel: $link.attr(ATTR_LINK_NODE_ID)

@@ -62,6 +62,7 @@ import {
     itemAction,
     navigateToFolder,
     openObjectPropertyEditor,
+    openToolOrAction,
     openTagList,
     pageListRowLanguage,
     selectNode,
@@ -1220,6 +1221,94 @@ test.describe('Page Management', () => {
         const list = findList(page, ITEM_TYPE_PAGE);
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', false);
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', true);
+    });
+
+    test.describe('Wastebin', () => {
+        const WASTEBIN_PERMISSIONS = (): ImportPermissions[] => [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                    { type: GcmsPermission.DELETE_ITEMS, value: true },
+                    { type: GcmsPermission.WASTE_BIN, value: true },
+                ],
+            },
+        ];
+
+        /**
+         * Moves the test page into the wastebin, opens the wastebin modal and selects the page in it.
+         * Validates that the selection actions are only enabled once the page has been selected.
+         */
+        async function openWastebinAndSelectPage(page: Page): Promise<{ modal: Locator; item: Locator; restore: Locator; remove: Locator }> {
+            await test.step('Move page to wastebin', async () => {
+                await IMPORTER.client.page.delete(TEST_PAGE.id).send();
+            });
+
+            await setupWithPermissions(page, WASTEBIN_PERMISSIONS());
+
+            await openToolOrAction(page, 'wastebin');
+            const modal = page.locator('wastebin-modal');
+            const item = modal.locator('wastebin-list[type="page"] gtx-contents-list-item').filter({ hasText: TEST_PAGE.name });
+            const restore = modal.locator('.selected-actions gtx-button:not([type="alert"]) button');
+            const remove = modal.locator('.selected-actions gtx-button[type="alert"] button');
+
+            await test.step('Select the page', async () => {
+                await expect(item).toBeVisible();
+                await expect(restore).toBeDisabled();
+                await expect(remove).toBeDisabled();
+
+                await item.locator('gtx-checkbox.type-icon label').click();
+
+                await expect(item.locator('gtx-checkbox.type-icon input[type="checkbox"]')).toHaveAttribute('data-state', 'true');
+                await expect(restore).toBeEnabled();
+                await expect(remove).toBeEnabled();
+            });
+
+            return { modal, item, restore, remove };
+        }
+
+        test('should be possible to restore a selected page', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20457',
+            }],
+        }, async ({ page }) => {
+            const { item, restore, remove } = await openWastebinAndSelectPage(page);
+
+            const restoreReq = waitForResponseFrom(page, 'POST', '/rest/page/wastebin/restore');
+            await restore.click();
+            const restoreRes = await restoreReq;
+            expect(restoreRes.request().postDataJSON().ids).toContain(TEST_PAGE.id);
+
+            await expect(item).toBeHidden();
+            await expect(restore).toBeDisabled();
+            await expect(remove).toBeDisabled();
+        });
+
+        test('should be possible to permanently remove a selected page', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20457',
+            }],
+        }, async ({ page }) => {
+            const { item, restore, remove } = await openWastebinAndSelectPage(page);
+
+            await remove.click();
+            const deleteReq = waitForResponseFrom(page, 'POST', '/rest/page/wastebin/delete');
+            // Confirm the "are you sure" dialog, the confirm button is the last one
+            await page.locator('gtx-modal-dialog .modal-footer gtx-button').last().locator('button').click();
+            const deleteRes = await deleteReq;
+            expect(deleteRes.request().postDataJSON().ids).toContain(TEST_PAGE.id);
+
+            await expect(item).toBeHidden();
+            await expect(restore).toBeDisabled();
+            await expect(remove).toBeDisabled();
+        });
     });
 
     test('publishing without publish permissions puts publish request into queue', {

@@ -1,20 +1,14 @@
 define([
     'aloha/core',
-	'jquery',
-	'PubSub',
 	'aloha/plugin',
     'ui/ui-plugin',
-	'ui/dialog',
 	'ui/overlayElement',
     'gcn/gcn-util',
     'gcn/gcmsui-surface',
 ], function(
     Aloha,
-    jQuery,
-    PubSub,
     Plugin,
     UiPlugin,
-    Dialog,
     OverlayElement,
     Util,
     GCMSUISurface
@@ -22,7 +16,7 @@ define([
     'use strict';
     
     var plugin = {
-        init: function() {
+        init: function(withLinks) {
             Util.withinCMS(function () {
                 // Create the GCMSUI Surface and set it as active.
                 // This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
@@ -34,6 +28,23 @@ define([
 					OverlayElement.OverlayCloseError = window.GCMSUI.closeErrorClass;
 				}
             });
+
+            if (withLinks) {
+                try {
+                    Aloha.require(['link/link-plugin', 'gcn/gcn-links'], (LinkPlugin, GCNLinks) => {
+                        GCNLinks.interjectLinkPlugin(LinkPlugin, function(context) {
+                            context.controls.url.options.pickerTypes = ['page', 'file'];
+
+                            delete context.controls.title;
+                            delete context.controls.lang;
+
+                            return context;
+                        });
+                    });
+                } catch (err) {
+                    console.error('Could not setup gcn-link integration in texteditor-plugin!', err);
+                }
+            }
         },
     };
 

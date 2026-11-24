@@ -25,4 +25,5 @@ export interface AlohaLinkTargetComponent extends AlohaComponent {
     // Not set unless opened via the GCN Plugin
     showPicker?: boolean;
     pickerTitle?: string;
+    pickerTypes?: ('page' | 'file' | 'image')[];
 }

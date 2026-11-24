@@ -7,6 +7,7 @@ import {
 } from '@gentics/cms-models';
 import { cloneWithSymbols } from '@gentics/common';
 import {
+    clickModalAction,
     EntityImporter,
     EXT_FORM_ONE,
     FORM_ONE,
@@ -31,6 +32,7 @@ import {
 } from '@gentics/e2e-utils';
 import { expect, Locator, Page, test } from '@playwright/test';
 import {
+    activateEditable,
     editorAction,
     fgAddBlock,
     fgAddControl,
@@ -41,10 +43,13 @@ import {
     fgMoveElement,
     fgMoveElementToPage,
     fgSelectElementTab,
+    findAlohaComponent,
     findItem,
     findList,
     itemAction,
     selectNode,
+    selectTextIn,
+    setupHelperWindowFunctions,
 } from './helpers';
 
 test.describe('Form Editing', () => {
@@ -587,6 +592,74 @@ test.describe('Form Editing', () => {
             const aggEl = req.data['ui-schema']?.pages?.[0]?.elements?.find((el) => el.id === 'agg2');
             const firstNameEl = aggEl?.elements?.find((el) => el.id === 'firstName');
             expect(Object.values(firstNameEl?.label || {})).toContain(LABEL_TEXT);
+        });
+    });
+
+    test('should not double encode links in rich-content text', async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
+        const TEXT_CONTENT = 'Visit ';
+        const LINK_TEXT = 'our website';
+        const LINK_URL = 'https://example.com/path?foo=bar&baz=1';
+        const EXPECTED_TEMPLATE = '{{LINK|URL:https&col;//example.com/path?foo&equals;bar&amp;baz&equals;1|our website}}';
+
+        await setupHelperWindowFunctions(page);
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                ],
+            },
+        ]);
+
+        await test.step('Open Editor', async () => {
+            const list = findList(page, ITEM_TYPE_FORM);
+            const item = findItem(list, EDITING_FORM.id);
+            await itemAction(item, 'edit');
+        });
+
+        const grid = page.locator('content-frame gtx-form-grid');
+        const editSidebar = fgFindEditSidebar(grid);
+        let textEditor: Locator;
+        let editable: Locator;
+
+        await test.step('Add text block', async () => {
+            const el = await fgAddBlock(grid, 'text', { position: 0 });
+            await expect(el).toBeVisible();
+            await el.locator('.element-container .element-title').click();
+            await expect(el).toContainClass('is-selected');
+            await expect(editSidebar).toBeVisible();
+
+            const translationTab = await fgSelectElementTab(editSidebar, 'translations');
+            textEditor = translationTab.locator('gtx-aloha-text-editor[data-control="text"]');
+            editable = textEditor.locator('iframe.aloha-frame').contentFrame().locator('#main');
+        });
+
+        await test.step('Create external link', async () => {
+            await activateEditable(editable);
+            await editable.fill(TEXT_CONTENT + LINK_TEXT);
+            expect(await selectTextIn(editable, LINK_TEXT)).toBe(true);
+
+            await findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' }, textEditor).click();
+
+            const modal = page.locator('gtx-dynamic-form-modal');
+            await modal.locator('.form-wrapper [data-slot="url"] .target-input input').fill(LINK_URL);
+            await clickModalAction(modal, 'confirm');
+
+            await expect(editable.locator('a')).toHaveAttribute('href', LINK_URL);
+            await expect(editable.locator('a')).toHaveText(LINK_TEXT);
+        });
+
+        await test.step('Save and validate', async () => {
+            const req = await saveForm(page);
+            const textEl = req.data['ui-schema']?.pages?.[0]?.elements?.[0];
+            const savedText: string = textEl?.formGridOptions?.text?.[LANGUAGE_EN];
+
+            expect(savedText).toEqual(`${TEXT_CONTENT}${EXPECTED_TEMPLATE}`);
         });
     });
 

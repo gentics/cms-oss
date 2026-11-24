@@ -31,26 +31,16 @@
  * @prop {string=} lang The language the language target is in
  */
 define('gcn/gcn-links', [
-	'/gcnjsapi/' + window.Aloha.settings.plugins.gcn.buildRootTimestamp + '/' + (
-		window.Aloha.settings.plugins.gcn.gcnLibVersion || 'bin'
-	) + '/gcnjsapi.js',
 	'jquery',
 	'aloha',
 	'PubSub',
-	'aloha/pluginmanager',
 	'aloha/ephemera',
-	'util/dom-to-xhtml',
-	'i18n!gcn/nls/i18n',
 ], function (
-	GCN,
 	/** @type {JQueryStatic} */
 	$,
 	Aloha,
 	PubSub,
-	PluginManager,
 	Ephemera,
-	DomToXhtml,
-	i18n
 ) {
 	'use strict';
 
@@ -110,7 +100,7 @@ define('gcn/gcn-links', [
 		return null != $link.attr(ATTR_REPOSITORY);
 	}
 
-	function interjectLinkPlugin(plugin) {
+	function interjectLinkPlugin(plugin, customHandler) {
 		originalLinkContextProviderFn = plugin.createInsertLinkContext;
 		originalLinkUpsertFn = plugin.upsertLink;
 
@@ -141,6 +131,10 @@ define('gcn/gcn-links', [
 
 			if (existingLink && $(existingLink)) {
 				context.initialValue = extractLinkTargetFromElement(context.initialValue, existingLink);
+			}
+
+			if (typeof customHandler === 'function') {
+				context = customHandler(context);
 			}
 
 			return context;
@@ -339,28 +333,6 @@ define('gcn/gcn-links', [
 		}
 	}
 
-	function getMagiclinkTags(page, report) {
-		page.tags(tags => {
-			report(tags.filter(tag => {
-				return tag.constructId === GCNLinks.magicLink.id;
-			}));
-		});
-	}
-
-	function cleanMagiclinkTags(tags) {
-		var i;
-		var $content;
-		for (i = 0; i < tags.length; i++) {
-			$content = $('<div>' + tags[i].part('text') + '</div>');
-			PluginManager.makeClean($content);
-			tags[i].part('text', DomToXhtml.contentsToXhtml($content[0]));
-		}
-	}
-
-	GCN.sub('page.before-saved', function (page) {
-		getMagiclinkTags(page, cleanMagiclinkTags);
-	});
-
 	PubSub.sub('aloha.link.pasted', function (msg) {
 		update($(msg.element), $.trim(msg.href));
 		// Default target is _blank
@@ -370,7 +342,6 @@ define('gcn/gcn-links', [
 	let GCNLinks = {
 		isInternal: isInternal,
 		interjectLinkPlugin: interjectLinkPlugin,
-		magicLink: null,
 	};
 
 	return GCNLinks;

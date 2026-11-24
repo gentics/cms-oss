@@ -156,7 +156,7 @@
             }
 
             @default {
-                <span class="error-message">Unknown setting type {{ getTypeIfValid(setting) }}</span>
+                <span class="error-message">Unknown setting type {{ $any(setting)?.type }}</span>
             }
         }
     }

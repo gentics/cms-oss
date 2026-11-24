@@ -39,6 +39,7 @@ define([
 	'gcn/tagcopycontenthandler',
 	'gcn/gcn-tags',
 	'gcn/gcn-links',
+	'gcn/gcn-magic-links',
 	'gcn/gcn-util',
 	'gcn/gcmsui-surface',
 	'i18n!gcn/nls/i18n',
@@ -62,6 +63,7 @@ define([
 	TagCopyContentHandler,
 	Tags,
 	GCNLinks,
+	GCNMagicLinks,
 	Util,
 	GCMSUISurface,
 	i18n,
@@ -811,7 +813,7 @@ define([
 					return;
 				}
 
-				GCNLinks.magicLink = magicLinkConstruct;
+				GCNMagicLinks.magicLink = magicLinkConstruct;
 				GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
 				that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);
 				if (typeof callback === 'function') {

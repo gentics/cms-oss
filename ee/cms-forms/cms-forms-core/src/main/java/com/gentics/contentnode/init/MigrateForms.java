@@ -599,7 +599,7 @@ public class MigrateForms extends InitJob {
 			break;
 		case "friendlycaptcha":
 			if (active) {
-				migratedForm.put("captchaId", "friendly_auto");
+				migratedForm.put("captchaId", "friendlycaptcha_auto");
 			}
 			break;
 		default:

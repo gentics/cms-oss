@@ -49,6 +49,7 @@ repository-browser-list + repository-browser-list {
         border-bottom: 1px dotted #ffb84f;
         display: flex;
         padding: 10px;
+        align-items: center;
 
         &.root-folder-type-node {
             .root-folder-checkbox::ng-deep .item-icon {
@@ -69,31 +70,8 @@ repository-browser-list + repository-browser-list {
     }
 }
 
-icon.lock {
-    margin-left: -1rem;
-    margin-right: 0;
-    opacity: 0;
-    overflow: visible;
-    transition: opacity 100ms;
-    width: 1rem;
-
-    & + span {
-        left: 0;
-        position: relative;
-        transition: left 100ms;
-    }
-}
-
 .no-permissions {
     gtx-button[type=primary] {
         cursor: help;
-    }
-
-    icon.lock {
-        opacity: 1;
-    }
-
-    icon.lock + span {
-        left: 0.65rem;
     }
 }

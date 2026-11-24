@@ -66,6 +66,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
     submitLabelKey = 'modal.repository_browser_submit';
     titleKey = '';
     titleParams: { [key: string]: string | number } = {};
+    selectMultiple = false;
 
     canSubmit$: Observable<boolean>;
     currentNodeId$: Observable<number>;
@@ -246,6 +247,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
 
         this.allowed = options.allowedSelection;
         this.isPickingFolder = this.dataService.isPickingFolder;
+        this.selectMultiple = options.selectMultiple;
     }
 
     private parseOptions(): void {

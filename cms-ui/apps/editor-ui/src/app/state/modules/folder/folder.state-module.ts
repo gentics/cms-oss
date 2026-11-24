@@ -551,13 +551,6 @@ export class FolderStateModule {
     async handleItemFetchingSuccessAction<T extends ItemType>(ctx: StateContext<FolderState>, action: ItemFetchingSuccessAction<T>): Promise<void> {
         const normalized = normalize(action.item, getNormalizrSchema(action.type));
         await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
-
-        const type = plural[action.type] || action.type;
-        ctx.setState(patch<FolderState>({
-            [type]: patch<ItemsInfo>({
-                fetching: false,
-            }),
-        }));
     }
 
     @ActionDefinition(LanguageFetchingSuccessAction)

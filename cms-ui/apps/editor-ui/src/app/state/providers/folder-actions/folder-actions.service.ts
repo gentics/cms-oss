@@ -1213,9 +1213,6 @@ export class FolderActionsService {
         options?: any,
         throwError?: boolean,
     ): Promise<InheritableItem<Raw> | Form | Template<Raw>> {
-
-        this.appState.dispatch(new StartListFetchingAction(type, undefined, true));
-
         // Create a copy to not modify the original argument/object
         options = Object.assign({}, options, { construct: true });
 
@@ -1251,7 +1248,6 @@ export class FolderActionsService {
                     .then(([folder, permRes]) => {
                         folder.privilegeMap = this.permissions.normalizeAPIResponse(permRes.privilegeMap);
                         if (!permRes.permissionsMap) {
-
                             throw new Error(`Folder with ID ${folder.id} has no permissionsMap.`);
                         }
                         folder.permissionsMap = permRes.permissionsMap;
@@ -1288,7 +1284,6 @@ export class FolderActionsService {
                 break;
 
             default:
-
                 fetchPromise = Promise.reject(new Error(`Unknown Type "${type}"!`));
         }
 
@@ -1304,7 +1299,6 @@ export class FolderActionsService {
             await this.appState.dispatch(new ItemFetchingSuccessAction(type, structuredClone(entity) as any)).toPromise();
             return entity;
         } catch (error) {
-            await this.appState.dispatch(new ListFetchingErrorAction(type, error.message, true)).toPromise();
             if (throwError) {
                 throw error;
             }

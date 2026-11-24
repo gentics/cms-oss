@@ -460,6 +460,10 @@ export class FormGridElementsContainerComponent {
             return;
         }
 
+        // Put the element back into its source list. If the move is applied to the data model, Angular removes it
+        // from there on re-render; if it is not, the element stays visible at its original position.
+        event.from.insertBefore(event.item, event.from.children[event.oldIndex] ?? null);
+
         const fromId = event.from.getAttribute(ATTR_CONTAINER_ID);
         const fromCtx = event.from.getAttribute(ATTR_CONTEXT_ID);
         const toId = event.to.getAttribute(ATTR_CONTAINER_ID);
@@ -557,7 +561,7 @@ export class FormGridElementsContainerComponent {
     private updateDisplayItems(): void {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
-            const uniqueElId = this.id() === this.rootId()
+            const uniqueElId = this.selfContext() === this.rootId()
                 ? el.id
                 : `${this.selfContext()}${UNIQUE_ID_GLUE}${el.id}`;
             const itemSchema = this.schemaPropertiesMap()?.[uniqueElId];

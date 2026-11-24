@@ -791,6 +791,177 @@ test.describe('Form Editing', () => {
         });
     });
 
+    test.describe('Non-Aggregate Containers', () => {
+        const FORM_CONTAINER: FormImportData = {
+            [IMPORT_TYPE]: ITEM_TYPE_FORM,
+            [IMPORT_ID]: `form_${NAMESPACE}_container`,
+
+            nodeId: NODE_MINIMAL[IMPORT_ID],
+            folderId: NODE_MINIMAL[IMPORT_ID],
+
+            languages: [LANGUAGE_EN],
+
+            name: 'Form Container',
+            description: 'Form with a group on the root level',
+            formType: FORM_TYPE_GENERIC,
+            data: {
+                schema: {
+                    key: '',
+                    version: '',
+                    properties: {
+                        email: { type: 'string' },
+                        name: { type: 'string' },
+                    },
+                },
+                'ui-schema': {
+                    key: '',
+                    version: '',
+                    pages: [{
+                        pagename: { en: 'Example' },
+                        elements: [
+                            {
+                                id: 'group1',
+                                label: { en: 'Group 1' },
+                                type: 'container',
+                                uiSchemaPage: 0,
+                                formGridOptions: { type: 'group' },
+                                elements: [{
+                                    id: 'email',
+                                    label: { en: 'Email' },
+                                    type: 'property',
+                                    uiSchemaPage: 0,
+                                    formGridOptions: { type: 'string' },
+                                }],
+                            },
+                            {
+                                id: 'name',
+                                label: { en: 'Name' },
+                                type: 'property',
+                                uiSchemaPage: 0,
+                                formGridOptions: { type: 'string' },
+                            },
+                        ],
+                    }],
+                },
+            },
+        };
+
+        async function openFormEditor(page: Page): Promise<Locator> {
+            await IMPORTER.importData([FORM_CONTAINER]);
+
+            await setupWithPermissions(page, [
+                {
+                    type: AccessControlledType.NODE,
+                    instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                    subObjects: true,
+                    perms: [
+                        { type: GcmsPermission.READ, value: true },
+                        { type: GcmsPermission.VIEW_FORM, value: true },
+                        { type: GcmsPermission.UPDATE_FORM, value: true },
+                    ],
+                },
+            ]);
+
+            await test.step('Open Editor', async () => {
+                const list = findList(page, ITEM_TYPE_FORM);
+                const item = findItem(list, IMPORTER.get(FORM_CONTAINER).id);
+                await itemAction(item, 'edit');
+            });
+
+            const grid = page.locator('content-frame gtx-form-grid');
+            await expect(fgFindElement(grid, 'group1')).toBeVisible();
+            return grid;
+        }
+
+        test('should display controls inside a non-aggregate container', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20471',
+            }],
+        }, async ({ page }) => {
+            const grid = await openFormEditor(page);
+
+            await test.step('The nested control is displayed', async () => {
+                await expect(fgFindDropContainer(grid, 'group1').locator('> .form-item')).toHaveCount(1);
+                const el = fgFindElement(grid, 'email', 'group1');
+                await expect(el).toBeVisible();
+                await expect(el).toHaveAttribute('data-is-control', 'true');
+            });
+
+            await test.step('The nested control can be selected for editing', async () => {
+                const el = fgFindElement(grid, 'email', 'group1');
+                await el.locator('.element-container .element-title').click();
+                await expect(el).toContainClass('is-selected');
+                await expect(fgFindEditSidebar(grid)).toBeVisible();
+            });
+        });
+
+        test('should move controls into and out of a non-aggregate container', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20471',
+            }],
+        }, async ({ page }) => {
+            const grid = await openFormEditor(page);
+            const rootItems = fgFindDropContainer(grid).locator('> .form-item');
+            const groupItems = fgFindDropContainer(grid, 'group1').locator('> .form-item');
+
+            await test.step('Move the root control into the group', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'name'), { containerId: 'group1' });
+
+                await expect(groupItems).toHaveCount(2);
+                await expect(fgFindElement(grid, 'name', 'group1')).toBeVisible();
+                await expect(rootItems).toHaveCount(1);
+                await expect(fgFindElement(grid, 'name')).toHaveCount(0);
+            });
+
+            await test.step('Move the nested control out of the group', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'email', 'group1'), { position: 0 });
+
+                await expect(rootItems).toHaveCount(2);
+                await expect(fgFindElement(grid, 'email')).toBeVisible();
+                await expect(groupItems).toHaveCount(1);
+                await expect(fgFindElement(grid, 'email', 'group1')).toHaveCount(0);
+            });
+
+            await test.step('Save and Validate', async () => {
+                const req = await saveForm(page);
+
+                // Non-aggregate containers do not nest the schema
+                const rootProps = req.data.schema?.properties || {};
+                expect(Object.keys(rootProps).sort()).toEqual(['email', 'name']);
+
+                const elements = req.data['ui-schema']?.pages?.[0]?.elements || [];
+                expect(elements.map((el) => el.id)).toEqual(['email', 'group1']);
+                expect(elements.find((el) => el.id === 'group1')?.elements?.map((el) => el.id)).toEqual(['name']);
+            });
+        });
+
+        test('should display a control moved into a newly added group', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20471',
+            }],
+        }, async ({ page }) => {
+            const grid = await openFormEditor(page);
+            let newId: string;
+
+            await test.step('Add a group to the root container', async () => {
+                const el = await fgAddBlock(grid, 'group', { position: 0 });
+                await expect(el).toHaveCount(1);
+                newId = await el.getAttribute('data-element-id');
+            });
+
+            await test.step('Move the root control into the new group', async () => {
+                await fgMoveElement(grid, fgFindElement(grid, 'name'), { containerId: newId });
+
+                await expect(fgFindDropContainer(grid, newId).locator('> .form-item')).toHaveCount(1);
+                await expect(fgFindElement(grid, 'name', newId)).toBeVisible();
+                await expect(fgFindElement(grid, 'name')).toHaveCount(0);
+            });
+        });
+    });
+
     test.describe('External Forms', () => {
         test.beforeEach(async () => {
             const node = IMPORTER.get(NODE_MINIMAL);

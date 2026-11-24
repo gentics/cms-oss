@@ -728,7 +728,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     }
 
     public moveElementToContainer(event: ElementContainerMoveEvent): void {
-        const uniqueElId = event.fromContextId == null || event.fromContainerId === this.ELEMENT_ROOT_CONTAINER_ID
+        const uniqueElId = event.fromContextId == null || event.fromContextId === this.ELEMENT_ROOT_CONTAINER_ID
             ? event.elementId
             : `${event.fromContextId}${UNIQUE_ID_GLUE}${event.elementId}`;
 
@@ -739,32 +739,35 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             return;
         }
 
-        this.uiSchema.update((uiSchema) => {
-            const copy = structuredClone(uiSchema);
+        const copy = structuredClone(this.uiSchema());
 
-            // Moving between containers can only be done within the same page, therefore safe
-            const page = copy.pages[event.pageIndex];
+        // Moving between containers can only be done within the same page, therefore safe
+        const page = copy.pages[event.pageIndex];
 
-            // Go through all elements (and nested ones), to find the from/to container elements in the page,
-            // then update the elements within that.
-            const { removed, added } = moveNestedElement(
-                this.ELEMENT_ROOT_CONTAINER_ID,
-                page.elements,
-                element,
-                event.fromContainerId,
-                event.toContainerId,
-                event.targetIndex,
-            );
+        // Go through all elements (and nested ones), to find the from/to container elements in the page,
+        // then update the elements within that.
+        const { removed, added } = moveNestedElement(
+            this.ELEMENT_ROOT_CONTAINER_ID,
+            page.elements,
+            element,
+            event.fromContainerId,
+            event.toContainerId,
+            event.targetIndex,
+        );
 
-            if (!removed) {
-                console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be removed from the source container`);
-            }
-            if (!added) {
-                console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be added from the target container`);
-            }
+        if (!removed) {
+            console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be removed from the source container`);
+        }
+        if (!added) {
+            console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be added from the target container`);
+        }
 
-            return copy;
-        });
+        // Only apply the move if it could be done completely, so the element never gets lost
+        if (!removed || !added) {
+            return;
+        }
+
+        this.uiSchema.set(copy);
 
         if (event.fromContextId !== event.toContextId) {
             // Since the element now has been moved within the ui-schema, we also have to check if we need

@@ -483,6 +483,7 @@ async function onBinaryPress(
     const pickerResult = await DocumentPicker.getDocumentAsync({
       type: "*/*",
       multiple: props.isList,
+      base64: false,
     });
     if (pickerResult.canceled) return null;
 

@@ -69,6 +69,7 @@ export const submitCSVUpload = async (
       type: 'text/csv',
       multiple: false,
       copyToCacheDirectory: false,
+      base64: false,
     });
 
     if (res.canceled) {

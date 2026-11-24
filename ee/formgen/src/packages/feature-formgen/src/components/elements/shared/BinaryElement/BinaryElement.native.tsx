@@ -331,6 +331,7 @@ function BinaryElement(props: IFormComponentAttributes) {
                 multiple: props.isList,
                 // makes sure the picked file is available on disk
                 copyToCacheDirectory: true,
+                base64: false,
               });
 
               // Newer expo-document-picker API returns { canceled, assets }

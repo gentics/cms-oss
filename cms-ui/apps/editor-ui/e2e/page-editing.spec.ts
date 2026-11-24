@@ -3,6 +3,7 @@ import { Page as CmsPage, PageSaveRequest, Raw, StringTagPartProperty, Template 
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
+    CONSTRUCT_ALOHA_LINK,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
     CONSTRUCT_TEST_INLINE_TEXT,
@@ -1410,9 +1411,9 @@ test.describe('Page Editing', () => {
                 const LINK_TEXT = 'World';
                 const LINK_URL = 'https://example.com/';
                 const LINK_TARGET = '_blank';
-                const LINK_CONSTRUCT = 'gtxalohapagelink';
 
-                const construct = (await IMPORTER.client.construct.get(LINK_CONSTRUCT).send()).construct;
+                // `gtxalohapagelink`, which is the link tagtype used by the editor
+                const construct = (await IMPORTER.client.construct.get(CONSTRUCT_ALOHA_LINK).send()).construct;
                 const setTargetRequired = (required: boolean) => IMPORTER.client.construct.update(construct.id, {
                     parts: construct.parts.map((part) => part.keyword === 'target' ? { ...part, mandatory: required } : part),
                 }).send();

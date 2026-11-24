@@ -10,7 +10,7 @@
 
     gtx-search-bar {
         background-color: white;
-        &::shadow {
+        &::ng-deep {
             .submit-button {
                 @media screen and (max-width: $small-screen) {
                     display: none;

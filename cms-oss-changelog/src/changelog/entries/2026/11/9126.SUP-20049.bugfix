@@ -1,0 +1,1 @@
+Corrected the documentation of the "maxfilesize" setting. An invalid value is now logged as a warning.

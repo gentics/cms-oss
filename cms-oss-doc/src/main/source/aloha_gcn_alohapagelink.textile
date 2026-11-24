@@ -15,7 +15,7 @@ Contents of the part "Handlebars":
 <div class="code_container">
 <pre class="brush: hbs; toolbar: false; gutter: true;">
 {{#gtx_alohalink cms.tag cms.rendermode ~}}
-<a{{{title}}}{{{target}}}{{{class}}}{{{data}}} href="{{{href}}}">{{cms.tag.parts.text.text}}</a>
+<a{{{title}}}{{{target}}}{{{class}}}{{{language}}}{{{data}}} href="{{{href}}}">{{cms.tag.parts.text.text}}</a>
 {{~/gtx_alohalink}}
 </pre>
 </div>
@@ -33,12 +33,6 @@ function gtx_alohalink(tag, renderMode, options) {
 
         if (parts.target.text.trim() === '_blank') {
             ctx['target'] += ' rel="noopener noreferrer"';
-        }
-    } else {
-        if (parts.url.isinternal) {
-            ctx['target'] = ' target="_self"';
-        } else {
-            ctx['target'] = ' target="_blank" rel="noopener noreferrer"'
         }
     }
     if (parts.language.text) {
@@ -75,7 +69,8 @@ function gtx_alohalink(tag, renderMode, options) {
         ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.Page" data-gentics-aloha-object-id="10007.' + url.target.id + '" data-gentics-aloha-object-online="' + url.target.online + '"';
         href = url.target.url;
     } else {
-        if (/^(https|http):\/\/(.*)$/.test(url.externalurl)) {
+        // Allows for absolute links, mailto, tel, and relative paths/links
+        if (/^(https?:\/\/|mailto:|tel:|\/)(.*)$/.test(url.externalurl)) {
             ctx['data'] = ' data-gentics-gcn-url="' + encodeURIComponent(url.externalurl) + '"';
             href = url.externalurl;
         }

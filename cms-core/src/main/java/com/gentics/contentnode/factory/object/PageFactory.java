@@ -1453,7 +1453,7 @@ public class PageFactory extends AbstractFactory {
 				if (publishAtTime > offlineAtTime) {
 					publishVersion(timePubVersion);
 				} else {
-					takeOffline();
+					doTakeOffline();
 				}
 				clearTimePub();
 				clearTimeOff();
@@ -1463,7 +1463,7 @@ public class PageFactory extends AbstractFactory {
 				clearTimePub();
 				handled = true;
 			} else if (offlineAtDue) {
-				takeOffline();
+				doTakeOffline();
 				clearTimeOff();
 				handled = true;
 			}
@@ -2662,6 +2662,9 @@ public class PageFactory extends AbstractFactory {
 		@Override
 		public void takeOffline(int timestamp) throws NodeException {
 			if (timestamp == 0) {
+				// unset future_unpublisher because the user who planned it should not be recorded as unpublisher
+				DBUtils.update("UPDATE page SET future_unpublisher = ? WHERE id = ?", 0, getId());
+				futureUnpublisherId = 0;
 				doTakeOffline();
 			} else {
 				// set the planned offline time and clear queue for planned offline time
@@ -3839,6 +3842,9 @@ public class PageFactory extends AbstractFactory {
 				data.put("time_pub_version", null);
 				data.put("delay_publish", 0);
 				data.put("online", 1);
+				// unset future_publisher because the user who planned it should not be recorded as publisher
+				data.put("future_publisher", 0);
+				futurePublisherId = 0;
 
 				if (updatePublisher) {
 					data.put("pdate", pdate);

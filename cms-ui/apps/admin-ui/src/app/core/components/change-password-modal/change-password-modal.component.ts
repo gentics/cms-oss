@@ -1,8 +1,7 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {UntypedFormControl, UntypedFormGroup, Validators} from '@angular/forms';
 import {IModalDialog} from '@gentics/ui-core';
 
-import {AppStateService} from '@admin-ui/state';
 import {PASSWORD_VALIDATORS} from '@admin-ui/shared';
 import {AuthOperations} from '../../providers';
 
@@ -12,15 +11,25 @@ import {AuthOperations} from '../../providers';
     templateUrl: './change-password-modal.tpl.html',
     standalone: false
 })
-export class ChangePasswordModalComponent implements IModalDialog {
+export class ChangePasswordModalComponent implements IModalDialog, OnInit {
 
     form: UntypedFormGroup;
+    oldPassword: UntypedFormControl;
     password1: UntypedFormControl;
     password2: UntypedFormControl;
+
+    /**
+     * ID of the user, whose password is set by an administrator.
+     * When not given, the current user changes the own password and has to enter the old password.
+     */
     userId: number;
 
+    /**
+     * Whether the current user changes the own password
+     */
+    ownPassword: boolean;
+
     constructor(
-        private appState: AppStateService,
         private authOps: AuthOperations
     ) {
 
@@ -31,6 +40,16 @@ export class ChangePasswordModalComponent implements IModalDialog {
             password1: this.password1,
             password2: this.password2
         }, this.areEqual);
+    }
+
+    ngOnInit(): void {
+        this.ownPassword = !this.userId;
+
+        if (this.ownPassword) {
+            // The old password may have been set before the current password rules applied, so it is only required
+            this.oldPassword = new UntypedFormControl('', Validators.required);
+            this.form.addControl('oldPassword', this.oldPassword);
+        }
     }
 
     /**
@@ -46,10 +65,20 @@ export class ChangePasswordModalComponent implements IModalDialog {
     }
 
     changePassword(): void {
-        const userId = this.userId || this.appState.now.auth.user?.id;
         const password = this.form.get('password1').value;
-        this.authOps.changePassword(userId, password)
-            .then(() => this.closeFn());
+
+        if (this.ownPassword) {
+            // keep the modal open on failure (e.g. wrong old password), so the user can correct the input
+            this.authOps.changeOwnPassword(this.oldPassword.value, password)
+                .then(success => {
+                    if (success) {
+                        this.closeFn();
+                    }
+                });
+        } else {
+            this.authOps.changePassword(this.userId, password)
+                .then(() => this.closeFn());
+        }
     }
 
     closeFn = () => {};

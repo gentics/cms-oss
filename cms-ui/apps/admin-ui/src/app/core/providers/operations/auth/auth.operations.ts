@@ -105,4 +105,30 @@ export class AuthOperations {
                 this.errorHandler.catch(error);
             });
     }
+
+    /**
+     * Update the current user's password. The old password is verified by the server.
+     * @returns true if the password was changed, false otherwise
+     */
+    changeOwnPassword(oldPassword: string, newPassword: string): Promise<boolean> {
+        this.appState.dispatch(new ChangePasswordStart());
+
+        return this.client.user.changePassword({
+            oldPassword,
+            newPassword,
+        }).toPromise()
+            .then(() => {
+                this.notification.show({
+                    message: 'modal.updated_password',
+                    type: 'success',
+                });
+                this.appState.dispatch(new ChangePasswordSuccess());
+                return true;
+            })
+            .catch((error) => {
+                this.appState.dispatch(new ChangePasswordError(error.message || error));
+                this.errorHandler.catch(error);
+                return false;
+            });
+    }
 }

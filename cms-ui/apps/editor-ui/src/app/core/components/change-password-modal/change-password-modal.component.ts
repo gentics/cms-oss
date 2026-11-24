@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BaseModal } from '@gentics/ui-core';
-import { ApplicationStateService, AuthActionsService } from '../../../state';
+import { AuthActionsService } from '../../../state';
 
 @Component({
     selector: 'change-password-modal',
@@ -12,11 +12,11 @@ import { ApplicationStateService, AuthActionsService } from '../../../state';
 export class ChangePasswordModal extends BaseModal<void> {
 
     form: UntypedFormGroup;
+    oldPassword: UntypedFormControl;
     password1: UntypedFormControl;
     password2: UntypedFormControl;
 
     constructor(
-        private appState: ApplicationStateService,
         private authActions: AuthActionsService,
     ) {
         super();
@@ -28,10 +28,13 @@ export class ChangePasswordModal extends BaseModal<void> {
             Validators.pattern('^[\\w\\-\\.@]+$'),
         ];
 
+        // The old password may have been set before the current password rules applied, so it is only required
+        this.oldPassword = new UntypedFormControl('', Validators.required);
         this.password1 = new UntypedFormControl('', passwordValidators);
         this.password2 = new UntypedFormControl('', passwordValidators);
 
         this.form = new UntypedFormGroup({
+            oldPassword: this.oldPassword,
             password1: this.password1,
             password2: this.password2,
         }, this.areEqual);
@@ -50,9 +53,14 @@ export class ChangePasswordModal extends BaseModal<void> {
     }
 
     changePassword(): void {
-        const userId = this.appState.now.auth.user?.id;
+        const oldPassword = this.form.get('oldPassword').value;
         const password = this.form.get('password1').value;
-        this.authActions.changePassword(userId, password)
-            .then(() => this.closeFn());
+        // keep the modal open on failure (e.g. wrong old password), so the user can correct the input
+        this.authActions.changePassword(oldPassword, password)
+            .then(success => {
+                if (success) {
+                    this.closeFn();
+                }
+            });
     }
 }

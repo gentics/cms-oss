@@ -160,7 +160,7 @@ export class ContentRepositoryFragmentOperations
         return this.api.devTools.addContentRepositoryFragmentToPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'content_repository_fragment.contentRepositoryFragment_successfully_added_to_package',
+                    message: 'content_repository_fragment.content_repository_fragment_successfully_added_to_package',
                     type: 'success',
                     translationParams: {
                         name: entity.name,
@@ -180,7 +180,7 @@ export class ContentRepositoryFragmentOperations
         return this.api.devTools.removeContentRepositoryFragmentFromPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'content_repository_fragment.contentRepositoryFragment_successfully_removed_from_package',
+                    message: 'content_repository_fragment.content_repository_fragment_successfully_removed_from_package',
                     type: 'success',
                     translationParams: {
                         name: entity.name,

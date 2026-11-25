@@ -1,0 +1,1 @@
+Formgen: Fixed selection-only dropdowns (e.g. the column filter of lists) in the web version, which could not be scrolled when their option list was longer than the dropdown height, so lower entries could not be selected.

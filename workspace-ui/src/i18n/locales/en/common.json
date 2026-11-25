@@ -33,7 +33,10 @@
     },
     "preview": {
         "title": "Preview",
-        "open": "Open",
+        "draft": "Preview",
+        "draftTitle": "Open the preview in the CMS",
+        "live": "Live",
+        "liveTitle": "Open the published page",
         "frameTitle": "Preview of the page in the CMS",
         "viewport": "Preview width",
         "desktop": "Desktop",
@@ -238,6 +241,7 @@
     },
     "chat": {
         "placeholder": "What should happen?",
+        "placeholderWhileRunning": "Waiting for reply – type your next step",
         "send": "Send",
         "sendFailed": "The message could not be sent",
         "sender": {
@@ -542,7 +546,7 @@
         "noMatch": "No session matches “{{query}}”.",
         "untitled": "Untitled session",
         "delete": "Delete “{{title}}”",
-        "deleted": "“{{title}}” deleted",
+        "deleted": "“<name/>” deleted",
         "undo": "Undo",
         "archiveFailed": "Deleting the session failed",
         "restoreFailed": "Restoring the session failed"
@@ -555,6 +559,7 @@
         "manyInReview_one": "{{count}} page sent to review",
         "manyInReview_other": "{{count}} pages sent to review",
         "openPage": "Open the page",
+        "openPreview": "Open the preview",
         "openSession": "Open this session",
         "newSession": "Start a new session",
         "placeholder": "What’s next?",
@@ -566,6 +571,7 @@
         "title": "Review",
         "pageTitle": "Review & release",
         "back": "Back to the chat",
+        "openPublished": "Open “{{name}}” on the website",
         "open": "Review & release",
         "loading": "Loading the plan…",
         "noPlan": "This session has no plan to review yet.",

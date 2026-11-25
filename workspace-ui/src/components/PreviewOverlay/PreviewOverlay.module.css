@@ -23,9 +23,68 @@
   background: color-mix(in oklab, var(--interactive) 15%, transparent);
 }
 
-/* Changed by the last CMS write (design.md §12 "Geändert"). */
+/* Changed by the last CMS write (design.md §12 "Geändert"), by GenAIx or a direct save. It appears piece by piece: first
+   covered by a skeleton (§8 "Lädt", §12 "Läuft: Skeleton über dem Element") for one sweep, which then dissolves; the
+   tint fades from the update on, gone after `--duration-changed-fade`. Only the tint, so the skeleton is not dimmed. */
 .changed {
-  background: rgba(var(--success-rgb), 0.07);
+  background: rgba(var(--success-rgb), 0);
+  animation: tint-out var(--duration-changed-fade) linear;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(var(--fg-primary-rgb), .05) 0%,
+        rgba(var(--fg-primary-rgb), .11) 50%,
+        rgba(var(--fg-primary-rgb), .05) 100%
+      ) 0 0 / 200% 100%,
+      var(--bg-surface);
+    opacity: 0;
+    animation:
+      shimmer var(--duration-skeleton) linear,
+      reveal calc(var(--duration-skeleton) + var(--duration-card)) var(--easing);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0, 0 0;
+  }
+
+  to {
+    background-position: -100% 0, 0 0;
+  }
+}
+
+/* Reduced motion shortens every animation to nothing (`index.css`), which would drop the tint at once: it stays,
+   without fading, so a changed part is still marked. */
+@media (prefers-reduced-motion: reduce) {
+  .changed {
+    background: rgba(var(--success-rgb), 0.07);
+  }
+}
+
+/* From the full tint to none. */
+@keyframes tint-out {
+  from {
+    background: rgba(var(--success-rgb), 0.07);
+  }
+}
+
+/* Covered for one sweep of the shimmer, then dissolving (card duration). */
+@keyframes reveal {
+  from,
+  80% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 .hovered {

@@ -43,7 +43,10 @@ interface ComposerProps {
     /** `start` the dashboard's prompt without a box, `chat` the box floating over a session's chat. */
     variant: 'start' | 'chat';
     onSubmit: (input: StartSessionInput) => void;
-    /** While the input is being sent: the send button is disabled and nothing is submitted twice. */
+    /**
+     * While the input is being sent, and in the chat until its run has started: nothing is submitted
+     * twice; the send button is disabled, or in the chat a disabled Stop takes its place.
+     */
     isSubmitting: boolean;
     /**
      * While sending: the share uploaded of each submitted file, 0 to 1, by its position in the
@@ -55,7 +58,12 @@ interface ComposerProps {
      * submitted meanwhile (a second message would be `409 run_already_active`).
      */
     isRunning?: boolean;
-    /** Chat: Stop was pressed and the run is stopping; Stop is disabled. */
+    /**
+     * Chat: a run is working that a message may still go beside (a plan's run, `SessionComposer`). Stop
+     * shows while the field is empty and nothing is attached; once there is input, send.
+     */
+    isRunningBeside?: boolean;
+    /** Chat: Stop is disabled: the run is stopping, or there is no run to stop yet (the message is still being sent). */
     isStopping?: boolean;
     onStop?: () => void;
     /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
@@ -77,10 +85,12 @@ const TEXT_KEYS = {
  * The prompt of the dashboard and of a session's chat: a field that takes typed or dictated text
  * with passages locked as verbatim, files attached as a source or verbatim, and the send button.
  * Enter or the send button submits the message parts and the files; a dictation only fills the
- * field. On phones it puts voice first. Sending is the caller's. While a run is working
- * (`isRunning`), Stop replaces send and calls `onStop`.
+ * field. On phones it puts voice first. Sending is the caller's. In the chat (`onStop`), Stop takes
+ * the place of send while a run is working (`isRunning`), while a run beside which a message may go
+ * is working and the field is empty (`isRunningBeside`), and while sending (`isSubmitting`), disabled
+ * while there is nothing to stop yet (`isStopping`): the button never shows as a dead send.
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, placeholder, extraAction, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isRunningBeside = false, isStopping = false, onStop, sessionId, placeholder, extraAction, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -207,7 +217,9 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         attachments: attachments.map(({ id, file }) => ({ value: attachmentSource(id), label: file.name })),
         sessionId,
     };
-    const canSubmit = !isSubmitting && !isRunning && (!isEmpty || attachments.length > 0);
+    const hasInput = !isEmpty || attachments.length > 0;
+    const canSubmit = !isSubmitting && !isRunning && hasInput;
+    const isStopShown = Boolean(onStop) && (isRunning || isSubmitting || (isRunningBeside && !hasInput));
     // Mobile, voice first: until the user types or dictates, only the big mic shows.
     const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
     // The submitted files are the attachments in their order: while sending they cannot be removed,
@@ -226,7 +238,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                 <VoiceInput dictation={dictation} onCancel={cancelDictation} size={isChat ? 'sm' : 'md'} />
             </span>
 
-            {isRunning && onStop && (
+            {isStopShown && (
                 <IconButton
                     variant="primary"
                     size={isChat ? 'icon' : 'icon-lg'}
@@ -237,7 +249,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                     <SquareIcon size={isChat ? 14 : undefined} />
                 </IconButton>
             )}
-            {(!isRunning || !onStop) && (
+            {!isStopShown && (
                 <IconButton
                     variant="primary"
                     size={isChat ? 'icon' : 'icon-lg'}
@@ -352,12 +364,13 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                     />
                 </div>
 
-                <div className={styles.line}>
+                <div className={`${styles.line} ${isChat ? '' : styles.startLine}`}>
                     <VerbatimSourcesContext value={verbatimSources}>
                         <ComposerTextInput
                             editor={editor}
                             label={placeholder ?? t(texts.placeholder)}
                             isEmpty={isEmpty}
+                            isRunning={isChat && (isRunning || isSubmitting)}
                             size={isChat ? 'base' : 'lg'}
                             onKeyDown={handleKeyDown}
                             onFocus={() => setHasFocus(true)}
@@ -365,7 +378,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                         />
                     </VerbatimSourcesContext>
 
-                    {!isChat && submitButtons}
+                    {!isChat && <span className={styles.lineSubmit}>{submitButtons}</span>}
                 </div>
 
                 <ReferenceMenu editor={editor} sessionId={sessionId} />

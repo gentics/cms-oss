@@ -57,12 +57,53 @@
   max-width: 240px;
 }
 
-/* The selected part, named in the header, with a button to clear it. */
-.selection {
-  display: flex;
+/* "Preview · Live": the page in a new tab, as text links (design.md §4.1: `--interactive`, underlined on hover and focus),
+   one icon for both. */
+.open {
+  display: inline-flex;
   flex: none;
   align-items: center;
+  gap: 5px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+
+  & svg {
+    color: var(--interactive);
+  }
+
+  & a {
+    border-radius: var(--corner-xs);
+    color: var(--interactive);
+    font-weight: 500;
+    text-decoration: none;
+    text-underline-offset: 2px;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--interactive);
+    }
+  }
+}
+
+/* The selected part, named in the header, with a button to clear it. A long name is cut off at the head's
+   width (the whole name is the text's title), instead of running out of the head. */
+.selection {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
   gap: 4px;
+  min-width: 0;
   color: var(--fg-secondary);
   font-size: var(--font-size-sm);
+}
+
+.selectionName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

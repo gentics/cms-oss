@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { GenaixEvent, PlanState } from '@/services/apiService/genaix/types';
 
-import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from './useWorkspaceEventStore';
+import { isSameCmsObject, persistedMessageKeys, selectSession, useWorkspaceEventStore } from './useWorkspaceEventStore';
 
 const SESSION = 's-1';
 
@@ -209,6 +209,13 @@ describe('useWorkspaceEventStore', () => {
             apply(event(2, 'run.cancelled', { run_id: 'r-1', ...run('cancelled') }));
             expect(session().run).toBeNull();
             expect(session().notices).toEqual([{ seq: 2, runId: 'r-1', kind: 'cancelled' }]);
+        });
+
+        it('markRunCancelling stops awaiting a run the stream has not told about yet', () => {
+            useWorkspaceEventStore.getState().awaitRun(SESSION, 'r-1');
+            useWorkspaceEventStore.getState().markRunCancelling(SESSION, 'r-1');
+
+            expect(session().awaitedRunIds).toEqual([]);
         });
 
         it('keeps the side runs, also after they ended, but no other run (rc.5)', () => {
@@ -492,5 +499,17 @@ describe('useWorkspaceEventStore', () => {
 
         expect(session().connection).toBe('open');
         expect(selectSession('other')(useWorkspaceEventStore.getState()).connection).toBe('closed');
+    });
+});
+
+describe('isSameCmsObject', () => {
+    it('matches type and id, and the connection only when both references name one', () => {
+        const recorded = { type: 'page' as const, id: 8644, connection_id: 'c-1' };
+
+        expect(isSameCmsObject(recorded, { type: 'page', id: 8644 })).toBe(true);
+        expect(isSameCmsObject(recorded, { type: 'page', id: 8644, connection_id: 'c-1' })).toBe(true);
+        expect(isSameCmsObject(recorded, { type: 'page', id: 8644, connection_id: 'c-2' })).toBe(false);
+        expect(isSameCmsObject(recorded, { type: 'page', id: 9011 })).toBe(false);
+        expect(isSameCmsObject(recorded, { type: 'file', id: 8644 })).toBe(false);
     });
 });

@@ -120,6 +120,54 @@ describe('SessionPage', () => {
         ]);
     });
 
+    it('shows a disabled Stop while the message is being sent, and once accepted a Stop that cancels its run', async () => {
+        const user = userEvent.setup();
+        let accept: (response: Response) => void = () => {};
+
+        const fetchMock = stubFetch();
+
+        fetchMock.mockImplementationOnce(() => new Promise((resolve) => {
+            accept = resolve;
+        }));
+        const field = await renderComposer();
+
+        await user.click(field);
+        await user.keyboard('Shorten the intro{Enter}');
+
+        // Being sent: no dead send, a Stop with nothing to stop yet.
+        expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Stop' })).toBeDisabled();
+
+        // Accepted (`202` names the run), its run not reported yet: Stop cancels that run.
+        fetchMock.mockResolvedValueOnce(Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+        await act(async () => accept(accepted()));
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Stop' })).toBeEnabled());
+
+        await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+        await waitFor(() => expect(fetchMock.mock.calls.map(([url]) => String(url))).toContain('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel'));
+        // Cancelled, the run is not awaited any more: the composer takes a message again.
+        await user.click(field);
+        await user.keyboard('Shorten the outro');
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled());
+    });
+
+    it('sends nothing more on Enter until the run of the sent message has started', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubFetch(accepted(), accepted());
+        const field = await renderComposer();
+        const messagePosts = () => fetchMock.mock.calls.filter(([url]) => String(url) === '/rest/proxy/genaix/sessions/s-1/messages');
+
+        await user.click(field);
+        await user.keyboard('Shorten the intro{Enter}');
+        await waitFor(() => expect(field).toHaveTextContent(''));
+
+        await user.keyboard('And the outro{Enter}');
+
+        expect(messagePosts()).toHaveLength(1);
+        expect(field).toHaveTextContent('And the outro');
+    });
+
     it('disables send while there is nothing to send, and sends with the button', async () => {
         const user = userEvent.setup();
         const fetchMock = stubFetch(accepted());
@@ -578,6 +626,9 @@ describe('SessionPage', () => {
 
             await send(field, 'Which pages link here?');
             await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'false'));
+            // The question's side run starts and ends before the next message can go (`409 run_already_active`).
+            apply({ run_id: 'r-1', type: 'run.started', run: { id: 'r-1', status: 'running', mode: 'side', started_at: '2026-10-14T14:00:01Z', step_count: 0 } });
+            apply({ run_id: 'r-1', type: 'run.completed', run: { id: 'r-1', status: 'completed', mode: 'side', started_at: '2026-10-14T14:00:01Z', step_count: 0 } });
             await send(field, 'Add a footer');
 
             await waitFor(() => expect(posts).toHaveBeenCalledTimes(2));
@@ -636,7 +687,18 @@ describe('SessionPage', () => {
             expect(JSON.parse(posts.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Use red instead' }] });
         });
 
-        it('stops the plan\'s run from the plan\'s head, with one Stop only', async () => {
+        // The Stop in the composer: the one nearest the field (the plan's head has the other).
+        function composerStop(field: HTMLElement): HTMLElement {
+            let box: HTMLElement | null = field;
+
+            while (box && within(box).queryAllByRole('button', { name: 'Stop' }).length === 0) {
+                box = box.parentElement;
+            }
+
+            return within(box!).getByRole('button', { name: 'Stop' });
+        }
+
+        it('stops the plan\'s run from the composer while its field is empty, beside the Stop on the plan\'s head', async () => {
             const user = userEvent.setup();
             const posts = stubPosts(() => Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
 
@@ -645,14 +707,74 @@ describe('SessionPage', () => {
 
             await renderPage();
 
-            expect(screen.getAllByRole('button', { name: 'Stop' })).toHaveLength(1);
-            // A turn beside the plan's run is a side run: send stays.
-            expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+            const stop = composerStop(screen.getByRole('textbox', { name: 'What should happen?' }));
 
-            await user.click(screen.getByRole('button', { name: 'Stop' }));
+            expect(screen.getAllByRole('button', { name: 'Stop' })).toHaveLength(2);
+            expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument();
+
+            await user.click(stop);
 
             await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
             expect(String(posts.mock.calls[0]![0])).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
+            // Both are disabled while the run stops.
+            await waitFor(() => screen.getAllByRole('button', { name: 'Stop' }).forEach((button) => expect(button).toBeDisabled()));
+        });
+
+        it('offers no Stop for the plan\'s run in the composer while a message beside it is being sent', async () => {
+            const posts = stubPosts();
+
+            // The message's POST stays open (e.g. its files still uploading).
+            posts.mockImplementationOnce(() => new Promise(() => {}));
+            showPlan('running');
+            startPlanRun();
+
+            const { field } = await renderPage();
+
+            await send(field, 'Which pages link here?');
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            // Nothing of this message to stop yet; the plan's run is stopped from its head.
+            expect(composerStop(field)).toBeDisabled();
+        });
+
+        it('stops the plan\'s run from the plan\'s head too', async () => {
+            const user = userEvent.setup();
+            const posts = stubPosts(() => Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+
+            showPlan('running');
+            startPlanRun();
+
+            await renderPage();
+
+            const stop = composerStop(screen.getByRole('textbox', { name: 'What should happen?' }));
+
+            await user.click(screen.getAllByRole('button', { name: 'Stop' }).find((button) => button !== stop)!);
+
+            await waitFor(() => expect(posts).toHaveBeenCalledTimes(1));
+            expect(String(posts.mock.calls[0]![0])).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
+        });
+
+        it('offers send beside the plan\'s run once there is text, and Stop again when the field is empty', async () => {
+            const user = userEvent.setup();
+
+            showPlan('running');
+            startPlanRun();
+
+            await renderPage();
+
+            const field = screen.getByRole('textbox', { name: 'What should happen?' });
+
+            await user.click(field);
+            await user.keyboard('Use red');
+
+            expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled();
+            // The plan's head keeps its Stop.
+            expect(screen.getAllByRole('button', { name: 'Stop' })).toHaveLength(1);
+
+            await user.keyboard('{Control>}a{/Control}{Backspace}');
+
+            expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument();
+            expect(screen.getAllByRole('button', { name: 'Stop' })).toHaveLength(2);
         });
     });
 

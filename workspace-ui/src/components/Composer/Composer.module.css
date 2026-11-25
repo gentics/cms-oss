@@ -27,6 +27,32 @@
   gap: 8px;
 }
 
+/* Dashboard: the field and the buttons in one line that scrolls as a whole, at most 150 px high (as the chat's field):
+   a long text grows downwards with the scrollbar at the line's edge, not between the text and the buttons. A grid, so
+   the row is as high as the text and the buttons can sit at its end. Hidden like `.line` on a phone (voice first). */
+.startLine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  max-height: 150px;
+  overflow-y: auto;
+  /* Into the prompt's right padding (`.prompt`): the scrollbar runs there, beside the buttons, not over them. */
+  margin-right: -10px;
+  padding-right: 10px;
+  /* Quiet: a thin thumb in the colour of lines (design.md §3.1 `--fg-primary-rgb`, the splitter grip's .22), no track. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--fg-primary-rgb), .22) transparent;
+}
+
+/* Voice input and send: at the bottom of the text, and kept at the line's bottom edge while the text scrolls. */
+.lineSubmit {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-self: end;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Wrapper of the AttachmentList, so the mobile rules below can collapse it. */
 .attachments {
   display: contents;
@@ -38,8 +64,10 @@
   flex: none;
 }
 
+/* Wraps in a narrow column instead of widening the composer; send keeps to the right (`.submit`). */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
   margin: -4px -9px 0;

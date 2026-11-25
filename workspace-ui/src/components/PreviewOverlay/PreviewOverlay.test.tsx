@@ -36,6 +36,19 @@ describe('PreviewOverlay', () => {
         expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
     });
 
+    it('shows the changed parts appearing anew for each update, and keeps them for the same one', () => {
+        const changed = [{ key: 'content_2#0', tagName: 'content_2', box }];
+        const { container, rerender } = render(<PreviewOverlay {...none} selectedRef={createRef()} changed={changed} changedRound="9142@1" />);
+        const first = container.querySelector('[data-changed-part="content_2"]');
+
+        rerender(<PreviewOverlay {...none} selectedRef={createRef()} changed={changed} changedRound="9142@1" />);
+        expect(container.querySelector('[data-changed-part="content_2"]')).toBe(first);
+
+        // A new element plays the reveal again.
+        rerender(<PreviewOverlay {...none} selectedRef={createRef()} changed={changed} changedRound="9142@2" />);
+        expect(container.querySelector('[data-changed-part="content_2"]')).not.toBe(first);
+    });
+
     it('gives the selection\'s element to the ref, also as a bare anchor', () => {
         const ref = createRef<HTMLDivElement>();
 

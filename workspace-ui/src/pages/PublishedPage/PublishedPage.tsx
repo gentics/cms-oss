@@ -1,6 +1,6 @@
 import { Link, useParams, useSearch } from '@tanstack/react-router';
-import { CheckIcon, ExternalLinkIcon, MessagesSquareIcon, SendIcon } from 'lucide-react';
-import { useId } from 'react';
+import { CheckIcon, ExternalLinkIcon, EyeIcon, MessagesSquareIcon, SendIcon } from 'lucide-react';
+import { Fragment, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Composer } from '@/components/Composer/Composer';
@@ -8,9 +8,13 @@ import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
 import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { Button } from '@/components/ui/button';
+import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
+import { readOnlyPreviewUrl } from '@/helper/previewUrl/previewUrl';
 import { usePlanState } from '@/hooks/useGenaixQueries';
+import { usePublishedUrls } from '@/hooks/usePublishedUrls';
 import { useSessionStart } from '@/hooks/useSessionStart';
-import type { CmsObjectRef, PlanState, Publication } from '@/services/apiService/genaix/types';
+import type { PlanState, Publication } from '@/services/apiService/genaix/types';
+import { isSameCmsObject } from '@/store/useWorkspaceEventStore';
 
 import styles from './PublishedPage.module.css';
 
@@ -18,31 +22,13 @@ import styles from './PublishedPage.module.css';
 const OUTCOMES: Publication['status'][] = ['published', 'review_requested'];
 
 /**
- * The page's address to open it at, whenever the plan has one: `CmsObjectRef.url` is the published or
- * preview URL as the CMS would open it, else its nice URL or folder path (contract, `CmsObjectRef.url`,
- * best-effort). A path is taken against this app's address, which the CMS serves (as the review page's
- * preview does); anything but `http(s)` (`javascript:`) is no link.
- */
-function openableUrlOf({ url }: CmsObjectRef): URL | undefined {
-    if (!url) {
-        return undefined;
-    }
-
-    try {
-        const parsed = new URL(url, document.baseURI);
-
-        return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed : undefined;
-    } catch {
-        return undefined;
-    }
-}
-
-/**
  * What went out (design.md §12 "Erfolg nach dem Veröffentlichen"): the success mark, as a headline
  * "Published" for one page or "4 pages published" for several, "Sent to review" when they wait for
- * approval, or how many went which way ("2 published, 1 in review"); below it the pages' names, and
- * for one page its address (`cms_ref.url`), which it offers to open; every outcome offers the way back
- * to the session.
+ * approval, or how many went which way ("2 published, 1 in review"); below it the pages' names. Only a published
+ * page links to the website (`usePublishedUrls`), in a new tab: one page with its address and "Open the page", of
+ * several each one's name. One page in review offers "Open the preview" instead: its CMS preview, read-only
+ * (`readOnlyPreviewUrl`); of several, the session's preview shows each. Every outcome offers the way back to the
+ * session.
  */
 function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) {
     const { t } = useTranslation();
@@ -52,8 +38,13 @@ function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) 
     const isMixed = counts.length > 1;
     const isReview = !isMixed && counts[0]?.[0] === 'review_requested';
     const single = pages.length === 1 ? pages[0] : undefined;
-    // One page: its address, also while it waits for review (the preview then).
-    const url = single ? openableUrlOf(single.cms_ref) : undefined;
+    // Where each published page is online.
+    const publishedUrls = usePublishedUrls(pages, pages.map(({ cms_ref: ref }) => ref));
+    const url = single ? publishedUrls[0] : undefined;
+    // One page in review: its latest preview (`PlanState.previews`), not online yet.
+    const reviewPreview = single?.status === 'review_requested'
+        ? state.previews?.find(({ cms_ref: ref }) => isSameCmsObject(ref, single.cms_ref))
+        : undefined;
     const names = pages.map(({ cms_ref: ref }) => ref.name || t('preview.pages.unnamed', { id: ref.id }));
     let headline: string;
 
@@ -75,7 +66,25 @@ function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) 
             <h1 id={headlineId} className={styles.headline}>{headline}</h1>
             {names.length > 0 && (
                 <p className={styles.pages}>
-                    {[...names, ...(url ? [`${url.host}${url.pathname === '/' ? '' : url.pathname}`] : [])].join(' · ')}
+                    {single
+                        ? [...names, ...(url ? [`${url.host}${url.pathname === '/' ? '' : url.pathname}`] : [])].join(' · ')
+                        : names.map((name, index) => {
+                            const pageUrl = publishedUrls[index];
+
+                            return (
+                                <Fragment key={pages[index]!.cms_ref.id}>
+                                    {index > 0 && ' · '}
+                                    {pageUrl
+                                        ? (
+                                            <a className={styles.pageLink} href={pageUrl.href} target="_blank" rel="noreferrer">
+                                                {name}
+                                                <ExternalLinkIcon size={12} aria-hidden />
+                                            </a>
+                                        )
+                                        : name}
+                                </Fragment>
+                            );
+                        })}
                 </p>
             )}
             <div className={styles.actions}>
@@ -83,6 +92,17 @@ function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) 
                     <Button variant="secondary" nativeButton={false} role={undefined} render={<a href={url.href} target="_blank" rel="noreferrer" />}>
                         <ExternalLinkIcon size={16} aria-hidden />
                         {t('published.openPage')}
+                    </Button>
+                )}
+                {reviewPreview && (
+                    <Button
+                        variant="secondary"
+                        nativeButton={false}
+                        role={undefined}
+                        render={<a href={readOnlyPreviewUrl(reviewPreview.preview_url)} target="_blank" rel="noopener noreferrer" />}
+                    >
+                        <EyeIcon size={16} aria-hidden />
+                        {t('published.openPreview')}
                     </Button>
                 )}
                 <Button variant="ghost" nativeButton={false} role={undefined} render={<Link to="/sessions/$id" params={{ id: sessionId }} />}>
@@ -98,7 +118,8 @@ function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) 
  * The page after a plan was published (`/sessions/$id/published?plan=`, design.md §12 "Erfolg nach dem
  * Veröffentlichen"): what went out (`Outcome`), then the prompt that starts the next session, the open
  * to-dos (`SessionTodos`, placed as on the dashboard) and the sessions to continue. It reads the plan itself, so it shows the same after a reload; a plan that is
- * not `published` or `review_requested` (yet) has nothing to show and links back to its review.
+ * not `published` or `review_requested` (yet) has nothing to show and links back to its review. A plan that could
+ * not be read says why, with a button to try again.
  */
 export function PublishedPage() {
     const { t } = useTranslation();
@@ -116,6 +137,14 @@ export function PublishedPage() {
         outcome = <Outcome sessionId={id} state={state.data} />;
     } else if (planId && (state.isPending || state.isFetching)) {
         outcome = <p className={styles.state} role="status">{t('review.loading')}</p>;
+    } else if (state.isError) {
+        // Not read is not "not published": the plan may well be out.
+        outcome = (
+            <div className={`${styles.state} ${styles.failed}`} role="alert">
+                <p>{t(errorMessageKey(state.error))}</p>
+                <Button size="sm" onClick={() => void state.refetch()}>{t('sessions.retry')}</Button>
+            </div>
+        );
     } else {
         outcome = (
             <p className={styles.state}>

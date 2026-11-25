@@ -37,6 +37,8 @@ export interface PreviewOverlayProps {
     dimmed: ElementBox | null;
     /** The parts the last CMS write changed. */
     changed: { key: string; tagName: string; box: ElementBox }[];
+    /** Which update `changed` belongs to: each new one shows its parts appearing again (`.changed`'s reveal). */
+    changedRound?: string;
     /** The selection and how it is shown; `null` for none. */
     selected: { box: ElementBox; mode: SelectedMode } | null;
     /** The selection's element, for what is anchored at it (menu, cards). */
@@ -51,14 +53,22 @@ export interface PreviewOverlayProps {
 
 /**
  * The outlines over the preview frame, the size of its page area (design.md §12 "Elemente in der Vorschau"): the
- * dimming of the focus mode, changed parts, the selection, the item or cell to be edited, the element being edited,
+ * dimming of the focus mode, changed parts (each appearing under a skeleton that dissolves, its tint fading after,
+ * once per update), the selection, the item or cell to be edited, the element being edited,
  * and the part under the mouse with its name. Hidden from assistive technology; lets the mouse through to the page.
  */
-export function PreviewOverlay({ dimmed, changed, selected, selectedRef, target, editing, hovered }: PreviewOverlayProps) {
+export function PreviewOverlay({ dimmed, changed, changedRound = '', selected, selectedRef, target, editing, hovered }: PreviewOverlayProps) {
     return (
         <div className={styles.overlay} aria-hidden="true">
             {dimmed && dimBands(dimmed).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
-            {changed.map(({ key, tagName, box }) => <div key={key} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
+            {changed.map(({ key, tagName, box }) => (
+                <div
+                    key={`${changedRound}:${key}`}
+                    className={styles.changed}
+                    style={boxStyle(box)}
+                    data-changed-part={tagName}
+                />
+            ))}
             {selected && (
                 <div
                     ref={selectedRef}

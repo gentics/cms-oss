@@ -219,6 +219,8 @@ export interface CmsNode {
     folderId: number;
     type?: 'node' | 'channel';
     inheritedFromName?: string;
+    /** The node's website, with its protocol, e.g. `https://www.example.com` (the CMS adds `http(s)://` to the host name). */
+    host?: string;
 }
 
 /** The CMS object types the composer's @-menu searches. */
@@ -412,6 +414,8 @@ export interface CmsPage {
     language?: string;
     cdate: number;
     edate: number;
+    /** Where the page lies on the node's website, e.g. `/Content.Node/news/page.html`; filled whatever the CMS's features. */
+    publishPath?: string;
 }
 
 /** The page `id`, in `nodeId` if given: `GET /rest/page/load/{id}`, read only (no `update`, so it is not locked). */

@@ -31,7 +31,7 @@ describe('PreviewHeader', () => {
         render(<PreviewHeader {...props} onMobileChange={onMobileChange} onFullScreenChange={onFullScreenChange} />, { wrapper: UiProvider });
 
         expect(screen.getByRole('heading', { name: 'Preview' })).toHaveAttribute('id', 'title');
-        expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('target', '_blank');
+        expect(screen.getByRole('link', { name: 'Preview' })).toHaveAttribute('target', '_blank');
         expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
         expect(screen.queryByRole('button', { name: 'Page settings' })).not.toBeInTheDocument();
 
@@ -40,6 +40,22 @@ describe('PreviewHeader', () => {
 
         expect(onMobileChange).toHaveBeenCalledWith(true);
         expect(onFullScreenChange).toHaveBeenCalledWith(true);
+    });
+
+    it('offers the published page beside the preview, only once it is published', () => {
+        const { rerender } = render(<PreviewHeader {...props} />, { wrapper: UiProvider });
+
+        expect(screen.getByRole('link', { name: 'Preview' })).toHaveAttribute('href', props.url);
+        expect(screen.queryByRole('link', { name: 'Live' })).not.toBeInTheDocument();
+
+        rerender(<PreviewHeader {...props} publishedUrl="https://www.gentics.com/terms.html" />);
+
+        const live = screen.getByRole('link', { name: 'Live' });
+
+        expect(live).toHaveAttribute('href', 'https://www.gentics.com/terms.html');
+        expect(live).toHaveAttribute('target', '_blank');
+        expect(live).toHaveAttribute('title', 'Open the published page');
+        expect(screen.getByRole('link', { name: 'Preview' })).toHaveAttribute('title', 'Open the preview in the CMS');
     });
 
     it('names the selection with a button to clear it, and toggles the page settings', async () => {

@@ -631,7 +631,7 @@ export class FormGridElementsContainerComponent {
             }
             usedTrackIds.add(trackId);
 
-            const uniqueElId = this.id() === this.rootId()
+            const uniqueElId = this.selfContext() === this.rootId()
                 ? el.id
                 : `${this.selfContext()}${UNIQUE_ID_GLUE}${el.id}`;
             const itemSchema = this.schemaPropertiesMap()?.[uniqueElId];

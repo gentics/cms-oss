@@ -8,6 +8,7 @@ import {
     findTableRowById,
     loginWithForm,
     matchRequest,
+    MESH_LOGIN,
     navigateToApp,
     selectTab,
     TestSize,
@@ -20,7 +21,6 @@ import {
     ImportPermissions,
 } from '@gentics/e2e-utils';
 import { expect, Locator, Page, test } from '@playwright/test';
-import { ADMIN } from './common';
 import {
     dateShouldBeDisabled,
     navigateToModule,
@@ -293,8 +293,8 @@ async function openUserTokenModal(page: Page, row: Locator) {
     const management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
     await management.waitFor({ state: 'visible' });
 
-    await management.locator('gtx-mesh-login-gate form input[type="text"]').fill(ADMIN.username);
-    await management.locator('gtx-mesh-login-gate form input[type="password"]').fill(ADMIN.password);
+    await management.locator('gtx-mesh-login-gate form input[type="text"]').fill(MESH_LOGIN.username);
+    await management.locator('gtx-mesh-login-gate form input[type="password"]').fill(MESH_LOGIN.password);
     await management.locator('gtx-mesh-login-gate form gtx-button.form-login-button').click();
 
     const managementTabs = management.locator('gtx-grouped-tabs');

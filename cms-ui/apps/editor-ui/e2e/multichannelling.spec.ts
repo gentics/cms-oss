@@ -278,6 +278,9 @@ test.describe('Multichannelling', () => {
                     description: 'SUP-20134',
                 }],
             }, async ({ page }) => {
+                // Selects and validates every target variant, which takes longer than the default timeout
+                test.slow();
+
                 const source = sources[sourceVariant];
 
                 await setupHelperWindowFunctions(page);
@@ -307,7 +310,7 @@ test.describe('Multichannelling', () => {
 
                 const modal = page.locator('gtx-tag-editor-modal');
                 const pageEditor = modal.locator('page-url-tag-property-editor');
-                const displayValue = pageEditor.locator('browse-box gtx-input.value-display input[type="text"]');
+                const displayValue = pageEditor.locator('gtx-browse-box .display-value');
                 const repoBrowser = page.locator('repository-browser');
 
                 async function findInRepoBrowser(target: PageInNode): Promise<Locator> {
@@ -322,7 +325,7 @@ test.describe('Multichannelling', () => {
 
                     await test.step(`Select ${VARIANT_LABELS[targetVariant]}`, async () => {
                         await editButton.click();
-                        await pageEditor.locator('browse-box [data-action="browse"] button').click();
+                        await pageEditor.locator('gtx-browse-box [data-action="browse"]').click();
                         await repoBrowser.waitFor();
 
                         await selectNode(repoBrowser, target.nodeId);
@@ -331,7 +334,7 @@ test.describe('Multichannelling', () => {
                         await clickModalAction(repoBrowser, 'confirm');
                         await repoBrowser.waitFor({ state: 'detached' });
 
-                        await expect(displayValue).toHaveValue(target.page.name);
+                        await expect(displayValue).toHaveText(target.page.name);
                         await modal.locator('.footer [data-action="confirm"] button').click();
                         await modal.waitFor({ state: 'detached' });
                     });
@@ -351,10 +354,10 @@ test.describe('Multichannelling', () => {
                         expect(pageLoadRes.page.folderId).toEqual(target.folderId);
                         await folderLoadReq;
 
-                        await expect(displayValue).toHaveValue(target.page.name);
+                        await expect(displayValue).toHaveText(target.page.name);
 
                         // The repository browser has to start in the node/folder of the referenced page
-                        await pageEditor.locator('browse-box [data-action="browse"] button').click();
+                        await pageEditor.locator('gtx-browse-box [data-action="browse"]').click();
                         await repoBrowser.waitFor();
                         await expect(repoBrowser.locator('repository-browser-breadcrumb gtx-breadcrumbs')).toHaveClass(
                             target.nodeId === channelNode.id ? /isInherited/ : /notInherited/,
@@ -364,7 +367,7 @@ test.describe('Multichannelling', () => {
                         await repoBrowser.waitFor({ state: 'detached' });
 
                         // Cancelling the repository browser must not change the selection
-                        await expect(displayValue).toHaveValue(target.page.name);
+                        await expect(displayValue).toHaveText(target.page.name);
                         await modal.locator('.footer [data-action="cancel"] button').click();
                         await modal.waitFor({ state: 'detached' });
                     });

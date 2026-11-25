@@ -103,5 +103,13 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     }
 
     private handleSsoResponse(result: string): void {
+        // A successful SSO login responds with the session-id. The session itself is handled via cookie,
+        // so it only has to be validated to load the user and update the auth state.
+        if (/^\d+$/.test(result)) {
+            console.log('Logging in via Single-Sign-On');
+            this.authOps.validateSession();
+        } else {
+            console.error('Unsupported SSO result: ' + result);
+        }
     }
 }

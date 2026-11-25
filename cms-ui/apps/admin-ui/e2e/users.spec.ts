@@ -15,7 +15,7 @@ import {
     UserImportData,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { cloneWithSymbols } from '@gentics/common';
 import test, { expect, Locator, Page } from '@playwright/test';
 import { navigateToModule } from './helpers';
 import { AccessControlledType, GcmsPermission, UserResponse } from '@gentics/cms-models';

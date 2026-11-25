@@ -1,0 +1,23 @@
+/* The number of open tasks on the button: red, so it stands out (design.md §12 "Zähler-Badge"). */
+.count {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--corner-full);
+  background: var(--error);
+  color: var(--bg-surface);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* The tasks below the drawer's header; only they scroll. Off-white, so the white task cards stand out (design.md §2,
+   the one large `--bg-subtle` area). */
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--bg-subtle);
+}

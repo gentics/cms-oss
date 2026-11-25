@@ -6,10 +6,13 @@ import { PartCard } from '@/components/MessageParts/PartCard';
 import { SelectableList } from '@/components/MessageParts/SelectableList';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { constructRequestTask, isConstructRequest, requestsConstruct } from '@/helper/constructRequest/constructRequest';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
+import { useCreateCmsTask } from '@/hooks/useCmsTasks';
 import { useAnswerInteraction } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
-import type { Interaction, InteractionAnswer, UserSettingPart } from '@/services/apiService/genaix/types';
+import type { ConstructDraftPart, Interaction, InteractionAnswer, UserSettingPart } from '@/services/apiService/genaix/types';
+import { constructRequestGroupId } from '@/services/cmsApiService/cmsTaskApi';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 
@@ -93,7 +96,8 @@ function Choice({ interaction, onSubmit, disabled }: KindProps) {
         return selected.length > 0 ? { selected } : undefined;
     }, [selected, other]);
 
-    useDraft(interaction.id, answer);
+    // Requesting a construct creates a CMS task first (`InteractionCard`), which a reply from the composer would skip.
+    useDraft(interaction.id, isConstructRequest(interaction) && requestsConstruct(answer) ? undefined : answer);
 
     function selectOther(isSelected: boolean) {
         setIsOther(isSelected);
@@ -455,10 +459,15 @@ const KINDS: Record<Interaction['kind'], (props: KindProps) => ReactNode> = {
  * `interaction.resolved` comes (`useInteractionLock`). A refused answer is shown as an error
  * notification; `409` already answered and `410` expired keep the card locked, any other failure
  * unlocks it.
+ *
+ * A construct request (`isConstructRequest`) answered with its request option first creates a task with
+ * `constructDraft` for the group set up for it (`constructRequestGroupId`), and answers only once the CMS has
+ * it: without a group, a draft or the task, GenAIx gets no answer and the card stays open.
  */
-export function InteractionCard({ interaction, sessionId }: { interaction: Interaction; sessionId: string }) {
-    const { t } = useTranslation();
+export function InteractionCard({ interaction, sessionId, constructDraft }: { interaction: Interaction; sessionId: string; constructDraft?: ConstructDraftPart }) {
+    const { t, i18n } = useTranslation();
     const answer = useAnswerInteraction(sessionId);
+    const createTask = useCreateCmsTask();
     const lock = useInteractionLock(interaction);
     const Kind = KINDS[interaction.kind];
 
@@ -473,6 +482,43 @@ export function InteractionCard({ interaction, sessionId }: { interaction: Inter
         }
 
         drafts.lock(interaction.id, 'sending');
+
+        if (isConstructRequest(interaction) && 'selected' in value && requestsConstruct(value)) {
+            requestConstruct(value);
+        } else {
+            send(value);
+        }
+    }
+
+    function requestConstruct(value: InteractionAnswer) {
+        const groupId = constructRequestGroupId();
+        const fail = (messageKey: string, detailKey?: string) => {
+            useInteractionDraftStore.getState().unlock(interaction.id);
+            useErrorNotificationStore.getState().addError({ messageKey, detailKey });
+        };
+
+        if (groupId === undefined) {
+            fail('chat.constructRequest.noGroup');
+
+            return;
+        }
+
+        if (!constructDraft) {
+            fail('chat.constructRequest.noDraft');
+
+            return;
+        }
+
+        const language = i18n.language.split('-')[0] ?? 'en';
+
+        createTask.mutate(constructRequestTask(constructDraft, interaction, groupId, t, language), {
+            onSuccess: () => send(value),
+            onError: (error) => fail('chat.constructRequest.failed', errorMessageKey(error)),
+        });
+    }
+
+    // Sends the answer; the card is already locked as `sending`.
+    function send(value: InteractionAnswer) {
         answer.mutate({ interactionId: interaction.id, answer: value }, {
             onSuccess: () => useInteractionDraftStore.getState().lock(interaction.id, 'answered'),
             onError: (error) => {

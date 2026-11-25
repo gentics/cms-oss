@@ -1,0 +1,92 @@
+/* Task card, like a chat card (design.md §12 "Chat-Karte (Part)"): flat, its actions as the footer. */
+.task {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
+}
+
+/* Name and meta line; with a place to go (`.corner`), a click on it goes there too. */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 12px;
+}
+
+/* No hover effect on the card; only the pointer shows that a click opens it. */
+.clickable {
+  padding-right: 44px;
+  cursor: pointer;
+}
+
+/* Open, compare or view live, as an icon in the top right corner (28 px icon button, design.md §7). */
+.corner {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  text-overflow: ellipsis;
+}
+
+a.name:hover,
+a.name:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.meta {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "See details": a task's instruction for GenAIx, folded below its meta line. */
+.body {
+  padding: 0 12px 10px;
+}
+
+.details {
+  display: flex;
+}
+
+.instruction {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--corner-sm);
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The card's footer; none when the task offers no action. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+
+  &:empty {
+    display: none;
+  }
+}
+
+/* Who has the task, at the end of the footer, as Jira shows the assignee (`TaskAssignee`). */
+.assignee {
+  margin-left: auto;
+}

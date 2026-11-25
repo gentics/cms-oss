@@ -1,11 +1,11 @@
 import { Link, useParams, useSearch } from '@tanstack/react-router';
 import { CheckIcon, ExternalLinkIcon, EyeIcon, MessagesSquareIcon, SendIcon } from 'lucide-react';
-import { Fragment, useId } from 'react';
+import { Fragment, useId, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Composer } from '@/components/Composer/Composer';
+import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
 import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
-import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
+import { TaskDrawer } from '@/components/TaskDrawer/TaskDrawer';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
@@ -23,8 +23,8 @@ const OUTCOMES: Publication['status'][] = ['published', 'review_requested'];
 
 /**
  * What went out (design.md §12 "Erfolg nach dem Veröffentlichen"): the success mark, as a headline
- * "Published" for one page or "4 pages published" for several, "Sent to review" when they wait for
- * approval, or how many went which way ("2 published, 1 in review"); below it the pages' names. Only a published
+ * "Published" for one page or "4 pages published" for several, "Publication requested" when they wait for
+ * approval, or how many went which way ("2 published, 1 requested"); below it the pages' names. Only a published
  * page links to the website (`usePublishedUrls`), in a new tab: one page with its address and "Open the page", of
  * several each one's name. One page in review offers "Open the preview" instead: its CMS preview, read-only
  * (`readOnlyPreviewUrl`); of several, the session's preview shows each. Every outcome offers the way back to the
@@ -117,7 +117,7 @@ function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) 
 /**
  * The page after a plan was published (`/sessions/$id/published?plan=`, design.md §12 "Erfolg nach dem
  * Veröffentlichen"): what went out (`Outcome`), then the prompt that starts the next session, the open
- * to-dos (`SessionTodos`, placed as on the dashboard) and the sessions to continue. It reads the plan itself, so it shows the same after a reload; a plan that is
+ * tasks (`TaskDrawer`, placed as on the dashboard) and the sessions to continue. It reads the plan itself, so it shows the same after a reload; a plan that is
  * not `published` or `review_requested` (yet) has nothing to show and links back to its review. A plan that could
  * not be read says why, with a button to try again.
  */
@@ -128,6 +128,7 @@ export function PublishedPage() {
     const state = usePlanState(id, planId || undefined);
     const { start, isStarting, uploadProgress } = useSessionStart();
     const newSessionId = useId();
+    const composerRef = useRef<ComposerHandle>(null);
     const status = state.data?.plan.status;
     const isSettled = status === 'published' || status === 'review_requested';
 
@@ -165,11 +166,11 @@ export function PublishedPage() {
 
                         <section className={styles.next} aria-labelledby={newSessionId}>
                             <h2 id={newSessionId} className={styles.overline}>{t('published.newSession')}</h2>
-                            <Composer variant="start" placeholder={t('published.placeholder')} onSubmit={start} isSubmitting={isStarting} uploadProgress={uploadProgress} />
+                            <Composer ref={composerRef} variant="start" placeholder={t('published.placeholder')} onSubmit={start} isSubmitting={isStarting} uploadProgress={uploadProgress} />
                         </section>
 
                         <div className={styles.todos}>
-                            <SessionTodos />
+                            <TaskDrawer onEditWithGenaix={(references) => composerRef.current?.addReferences(references)} />
                         </div>
 
                         <RecentSessions title={t('published.continue')} defaultOpen />

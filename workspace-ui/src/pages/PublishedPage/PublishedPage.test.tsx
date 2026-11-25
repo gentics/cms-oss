@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
 import type { PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
+import { taskFixture } from '@/test/cmsTasks';
 import { sessionFixture } from '@/test/genaixSessions';
 
 import '@/i18n';
@@ -32,8 +33,7 @@ function planState(status: PlanStatus, publications: Publication[]): PlanState {
     };
 }
 
-// Answers the plan with `state`; the to-dos' lists (filtered by `plan_status` or `status`, `SessionTodos`)
-// with a session to release, the others empty; the unfiltered list with the sessions to continue. The CMS: node 3
+// Answers the plan with `state`, the open tasks and the sessions to continue. The CMS: node 3
 // on `host`, each page of `publishPaths` with that publish path, any other page not readable.
 function stubRoutes(state: PlanState, publishPaths: Record<number, string> = {}, host = 'https://www.gentics.com') {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
@@ -57,10 +57,10 @@ function stubRoutes(state: PlanState, publishPaths: Record<number, string> = {},
             return Response.json(state);
         }
 
-        if (path.endsWith('/sessions') && (url.searchParams.has('plan_status') || url.searchParams.has('status'))) {
-            const toRelease = url.searchParams.get('plan_status') === 'released';
+        if (path === '/rest/task') {
+            const task = taskFixture({ id: '7', source: 'genaix', type: 'genaixReadyToPublish', title: 'Prices 2026', genaix: { sessionId: 's-3' }, actions: ['open'] });
 
-            return Response.json({ items: toRelease ? [sessionFixture({ id: 's-3', title: 'Prices 2026' })] : [], next_cursor: null });
+            return Response.json({ items: [task], numItems: 1, hasMoreItems: false });
         }
 
         if (path.endsWith('/sessions')) {
@@ -137,7 +137,7 @@ describe('PublishedPage', () => {
         ]), { 1: '/events', 3: '/norhaus' });
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: '2 published, 1 in review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: '2 published, 1 requested' })).toBeInTheDocument();
         expect(screen.getByText((_, element) => element?.localName === 'p' && element.textContent === 'Events – archive · Blog: Migration without downtime · Reference Norhaus')).toBeInTheDocument();
 
         const events = await screen.findByRole('link', { name: 'Events – archive' });
@@ -154,7 +154,7 @@ describe('PublishedPage', () => {
         stubRoutes(planState('review_requested', [publication(1, 'Versand', 'published'), publication(2, 'Service', 'review_requested')]));
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: '1 published, 1 in review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: '1 published, 1 requested' })).toBeInTheDocument();
     });
 
     it('says a page was sent to review and offers its CMS preview, read-only, not the page: it is not online yet', async () => {
@@ -165,7 +165,7 @@ describe('PublishedPage', () => {
         stubRoutes({ ...planState('review_requested', [service]), previews: [preview] });
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: 'Sent to review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: 'Publication requested' })).toBeInTheDocument();
         expect(screen.getByText('Service')).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Open the page' })).not.toBeInTheDocument();
 
@@ -179,7 +179,7 @@ describe('PublishedPage', () => {
         stubRoutes(planState('review_requested', [publication(2, 'Service', 'review_requested', 'https://www.gentics.com/service')]));
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: 'Sent to review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: 'Publication requested' })).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Open the preview' })).not.toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Open the page' })).not.toBeInTheDocument();
     });
@@ -226,13 +226,17 @@ describe('PublishedPage', () => {
         expect(screen.getByRole('link', { name: 'Open this session' })).toHaveAttribute('href', `/sessions/${SESSION}`);
     });
 
-    it('shows the open to-dos, as the dashboard does', async () => {
+    it('shows the open tasks, as the dashboard does', async () => {
+        const user = userEvent.setup();
+
         stubRoutes(planState('published', [publication(9142, 'Products – Overview', 'published')]));
         renderPublished();
 
-        const todos = await screen.findByRole('region', { name: 'Open to-dos' });
+        await user.click(await screen.findByRole('button', { name: '1 open task' }));
 
-        expect(await within(todos).findByRole('link', { name: /Prices 2026/ })).toBeInTheDocument();
+        const tasks = await screen.findByRole('dialog', { name: 'Open tasks' });
+
+        expect(await within(tasks).findByRole('link', { name: /Prices 2026/ })).toBeInTheDocument();
     });
 
     it('links back to the review of a plan that has not been published', async () => {

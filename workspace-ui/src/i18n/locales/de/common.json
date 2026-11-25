@@ -274,6 +274,11 @@
             "error": "Etwas ist schiefgegangen, der Lauf geht weiter",
             "auth": "Kein Zugriff auf die Verbindung {{connector}}"
         },
+        "constructRequest": {
+            "failed": "Der Baustein konnte nicht beantragt werden.",
+            "noGroup": "Für Bausteinanträge ist keine Gruppe eingerichtet.",
+            "noDraft": "Der Entwurf des Bausteins fehlt, er kann nicht beantragt werden."
+        },
         "interaction": {
             "title": {
                 "ask_user": "Frage",
@@ -331,13 +336,13 @@
         "actions": {
             "release": "Freigeben",
             "publish": "Veröffentlichen",
-            "request_review": "Prüfung anfordern",
+            "request_review": "Veröffentlichung beantragen",
             "discard": "Verwerfen"
         },
         "pending": {
             "release": "Wird freigegeben…",
             "publish": "Wird veröffentlicht…",
-            "request_review": "Prüfung wird angefordert…",
+            "request_review": "Veröffentlichung wird beantragt…",
             "discard": "Wird verworfen…"
         },
         "count": {
@@ -345,8 +350,8 @@
             "pending_other": "{{count}} Seiten zu veröffentlichen",
             "published_one": "{{count}} veröffentlicht",
             "published_other": "{{count}} veröffentlicht",
-            "review_requested_one": "{{count}} in Prüfung",
-            "review_requested_other": "{{count}} in Prüfung",
+            "review_requested_one": "{{count}} beantragt",
+            "review_requested_other": "{{count}} beantragt",
             "failed_one": "{{count}} fehlgeschlagen",
             "failed_other": "{{count}} fehlgeschlagen"
         },
@@ -355,7 +360,7 @@
             "anyway": {
                 "release": "Trotzdem freigeben",
                 "publish": "Trotzdem veröffentlichen",
-                "request_review": "Trotzdem Prüfung anfordern"
+                "request_review": "Trotzdem Veröffentlichung beantragen"
             }
         },
         "transitionFailed": "Der Plan konnte nicht geändert werden",
@@ -480,7 +485,7 @@
                 "done": "Fertig",
                 "released": "Bereit zum Veröffentlichen",
                 "published": "Veröffentlicht",
-                "review_requested": "Wartet auf Prüfung",
+                "review_requested": "Wartet auf Veröffentlichung",
                 "discarded": "Verworfen",
                 "superseded": "Durch einen neueren Plan ersetzt"
             },
@@ -540,9 +545,9 @@
         "one": "Veröffentlicht",
         "many_one": "{{count}} Seite veröffentlicht",
         "many_other": "{{count}} Seiten veröffentlicht",
-        "inReview": "Zur Prüfung gesendet",
-        "manyInReview_one": "{{count}} Seite zur Prüfung gesendet",
-        "manyInReview_other": "{{count}} Seiten zur Prüfung gesendet",
+        "inReview": "Veröffentlichung beantragt",
+        "manyInReview_one": "Veröffentlichung für {{count}} Seite beantragt",
+        "manyInReview_other": "Veröffentlichung für {{count}} Seiten beantragt",
         "openPage": "Seite öffnen",
         "openPreview": "Vorschau öffnen",
         "openSession": "Diese Sitzung öffnen",
@@ -577,16 +582,16 @@
                 "release_other": "Nicht freigegeben: {{count}} Prüfungen haben Warnungen.",
                 "publish_one": "Nicht veröffentlicht: {{count}} Prüfung hat eine Warnung.",
                 "publish_other": "Nicht veröffentlicht: {{count}} Prüfungen haben Warnungen.",
-                "request_review_one": "Keine Prüfung angefordert: {{count}} Prüfung hat eine Warnung.",
-                "request_review_other": "Keine Prüfung angefordert: {{count}} Prüfungen haben Warnungen."
+                "request_review_one": "Keine Veröffentlichung beantragt: {{count}} Prüfung hat eine Warnung.",
+                "request_review_other": "Keine Veröffentlichung beantragt: {{count}} Prüfungen haben Warnungen."
             },
             "blocking": {
                 "release_one": "Nicht freigegeben: {{count}} blockierende Prüfung muss behoben werden.",
                 "release_other": "Nicht freigegeben: {{count}} blockierende Prüfungen müssen behoben werden.",
                 "publish_one": "Nicht veröffentlicht: {{count}} blockierende Prüfung muss behoben werden.",
                 "publish_other": "Nicht veröffentlicht: {{count}} blockierende Prüfungen müssen behoben werden.",
-                "request_review_one": "Keine Prüfung angefordert: {{count}} blockierende Prüfung muss behoben werden.",
-                "request_review_other": "Keine Prüfung angefordert: {{count}} blockierende Prüfungen müssen behoben werden."
+                "request_review_one": "Keine Veröffentlichung beantragt: {{count}} blockierende Prüfung muss behoben werden.",
+                "request_review_other": "Keine Veröffentlichung beantragt: {{count}} blockierende Prüfungen müssen behoben werden."
             }
         },
         "approvalChain": "Freigabe",
@@ -602,7 +607,7 @@
             "done": "Fertig",
             "released": "Freigegeben",
             "published": "Veröffentlicht",
-            "review_requested": "In Prüfung",
+            "review_requested": "Veröffentlichung beantragt",
             "discarded": "Verworfen",
             "superseded": "Ersetzt"
         },
@@ -621,20 +626,20 @@
         "publication": {
             "pending": "Nicht veröffentlicht",
             "published": "Veröffentlicht",
-            "review_requested": "Prüfung angefordert",
+            "review_requested": "Veröffentlichung beantragt",
             "failed": "Fehlgeschlagen"
         },
         "page": {
             "issues_one": "{{count}} offener Punkt",
             "issues_other": "{{count}} offene Punkte",
             "canPublish": "Sie dürfen diese Seite veröffentlichen.",
-            "needsReview": "Braucht eine Prüfung: Sie dürfen diese Seite nicht veröffentlichen."
+            "needsReview": "Sie dürfen diese Seite nicht veröffentlichen, nur die Veröffentlichung beantragen."
         },
         "actions": {
             "release": "Freigeben",
             "publish": "Veröffentlichen",
             "publishRemaining": "Rest veröffentlichen",
-            "request_review": "Prüfung anfordern",
+            "request_review": "Veröffentlichung beantragen",
             "discard": "Verwerfen"
         },
         "gate": {
@@ -649,13 +654,82 @@
             "confirm": "Verwerfen"
         }
     },
-    "todos": {
-        "title": "Offene To-dos",
+    "tasks": {
+        "title": "Offene Aufgaben",
+        "toggle": "Aufgaben",
+        "openCount_zero": "Keine offenen Aufgaben",
+        "openCount_one": "{{count}} offene Aufgabe",
+        "openCount_other": "{{count}} offene Aufgaben",
+        "empty": "Keine offenen Aufgaben.",
+        "otherBrokenLinks_one": "{{count}} weitere Seite mit defekten Links, die Sie bearbeiten dürfen",
+        "otherBrokenLinks_other": "{{count}} weitere Seiten mit defekten Links, die Sie bearbeiten dürfen",
+        "brokenLinkPages_one": "{{count}} Seite mit defekten Links, die Sie bearbeiten dürfen",
+        "brokenLinkPages_other": "{{count}} Seiten mit defekten Links, die Sie bearbeiten dürfen",
         "groups": {
-            "released": "Bereit zum Veröffentlichen",
-            "review_requested": "Wartet auf Prüfung",
-            "waiting_for_input": "Wartet auf Ihre Antwort"
-        }
+            "genaix": "Bereit zum Veröffentlichen",
+            "publishQueue": "Wartet auf Ihre Freigabe",
+            "linkChecker": "Defekte Links",
+            "assigned": "Ihnen zugewiesen",
+            "group": "Offen zum Übernehmen"
+        },
+        "name": {
+            "approvePublish": "{{name}} veröffentlichen",
+            "approveOffline": "{{name}} offline nehmen",
+            "fixBrokenLinks": "Links auf {{name}} reparieren",
+            "genaixReadyToPublish": "{{name}} ist bereit zum Veröffentlichen",
+            "requestConstruct": "Neuer Tagtyp für {{name}}"
+        },
+        "meta": {
+            "requestedBy": "Angefragt von {{name}}",
+            "brokenLinks_one": "{{count}} defekter Link",
+            "brokenLinks_other": "{{count}} defekte Links",
+            "forGroup": "Für {{name}}",
+            "due": "Fällig {{date}}"
+        },
+        "assignee": {
+            "assignedTo": "Zugewiesen an {{name}}"
+        },
+        "actions": {
+            "approve": "Veröffentlichen",
+            "approveOffline": "Offline nehmen",
+            "assignBack": "Übergeben",
+            "compare": "Vergleichen",
+            "open": "Öffnen",
+            "view": "Live ansehen",
+            "fixWithGenaix": "Mit GenAIx beheben",
+            "startSession": "Session starten",
+            "editWithGenaix": "Mit GenAIx bearbeiten",
+            "showDetails": "Details ansehen",
+            "hideDetails": "Details ausblenden",
+            "openLinkChecker": "Im Link-Checker ansehen",
+            "claim": "Mir zuweisen",
+            "unclaim": "Zurückgeben",
+            "complete": "Erledigt"
+        },
+        "instruction": {
+            "fixBrokenLinks": "Repariere die defekten Links auf dieser Seite:\n{{urls}}",
+            "default": "Hilf mir bei dieser Aufgabe."
+        },
+        "assignBack": {
+            "title": "Zur Bearbeitung übergeben",
+            "recipients": "Benutzer",
+            "message": "Nachricht",
+            "cancel": "Abbrechen",
+            "failed": "Die Seite konnte nicht übergeben werden."
+        },
+        "constructRequest": {
+            "title": "Baustein anlegen: {{name}}",
+            "intro": "Lege den Baustein „{{name}}“ ({{keyword}}) im CMS an. Er wurde beantragt, weil der Antragsteller selbst keine Bausteine anlegen darf.",
+            "names": "Namen: {{names}}",
+            "description": "Beschreibung: {{description}}",
+            "nodes": "Nodes: {{ids}}",
+            "parts": "Teile:",
+            "partType": "Typ {{typeId}}",
+            "mandatory": "Pflicht",
+            "default": "Standardwert: {{value}}",
+            "template": "Template:"
+        },
+        "actionFailed": "Die Aufgabe konnte nicht geändert werden."
     },
     "ui": {
         "close": "Schließen",
@@ -703,7 +777,9 @@
             "link": "Als Link",
             "linkText": "Zu den Buttons",
             "quiet": "Leiser Text-Button",
-            "sources": "Quellen"
+            "sources": "Quellen",
+            "disclosure": "Aufklapp-Überschrift",
+            "section": "Wartet auf Ihre Freigabe"
         },
         "checkbox": {
             "title": "Checkbox",
@@ -791,6 +867,9 @@
         "drawer": {
             "title": "Drawer",
             "open": "Drawer öffnen",
+            "openRight": "Von rechts öffnen",
+            "headingRight": "Offene Aufgaben",
+            "bodyRight": "Breiter Drawer von rechts, z. B. für die offenen Aufgaben.",
             "heading": "Sessions",
             "description": "Deine letzten Sessions.",
             "option": "Archivierte zeigen",

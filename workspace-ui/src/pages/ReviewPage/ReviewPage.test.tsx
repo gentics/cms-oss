@@ -222,7 +222,7 @@ describe('ReviewPage', () => {
             expect(screen.getByRole('region', { name: 'Checklist' })).toHaveTextContent('Formal address');
             expect(screen.getByRole('region', { name: 'Checklist' })).toHaveTextContent('Changed meanwhile');
             expect(screen.getByRole('region', { name: 'Checklist' })).not.toHaveTextContent('Alt text missing');
-            expect(await screen.findByText('Needs a review: you may not publish this page.')).toBeInTheDocument();
+            expect(await screen.findByText('You may not publish this page, only request its publication.')).toBeInTheDocument();
             // The list picks the page; the preview's head has no select of its own.
             expect(screen.queryByRole('combobox', { name: 'Pages' })).not.toBeInTheDocument();
 

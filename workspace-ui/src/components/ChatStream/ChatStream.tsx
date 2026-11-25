@@ -7,6 +7,7 @@ import { ConfirmedSettingsCard, InteractionCard } from '@/components/Interaction
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
+import { isConstructRequest, latestConstructDraft } from '@/helper/constructRequest/constructRequest';
 import { useSessionMessages } from '@/hooks/useGenaixQueries';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import type { MessagePart, MessageRole, UserMessagePart, UserSettingPart } from '@/services/apiService/genaix/types';
@@ -290,7 +291,14 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
 
     (interactions ?? []).forEach((interaction) => placed.push({
         key: `interaction-${interaction.id}`,
-        node: <InteractionCard interaction={interaction} sessionId={sessionId} />,
+        node: (
+            <InteractionCard
+                interaction={interaction}
+                sessionId={sessionId}
+                // A construct request asks for the draft its run showed before it.
+                constructDraft={isConstructRequest(interaction) ? latestConstructDraft(allEntries, interaction.run_id) : undefined}
+            />
+        ),
     }));
 
     // An accepted plan runs one execute run per segment of one module's items (rc.5): between one

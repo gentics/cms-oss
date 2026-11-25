@@ -62,8 +62,8 @@ export function stubSessionRoutes(
 }
 
 /**
- * Wraps `fetchMock` for a page that lists sessions: `GET /sessions` gets an empty list, every other
- * call goes to `fetchMock`, which so sees only the calls a test is about.
+ * Wraps `fetchMock` for a page that lists sessions and the open tasks: `GET /sessions` and `GET /rest/task`
+ * get an empty list, every other call goes to `fetchMock`, which so sees only the calls a test is about.
  */
 export function withEmptySessionList(fetchMock: typeof fetch): typeof fetch {
     return async (input, init) => {
@@ -71,6 +71,10 @@ export function withEmptySessionList(fetchMock: typeof fetch): typeof fetch {
 
         if ((init?.method ?? 'GET') === 'GET' && url.pathname === '/rest/proxy/genaix/sessions') {
             return Response.json({ items: [], next_cursor: null } satisfies SessionPage);
+        }
+
+        if ((init?.method ?? 'GET') === 'GET' && url.pathname === '/rest/task') {
+            return Response.json({ items: [], numItems: 0, hasMoreItems: false });
         }
 
         return fetchMock(input, init);

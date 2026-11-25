@@ -21,7 +21,7 @@ Dieses Dokument beschreibt das Aussehen der Workspace-UI: Farben, Schrift, Abst�
 ## 2. Look & Feel
 
 - **Ruhiges Werkzeug, keine Marketing-Seite.** Das Interface wirkt wie eine IDE: feste Spalten, klare 1-px-Linien, dichte, aber luftige Listen. Die bunte Fläche ist die **Vorschau der Website**, nicht die Arbeitsoberfläche drumherum.
-- **Weiß trägt.** Arbeitsflächen, Chat, Panels, Karten und Formulare sind weiß (`--bg-surface`). Getönte Flächen (`--bg-subtle`) gibt es nur klein: Hover, Chips, Kopfzeilen von Chat-Karten, Fußleisten.
+- **Weiß trägt.** Arbeitsflächen, Chat, Panels, Karten und Formulare sind weiß (`--bg-surface`). Getönte Flächen (`--bg-subtle`) gibt es nur klein: Hover, Chips, Kopfzeilen von Chat-Karten, Fußleisten. Einzige große Ausnahme: der Inhalt des Aufgaben-Drawers unter seinem Kopf, damit sich die weißen Aufgaben-Karten abheben.
 - **Blau heißt: interaktiv.** Azure/Akzent markieren nur Aktion, Auswahl, Fokus und Verweise. Blau ist nie Dekoration und nie Fließtext.
 - **Hierarchie über Größe und Farbe, nicht über Gewicht.** Es gibt nur Regular 400 und Medium 500.
 - **Eins nach dem anderen.** Ein Schritt ist sichtbar, der Rest wartet. Keine Erklär- oder Hinweiszeilen unter Bausteinen: Labels und Zustände sprechen für sich.
@@ -281,7 +281,7 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 
 - **Kurve:** `cubic-bezier(.2, .8, .2, 1)` für alles, was erscheint oder sich bewegt.
 - **Dauer:** Zustandswechsel 120–140 ms · Popover/Menü 160 ms · Nachricht/Karte 240–260 ms · Dashboard-Einstieg 340 ms, gestaffelt um je 30–40 ms · Vorschau-Spalte ein-/ausfahren 420 ms.
-- **Muster:** `rise` (7 px nach oben + einblenden) für Nachrichten und Listen, `pop` (5 px + Skalierung .985) für Popover und Karten, `drop` (−8 px) für Sheets, die von oben fallen, und Toasts. Drawer: 24 px von links.
+- **Muster:** `rise` (7 px nach oben + einblenden) für Nachrichten und Listen, `pop` (5 px + Skalierung .985) für Popover und Karten, `drop` (−8 px) für Sheets, die von oben fallen, und Toasts. Drawer: 24 px von links, der Aufgaben-Drawer 24 px von rechts.
 - **Drücken:** Buttons skalieren beim Drücken auf `.97` (`--press-scale`) und beim Loslassen zurück, 120–140 ms mit der Kurve oben. Kein Federn.
 - **Erfolg:** Häkchen-Marke skaliert von .6 auf 1 (`cubic-bezier(.2,1.4,.4,1)`, 500 ms). Die einzige federnde Bewegung.
 - **`prefers-reduced-motion: reduce`:** alle Animationen und Übergänge auf praktisch 0 ms.
@@ -294,10 +294,10 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 - **Drei Spalten mit Splittern:** Sessions (292 px) · Chat (mind. 320 px, flexibel) · Vorschau (46 %). Unter 1180 px: 228 px / 280 px / 42 %. Unter 900 px: 200 px / 240 px / 40 %. Spalten werden schmaler, aber nie zum Overlay.
 - **Vorschau erst bei Bedarf:** Bis die Seite angefasst wird, bleibt die Vorschau-Spalte weg und der Chat hat die volle Breite (Inhalt max. 760 px, zentriert).
 - **Chat:** Nachrichten max. 740 px breit. Agent links, eigene Nachricht rechts. Der Composer schwebt unten über dem Verlauf, mit Verlauf zu `--bg-canvas` dahinter; die Release-Leiste sitzt direkt darüber.
-- **Dashboard:** eine Eingabe, sonst nichts. Oben verankert (Abstand oben `min(28vh, 280px)`), max. 660 px breit. Die Eingabe hat **keinen Kasten**: Text auf der Fläche, beim Fokus eine weiche Fläche `rgba(interactive,.07)`. Offene To-dos ab 1360 px als Karte oben rechts (330 px), darunter in der Spalte.
+- **Dashboard:** eine Eingabe, sonst nichts. Oben verankert (Abstand oben `min(28vh, 280px)`), max. 660 px breit. Die Eingabe hat **keinen Kasten**: Text auf der Fläche, beim Fokus eine weiche Fläche `rgba(interactive,.07)`. Offene Aufgaben hinter einem Button oben rechts (Icon `list-checks`, Zähler-Badge); er öffnet sie als Drawer von rechts.
 - **Review:** links die Vorschau (flexibel, auf `--bg-preview-stage`), rechts ein Panel mit 400 px (340 px unter 1180 px) mit Checkliste und Veröffentlichen-Aktionen unten.
 - **Vorschau-Bühne:** Die Seite liegt als weißes Blatt (`--bg-surface`, Rand `rgba(fg-primary,.15)`, `--corner-xl`, `--elevation-1`) auf `--bg-preview-stage`, 12 px Rand. Mobil: 390 px breit, 6-px-Rahmen `rgba(fg-primary,.34)`, Radius 22 px.
-- **Overlays:** Drawer links 380 px · Dialog max. 720 × 600 px · Popover 350–410 px · Toast oben rechts, max. 520 px.
+- **Overlays:** Drawer links 380 px, Aufgaben-Drawer rechts 480 px · Dialog max. 720 × 600 px · Popover 350–410 px · Toast oben rechts, max. 520 px.
 - **Kundenseite in der Vorschau:** hat eigene Stile (u. a. Gewicht 600, Verläufe). Diese gelten **nicht** für die Workspace-UI.
 
 ---
@@ -319,6 +319,8 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 **Checkbox / Radio:** 16–18 px, Rand 1.5 px `--border-strong` (bzw. `rgba(fg-secondary,.45)`), `--corner-xs`. An: Fläche `--interactive-fill`/`--interactive`, weißes Häkchen. Radio an: 4-px-Ring `--interactive`.
 
 **Badge:** 10 px, `uppercase`, `--corner-sm`, 2 × 8 px. Standard `rgba(interactive,.12)` + `--fg-primary`; Status-Varianten siehe §3.3; „flat“ ohne Fläche in `--fg-muted`.
+
+**Zähler-Badge** (Anzahl offener Aufgaben am Button): Fläche `--error`, Text `--bg-surface`, 10 px, 500, `tabular-nums`, 16 px hoch, `--corner-full`. Nur bei mindestens 1; die Anzahl steht auch im Namen des Buttons.
 
 **`@`-Token / Referenz:** `rgba(interactive,.13)`, Rand `rgba(interactive,.30)`, `--corner-sm`, 12 px, 500, Icon 13 px `--interactive`, max. 270 px mit Auslassungspunkten. **Verbatim** = gleicher Token mit **gestricheltem** Rand; Verbatim-Textstelle im Composer: derselbe Token gestrichelt mit Schloss-Icon, zeigt ihren Text aber ganz (keine Maximalbreite) und bricht um. Verbatim-Block in Nachrichten: `rgba(interactive,.11)`, 2 px linke Kante `--interactive`, rechts `--corner-md`. In der eigenen Nachricht (auf `--bg-solid`): Fläche `rgba(255,255,255,.14)`, linke Kante `--interactive-fill`; Tokens darin mit gestricheltem Rand `rgba(255,255,255,.45)` für Verbatim.
 
@@ -370,6 +372,6 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 - **Nie** Fokus ausblenden, ohne ihn zu ersetzen.
 - **Nie** informationstragenden Text heller als `--fg-muted`.
 - **Nie** Status nur über Farbe.
-- **Nie** große getönte Flächen als Hintergrund der Arbeitsbereiche; `--bg-subtle` nur klein, `--bg-preview-stage` nur hinter der Vorschau.
+- **Nie** große getönte Flächen als Hintergrund der Arbeitsbereiche; `--bg-subtle` nur klein (Ausnahme: Inhalt des Aufgaben-Drawers, §2), `--bg-preview-stage` nur hinter der Vorschau.
 - **Nie** Schatten zur Trennung von Zonen; Schatten nur für schwebende Ebenen.
 - **Nie** Farben, Radien oder Schatten außerhalb dieses Dokuments.

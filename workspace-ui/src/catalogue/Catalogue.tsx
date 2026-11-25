@@ -1,4 +1,4 @@
-import { ArrowUpIcon, ChevronDownIcon, ChevronUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon, XIcon } from 'lucide-react';
+import { ArrowUpIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon, XIcon } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -210,6 +210,16 @@ export function Catalogue() {
                             <Button variant="quiet" size="text" aria-expanded>
                                 {t('catalogue.buttons.sources')}
                                 <ChevronUpIcon size={12} />
+                            </Button>
+                        </State>
+                        <State label={t('catalogue.buttons.disclosure')}>
+                            <Button variant="disclosure" aria-expanded>
+                                <ChevronDownIcon size={16} />
+                                {t('catalogue.buttons.section')}
+                            </Button>
+                            <Button variant="disclosure" aria-expanded={false}>
+                                <ChevronRightIcon size={16} />
+                                {t('catalogue.buttons.section')}
                             </Button>
                         </State>
                         <State label={t('catalogue.buttons.pressed')}>
@@ -514,24 +524,35 @@ export function Catalogue() {
                 </Section>
 
                 <Section id="catalogue-drawer" title={t('catalogue.drawer.title')}>
-                    <Drawer>
-                        <DrawerTrigger render={<Button variant="secondary" />}>{t('catalogue.drawer.open')}</DrawerTrigger>
-                        <DrawerContent>
-                            <DrawerHeader>
-                                <DrawerTitle>{t('catalogue.drawer.heading')}</DrawerTitle>
-                                <DrawerDescription>{t('catalogue.drawer.description')}</DrawerDescription>
-                            </DrawerHeader>
-                            <DrawerBody>
-                                <Label>
-                                    <Checkbox />
-                                    {t('catalogue.drawer.option')}
-                                </Label>
-                            </DrawerBody>
-                            <DrawerFooter>
-                                <DrawerClose render={<Button variant="secondary" />}>{t('catalogue.drawer.close')}</DrawerClose>
-                            </DrawerFooter>
-                        </DrawerContent>
-                    </Drawer>
+                    <div className={styles.row}>
+                        <Drawer>
+                            <DrawerTrigger render={<Button variant="secondary" />}>{t('catalogue.drawer.open')}</DrawerTrigger>
+                            <DrawerContent>
+                                <DrawerHeader>
+                                    <DrawerTitle>{t('catalogue.drawer.heading')}</DrawerTitle>
+                                    <DrawerDescription>{t('catalogue.drawer.description')}</DrawerDescription>
+                                </DrawerHeader>
+                                <DrawerBody>
+                                    <Label>
+                                        <Checkbox />
+                                        {t('catalogue.drawer.option')}
+                                    </Label>
+                                </DrawerBody>
+                                <DrawerFooter>
+                                    <DrawerClose render={<Button variant="secondary" />}>{t('catalogue.drawer.close')}</DrawerClose>
+                                </DrawerFooter>
+                            </DrawerContent>
+                        </Drawer>
+                        <Drawer side="right">
+                            <DrawerTrigger render={<Button variant="secondary" />}>{t('catalogue.drawer.openRight')}</DrawerTrigger>
+                            <DrawerContent size="wide">
+                                <DrawerHeader>
+                                    <DrawerTitle>{t('catalogue.drawer.headingRight')}</DrawerTitle>
+                                </DrawerHeader>
+                                <DrawerBody>{t('catalogue.drawer.bodyRight')}</DrawerBody>
+                            </DrawerContent>
+                        </Drawer>
+                    </div>
                 </Section>
 
                 <Section id="catalogue-toast" title={t('catalogue.toast.title')}>

@@ -10,6 +10,7 @@ import { CMS_USER_QUERY_KEY } from '@/hooks/useCmsAuth';
 import { routeTree } from '@/router';
 import type { CmsUser } from '@/services/cmsApiService/cmsApiService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { taskFixture, withTasks } from '@/test/cmsTasks';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 
 import '@/i18n';
@@ -92,29 +93,69 @@ describe('DashboardPage', () => {
         expect(fetchMock.mock.calls.map(([input]) => String(input))).not.toContain('/rest/user/me');
     });
 
-    it('shows the open to-dos and folds out the recent sessions', async () => {
+    it('shows the open tasks and folds out the recent sessions', async () => {
         const user = userEvent.setup();
-        const todo = sessionFixture({ id: 's-1', title: 'Prices 2026', status: 'active' });
         const recent = sessionFixture({ id: 's-2', title: 'Careers page' });
+        const task = taskFixture({ id: '7', source: 'genaix', type: 'genaixReadyToPublish', title: 'Prices 2026', genaix: { sessionId: 's-1' }, actions: ['open'] });
 
-        // The to-do queries (rc.4: `plan_status` for review) and the recent sessions, which take neither filter.
-        stubSessionRoutes((url) => {
-            if (url.searchParams.has('plan_status') || url.searchParams.has('status')) {
-                return { items: url.searchParams.get('plan_status') === 'review_requested' ? [todo] : [], next_cursor: null };
-            }
-
-            return { items: [recent, todo], next_cursor: null };
-        });
+        vi.stubGlobal('fetch', withTasks(stubSessionRoutes(() => ({ items: [recent], next_cursor: null })), [task]));
         renderDashboard();
 
-        const todos = await screen.findByRole('region', { name: 'Open to-dos' });
+        await user.click(await screen.findByRole('button', { name: '1 open task' }));
 
-        expect(await within(todos).findByRole('link', { name: /Prices 2026/ })).toBeInTheDocument();
-        expect(within(todos).getByRole('heading', { name: 'Waiting for review' })).toBeInTheDocument();
+        const tasks = await screen.findByRole('dialog', { name: 'Open tasks' });
 
+        expect(await within(tasks).findByRole('link', { name: /Prices 2026/ })).toHaveAttribute('href', '/sessions/s-1');
+        expect(within(tasks).getByRole('heading', { name: 'Ready to publish' })).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
         await user.click(screen.getByRole('button', { name: 'Recent sessions' }));
 
         expect(await screen.findByRole('link', { name: /Careers page/ })).toBeInTheDocument();
+    });
+
+    it('puts the page of a publish queue task into the field, and sending starts the session with it', async () => {
+        const user = userEvent.setup();
+        const session = { id: 's-1', status: 'active', workflow: 'content_research', run_id: 'r-1', message_id: 'm-1' };
+        const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json(session, { status: 201 }));
+        const page = { type: 'page', id: '9142', node_id: 3, label: 'Terms of use' };
+        const task = taskFixture({
+            id: 'publishQueue:page:9142',
+            source: 'publishQueue',
+            type: 'approvePublish',
+            title: undefined,
+            objects: [{ type: 'page', id: 9142, nodeId: 3, name: 'Terms of use' }],
+            actions: ['open', 'approve', 'startSession'],
+        });
+
+        vi.stubGlobal('fetch', withTasks(withEmptySessionList(fetchMock), [task]));
+
+        const { router } = renderDashboard();
+
+        await user.click(await screen.findByRole('button', { name: '1 open task' }));
+        await user.click(await screen.findByRole('button', { name: 'Edit with GenAIx' }));
+
+        // The drawer closes and leaves the focus in the field, not on its button.
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+        const field = screen.getByRole('textbox');
+
+        await waitFor(() => expect(field).toHaveTextContent('Terms of use'));
+        await waitFor(() => expect(field).toHaveFocus());
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        await user.keyboard('Add the new cancellation period{Enter}');
+
+        await waitFor(() => expect(router.state.location.pathname).toBe('/sessions/s-1'));
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions');
+        expect(JSON.parse(init?.body as string)).toMatchObject({
+            context: { references: [page] },
+            message: { parts: [{ type: 'reference', ref: page }, { type: 'text', text: ' Add the new cancellation period' }] },
+        });
     });
 
     it('creates the session with the prompt, caches it and opens its page', async () => {

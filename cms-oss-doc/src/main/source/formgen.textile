@@ -9,11 +9,13 @@ The core stays untouched and therefore update-compatible.
 
 You can:
 * register new form controls or replace existing ones,
-* hook into the form lifecycle (before/after submit, page changes, validation, form initialisation),
+* hook into the form lifecycle (before/after submit, page changes, validation, form initialization),
 * replace or add navigation buttons,
 * extend or replace overlays (loading / error / info dialogs),
 * register or replace whole screens,
 * override the styling.
+
+NOTE: For an overview over all CMP Components related to Forms, check the "Implementation Guide":https://www.gentics.com/implementation/cmp8.6/forms/forms.
 
 endprologue.
 

@@ -8,6 +8,8 @@ The guide covers the following topics:
 * Custom conversion steps of the CMS configuration files
 * Automatic conversion of all forms in the CMS
 
+NOTE: For an overview over all CMP Components related to Forms, check the "Implementation Guide":https://www.gentics.com/implementation/cmp8.6/forms/forms.
+
 endprologue.
 
 h3. Migrating the configuration

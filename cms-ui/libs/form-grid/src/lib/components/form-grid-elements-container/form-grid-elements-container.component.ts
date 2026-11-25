@@ -27,6 +27,7 @@ import {
     ATTR_CONTAINER_ID,
     ATTR_CONTEXT_ID,
     ATTR_ELEMENT_ID,
+    ATTR_ELEMENT_IS_CONTROL,
     ElementContainerMoveEvent,
     ElementMoveData,
     ElementSelectionEvent,
@@ -75,6 +76,7 @@ export class FormGridElementsContainerComponent {
 
     /** The configuration for this form. */
     public readonly config = input.required<FormTypeConfiguration>();
+    public readonly controlTypeNames = input.required<Set<string>>();
     /** How many levels deep this container is. */
     public readonly level = input.required<number>();
     /** The mode in which the form-grid operates in. */
@@ -158,13 +160,15 @@ export class FormGridElementsContainerComponent {
      */
     public isDragBlocked = computed(() => {
         const wl = this.whitelist();
+        const mode = this.mode();
+        const controlTypeNames = this.controlTypeNames();
         const moveData = this.elementMoving();
         const contextId = this.selfContext();
         const rootId = this.rootId();
         const elMap = this.elementMap();
 
         // Check it in helper function, which checks the dragging element recursively
-        return blockDragForElement(moveData, wl, contextId, rootId, elMap, true);
+        return blockDragForElement(moveData, mode, controlTypeNames, wl, contextId, rootId, elMap, true);
     });
 
     /* MISC
@@ -515,19 +519,30 @@ export class FormGridElementsContainerComponent {
             this.schema.update((data) => {
                 const copy = structuredClone(data);
 
-                copy.properties[createdEl.id] = {
+                let parentPropertiesMap: FormSchemaProperties = copy.properties;
+
+                // If this container is an aggregate, and we add a new element,
+                // we have to add it as child property to the parent aggregate schema,
+                // since these are nested.
+                if (this.id() !== this.rootId()) {
+                    parentPropertiesMap = copy.properties[this.id()]?.properties;
+                }
+
+                parentPropertiesMap[createdEl.id] = {
                     type: type,
                     name: createdEl.id,
                     formPage: this.pageIndex(),
                 };
+
                 if (containerType === 'aggregate') {
-                    copy.properties[createdEl.id].isList = true;
-                    copy.properties[createdEl.id].properties = {};
+                    parentPropertiesMap[createdEl.id].isList = true;
+                    parentPropertiesMap[createdEl.id].properties = {};
                 }
 
                 return copy;
             });
         }
+
         this.elements.update((data) => {
             const copy = structuredClone(data);
             copy.splice(index, 0, createdEl);

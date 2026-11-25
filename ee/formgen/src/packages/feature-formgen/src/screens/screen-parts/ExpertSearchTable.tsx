@@ -22,6 +22,7 @@ import { FlashList } from '@shopify/flash-list';
 import { expertSearchTableTheme } from '@andp/core/src/styles/theme';
 import * as interfaces from '../../types/interfaces';
 import * as overlayUtils from '../../utils/OverlayUtils';
+import { handleActaNovaProblem } from '../../utils/ActaNovaProblemUtils';
 import { StatesToUpdateEnum } from '../../constants/enums/StateToUpdateEnum';
 import { OverlayTypeEnum } from '../../custom/OverlayTypes';
 import AndpText from '@andp/core/src/components/AndpText';
@@ -253,6 +254,11 @@ const TableView: React.FC<TableViewProps> = (props) => {
               />
             )}
             keyExtractor={(item, index) => getRowKey(item, index)}
+            // The list has no fixed height here (it grows with its rows), so it never needs its
+            // own scrollbar. At certain table widths one still appeared on the list's ScrollView,
+            // narrowing the content; FlashList re-renders on every width change, and the scrollbar
+            // toggling on/off looped until React aborted with error #185 (white screen).
+            showsVerticalScrollIndicator={false}
             extraData={{ checkBoxesState, colWidths }}
           />
         </View>
@@ -823,6 +829,9 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
     (request?: interfaces.ApiResponse | Error) => {
       endANRequest(props.uiState, props.updateState);
       console.error('Failure on triggerFormEndpoint');
+      if (handleActaNovaProblem(request, props.uiState, props.formState, props.updateState)) {
+        return;
+      }
       overlayUtils.setOverlay(
         props.uiState,
         props.formState,

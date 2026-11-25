@@ -20,7 +20,9 @@ const OverlayLeave: React.FC<IDefaultOverlayProps> = (
   const additionalProps: IOverlayLeaveExtraProps = uiState.overlayState
     .additionalProps as IOverlayLeaveExtraProps;
 
-  const content = props.uiState.dialogForm.isDialogFormOpen
+  const saveDisabled = formState.formSettings?.disableSave === true;
+
+  const content = props.uiState.dialogForm.isDialogFormOpen || saveDisabled
     ? t('form_dialog_exit_without_save_overlay_content')
     : t('form_save_overlay_content');
 
@@ -48,8 +50,8 @@ const OverlayLeave: React.FC<IDefaultOverlayProps> = (
       },
     }];
 
-    // Add Save button if it is not dialogform
-    if (!props.uiState.dialogForm.isDialogFormOpen && !props.uiState.isReadOnlyForm) {
+    // Add Save button if it is not dialogform and intermediate saving is not disabled
+    if (!props.uiState.dialogForm.isDialogFormOpen && !props.uiState.isReadOnlyForm && !saveDisabled) {
       buttonList.push({
         key: 'leave-overlay-save-btn',
         title: t('form_save_overlay_button_save'),

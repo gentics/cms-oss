@@ -118,6 +118,7 @@
                     [schema]="schema()"
                     (schemaChange)="$event && updateSchema($event)"
                     [mode]="mode()"
+                    [controlTypeNames]="controlTypeNames()"
                     [elementMap]="elementMap()"
                     [rootId]="ELEMENT_ROOT_CONTAINER_ID"
                     [elementMoving]="elementMoving()"
@@ -138,6 +139,7 @@
                         [pageIndex]="pageIndex()"
                         [languages]="languages()"
                         [mode]="mode()"
+                        [controlTypeNames]="controlTypeNames()"
                         [gridSurface]="gridSurface"
                         [isAggregate]="false"
 

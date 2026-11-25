@@ -8,6 +8,8 @@ import AndpText from '@andp/core/src/components/AndpText';
 import { mergeStyles, useBreakpoints } from '@andp/core/src/AndpUtils';
 import { getFeatureActive, getI18nTextStr, isFeatureActive } from '../../../utils/Utils';
 import { handleBackgroundFormSave } from '../../../utils/FormEventsUtils';
+import * as overlayUtils from '../../../utils/OverlayUtils';
+import { OverlayTypeEnum } from '../../../custom/OverlayTypes';
 
 interface DetailInfoButtonProps {
     formState: FormState;
@@ -75,7 +77,16 @@ const DetailInfoButtonScreenPart: React.FC<DetailInfoButtonProps> = ({
         if (!detailsUrl || detailsUrl === "") {
             detailsUrl = "/";
         }
-        if (isLoggedIn) {
+        if (isLoggedIn && formState.formSettings?.disableSave === true) {
+            // intermediate saving is disabled: show the leave dialog instead of saving
+            overlayUtils.setOverlay(
+                uiState,
+                formState,
+                OverlayTypeEnum.ON_LEAVE,
+                updateState,
+                { link: detailsUrl },
+            );
+        } else if (isLoggedIn) {
             handleBackgroundFormSave(
                 formState,
                 uiState,

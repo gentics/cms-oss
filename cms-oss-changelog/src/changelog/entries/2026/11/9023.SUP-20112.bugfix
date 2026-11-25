@@ -1,0 +1,1 @@
+Fixed an issue where REST endpoints would return an HTTP status code of "200 OK" and the JSON body containing an error. The HTTP status codes now match the errors in the response.

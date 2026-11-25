@@ -13,3 +13,4 @@ export { default as AggregateDeleteConfirmationOverlay } from '../components/ove
 export { default as SubmitOverlay } from '../components/overlays/childOverlays/SubmitOverlay';
 export { default as CaptchaErrorOverlay } from '../components/overlays/childOverlays/CaptchaErrorOverlay';
 export { default as CustomOptionOverlay } from '../components/overlays/childOverlays/CustomOptionOverlay';
+export { default as ActaNovaProblemOverlay } from '../components/overlays/childOverlays/ActaNovaProblemOverlay';

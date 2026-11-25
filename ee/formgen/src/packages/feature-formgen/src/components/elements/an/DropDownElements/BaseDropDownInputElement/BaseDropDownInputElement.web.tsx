@@ -851,7 +851,6 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
                       renderItem={customRenderItem}
                       keyExtractor={(_, index) => index.toString()}
                       contentContainerStyle={customStyles.dropdownListContent}
-                      scrollEnabled={onlyDropdown ? false : true}
                       showsVerticalScrollIndicator={
                         dropdownInputTheme.dropdownList.showScrollbar
                       }

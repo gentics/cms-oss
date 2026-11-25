@@ -55,6 +55,8 @@
             [attr.data-element-id]="element?.id"
             [attr.data-context-id]="selfContext()"
             [attr.data-drop-index]="$index"
+            [attr.data-is-control]="displayItem.isControl"
+            [attr.data-is-block]="displayItem.isBlock"
         >
             <div
                 class="grid-resize-handle"
@@ -108,6 +110,7 @@
                     [class.no-elements]="element.elements?.length === 0"
 
                     [config]="config()"
+                    [controlTypeNames]="controlTypeNames()"
                     [rootId]="rootId()"
                     [parentId]="id()"
                     [contextId]="selfContext()"

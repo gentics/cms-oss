@@ -1172,7 +1172,11 @@ public class StagingModelBuilder {
 						if (defId > 0) {
 							ObjectTagDefinition definition = t.getObject(ObjectTagDefinition.class, defId);
 							if (definition != null && !definition.isVisibleIn(owningNode)) {
-								continue;
+								// the object property is not assigned to the node of the object, so it is assigned now (to import the value)
+								ObjectTagDefinition editable = TransactionManager.getCurrentTransaction().getObject(definition, true);
+								editable.getNodes().add(owningNode);
+								editable.save();
+								editable.unlock();
 							}
 						}
 

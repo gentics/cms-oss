@@ -157,15 +157,13 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         return null;
       }
 
+      // aggregates/containers are rendered by their own component, which handles the summary mode itself
       if (
-        props.summary === SummaryOptions.ReadOnly ||
-        props.summary === SummaryOptions.SummaryText
+        (props.summary === SummaryOptions.ReadOnly ||
+          props.summary === SummaryOptions.SummaryText) &&
+        ElemTyp !== ANAggregateElement &&
+        ElemTyp !== CmsContainerElement
       ) {
-        if (ElemTyp === ANAggregateElement || ElemTyp === CmsContainerElement) {
-          //Aggregates/containers are not handled directly by ReadOnly/Summary Element, instead we use normal Aggregate/Container Component to initialize sub elements - old comment
-          return null;
-        }
-
         value = ElemTyp.getSummaryValue(
           formState,
           jsonpath,

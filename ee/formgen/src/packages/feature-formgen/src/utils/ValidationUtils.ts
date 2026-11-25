@@ -13,6 +13,7 @@ import { getElementTypeByPlugin } from '../custom/ElementTypes';
 import i18n from '@andp/core/src/services/i18n';
 import * as utils from '../utils/Utils';
 import * as overlayUtils from '../utils/OverlayUtils';
+import { handleActaNovaProblem } from '../utils/ActaNovaProblemUtils';
 import * as mockFormularUtils from '../utils/MockFormularUtils';
 import JsonPath from 'jsonpath';
 import memoize from 'memoizee';
@@ -706,7 +707,9 @@ const loadValidation = async (
   const errorFunc = (errorResponse: any) => {
     (global as any).updateOnChangeWillRun = undefined;
     console.error(errorResponse);
-    if (jsonPath) {
+    if (handleActaNovaProblem(errorResponse, uiState, formState, updateState)) {
+      // The ActaNova problem overlay is shown instead of the load error.
+    } else if (jsonPath) {
       utils.setANFieldLoadError(formState, jsonPath, true);
       updateState(StatesToUpdateEnum.UIState);
     } else {
@@ -830,6 +833,11 @@ export const handleValidation = (
 
     const previousData = formState.data;
     formState.data = responseFormData;
+    // ActaNova now knows the current rows and renumbers the positional row IDs (<uuid>_<index>),
+    // so old IDs would hit other rows in refreshForm. A dialog form shares this formState: keep them there.
+    if (!uiState.dialogForm?.isDialogFormOpen) {
+      formState.deletedAggregateRowIds = undefined;
+    }
 
     // ---------- 4. Helpers ----------
     const isEmpty = (val: any): boolean =>

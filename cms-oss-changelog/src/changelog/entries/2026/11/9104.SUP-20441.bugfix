@@ -1,0 +1,1 @@
+CMS-Core: fixed issue when a form had been scheduled for taking offline, no user was recorded as unpublisher. Also, the user who scheduled a form for publishing (or took it offline) was recorded as publisher (or unpublisher) of later publish or take-offline actions of that form, even when another user did it

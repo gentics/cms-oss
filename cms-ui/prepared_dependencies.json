@@ -1,5 +1,5 @@
 {
-  "version": "6.6.0",
+  "version": "6.6.3",
   "name": "@gentics/root",
   "dependencies": {
     "@angular/animations": {
@@ -38,18 +38,18 @@
       "overridden": false
     },
     "@gentics/mesh-models": {
-      "version": "3.3.0-rc2",
-      "resolved": "https://repo.gentics.com/repository/npm-products/@gentics/mesh-models/-/mesh-models-3.3.0-rc2.tgz",
+      "version": "3.3.0",
+      "resolved": "https://repo.gentics.com/repository/npm-products/@gentics/mesh-models/-/mesh-models-3.3.0.tgz",
       "overridden": false
     },
     "@gentics/mesh-rest-client-angular": {
-      "version": "3.3.0-rc2",
-      "resolved": "https://repo.gentics.com/repository/npm-products/@gentics/mesh-rest-client-angular/-/mesh-rest-client-angular-3.3.0-rc2.tgz",
+      "version": "3.3.0",
+      "resolved": "https://repo.gentics.com/repository/npm-products/@gentics/mesh-rest-client-angular/-/mesh-rest-client-angular-3.3.0.tgz",
       "overridden": false
     },
     "@gentics/mesh-rest-client": {
-      "version": "3.3.0-rc2",
-      "resolved": "https://repo.gentics.com/repository/npm-products/@gentics/mesh-rest-client/-/mesh-rest-client-3.3.0-rc2.tgz",
+      "version": "3.3.0",
+      "resolved": "https://repo.gentics.com/repository/npm-products/@gentics/mesh-rest-client/-/mesh-rest-client-3.3.0.tgz",
       "overridden": false
     },
     "@microsoft/tsdoc": {

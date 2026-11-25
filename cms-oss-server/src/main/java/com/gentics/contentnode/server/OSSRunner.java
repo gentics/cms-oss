@@ -40,6 +40,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.util.resource.ResourceFactory;
+import org.glassfish.jersey.micrometer.server.DefaultJerseyTagsProvider;
+import org.glassfish.jersey.micrometer.server.MetricsApplicationEventListener;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -50,6 +52,7 @@ import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.init.Initializer;
 import com.gentics.contentnode.mcp.MCPServer;
 import com.gentics.contentnode.mcp.McpTools;
+import com.gentics.contentnode.metrics.CmsMetrics;
 import com.gentics.contentnode.rest.AcceptResponseServletFilter;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -73,6 +76,11 @@ public class OSSRunner {
 	 * Server instance
 	 */
 	protected static Server server;
+
+	/**
+	 * Metrics server instance (if metrics are enabled)
+	 */
+	protected static MetricsServer metricsServer;
 
 	/**
 	 * Loader for implementations of {@link ServletContextHandlerService}
@@ -121,6 +129,7 @@ public class OSSRunner {
 		if (server != null) {
 			server.stop();
 		}
+		stopMetricsServer();
 	}
 
 	/**
@@ -143,11 +152,20 @@ public class OSSRunner {
 	}
 
 	/**
+	 * Get the port, the metrics server is listening to.
+	 * @return port (negative, if the metrics server is not started)
+	 */
+	public static int getMetricsPort() {
+		return metricsServer != null ? metricsServer.getPort() : -1;
+	}
+
+	/**
 	 * Start the server
 	 */
 	protected static void start() {
 		Initializer.get().init();
 		log = NodeLogger.getNodeLogger(OSSRunner.class);
+		CmsMetrics.init();
 		servletContextHandlerServiceLoader = ServiceLoaderUtil.load(ServletContextHandlerService.class);
 		// set the loader also to the NodeConfigRuntimeConfiguration, so that the services can be called when the configuration is reloaded
 		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
@@ -162,6 +180,8 @@ public class OSSRunner {
 		// add REST API Servlet
 		ResourceConfig resourceConfig = ResourceConfig.forApplication(new RESTApplication());
 		resourceConfig.register(AutoScanFeature.class);
+		CmsMetrics.getRegistry().ifPresent(registry -> resourceConfig.register(
+				new MetricsApplicationEventListener(registry, new DefaultJerseyTagsProvider(), "http.server.requests", true)));
 
 		ServletContainer container = new ServletContainer(resourceConfig);
 		ServletHolder servletHolder = new ServletHolder(container);
@@ -249,6 +269,8 @@ public class OSSRunner {
 		server.setRequestLog(new CustomRequestLog(logWriter, ConfigurationValue.ACCESS_LOG.get()));
 
 		try {
+			startMetricsServer();
+
 			NodeConfigRuntimeConfiguration.runtimeLog.info(String.format("Starting server at port %d", port));
 
 			// start server
@@ -264,7 +286,31 @@ public class OSSRunner {
 			}
 		} finally {
 			MCPServer.shutdown();
+			// metrics must be shut down before the CMS, because the refresh tasks access the database and the caches
+			stopMetricsServer();
+			CmsMetrics.shutdown();
 			Initializer.get().shutdown();
+		}
+	}
+
+	/**
+	 * Start the metrics server on the configured host and port, if metrics are enabled
+	 */
+	private static void startMetricsServer() {
+		CmsMetrics.getPrometheusRegistry().ifPresent(registry -> {
+			metricsServer = new MetricsServer(ConfigurationValue.METRICS_HOST.get(),
+					Integer.parseInt(ConfigurationValue.METRICS_PORT.get()), registry);
+			metricsServer.start();
+		});
+	}
+
+	/**
+	 * Stop the metrics server, if it was started
+	 */
+	private static void stopMetricsServer() {
+		if (metricsServer != null) {
+			metricsServer.stop();
+			metricsServer = null;
 		}
 	}
 

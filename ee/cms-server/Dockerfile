@@ -22,7 +22,7 @@ ENV CONF_FILES="" \
     SCHEDULER_COMNANDS_PATH="scheduler-commands" \
     JAVA_TOOL_OPTIONS="-Xmx1g"
 
-EXPOSE 8080
+EXPOSE 8080 8081
 
 USER root
 RUN adduser -D -u 1000 -G root -h /cms node && \

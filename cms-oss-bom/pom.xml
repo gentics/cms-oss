@@ -14,6 +14,31 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- Metrics. Imported before mesh-bom, so that all micrometer artifacts use the same version -->
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-bom</artifactId>
+				<version>${micrometer.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-bom</artifactId>
+				<version>${otel.api.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry.instrumentation</groupId>
+				<artifactId>opentelemetry-micrometer-1.5</artifactId>
+				<version>${otel.javaagent.version}-alpha</version>
+			</dependency>
+			<dependency>
+				<groupId>io.prometheus</groupId>
+				<artifactId>prometheus-metrics-exposition-textformats</artifactId>
+				<version>${prometheus.metrics.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>com.gentics.mesh</groupId>
 				<artifactId>mesh-bom</artifactId>

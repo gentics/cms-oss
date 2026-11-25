@@ -328,3 +328,27 @@ h4. GCNJSAPI_PATH
 |_. Configuration   | -                                                                  |
 |_. Default         |                                                                    |
 
+h4. METRICS_ENABLED
+
+|_. Description     | Whether metrics are collected and served (see "Metrics":admin_metrics.html) |
+|_. Env             | @METRICS_ENABLED@                                                           |
+|_. System Property | @com.gentics.contentnode.metrics.enabled@                                   |
+|_. Configuration   | @metrics.enabled@                                                           |
+|_. Default         | false                                                                       |
+
+h4. METRICS_HOST
+
+|_. Description     | Host (interface) the metrics server binds to. Use 0.0.0.0 to make the metrics available from other hosts (e.g. in containers) |
+|_. Env             | @METRICS_HOST@                                                                                                                 |
+|_. System Property | @com.gentics.contentnode.metrics.host@                                                                                         |
+|_. Configuration   | @metrics.host@                                                                                                                 |
+|_. Default         | 127.0.0.1                                                                                                                      |
+
+h4. METRICS_PORT
+
+|_. Description     | Port of the metrics server                |
+|_. Env             | @METRICS_PORT@                            |
+|_. System Property | @com.gentics.contentnode.metrics.port@    |
+|_. Configuration   | @metrics.port@                            |
+|_. Default         | 8081                                      |
+

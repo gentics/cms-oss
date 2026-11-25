@@ -14,5 +14,11 @@ spec:
       {{- if .Values.cms.service.useHttp2 }}
       appProtocol: h2c
       {{- end }}
+    {{- if .Values.cms.metrics.enabled }}
+    - port: {{ .Values.cms.metrics.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+    {{- end }}
   selector:
     {{- include "cms.selectorLabels" . | nindent 4 }}

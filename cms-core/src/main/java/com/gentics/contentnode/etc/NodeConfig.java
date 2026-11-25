@@ -2,6 +2,9 @@ package com.gentics.contentnode.etc;
 
 import java.sql.Connection;
 import java.util.Collection;
+import java.util.Optional;
+
+import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.lib.datasource.SQLHandle;
@@ -61,6 +64,12 @@ public interface NodeConfig {
 	 * @return SQLHandle
 	 */
 	SQLHandle getSQLHandle(boolean useConnectionPool);
+
+	/**
+	 * Get the pool of the backend database connections
+	 * @return optional pool, empty if no pooled connection was requested yet
+	 */
+	Optional<GenericObjectPool<Object>> getConnectionPool();
 
 	/**
 	 * Get the preferences for all users.

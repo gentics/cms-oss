@@ -69,6 +69,13 @@ public final class McpTools {
 	private static final ServiceLoaderUtil<McpToolService> SERVICES = ServiceLoaderUtil.load(McpToolService.class);
 
 	/**
+	 * The guideline tools, registered after {@link #TOOLS}. A list of their own, so that other tool groups can be
+	 * added to {@link #TOOLS} without touching them.
+	 */
+	private static final List<AbstractMcpTool> GUIDELINE_TOOLS = List.of(new ListGuidelinesTool(),
+			new GetGuidelineTool(), new CreateGuidelineTool(), new UpdateGuidelineTool(), new DeleteGuidelineTool());
+
+	/**
 	 * Every tool of this module, in registration order.
 	 */
 	private static final List<AbstractMcpTool> TOOLS = List.of(new ListNodesTool(),
@@ -83,9 +90,7 @@ public final class McpTools {
 			new UpdateConstructTool(), new AssignConstructToNodesTool(), new ListPackagesTool(),
 			new AddConstructToPackageTool(), new ListUsersTool(), new ListGroupsTool(),
 			new GetGroupPermissionsTool(), new CreateUserTool(), new AssignUserToGroupTool(),
-			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool(), new CreateFolderTool(),
-			new ListGuidelinesTool(), new GetGuidelineTool(), new CreateGuidelineTool(), new UpdateGuidelineTool(),
-			new DeleteGuidelineTool());
+			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool(), new CreateFolderTool());
 
 	/**
 	 * Static class, no instances
@@ -99,6 +104,7 @@ public final class McpTools {
 	 */
 	static List<AbstractMcpTool> tools() {
 		List<AbstractMcpTool> tools = new ArrayList<>(TOOLS);
+		tools.addAll(GUIDELINE_TOOLS);
 		SERVICES.forEach(service -> tools.addAll(service.tools()));
 		return tools;
 	}

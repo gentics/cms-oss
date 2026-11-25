@@ -1,4 +1,8 @@
+import type { CmsUser } from '@/services/cmsApiService/cmsApiService';
 import type { CmsTask } from '@/services/cmsApiService/cmsTaskApi';
+
+/** The logged-in user `withTasks` answers with. */
+export const TASK_USER: CmsUser = { id: 5, login: 'mm', firstName: 'Max', lastName: 'Mustermann' };
 
 /** A task as `GET /rest/task` returns it; `overrides` sets what a test is about. */
 export function taskFixture(overrides: Partial<CmsTask> & Pick<CmsTask, 'id'>): CmsTask {
@@ -13,13 +17,17 @@ export function taskFixture(overrides: Partial<CmsTask> & Pick<CmsTask, 'id'>): 
 }
 
 /**
- * Answers `GET /rest/task` with `tasks`, and the link checker: off, unless `brokenLinkPages` is given, then on with
- * that many pages with broken links. Every other call goes to `fetchMock`.
+ * Answers `GET /rest/task` with `tasks`, `GET /rest/user/me` with `TASK_USER`, and the link checker: off, unless
+ * `brokenLinkPages` is given, then on with that many pages with broken links. Every other call goes to `fetchMock`.
  */
 export function withTasks(fetchMock: typeof fetch, tasks: CmsTask[], { brokenLinkPages }: { brokenLinkPages?: number } = {}): typeof fetch {
     return async (input, init) => {
         const url = new URL(String(input), 'http://localhost');
         const isGet = (init?.method ?? 'GET') === 'GET';
+
+        if (isGet && url.pathname === '/rest/user/me') {
+            return Response.json({ user: TASK_USER });
+        }
 
         if (isGet && url.pathname === '/rest/task') {
             return Response.json({ items: tasks, numItems: tasks.length, hasMoreItems: false });

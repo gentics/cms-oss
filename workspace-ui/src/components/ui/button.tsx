@@ -18,6 +18,8 @@ const buttonVariants = cva(
                 solid: 'bg-solid text-white',
                 // Meta text that opens more (design.md §5.1 `--fg-muted`, 400), e.g. the sources of an answer.
                 quiet: 'font-normal text-muted not-data-disabled:hover:text-slate aria-expanded:text-slate',
+                // A heading that folds its content in and out: no fill, the text turns blue on hover (design.md §2, §4.1).
+                disclosure: 'text-ink not-data-disabled:hover:text-azure',
             },
             size: {
                 default: 'px-12 py-8',

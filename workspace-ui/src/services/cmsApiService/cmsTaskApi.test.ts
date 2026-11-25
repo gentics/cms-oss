@@ -57,8 +57,9 @@ describe('cmsTaskApi', () => {
         vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', '9');
         expect(constructRequestGroupId()).toBe(9);
 
+        // Not set: group 2, for now.
         vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', '');
-        expect(constructRequestGroupId()).toBeUndefined();
+        expect(constructRequestGroupId()).toBe(2);
 
         vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', 'chief-cc');
         expect(constructRequestGroupId()).toBeUndefined();

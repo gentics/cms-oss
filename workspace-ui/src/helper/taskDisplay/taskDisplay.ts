@@ -61,10 +61,9 @@ export function taskMeta(task: CmsTask, t: TFunction, language: string): string 
         parts.push(t('tasks.meta.brokenLinks', { count: brokenUrls(task).length }));
     }
 
+    // Who took a group task shows beside it (`TaskAssignee`), not here.
     if (task.assignee?.type === 'group') {
         parts.push(t('tasks.meta.forGroup', { name: task.assignee.name ?? '' }));
-    } else if (task.assigneeGroup && task.assignee?.type === 'user') {
-        parts.push(t('tasks.meta.claimedBy', { name: task.assignee.name ?? '' }));
     }
 
     if (task.dueAt) {

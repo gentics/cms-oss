@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { taskFixture, withTasks } from '@/test/cmsTasks';
+import { TASK_USER, taskFixture, withTasks } from '@/test/cmsTasks';
 import { renderWithProviders } from '@/test/renderWithProviders';
 
 import { TaskList } from './TaskList';
@@ -78,7 +78,7 @@ describe('TaskList', () => {
 
         // The tasks drawer gives the title; the list has only its groups.
         expect((await screen.findAllByRole('heading', { level: 3 })).map((heading) => heading.textContent))
-            .toEqual(['Ready to publish', 'Waiting for your approval', 'Broken links', 'Assigned to you']);
+            .toEqual(['Ready to publish', 'Waiting for your approval', 'Broken links', 'Open to take']);
         expect(screen.getByText('Publish Terms of use')).toBeInTheDocument();
         expect(screen.getByText('Asked by Example Erika')).toBeInTheDocument();
         expect(screen.getByText('1 broken link')).toBeInTheDocument();
@@ -127,6 +127,70 @@ describe('TaskList', () => {
         await waitFor(() => expect(writes(fetchMock)).toEqual([{ url: '/rest/page/pubqueue/approve', method: 'POST', body: { ids: [9142] } }]));
     });
 
+    it('folds a group in and out by its heading, keeping its count, and leaves the others open', async () => {
+        const user = userEvent.setup();
+
+        stubCms([queueTask, groupTask]);
+        renderWithProviders(<TaskList onEditWithGenaix={vi.fn()} />);
+
+        const toggle = await screen.findByRole('button', { name: 'Waiting for your approval' });
+        const tasks = screen.getByRole('region', { name: 'Waiting for your approval' });
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(toggle).toHaveAttribute('aria-controls', tasks.id);
+
+        await user.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.getByText('Publish Terms of use')).not.toBeVisible();
+        expect(screen.getByRole('heading', { name: 'Waiting for your approval' })).toBeVisible();
+        expect(screen.getAllByText('1')[0]).toBeVisible();
+        expect(screen.getByText('New tag type for price tables')).toBeVisible();
+
+        await user.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByText('Publish Terms of use')).toBeVisible();
+    });
+
+    it('compares a queue task\'s page from the corner icon or the top of its card, not from the other actions', async () => {
+        const user = userEvent.setup();
+        // The new tab `openTaskInCms` opens and then sends to the page.
+        const tab = { opener: {}, location: { href: '' } };
+        const open = vi.fn(() => tab);
+
+        stubCms([queueTask]);
+        vi.stubGlobal('open', open);
+        renderWithProviders(<TaskList onEditWithGenaix={vi.fn()} />);
+
+        const compare = await screen.findByRole('button', { name: 'Compare' });
+
+        expect(compare).toHaveTextContent('');
+        expect(screen.getAllByRole('button', { name: 'Compare' })).toHaveLength(1);
+
+        await user.click(screen.getByRole('button', { name: 'Publish' }));
+        expect(open).not.toHaveBeenCalled();
+
+        await user.click(screen.getByText('Publish Terms of use'));
+
+        expect(open).toHaveBeenCalledExactlyOnceWith('', '_blank');
+        await waitFor(() => expect(tab.location.href).toContain('detail:node/3/page/9142/'));
+    });
+
+    it('opens the live page of a link checker task from the top of its card', async () => {
+        const user = userEvent.setup();
+        const open = vi.fn();
+
+        stubCms([linkTask]);
+        vi.stubGlobal('open', open);
+        renderWithProviders(<TaskList onEditWithGenaix={vi.fn()} />);
+
+        await user.click(await screen.findByText('1 broken link'));
+
+        expect(open).toHaveBeenCalledExactlyOnceWith('https://www.example.com/directions', '_blank', 'noopener,noreferrer');
+        expect(screen.getByRole('link', { name: 'View live' })).toHaveTextContent('');
+    });
+
     it('hands the page of a queue task to the start composer instead of starting a session', async () => {
         const user = userEvent.setup();
         const fetchMock = stubCms([queueTask]);
@@ -149,6 +213,51 @@ describe('TaskList', () => {
         await user.click(await screen.findByRole('button', { name: 'Assign to me' }));
 
         await waitFor(() => expect(writes(fetchMock)).toEqual([{ url: '/rest/task/8/claim', method: 'POST', body: undefined }]));
+    });
+
+    it('takes a group task without opening its page', async () => {
+        const user = userEvent.setup();
+        const open = vi.fn();
+        const withPage = taskFixture({
+            ...groupTask,
+            id: '9',
+            objects: [{ type: 'page', id: 9142, nodeId: 3, name: 'Terms of use' }],
+            actions: ['open', 'claim'],
+        });
+        const fetchMock = stubCms([withPage]);
+
+        vi.stubGlobal('open', open);
+        renderWithProviders(<TaskList onEditWithGenaix={vi.fn()} />);
+        await user.click(await screen.findByRole('button', { name: 'Assign to me' }));
+
+        await waitFor(() => expect(writes(fetchMock)).toEqual([{ url: '/rest/task/9/claim', method: 'POST', body: undefined }]));
+        expect(open).not.toHaveBeenCalled();
+    });
+
+    it('keeps the tasks for the user apart from those for the group, and leaves out what another member took', async () => {
+        const group = { type: 'group' as const, id: 9, name: 'Chief CC' };
+        const direct = taskFixture({ id: '11', title: 'Check the imprint', assignee: { type: 'user', id: TASK_USER.id } });
+        const takenByUser = taskFixture({ id: '12', title: 'New tag type for banners', assignee: { type: 'user', id: TASK_USER.id }, assigneeGroup: group });
+        const takenByOther = taskFixture({ id: '13', title: 'New tag type for quotes', assignee: { type: 'user', id: 77, name: 'Other One' }, assigneeGroup: group });
+
+        stubCms([direct, takenByUser, groupTask, takenByOther]);
+        renderWithProviders(<TaskList onEditWithGenaix={vi.fn()} />);
+
+        const own = within(await screen.findByRole('region', { name: 'Assigned to you' }));
+
+        await waitFor(() => expect(screen.queryByText('New tag type for quotes')).not.toBeInTheDocument());
+
+        const forGroup = within(screen.getByRole('region', { name: 'Open to take' }));
+
+        expect(own.getAllByRole('listitem')).toHaveLength(2);
+        // Each group says how many tasks it has, beside its heading.
+        expect(screen.getByText('2')).toBeInTheDocument();
+        expect(screen.getByText('1')).toBeInTheDocument();
+        expect(own.getByText('Check the imprint')).toBeInTheDocument();
+        expect(own.getByText('New tag type for banners')).toBeInTheDocument();
+        expect(forGroup.getAllByRole('listitem')).toHaveLength(1);
+        expect(forGroup.getByText('New tag type for price tables')).toBeInTheDocument();
+        expect(forGroup.getByRole('button', { name: 'Assign to me' })).toBeInTheDocument();
     });
 
     it('counts the other pages with broken links the user may edit below the own, and links the link checker', async () => {

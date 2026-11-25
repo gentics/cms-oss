@@ -13,9 +13,11 @@
   text-align: center;
 }
 
-/* The tasks below the drawer's header; only they scroll. */
+/* The tasks below the drawer's header; only they scroll. Off-white, so the white task cards stand out (design.md §2,
+   the one large `--bg-subtle` area). */
 .body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  background: var(--bg-subtle);
 }

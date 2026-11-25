@@ -80,6 +80,15 @@ describe('Button', () => {
         expect(button).toHaveAttribute('data-size', 'text');
     });
 
+    it('has a disclosure variant for a heading that folds its content', () => {
+        render(<Button variant="disclosure" aria-expanded>Waiting for your approval</Button>, { wrapper: UiProvider });
+
+        const button = screen.getByRole('button', { name: 'Waiting for your approval' });
+
+        expect(button).toHaveAttribute('data-variant', 'disclosure');
+        expect(button).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('has a mini icon size for chips and passages', () => {
         render(<Button variant="ghost" size="icon-xs" aria-label="Remove">×</Button>, { wrapper: UiProvider });
 

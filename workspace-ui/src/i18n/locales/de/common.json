@@ -669,7 +669,8 @@
             "genaix": "Bereit zum Veröffentlichen",
             "publishQueue": "Wartet auf Ihre Freigabe",
             "linkChecker": "Defekte Links",
-            "assigned": "Ihnen zugewiesen"
+            "assigned": "Ihnen zugewiesen",
+            "group": "Offen zum Übernehmen"
         },
         "name": {
             "approvePublish": "{{name}} veröffentlichen",
@@ -683,8 +684,10 @@
             "brokenLinks_one": "{{count}} defekter Link",
             "brokenLinks_other": "{{count}} defekte Links",
             "forGroup": "Für {{name}}",
-            "claimedBy": "Übernommen von {{name}}",
             "due": "Fällig {{date}}"
+        },
+        "assignee": {
+            "assignedTo": "Zugewiesen an {{name}}"
         },
         "actions": {
             "approve": "Veröffentlichen",
@@ -774,7 +777,9 @@
             "link": "Als Link",
             "linkText": "Zu den Buttons",
             "quiet": "Leiser Text-Button",
-            "sources": "Quellen"
+            "sources": "Quellen",
+            "disclosure": "Aufklapp-Überschrift",
+            "section": "Wartet auf Ihre Freigabe"
         },
         "checkbox": {
             "title": "Checkbox",

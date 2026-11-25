@@ -669,7 +669,8 @@
             "genaix": "Ready to publish",
             "publishQueue": "Waiting for your approval",
             "linkChecker": "Broken links",
-            "assigned": "Assigned to you"
+            "assigned": "Assigned to you",
+            "group": "Open to take"
         },
         "name": {
             "approvePublish": "Publish {{name}}",
@@ -683,8 +684,10 @@
             "brokenLinks_one": "{{count}} broken link",
             "brokenLinks_other": "{{count}} broken links",
             "forGroup": "For {{name}}",
-            "claimedBy": "Taken by {{name}}",
             "due": "Due {{date}}"
+        },
+        "assignee": {
+            "assignedTo": "Assigned to {{name}}"
         },
         "actions": {
             "approve": "Publish",
@@ -774,7 +777,9 @@
             "link": "As a link",
             "linkText": "To the buttons",
             "quiet": "Quiet text button",
-            "sources": "Sources"
+            "sources": "Sources",
+            "disclosure": "Disclosure heading",
+            "section": "Waiting for your approval"
         },
         "checkbox": {
             "title": "Checkbox",

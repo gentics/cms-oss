@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { taskStartParts } from '@/helper/taskDisplay/taskDisplay';
+import { useCmsUser } from '@/hooks/useCmsAuth';
 import { cmsKeys, useCmsFeature } from '@/hooks/useCmsQueries';
 import { useSessionStart } from '@/hooks/useSessionStart';
 import {
@@ -24,9 +25,20 @@ import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 export type TaskRequestAction = 'approve' | 'complete' | 'claim' | 'unclaim';
 
-/** The open tasks of the current user. */
+/**
+ * The open tasks of the current user, without the group tasks another member has taken: the CMS lists those for the
+ * whole group, but they are no longer the user's to do. Unfiltered while the user is unknown.
+ */
 export function useCmsTasks() {
-    return useQuery({ queryKey: cmsKeys.tasks(), queryFn: ({ signal }) => listCmsTasks(signal) });
+    const userId = useCmsUser({ refetchOnMount: false }).data?.id;
+
+    return useQuery({
+        queryKey: cmsKeys.tasks(),
+        queryFn: ({ signal }) => listCmsTasks(signal),
+        select: (tasks) => (userId === undefined
+            ? tasks
+            : tasks.filter((task) => !(task.assigneeGroup && task.assignee?.type === 'user' && task.assignee.id !== userId))),
+    });
 }
 
 /**

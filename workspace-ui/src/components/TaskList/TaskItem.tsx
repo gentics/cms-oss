@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon, EyeIcon, SparklesIcon, Undo2Icon, UserIcon } from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon, EyeIcon, SparklesIcon, Undo2Icon } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { TaskAssignee } from '@/components/TaskAssignee/TaskAssignee';
 import { Button } from '@/components/ui/button';
 import { taskMeta, taskReferences, taskTitle } from '@/helper/taskDisplay/taskDisplay';
 import { openTaskInCms, type TaskRequestAction, useStartSessionFromTask, useTaskAction } from '@/hooks/useCmsTasks';
@@ -36,16 +37,47 @@ export function TaskItem({ task, onEditWithGenaix }: TaskItemProps) {
     const liveUrl = typeof task.details?.liveUrl === 'string' ? task.details.liveUrl : undefined;
     const hasPage = task.objects?.some((object) => object.type === 'page' && object.nodeId !== undefined) ?? false;
     const run = (action: TaskRequestAction) => taskAction.mutate({ task, action });
+    // Where the task leads: the corner icon, and a click on the card's top does the same.
+    const primary = task.source === 'genaix' ? undefined
+        : has('open') && hasPage ? { label: t(task.source === 'publishQueue' ? 'tasks.actions.compare' : 'tasks.actions.open'), run: () => void openTaskInCms(task) }
+            : has('view') && liveUrl ? { label: t('tasks.actions.view'), href: liveUrl, run: () => window.open(liveUrl, '_blank', 'noopener,noreferrer') }
+                : undefined;
 
     return (
         <div className={styles.task}>
-            {sessionId && has('open')
-                ? <Link to="/sessions/$id" params={{ id: sessionId }} className={styles.name}>{title}</Link>
-                : <span className={styles.name}>{title}</span>}
-            {meta && <span className={styles.meta}>{meta}</span>}
+            {/* A larger target for the mouse; keyboard and screen readers use the corner control beside it. */}
+            <div className={`${styles.head} ${primary ? styles.clickable : ''}`} onClick={primary?.run}>
+                {sessionId && has('open')
+                    ? <Link to="/sessions/$id" params={{ id: sessionId }} className={styles.name}>{title}</Link>
+                    : <span className={styles.name}>{title}</span>}
+                {meta && <span className={styles.meta}>{meta}</span>}
+            </div>
+            {primary && (
+                <span className={styles.corner}>
+                    {primary.href
+                        ? (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                nativeButton={false}
+                                role={undefined}
+                                aria-label={primary.label}
+                                title={primary.label}
+                                render={<a href={primary.href} target="_blank" rel="noopener noreferrer" />}
+                            >
+                                <EyeIcon size={16} aria-hidden />
+                            </Button>
+                        )
+                        : (
+                            <Button variant="ghost" size="icon" aria-label={primary.label} title={primary.label} onClick={primary.run}>
+                                <ExternalLinkIcon size={16} aria-hidden />
+                            </Button>
+                        )}
+                </span>
+            )}
 
             {instruction && (
-                <>
+                <div className={styles.body}>
                     <div className={styles.details}>
                         <Button variant="ghost" size="sm" aria-expanded={isInstructionOpen} aria-controls={instructionId} onClick={() => setIsInstructionOpen((open) => !open)}>
                             {t(isInstructionOpen ? 'tasks.actions.hideDetails' : 'tasks.actions.showDetails')}
@@ -53,7 +85,7 @@ export function TaskItem({ task, onEditWithGenaix }: TaskItemProps) {
                         </Button>
                     </div>
                     <p id={instructionId} className={styles.instruction} hidden={!isInstructionOpen}>{instruction}</p>
-                </>
+                </div>
             )}
 
             {task.source !== 'genaix' && (
@@ -70,18 +102,6 @@ export function TaskItem({ task, onEditWithGenaix }: TaskItemProps) {
                             {t('tasks.actions.assignBack')}
                         </Button>
                     )}
-                    {has('open') && hasPage && (
-                        <Button variant="ghost" size="sm" onClick={() => void openTaskInCms(task)}>
-                            <ExternalLinkIcon size={14} />
-                            {t(task.source === 'publishQueue' ? 'tasks.actions.compare' : 'tasks.actions.open')}
-                        </Button>
-                    )}
-                    {has('view') && liveUrl && (
-                        <a href={liveUrl} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                            <EyeIcon size={14} />
-                            {t('tasks.actions.view')}
-                        </a>
-                    )}
                     {has('startSession') && (task.source === 'publishQueue'
                         // The approver says what to add or change before publishing, so no generic first message is sent.
                         ? (
@@ -96,23 +116,16 @@ export function TaskItem({ task, onEditWithGenaix }: TaskItemProps) {
                                 {t(task.type === 'fixBrokenLinks' ? 'tasks.actions.fixWithGenaix' : 'tasks.actions.startSession')}
                             </Button>
                         ))}
-                    {has('claim') && (
-                        <Button variant="ghost" size="sm" disabled={taskAction.isPending} onClick={() => run('claim')}>
-                            <UserIcon size={14} />
-                            {t('tasks.actions.claim')}
-                        </Button>
-                    )}
-                    {has('unclaim') && (
-                        <Button variant="ghost" size="sm" disabled={taskAction.isPending} onClick={() => run('unclaim')}>
-                            <Undo2Icon size={14} />
-                            {t('tasks.actions.unclaim')}
-                        </Button>
-                    )}
                     {has('complete') && (
                         <Button variant="ghost" size="sm" disabled={taskAction.isPending} onClick={() => run('complete')}>
                             <CheckIcon size={14} />
                             {t('tasks.actions.complete')}
                         </Button>
+                    )}
+                    {(has('claim') || has('unclaim')) && (
+                        <span className={styles.assignee}>
+                            <TaskAssignee task={task} disabled={taskAction.isPending} onClaim={() => run('claim')} onUnclaim={() => run('unclaim')} />
+                        </span>
                     )}
                 </div>
             )}

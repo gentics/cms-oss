@@ -1,31 +1,74 @@
-/* The groups of open tasks; the tasks drawer (`TaskDrawer`) frames them and gives the title. */
+/* The groups of open tasks, set apart by space rather than lines, each task a card (`TaskItem.module.css`); the tasks
+   drawer (`TaskDrawer`) frames them and gives the title. The ghost button's own padding adds to the gap. */
 .tasks {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
 }
 
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The heading holds the button that folds the group: plain text in the button's 13 px / 500 (design.md §5), shifted
+   by the button's 12 px padding so the chevron lines up with the cards. */
 .groupTitle {
-  margin: 0;
-  padding: 9px 14px 3px;
+  margin: 0 0 0 -12px;
+}
+
+/* As "Recent sessions" (`RecentSessions.module.css`): pointing down while open, right while folded; blue with the
+   heading's text on hover (`Button` variant `disclosure`). */
+.chevron {
+  display: inline-flex;
   color: var(--fg-muted);
+  transform: rotate(-90deg);
+  transition: transform var(--duration-popover) var(--easing), color var(--duration-state) var(--easing);
+
+  &[data-open] {
+    transform: none;
+  }
+
+  .groupTitle:hover & {
+    color: var(--interactive);
+  }
+}
+
+/* An icon that says something (design.md §9). */
+.groupIcon {
+  display: inline-flex;
+  color: var(--interactive);
+}
+
+.groupBody {
+  margin-top: 4px;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+/* How many tasks the group has (design.md §12 "Badge"). */
+.groupCount {
+  padding: 2px 8px;
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), .12);
+  color: var(--fg-primary);
   font-size: var(--font-size-overline);
   font-weight: 500;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.group + .group {
-  border-top: 1px solid var(--border-subtle);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
 .list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
-
-  & li + li {
-    border-top: 1px solid var(--border-subtle);
-  }
 }
 
 .state {
@@ -43,23 +86,25 @@
 }
 
 /* The other pages with broken links the user may edit, and a link to the link checker; after the tasks of the group,
-   divided like a row. */
+   dashed, since it points elsewhere instead of being a task. */
 .more {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 4px 8px;
-  padding: 9px 14px;
+  padding: 8px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--corner-xl);
   color: var(--fg-secondary);
   font-size: var(--font-size-sm);
 
   .list + & {
-    border-top: 1px solid var(--border-subtle);
+    margin-top: 8px;
   }
 }
 
-/* As the links of a task row (`TaskItem.module.css`, `.link`). */
+/* A text link (design.md §4.1: `--interactive`, underlined on hover and focus). */
 .link {
   display: inline-flex;
   align-items: center;

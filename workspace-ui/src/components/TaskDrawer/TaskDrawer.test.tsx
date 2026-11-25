@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { CmsTask } from '@/services/cmsApiService/cmsTaskApi';
-import { taskFixture, withTasks } from '@/test/cmsTasks';
+import { TASK_USER, taskFixture, withTasks } from '@/test/cmsTasks';
 import { renderWithProviders } from '@/test/renderWithProviders';
 
 import { TaskDrawer } from './TaskDrawer';
@@ -48,6 +48,20 @@ describe('TaskDrawer', () => {
         const button = await screen.findByRole('button', { name: '3 open tasks' });
 
         expect(button).toHaveTextContent('Tasks3');
+    });
+
+    it('does not count a group task another member has taken', async () => {
+        const takenByOther = taskFixture({
+            id: '13',
+            assignee: { type: 'user', id: TASK_USER.id + 1, name: 'Other One' },
+            assigneeGroup: { type: 'group', id: 9, name: 'Chief CC' },
+            actions: ['claim'],
+        });
+
+        stubTasks([queueTask, takenByOther]);
+        renderWithProviders(<TaskDrawer onEditWithGenaix={vi.fn()} />);
+
+        expect(await screen.findByRole('button', { name: '1 open task' })).toHaveTextContent('Tasks1');
     });
 
     it('shows no number without open tasks, and says so inside', async () => {

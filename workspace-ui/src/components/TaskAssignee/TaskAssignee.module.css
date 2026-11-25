@@ -1,0 +1,38 @@
+/* The assignee spot of a task card, as quiet meta text (`Button` variant `quiet`); the card puts it at the end of its
+   footer. */
+.assignee {
+  display: inline-flex;
+}
+
+/* Nobody has the task yet: an empty avatar, dashed, that turns blue with the pointer on it (design.md §2). */
+.placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--corner-full);
+  color: var(--fg-muted);
+  transition: border-color var(--duration-state) var(--easing), color var(--duration-state) var(--easing);
+
+  .assignee:hover & {
+    border-color: var(--interactive);
+    color: var(--interactive);
+  }
+}
+
+/* The taker's initials in a round avatar (design.md §6.1 `--corner-full`; fill as a reference chip, §3.2). */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--corner-full);
+  background: rgba(var(--interactive-rgb), .13);
+  color: var(--fg-primary);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  line-height: 1;
+}

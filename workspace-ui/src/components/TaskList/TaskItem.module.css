@@ -1,20 +1,40 @@
-/* Task row (design.md §12 "Listenzeile"). */
+/* Task card, like a chat card (design.md §12 "Chat-Karte (Part)"): flat, its actions as the footer. */
 .task {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
+}
+
+/* Name and meta line; with a place to go (`.corner`), a click on it goes there too. */
+.head {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 9px 14px;
-  transition: background-color var(--duration-state) var(--easing);
+  padding: 10px 12px;
+}
 
-  &:hover {
-    background: rgba(var(--interactive-rgb), .05);
-  }
+/* No hover effect on the card; only the pointer shows that a click opens it. */
+.clickable {
+  padding-right: 44px;
+  cursor: pointer;
+}
+
+/* Open, compare or view live, as an icon in the top right corner (28 px icon button, design.md §7). */
+.corner {
+  position: absolute;
+  top: 6px;
+  right: 6px;
 }
 
 .name {
   overflow: hidden;
   color: var(--fg-primary);
   font-size: var(--font-size-base);
+  font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
   text-overflow: ellipsis;
@@ -32,18 +52,13 @@ a.name:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  margin-top: 6px;
+/* "See details": a task's instruction for GenAIx, folded below its meta line. */
+.body {
+  padding: 0 12px 10px;
 }
 
-/* "See details": a task's instruction for GenAIx, folded below its meta line. */
 .details {
   display: flex;
-  margin-top: 4px;
 }
 
 .instruction {
@@ -57,19 +72,21 @@ a.name:focus-visible {
   overflow-wrap: anywhere;
 }
 
-.link {
-  display: inline-flex;
+/* The card's footer; none when the task offers no action. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  color: var(--interactive);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  text-decoration: none;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
 
-  &:hover,
-  &:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 2px;
+  &:empty {
+    display: none;
   }
+}
+
+/* Who has the task, at the end of the footer, as Jira shows the assignee (`TaskAssignee`). */
+.assignee {
+  margin-left: auto;
 }

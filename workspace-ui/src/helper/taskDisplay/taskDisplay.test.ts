@@ -44,7 +44,8 @@ describe('taskDisplay', () => {
             assigneeGroup: { type: 'group', id: 9, name: 'Chief CC' },
         });
 
-        expect(taskMeta(claimed, t, 'en')).toBe('Taken by Chief One');
+        // The taker shows in the task's assignee (`TaskAssignee`), not in the meta line.
+        expect(taskMeta(claimed, t, 'en')).toBe('');
         expect(taskMeta(taskFixture({ id: '4', assignee: { type: 'group', id: 9, name: 'Chief CC' } }), t, 'en')).toBe('For Chief CC');
     });
 

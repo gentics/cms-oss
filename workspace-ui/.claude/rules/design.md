@@ -21,7 +21,7 @@ Dieses Dokument beschreibt das Aussehen der Workspace-UI: Farben, Schrift, Abst�
 ## 2. Look & Feel
 
 - **Ruhiges Werkzeug, keine Marketing-Seite.** Das Interface wirkt wie eine IDE: feste Spalten, klare 1-px-Linien, dichte, aber luftige Listen. Die bunte Fläche ist die **Vorschau der Website**, nicht die Arbeitsoberfläche drumherum.
-- **Weiß trägt.** Arbeitsflächen, Chat, Panels, Karten und Formulare sind weiß (`--bg-surface`). Getönte Flächen (`--bg-subtle`) gibt es nur klein: Hover, Chips, Kopfzeilen von Chat-Karten, Fußleisten.
+- **Weiß trägt.** Arbeitsflächen, Chat, Panels, Karten und Formulare sind weiß (`--bg-surface`). Getönte Flächen (`--bg-subtle`) gibt es nur klein: Hover, Chips, Kopfzeilen von Chat-Karten, Fußleisten. Einzige große Ausnahme: der Inhalt des Aufgaben-Drawers unter seinem Kopf, damit sich die weißen Aufgaben-Karten abheben.
 - **Blau heißt: interaktiv.** Azure/Akzent markieren nur Aktion, Auswahl, Fokus und Verweise. Blau ist nie Dekoration und nie Fließtext.
 - **Hierarchie über Größe und Farbe, nicht über Gewicht.** Es gibt nur Regular 400 und Medium 500.
 - **Eins nach dem anderen.** Ein Schritt ist sichtbar, der Rest wartet. Keine Erklär- oder Hinweiszeilen unter Bausteinen: Labels und Zustände sprechen für sich.
@@ -372,6 +372,6 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 - **Nie** Fokus ausblenden, ohne ihn zu ersetzen.
 - **Nie** informationstragenden Text heller als `--fg-muted`.
 - **Nie** Status nur über Farbe.
-- **Nie** große getönte Flächen als Hintergrund der Arbeitsbereiche; `--bg-subtle` nur klein, `--bg-preview-stage` nur hinter der Vorschau.
+- **Nie** große getönte Flächen als Hintergrund der Arbeitsbereiche; `--bg-subtle` nur klein (Ausnahme: Inhalt des Aufgaben-Drawers, §2), `--bg-preview-stage` nur hinter der Vorschau.
 - **Nie** Schatten zur Trennung von Zonen; Schatten nur für schwebende Ebenen.
 - **Nie** Farben, Radien oder Schatten außerhalb dieses Dokuments.

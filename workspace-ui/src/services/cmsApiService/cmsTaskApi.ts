@@ -98,12 +98,21 @@ export async function createCmsTask(task: CmsTaskCreate): Promise<CmsTask> {
     return created;
 }
 
+// The group construct requests go to for now, until the CMS picks the group that may create constructs on the node.
+const DEFAULT_CONSTRUCT_REQUEST_GROUP_ID = 2;
+
 /**
- * The CMS group that construct requests go to (`VITE_CONSTRUCT_REQUEST_GROUP_ID`, `.env.example`); read on every
- * call, not once. Anything but a positive integer counts as none.
+ * The CMS group that construct requests go to: `VITE_CONSTRUCT_REQUEST_GROUP_ID` (`.env.example`), else group 2;
+ * read on every call, not once. A set value that is no positive integer counts as none.
  */
 export function constructRequestGroupId(): number | undefined {
-    const value = Number(import.meta.env.VITE_CONSTRUCT_REQUEST_GROUP_ID);
+    const configured = import.meta.env.VITE_CONSTRUCT_REQUEST_GROUP_ID;
+
+    if (!configured) {
+        return DEFAULT_CONSTRUCT_REQUEST_GROUP_ID;
+    }
+
+    const value = Number(configured);
 
     return Number.isInteger(value) && value > 0 ? value : undefined;
 }

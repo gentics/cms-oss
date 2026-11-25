@@ -594,7 +594,8 @@ describe('InteractionCard, a construct request', () => {
         const user = userEvent.setup();
         const fetchMock = stubCmsAndGenaix();
 
-        vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', '');
+        // Not set means group 2; a value that is no group id leaves none.
+        vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', 'chief-cc');
         renderRequest();
         await user.click(screen.getByRole('button', { name: 'Send' }));
 

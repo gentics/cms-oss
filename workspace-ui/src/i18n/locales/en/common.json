@@ -274,6 +274,11 @@
             "error": "Something went wrong, the run continues",
             "auth": "No access to the {{connector}} connection"
         },
+        "constructRequest": {
+            "failed": "The construct could not be requested.",
+            "noGroup": "No group is set up for construct requests.",
+            "noDraft": "The construct's draft is missing, so it cannot be requested."
+        },
         "interaction": {
             "title": {
                 "ask_user": "Question",
@@ -331,13 +336,13 @@
         "actions": {
             "release": "Release",
             "publish": "Publish",
-            "request_review": "Request review",
+            "request_review": "Request publication",
             "discard": "Discard"
         },
         "pending": {
             "release": "Releasing…",
             "publish": "Publishing…",
-            "request_review": "Requesting review…",
+            "request_review": "Requesting publication…",
             "discard": "Discarding…"
         },
         "count": {
@@ -345,8 +350,8 @@
             "pending_other": "{{count}} pages to publish",
             "published_one": "{{count}} published",
             "published_other": "{{count}} published",
-            "review_requested_one": "{{count}} in review",
-            "review_requested_other": "{{count}} in review",
+            "review_requested_one": "{{count}} requested",
+            "review_requested_other": "{{count}} requested",
             "failed_one": "{{count}} failed",
             "failed_other": "{{count}} failed"
         },
@@ -355,7 +360,7 @@
             "anyway": {
                 "release": "Release anyway",
                 "publish": "Publish anyway",
-                "request_review": "Request review anyway"
+                "request_review": "Request publication anyway"
             }
         },
         "transitionFailed": "The plan could not be changed",
@@ -480,7 +485,7 @@
                 "done": "Done",
                 "released": "Ready to publish",
                 "published": "Published",
-                "review_requested": "Waiting for review",
+                "review_requested": "Waiting for publication",
                 "discarded": "Discarded",
                 "superseded": "Replaced by a newer plan"
             },
@@ -540,9 +545,9 @@
         "one": "Published",
         "many_one": "{{count}} page published",
         "many_other": "{{count}} pages published",
-        "inReview": "Sent to review",
-        "manyInReview_one": "{{count}} page sent to review",
-        "manyInReview_other": "{{count}} pages sent to review",
+        "inReview": "Publication requested",
+        "manyInReview_one": "Publication requested for {{count}} page",
+        "manyInReview_other": "Publication requested for {{count}} pages",
         "openPage": "Open the page",
         "openPreview": "Open the preview",
         "openSession": "Open this session",
@@ -577,16 +582,16 @@
                 "release_other": "Not released: {{count}} checks have warnings.",
                 "publish_one": "Not published: {{count}} check has a warning.",
                 "publish_other": "Not published: {{count}} checks have warnings.",
-                "request_review_one": "No review requested: {{count}} check has a warning.",
-                "request_review_other": "No review requested: {{count}} checks have warnings."
+                "request_review_one": "No publication requested: {{count}} check has a warning.",
+                "request_review_other": "No publication requested: {{count}} checks have warnings."
             },
             "blocking": {
                 "release_one": "Not released: {{count}} blocking check must be fixed.",
                 "release_other": "Not released: {{count}} blocking checks must be fixed.",
                 "publish_one": "Not published: {{count}} blocking check must be fixed.",
                 "publish_other": "Not published: {{count}} blocking checks must be fixed.",
-                "request_review_one": "No review requested: {{count}} blocking check must be fixed.",
-                "request_review_other": "No review requested: {{count}} blocking checks must be fixed."
+                "request_review_one": "No publication requested: {{count}} blocking check must be fixed.",
+                "request_review_other": "No publication requested: {{count}} blocking checks must be fixed."
             }
         },
         "approvalChain": "Approval",
@@ -602,7 +607,7 @@
             "done": "Done",
             "released": "Released",
             "published": "Published",
-            "review_requested": "In review",
+            "review_requested": "Publication requested",
             "discarded": "Discarded",
             "superseded": "Superseded"
         },
@@ -621,20 +626,20 @@
         "publication": {
             "pending": "Not published",
             "published": "Published",
-            "review_requested": "Review requested",
+            "review_requested": "Publication requested",
             "failed": "Failed"
         },
         "page": {
             "issues_one": "{{count}} open issue",
             "issues_other": "{{count}} open issues",
             "canPublish": "You may publish this page.",
-            "needsReview": "Needs a review: you may not publish this page."
+            "needsReview": "You may not publish this page, only request its publication."
         },
         "actions": {
             "release": "Release",
             "publish": "Publish",
             "publishRemaining": "Publish remaining",
-            "request_review": "Request review",
+            "request_review": "Request publication",
             "discard": "Discard"
         },
         "gate": {
@@ -651,6 +656,15 @@
     },
     "tasks": {
         "title": "Open tasks",
+        "toggle": "Tasks",
+        "openCount_zero": "No open tasks",
+        "openCount_one": "{{count}} open task",
+        "openCount_other": "{{count}} open tasks",
+        "empty": "No open tasks.",
+        "otherBrokenLinks_one": "{{count}} more page with broken links you may edit",
+        "otherBrokenLinks_other": "{{count}} more pages with broken links you may edit",
+        "brokenLinkPages_one": "{{count}} page with broken links you may edit",
+        "brokenLinkPages_other": "{{count}} pages with broken links you may edit",
         "groups": {
             "genaix": "Ready to publish",
             "publishQueue": "Waiting for your approval",
@@ -673,13 +687,18 @@
             "due": "Due {{date}}"
         },
         "actions": {
-            "approve": "Approve",
+            "approve": "Publish",
+            "approveOffline": "Take offline",
             "assignBack": "Assign",
             "compare": "Compare",
             "open": "Open",
             "view": "View live",
             "fixWithGenaix": "Fix with GenAIx",
             "startSession": "Start session",
+            "editWithGenaix": "Edit with GenAIx",
+            "showDetails": "See details",
+            "hideDetails": "Hide details",
+            "openLinkChecker": "View in link checker",
             "claim": "Assign to me",
             "unclaim": "Give back",
             "complete": "Done"
@@ -694,6 +713,18 @@
             "message": "Message",
             "cancel": "Cancel",
             "failed": "The page could not be assigned."
+        },
+        "constructRequest": {
+            "title": "Create construct: {{name}}",
+            "intro": "Create the construct \"{{name}}\" ({{keyword}}) in the CMS. It was requested because the requester may not create constructs.",
+            "names": "Names: {{names}}",
+            "description": "Description: {{description}}",
+            "nodes": "Nodes: {{ids}}",
+            "parts": "Parts:",
+            "partType": "type {{typeId}}",
+            "mandatory": "mandatory",
+            "default": "default: {{value}}",
+            "template": "Template:"
         },
         "actionFailed": "The task could not be updated."
     },
@@ -831,6 +862,9 @@
         "drawer": {
             "title": "Drawer",
             "open": "Open drawer",
+            "openRight": "Open from the right",
+            "headingRight": "Open tasks",
+            "bodyRight": "A wide drawer from the right, e.g. for the open tasks.",
             "heading": "Sessions",
             "description": "Your recent sessions.",
             "option": "Show archived",

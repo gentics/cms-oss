@@ -137,7 +137,7 @@ describe('PublishedPage', () => {
         ]), { 1: '/events', 3: '/norhaus' });
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: '2 published, 1 in review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: '2 published, 1 requested' })).toBeInTheDocument();
         expect(screen.getByText((_, element) => element?.localName === 'p' && element.textContent === 'Events – archive · Blog: Migration without downtime · Reference Norhaus')).toBeInTheDocument();
 
         const events = await screen.findByRole('link', { name: 'Events – archive' });
@@ -154,7 +154,7 @@ describe('PublishedPage', () => {
         stubRoutes(planState('review_requested', [publication(1, 'Versand', 'published'), publication(2, 'Service', 'review_requested')]));
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: '1 published, 1 in review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: '1 published, 1 requested' })).toBeInTheDocument();
     });
 
     it('says a page was sent to review and offers its CMS preview, read-only, not the page: it is not online yet', async () => {
@@ -165,7 +165,7 @@ describe('PublishedPage', () => {
         stubRoutes({ ...planState('review_requested', [service]), previews: [preview] });
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: 'Sent to review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: 'Publication requested' })).toBeInTheDocument();
         expect(screen.getByText('Service')).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Open the page' })).not.toBeInTheDocument();
 
@@ -179,7 +179,7 @@ describe('PublishedPage', () => {
         stubRoutes(planState('review_requested', [publication(2, 'Service', 'review_requested', 'https://www.gentics.com/service')]));
         renderPublished();
 
-        expect(await screen.findByRole('heading', { level: 1, name: 'Sent to review' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: 'Publication requested' })).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Open the preview' })).not.toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Open the page' })).not.toBeInTheDocument();
     });
@@ -227,10 +227,14 @@ describe('PublishedPage', () => {
     });
 
     it('shows the open tasks, as the dashboard does', async () => {
+        const user = userEvent.setup();
+
         stubRoutes(planState('published', [publication(9142, 'Products – Overview', 'published')]));
         renderPublished();
 
-        const tasks = await screen.findByRole('region', { name: 'Open tasks' });
+        await user.click(await screen.findByRole('button', { name: '1 open task' }));
+
+        const tasks = await screen.findByRole('dialog', { name: 'Open tasks' });
 
         expect(await within(tasks).findByRole('link', { name: /Prices 2026/ })).toBeInTheDocument();
     });

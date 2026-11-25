@@ -2,7 +2,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Interaction } from '@/services/apiService/genaix/types';
+import type { ConstructDraftPart, Interaction } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { createWrapper } from '@/test/renderWithProviders';
@@ -499,5 +499,143 @@ describe('ConfirmedSettingsCard', () => {
         expect(screen.queryByRole('button')).not.toBeInTheDocument();
         expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
         expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+});
+
+describe('InteractionCard, a construct request', () => {
+    // A choice with the reserved option `request_construct` (`constructRequest.ts`), as proposed to GenAIx.
+    const constructRequest = interaction({
+        kind: 'choice',
+        prompt: 'No construct fits, and you may not create one. How should I go on?',
+        options: [
+            { id: 'request_construct', label: 'Request construct', ref: { type: 'page', id: '9142', node_id: 3, label: 'Terms of use' } },
+            { id: 'continue_without', label: 'Go on without a new construct' },
+        ],
+        recommended: ['request_construct'],
+        run_id: 'r-1',
+    });
+
+    const draft: ConstructDraftPart = {
+        type: 'construct_draft',
+        keyword: 'terms_change_table',
+        name: { en: 'Terms change table' },
+        parts: [{ keyword: 'heading', name: { en: 'Heading' }, type_id: 1, editable: true, mandatory: false, hidden: false }],
+        template: '<table>{{cms.tag.parts.heading}}</table>',
+    };
+
+    // The CMS answers `POST /rest/task` with `task` (or `taskStatus`), GenAIx the answer.
+    function stubCmsAndGenaix(taskStatus = 200) {
+        const fetchMock = vi.fn<typeof fetch>(async (input) => (String(input) === '/rest/task'
+            ? Response.json({ responseInfo: { responseCode: 'OK' }, task: { id: '31', source: 'manual', type: 'requestConstruct', status: 'open', actions: [] } }, { status: taskStatus })
+            : Response.json({ id: 'i-1', status: 'answered' })));
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        return fetchMock;
+    }
+
+    const posts = (fetchMock: ReturnType<typeof stubCmsAndGenaix>) => fetchMock.mock.calls
+        .filter(([, init]) => init?.method === 'POST')
+        .map(([url, init]) => ({ url: String(url), body: JSON.parse(init?.body as string) as unknown }));
+
+    function renderRequest(constructDraft: ConstructDraftPart | undefined = draft) {
+        return render(<InteractionCard interaction={constructRequest} sessionId="s-1" constructDraft={constructDraft} />, { wrapper: createWrapper() });
+    }
+
+    beforeEach(() => {
+        useErrorNotificationStore.setState({ errors: [] });
+        useInteractionDraftStore.setState({ drafts: {}, locks: {} });
+        vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', '9');
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
+    });
+
+    it('creates the task for the group first, then answers with the request option', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubCmsAndGenaix();
+
+        renderRequest();
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        await waitFor(() => expect(posts(fetchMock)).toHaveLength(2));
+
+        const [task, answer] = posts(fetchMock);
+
+        expect(task).toMatchObject({
+            url: '/rest/task',
+            body: {
+                type: 'requestConstruct',
+                title: 'Create construct: Terms change table',
+                assignee: { type: 'group', id: 9 },
+                objects: [{ type: 'page', id: 9142, nodeId: 3, name: 'Terms of use' }],
+                externalKey: 'i-1',
+                genaix: { instruction: expect.stringContaining('terms_change_table') as unknown },
+            },
+        });
+        expect(answer).toEqual({ url: '/rest/proxy/genaix/sessions/s-1/interactions/i-1', body: { answer: { selected: ['request_construct'] } } });
+    });
+
+    it('does not answer when the CMS refuses the task, and can be sent again', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubCmsAndGenaix(400);
+
+        renderRequest();
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([{ messageKey: 'chat.constructRequest.failed' }]));
+        expect(posts(fetchMock).map(({ url }) => url)).toEqual(['/rest/task']);
+        expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled();
+    });
+
+    it('requests nothing and does not answer without a group set up', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubCmsAndGenaix();
+
+        vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', '');
+        renderRequest();
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        expect(useErrorNotificationStore.getState().errors).toMatchObject([{ messageKey: 'chat.constructRequest.noGroup' }]);
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('requests nothing and does not answer without the draft', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubCmsAndGenaix();
+
+        renderRequest(undefined);
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        expect(useErrorNotificationStore.getState().errors).toMatchObject([{ messageKey: 'chat.constructRequest.noDraft' }]);
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('only answers when the user goes on without a new construct', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubCmsAndGenaix();
+
+        renderRequest();
+        await user.click(screen.getByRole('radio', { name: /Go on without a new construct/ }));
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        await waitFor(() => expect(posts(fetchMock)).toEqual([
+            { url: '/rest/proxy/genaix/sessions/s-1/interactions/i-1', body: { answer: { selected: ['continue_without'] } } },
+        ]));
+    });
+
+    it('gives the composer no answer while the request is chosen, so it cannot skip the task', async () => {
+        const user = userEvent.setup();
+
+        stubCmsAndGenaix();
+        renderRequest();
+
+        expect(useInteractionDraftStore.getState().drafts['i-1']).toBeUndefined();
+
+        await user.click(screen.getByRole('radio', { name: /Go on without a new construct/ }));
+
+        expect(useInteractionDraftStore.getState().drafts['i-1']).toEqual({ selected: ['continue_without'] });
     });
 });

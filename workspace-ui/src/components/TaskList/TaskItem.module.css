@@ -40,6 +40,23 @@ a.name:focus-visible {
   margin-top: 6px;
 }
 
+/* "See details": a task's instruction for GenAIx, folded below its meta line. */
+.details {
+  display: flex;
+  margin-top: 4px;
+}
+
+.instruction {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--corner-sm);
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .link {
   display: inline-flex;
   align-items: center;

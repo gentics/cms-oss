@@ -47,7 +47,7 @@ describe('ReviewPages', () => {
 
         expect(links.map((link) => link.textContent)).toEqual([
             'Versand und LieferungPublished',
-            'ServiceinformationenReview requested2 open issues',
+            'ServiceinformationenPublication requested2 open issues',
             'Page 8871Not published',
         ]);
         expect(within(pages).getByRole('link', { name: /Serviceinformationen/ })).toHaveAttribute('aria-current', 'page');

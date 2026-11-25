@@ -314,7 +314,7 @@ describe('ReviewPanel', () => {
         ['running', ['Release']],
         ['done', ['Discard', 'Release']],
         // rc.5 removed `reopen`: a published plan is changed with a message (contract §4.4).
-        ['released', ['Discard', 'Request review', 'Publish']],
+        ['released', ['Discard', 'Request publication', 'Publish']],
         ['published', []],
         ['review_requested', []],
         ['discarded', []],
@@ -358,7 +358,7 @@ describe('ReviewPanel', () => {
             await waitFor(() => expect(screen.queryByText('The quality gates are checking the plan…')).not.toBeInTheDocument());
             expect(screen.getByRole('region', { name: 'Checklist' }).closest('[aria-busy="true"]')).toBeNull();
             expect(within(screen.getByRole('region', { name: 'Checklist' })).getByRole('status')).toHaveTextContent('All checks passed. The plan is released.');
-            expect(actionNames()).toEqual(['Discard', 'Request review', 'Publish']);
+            expect(actionNames()).toEqual(['Discard', 'Request publication', 'Publish']);
         });
 
         it('shows the gates at work on "Publish anyway" too: the release first, then publishing over the whole page', async () => {
@@ -441,7 +441,7 @@ describe('ReviewPanel', () => {
             await renderPanel(planState('released', { cms_objects: [writtenPage(9142)] }));
 
             await waitFor(() => expect(permissionUrls).toEqual(['/rest/perm/publish/page/9142?nodeId=3']));
-            expect(actionNames()).toEqual(['Discard', 'Request review']);
+            expect(actionNames()).toEqual(['Discard', 'Request publication']);
         });
 
         it('offers no Publish when the user may publish only some of the plan\'s pages', async () => {
@@ -450,7 +450,7 @@ describe('ReviewPanel', () => {
             await renderPanel(planState('released', { cms_objects: [writtenPage(9142), writtenPage(9143, 'updated')] }));
 
             await waitFor(() => expect(permissionUrls).toHaveLength(2));
-            expect(actionNames()).toEqual(['Discard', 'Request review']);
+            expect(actionNames()).toEqual(['Discard', 'Request publication']);
         });
 
         it('offers Publish when the user may publish every page the plan wrote, and does not ask for pages it only read', async () => {
@@ -603,7 +603,7 @@ describe('ReviewPanel', () => {
         const { sent } = stubRoutes();
 
         await renderPanel(planState('released'));
-        await user.click(screen.getByRole('button', { name: 'Request review' }));
+        await user.click(screen.getByRole('button', { name: 'Request publication' }));
 
         await waitFor(() => expect(sent).toEqual([{ action: 'request_review' }]));
     });
@@ -758,7 +758,7 @@ describe('ReviewPanel', () => {
         stubRoutes({ transition: () => problem('plan_closed') });
         await renderPanel(planState('released'));
         // Not Publish, which has tests of its own ('publishing, over the whole page').
-        await user.click(screen.getByRole('button', { name: 'Request review' }));
+        await user.click(screen.getByRole('button', { name: 'Request publication' }));
 
         await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
             { messageKey: 'planBar.transitionFailed', detailKey: 'errors.genaix.plan_closed' },

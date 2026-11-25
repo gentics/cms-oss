@@ -2,7 +2,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpError } from '@/services/httpService/httpService';
 
-import { approvePubqueuePages, assignCmsPages, claimCmsTask, cmsPageUrl, cmsVersionCompareUrl, completeCmsTask, listCmsTasks } from './cmsTaskApi';
+import {
+    approvePubqueuePages,
+    assignCmsPages,
+    claimCmsTask,
+    cmsPageUrl,
+    cmsVersionCompareUrl,
+    completeCmsTask,
+    constructRequestGroupId,
+    countBrokenLinkPages,
+    createCmsTask,
+    listCmsTasks,
+} from './cmsTaskApi';
 
 function stubFetch(...responses: Response[]) {
     const fetchMock = vi.fn<typeof fetch>();
@@ -31,6 +42,26 @@ function urlOptions(url: string): unknown {
 describe('cmsTaskApi', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
+    });
+
+    it('creates a task with its data and returns the one the CMS stored', async () => {
+        const fetchMock = stubFetch(Response.json({ responseInfo: { responseCode: 'OK' }, task: { id: '31', source: 'manual', type: 'requestConstruct', status: 'open', actions: [] } }));
+        const body = { type: 'requestConstruct', title: 'Create construct: X', assignee: { type: 'group' as const, id: 9 }, externalKey: 'i-7', genaix: { instruction: 'Create X.' } };
+
+        await expect(createCmsTask(body)).resolves.toMatchObject({ id: '31' });
+        expect(sent(fetchMock)).toEqual({ url: '/rest/task', method: 'POST', body });
+    });
+
+    it('reads the group of construct requests from the build, a positive integer only', () => {
+        vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', '9');
+        expect(constructRequestGroupId()).toBe(9);
+
+        vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', '');
+        expect(constructRequestGroupId()).toBeUndefined();
+
+        vi.stubEnv('VITE_CONSTRUCT_REQUEST_GROUP_ID', 'chief-cc');
+        expect(constructRequestGroupId()).toBeUndefined();
     });
 
     it('lists the tasks with the CMS session cookie', async () => {
@@ -40,6 +71,13 @@ describe('cmsTaskApi', () => {
 
         expect(tasks.map((task) => task.id)).toEqual(['1']);
         expect(fetchMock).toHaveBeenCalledWith('/rest/task', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('counts the pages with broken links the user may edit without loading them', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [], numItems: 12, hasMoreItems: true, responseInfo: { responseCode: 'OK' } }));
+
+        await expect(countBrokenLinkPages()).resolves.toBe(12);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/linkChecker/pages?editable=true&status=invalid&pageSize=0', expect.objectContaining({ credentials: 'same-origin' }));
     });
 
     it('sets a task done, claims it, and encodes virtual task ids in the path', async () => {

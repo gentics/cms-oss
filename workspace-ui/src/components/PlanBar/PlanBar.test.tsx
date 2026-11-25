@@ -78,7 +78,7 @@ describe('PlanBar', () => {
         // A change is asked for with a plain message, which GenAIx's session agent tells apart (contract §4.4).
         expect(within(bar).queryByRole('button', { name: 'Ask for a change' })).not.toBeInTheDocument();
         expect(within(bar).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
-        expect(within(bar).queryByRole('button', { name: 'Request review' })).not.toBeInTheDocument();
+        expect(within(bar).queryByRole('button', { name: 'Request publication' })).not.toBeInTheDocument();
         expect(await within(bar).findByRole('link', { name: 'Review & release' })).toBeInTheDocument();
     });
 

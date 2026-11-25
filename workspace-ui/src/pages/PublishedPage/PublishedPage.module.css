@@ -12,7 +12,7 @@
   text-align: left;
 }
 
-/* Below the topbar; places the to-dos card on wide screens (`.todos`), as on the dashboard. */
+/* Below the topbar; places the tasks button (`.todos`), as on the dashboard. */
 .body {
   position: relative;
   display: flex;
@@ -149,22 +149,13 @@
   text-transform: uppercase;
 }
 
-/* Open to-dos (`SessionTodos`): under the prompt; from 1360 px a card top right, against `.body`, so
-   it stays put while the column scrolls (design.md §11 "Dashboard", as there). */
-.todos:empty {
-  display: none;
-}
-
-@media (min-width: 1360px) {
-  .todos {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 2;
-    width: 330px;
-    max-height: calc(100% - 40px);
-    overflow-y: auto;
-  }
+/* The tasks button top right, against `.body`, so it stays put while the column scrolls (design.md
+   §11 "Dashboard", as there). */
+.todos {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
 }
 
 @keyframes spring {

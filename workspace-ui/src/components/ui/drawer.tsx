@@ -6,11 +6,14 @@ import { useTranslation } from 'react-i18next';
 import { Button } from './button';
 import { cn } from './utils';
 
-// design.md §12 "Dialog / Drawer", §11 (drawer from the left, 380 px), §10 (24 px from the left).
+// design.md §12 "Dialog / Drawer", §11 (drawer from the left, 380 px; the tasks from the right, 480 px), §10 (24 px in from its side).
 
-/** Drawer from the left. Swiping to the left closes it, like Escape and the close button. */
-function Drawer(props: Omit<DrawerPrimitive.Root.Props, 'swipeDirection'>) {
-    return <DrawerPrimitive.Root data-slot="drawer" swipeDirection="left" {...props} />;
+/**
+ * Drawer from the left, or with `side="right"` from the right. Swiping towards its side closes it, like
+ * Escape and the close button.
+ */
+function Drawer({ side = 'left', ...props }: Omit<DrawerPrimitive.Root.Props, 'swipeDirection'> & { side?: 'left' | 'right' }) {
+    return <DrawerPrimitive.Root data-slot="drawer" swipeDirection={side} {...props} />;
 }
 
 function DrawerTrigger(props: DrawerPrimitive.Trigger.Props) {
@@ -25,8 +28,9 @@ function DrawerContent({
     className,
     children,
     showCloseButton = true,
+    size = 'default',
     ...props
-}: DrawerPrimitive.Popup.Props & { showCloseButton?: boolean }) {
+}: DrawerPrimitive.Popup.Props & { showCloseButton?: boolean; size?: 'default' | 'wide' }) {
     const { t } = useTranslation();
 
     return (
@@ -39,9 +43,13 @@ function DrawerContent({
                 <DrawerPrimitive.Popup
                     data-slot="drawer-content"
                     className={cn(
-                        'pointer-events-auto fixed inset-y-0 left-0 flex w-[min(380px,calc(100vw-32px))] flex-col border-r border-line2 bg-surface text-base leading-normal text-ink shadow-drawer',
+                        'pointer-events-auto fixed inset-y-0 left-0 flex flex-col border-r border-line2 bg-surface text-base leading-normal text-ink shadow-drawer',
+                        size === 'wide' ? 'w-[min(480px,calc(100vw-32px))]' : 'w-[min(380px,calc(100vw-32px))]',
                         '[transform:translateX(var(--drawer-swipe-movement-x,0px))] transition-[opacity,translate] duration-(--duration-card) data-swiping:duration-0',
                         'data-ending-style:-translate-x-24 data-ending-style:opacity-0 data-starting-style:-translate-x-24 data-starting-style:opacity-0',
+                        // From the right (`Drawer side`, which Base UI marks on the popup).
+                        'data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:left-auto data-[swipe-direction=right]:border-r-0 data-[swipe-direction=right]:border-l',
+                        'data-[swipe-direction=right]:data-ending-style:translate-x-24 data-[swipe-direction=right]:data-starting-style:translate-x-24',
                         className,
                     )}
                     {...props}

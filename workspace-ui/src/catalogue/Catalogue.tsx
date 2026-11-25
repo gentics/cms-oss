@@ -514,24 +514,35 @@ export function Catalogue() {
                 </Section>
 
                 <Section id="catalogue-drawer" title={t('catalogue.drawer.title')}>
-                    <Drawer>
-                        <DrawerTrigger render={<Button variant="secondary" />}>{t('catalogue.drawer.open')}</DrawerTrigger>
-                        <DrawerContent>
-                            <DrawerHeader>
-                                <DrawerTitle>{t('catalogue.drawer.heading')}</DrawerTitle>
-                                <DrawerDescription>{t('catalogue.drawer.description')}</DrawerDescription>
-                            </DrawerHeader>
-                            <DrawerBody>
-                                <Label>
-                                    <Checkbox />
-                                    {t('catalogue.drawer.option')}
-                                </Label>
-                            </DrawerBody>
-                            <DrawerFooter>
-                                <DrawerClose render={<Button variant="secondary" />}>{t('catalogue.drawer.close')}</DrawerClose>
-                            </DrawerFooter>
-                        </DrawerContent>
-                    </Drawer>
+                    <div className={styles.row}>
+                        <Drawer>
+                            <DrawerTrigger render={<Button variant="secondary" />}>{t('catalogue.drawer.open')}</DrawerTrigger>
+                            <DrawerContent>
+                                <DrawerHeader>
+                                    <DrawerTitle>{t('catalogue.drawer.heading')}</DrawerTitle>
+                                    <DrawerDescription>{t('catalogue.drawer.description')}</DrawerDescription>
+                                </DrawerHeader>
+                                <DrawerBody>
+                                    <Label>
+                                        <Checkbox />
+                                        {t('catalogue.drawer.option')}
+                                    </Label>
+                                </DrawerBody>
+                                <DrawerFooter>
+                                    <DrawerClose render={<Button variant="secondary" />}>{t('catalogue.drawer.close')}</DrawerClose>
+                                </DrawerFooter>
+                            </DrawerContent>
+                        </Drawer>
+                        <Drawer side="right">
+                            <DrawerTrigger render={<Button variant="secondary" />}>{t('catalogue.drawer.openRight')}</DrawerTrigger>
+                            <DrawerContent size="wide">
+                                <DrawerHeader>
+                                    <DrawerTitle>{t('catalogue.drawer.headingRight')}</DrawerTitle>
+                                </DrawerHeader>
+                                <DrawerBody>{t('catalogue.drawer.bodyRight')}</DrawerBody>
+                            </DrawerContent>
+                        </Drawer>
+                    </div>
                 </Section>
 
                 <Section id="catalogue-toast" title={t('catalogue.toast.title')}>

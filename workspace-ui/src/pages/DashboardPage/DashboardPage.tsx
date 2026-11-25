@@ -1,8 +1,9 @@
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Composer } from '@/components/Composer/Composer';
+import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
 import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
-import { TaskList } from '@/components/TaskList/TaskList';
+import { TaskDrawer } from '@/components/TaskDrawer/TaskDrawer';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { useCmsUser } from '@/hooks/useCmsAuth';
 import { useSessionStart } from '@/hooks/useSessionStart';
@@ -23,12 +24,13 @@ function greetingKey(hour: number): string {
 }
 
 /**
- * The page at `/`: the prompt that starts a session, the open tasks and the recent sessions. Once
+ * The page at `/`: the prompt that starts a session, the open tasks (`TaskDrawer`) and the recent sessions. Once
  * the session exists, and its files are uploaded, the session's page opens.
  */
 export function DashboardPage() {
     const { t } = useTranslation();
     const { start, isStarting, uploadProgress } = useSessionStart();
+    const composerRef = useRef<ComposerHandle>(null);
     // The CMS user of the session (`LoginGate` shows the page only with one): first name, the login without one.
     const cmsUser = useCmsUser({ refetchOnMount: false }).data;
     const greetingName = cmsUser ? (cmsUser.firstName || cmsUser.login) : null;
@@ -41,10 +43,10 @@ export function DashboardPage() {
                     <div className={styles.content}>
                         {greetingName && <h1 className={styles.greeting}>{t(greetingKey(new Date().getHours()), { name: greetingName })}</h1>}
 
-                        <Composer variant="start" onSubmit={start} isSubmitting={isStarting} uploadProgress={uploadProgress} />
+                        <Composer ref={composerRef} variant="start" onSubmit={start} isSubmitting={isStarting} uploadProgress={uploadProgress} />
 
                         <div className={styles.todos}>
-                            <TaskList />
+                            <TaskDrawer onEditWithGenaix={(references) => composerRef.current?.addReferences(references)} />
                         </div>
 
                         <RecentSessions />

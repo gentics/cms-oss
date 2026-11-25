@@ -34,6 +34,8 @@ export const cmsKeys = {
     templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
     languages: (nodeId: number) => ['cms', 'nodes', nodeId, 'languages'] as const,
     tasks: () => ['cms', 'tasks'] as const,
+    // Under the tasks, so reading the tasks again also counts again.
+    brokenLinkPages: () => [...cmsKeys.tasks(), 'broken-link-pages'] as const,
     users: () => ['cms', 'users'] as const,
 };
 

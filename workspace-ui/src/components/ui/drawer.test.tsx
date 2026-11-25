@@ -60,4 +60,29 @@ describe('Drawer', () => {
         await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
         expect(trigger).toHaveFocus();
     });
+
+    it('opens from the right with side="right", and closes with Escape', async () => {
+        const user = userEvent.setup();
+
+        render(
+            <Drawer side="right">
+                <DrawerTrigger render={<Button />}>Open tasks</DrawerTrigger>
+                <DrawerContent size="wide">
+                    <DrawerHeader>
+                        <DrawerTitle>Tasks</DrawerTitle>
+                    </DrawerHeader>
+                </DrawerContent>
+            </Drawer>,
+            { wrapper: UiProvider },
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Open tasks' }));
+
+        // The attribute the right side is styled by.
+        expect(await screen.findByRole('dialog', { name: 'Tasks' })).toHaveAttribute('data-swipe-direction', 'right');
+
+        await user.keyboard('{Escape}');
+
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
 });

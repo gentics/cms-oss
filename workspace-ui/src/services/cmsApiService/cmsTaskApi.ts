@@ -39,6 +39,19 @@ export interface CmsTask {
     genaix?: { sessionId?: string; planId?: string; instruction?: string };
 }
 
+/** A stored task to create (`POST /rest/task`); `source` defaults to `manual`, `assignee` to the creator. */
+export interface CmsTaskCreate {
+    type: string;
+    title: string;
+    description?: string;
+    assignee?: Pick<CmsTaskAssignee, 'type' | 'id'>;
+    objects?: CmsTaskObject[];
+    details?: Record<string, unknown>;
+    /** With the same source, the CMS updates the task that has it instead of creating another. */
+    externalKey?: string;
+    genaix?: { instruction?: string };
+}
+
 export interface CmsUserItem {
     id: number;
     login?: string;
@@ -78,6 +91,23 @@ export async function listCmsTasks(signal?: AbortSignal): Promise<CmsTask[]> {
     return items ?? [];
 }
 
+/** Creates a stored task, or updates the one with the same `externalKey`. */
+export async function createCmsTask(task: CmsTaskCreate): Promise<CmsTask> {
+    const { task: created } = await cmsWrite<CmsResponse & { task: CmsTask }>('/rest/task', 'POST', task);
+
+    return created;
+}
+
+/**
+ * The CMS group that construct requests go to (`VITE_CONSTRUCT_REQUEST_GROUP_ID`, `.env.example`); read on every
+ * call, not once. Anything but a positive integer counts as none.
+ */
+export function constructRequestGroupId(): number | undefined {
+    const value = Number(import.meta.env.VITE_CONSTRUCT_REQUEST_GROUP_ID);
+
+    return Number.isInteger(value) && value > 0 ? value : undefined;
+}
+
 /** Sets a task done. */
 export async function completeCmsTask(id: string): Promise<CmsTask> {
     const { task } = await cmsWrite<CmsResponse & { task: CmsTask }>(`/rest/task/${encodeURIComponent(id)}`, 'PUT', { status: 'done' });
@@ -115,6 +145,20 @@ export async function listCmsUsers(signal?: AbortSignal): Promise<CmsUserItem[]>
 
     return items ?? [];
 }
+
+/**
+ * How many pages the user may edit have broken links (`GET /rest/linkChecker/pages`); `numItems` counts after the
+ * permission filter, and `pageSize=0` leaves the pages out.
+ */
+export async function countBrokenLinkPages(signal?: AbortSignal): Promise<number> {
+    const params = new URLSearchParams({ editable: 'true', status: 'invalid', pageSize: '0' });
+    const { numItems } = await httpRequest<{ numItems?: number }>(`/rest/linkChecker/pages?${params}`, { ...CMS_GET, signal });
+
+    return numItems ?? 0;
+}
+
+/** The link checker in the CMS UI: the custom tool, whose key must be `linkchecker` (`cms-ui/apps/ct-link-checker/README.md`). */
+export const CMS_LINK_CHECKER_URL = '/editor/#/tools/linkchecker';
 
 /** The page in the CMS UI. */
 export function cmsPageUrl(pageId: number, nodeId: number, editMode = 'preview', options: object = {}): string {

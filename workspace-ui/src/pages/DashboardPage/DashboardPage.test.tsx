@@ -101,14 +101,61 @@ describe('DashboardPage', () => {
         vi.stubGlobal('fetch', withTasks(stubSessionRoutes(() => ({ items: [recent], next_cursor: null })), [task]));
         renderDashboard();
 
-        const tasks = await screen.findByRole('region', { name: 'Open tasks' });
+        await user.click(await screen.findByRole('button', { name: '1 open task' }));
+
+        const tasks = await screen.findByRole('dialog', { name: 'Open tasks' });
 
         expect(await within(tasks).findByRole('link', { name: /Prices 2026/ })).toHaveAttribute('href', '/sessions/s-1');
         expect(within(tasks).getByRole('heading', { name: 'Ready to publish' })).toBeInTheDocument();
 
+        await user.keyboard('{Escape}');
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
         await user.click(screen.getByRole('button', { name: 'Recent sessions' }));
 
         expect(await screen.findByRole('link', { name: /Careers page/ })).toBeInTheDocument();
+    });
+
+    it('puts the page of a publish queue task into the field, and sending starts the session with it', async () => {
+        const user = userEvent.setup();
+        const session = { id: 's-1', status: 'active', workflow: 'content_research', run_id: 'r-1', message_id: 'm-1' };
+        const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json(session, { status: 201 }));
+        const page = { type: 'page', id: '9142', node_id: 3, label: 'Terms of use' };
+        const task = taskFixture({
+            id: 'publishQueue:page:9142',
+            source: 'publishQueue',
+            type: 'approvePublish',
+            title: undefined,
+            objects: [{ type: 'page', id: 9142, nodeId: 3, name: 'Terms of use' }],
+            actions: ['open', 'approve', 'startSession'],
+        });
+
+        vi.stubGlobal('fetch', withTasks(withEmptySessionList(fetchMock), [task]));
+
+        const { router } = renderDashboard();
+
+        await user.click(await screen.findByRole('button', { name: '1 open task' }));
+        await user.click(await screen.findByRole('button', { name: 'Edit with GenAIx' }));
+
+        // The drawer closes and leaves the focus in the field, not on its button.
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+        const field = screen.getByRole('textbox');
+
+        await waitFor(() => expect(field).toHaveTextContent('Terms of use'));
+        await waitFor(() => expect(field).toHaveFocus());
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        await user.keyboard('Add the new cancellation period{Enter}');
+
+        await waitFor(() => expect(router.state.location.pathname).toBe('/sessions/s-1'));
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions');
+        expect(JSON.parse(init?.body as string)).toMatchObject({
+            context: { references: [page] },
+            message: { parts: [{ type: 'reference', ref: page }, { type: 'text', text: ' Add the new cancellation period' }] },
+        });
     });
 
     it('creates the session with the prompt, caches it and opens its page', async () => {

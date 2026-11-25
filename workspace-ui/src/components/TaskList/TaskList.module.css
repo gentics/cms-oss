@@ -1,35 +1,21 @@
-/* "Open tasks" card (design.md §11 "Dashboard"); the page that mounts it places it. */
+/* The groups of open tasks; the tasks drawer (`TaskDrawer`) frames them and gives the title. */
 .tasks {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--corner-xl);
-  background: var(--bg-surface);
 }
 
-.title,
 .groupTitle {
   margin: 0;
-  color: var(--fg-secondary);
+  padding: 9px 14px 3px;
+  color: var(--fg-muted);
   font-size: var(--font-size-overline);
   font-weight: 500;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 
-.title {
-  padding: 12px 14px 9px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
 .group + .group {
   border-top: 1px solid var(--border-subtle);
-}
-
-.groupTitle {
-  padding: 9px 14px 3px;
-  color: var(--fg-muted);
 }
 
 .list {
@@ -54,4 +40,48 @@
   & p {
     margin: 0;
   }
+}
+
+/* The other pages with broken links the user may edit, and a link to the link checker; after the tasks of the group,
+   divided like a row. */
+.more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  padding: 9px 14px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+
+  .list + & {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+/* As the links of a task row (`TaskItem.module.css`, `.link`). */
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  color: var(--interactive);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+/* No open tasks (design.md §8 "Leer"). */
+.empty {
+  margin: 0;
+  padding: 26px 14px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
 }

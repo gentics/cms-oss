@@ -607,7 +607,8 @@ describe('InteractionCard, a construct request', () => {
         const user = userEvent.setup();
         const fetchMock = stubCmsAndGenaix();
 
-        renderRequest(undefined);
+        // Not `renderRequest(undefined)`: `undefined` takes the parameter's default, the draft.
+        render(<InteractionCard interaction={constructRequest} sessionId="s-1" />, { wrapper: createWrapper() });
         await user.click(screen.getByRole('button', { name: 'Send' }));
 
         expect(useErrorNotificationStore.getState().errors).toMatchObject([{ messageKey: 'chat.constructRequest.noDraft' }]);

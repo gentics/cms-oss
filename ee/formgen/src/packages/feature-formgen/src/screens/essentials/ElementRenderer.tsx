@@ -152,6 +152,10 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       }else{
         value = obj?.formGridOptions?.value;
       }
+      // aggregates expect a list; without a value (e.g. empty data.properties on unmet preconditions) the component crashes
+      if (ElemTyp === ANAggregateElement && value == null) {
+        value = [];
+      }
 
       if ((schemaElem == null && !obj.formGridOptions?.type )|| !isVisible ) {
         return null;

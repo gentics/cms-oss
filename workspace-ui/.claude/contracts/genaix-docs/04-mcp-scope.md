@@ -669,10 +669,12 @@ Notes.
   `computedBy: "composition"` and a client must label it a preview (§11).
 - **`create_user` cannot be previewed.** The preview needs an existing user, so `get_group_permissions` on the
   target group stands in for it.
-- **The new user sets their own password on a one-time CMS link (proposed).** `create_user` takes no
-  password. The CMS creates the user with a single-use link and the result carries only `passwordLink.expiresAt`,
-  never the link or its token, because a tool result reaches the model and the stored session. How the link
-  reaches the user, a CMS email or an admin action in the Workspace that reissues it, is open for Gentics.
+- **The new user sets their own password on a one-time CMS link** (GPU-2776, decided 2026-11-25). `create_user`
+  takes no password. The CMS creates the user with a single-use link, valid for 24 hours, and the result carries
+  only `passwordLink.expiresAt`, never the link or its token, because a tool result reaches the model and the
+  stored session. The link reaches the user through the administrator: the Workspace UI offers it for a user the
+  plan created (`cms_objects`) and fetches it with `POST /rest/user/{id}/passwordLink` on the administrator's own
+  CMS session, which needs the permission to edit that user and revokes any earlier link. GenAIx never sees it.
 - **`assign_user_to_group` is not one transaction.** All nodes are checked first, and if a restriction then
   fails, a membership the call added is removed again. `nodeIds` add to existing restrictions, and omitting them
   clears nothing.
@@ -879,7 +881,13 @@ agent's toolbox small enough to behave.
 
 ### 8.1 For Design Studio
 
-Design Studio is template-level rather than page-level work, and the contract is shaped so it slots in:
+Since `1.0.0-rc.7` the `design` group carries the pilot's tools, and
+`15-design-studio-cms-and-si.md` §1 lists them with their REST mapping. It replaces this sketch
+where they differ: the work happens on a design target, not on the working node; the render check
+goes through a preview portal instead of `render_diff`; and `decompose_design` is GenAIx's own work,
+not a CMS tool.
+
+The original sketch: Design Studio is template-level rather than page-level work, and the contract is shaped so it slots in:
 
 - **New group `design`**, listed only for users holding `createtemplates`/`updatetemplates`. The group-level
   permission filter (§2.4) already supports that.

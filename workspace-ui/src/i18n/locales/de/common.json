@@ -837,6 +837,7 @@
                 "citationsBare": "Ohne Marker und Auszüge",
                 "fileNamed": "Mit Namen",
                 "fileUnnamed": "Ohne Namen",
+                "designRevision": "Mit Seiten und Text (über die Fallback-Regel)",
                 "unknownWithText": "Unbekannter Typ, mit Text",
                 "unknownWithoutText": "Unbekannter Typ, ohne Text (zeigt nichts)",
                 "brokenTable": "Bekannter Typ, der nicht dargestellt werden kann"
@@ -886,7 +887,10 @@
             "service_unavailable": "Der KI-Dienst ist derzeit nicht verfügbar.",
             "plan_not_revisable": "Dieser Plan ist endgültig abgeschlossen und kann nicht mehr geändert werden.",
             "dependency_order": "Ein Schritt steht vor einem Schritt, von dem er abhängt.",
-            "revise_plan_missing": "Es gibt keinen Plan zum Überarbeiten."
+            "revise_plan_missing": "Es gibt keinen Plan zum Überarbeiten.",
+            "design_target_required": "Ein Design braucht ein Designziel.",
+            "design_target_immutable": "Das Designziel einer Sitzung kann nicht geändert werden.",
+            "design_revision_conflict": "Diese Design-Revision ist veraltet: Es gibt eine neuere."
         },
         "cms": {
             "AUTHREQUIRED": "Bitte melden Sie sich im CMS an.",

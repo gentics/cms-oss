@@ -1,6 +1,6 @@
 {
   "$schema_note": "Specification of the Gentics CMS MCP tool surface (cms-mcp). Companion document: stage1/04-mcp-scope.md. Every inputSchema and outputSchema is JSON Schema draft 2020-12. $ref values resolve against the root of THIS document; dereference them before handing a schema to an MCP client. Tool names are snake_case; input and output field names are camelCase, identical to the CMS REST model names. Input schemas are strict (additionalProperties false); output schemas are intentionally open so cms-mcp can add fields additively.",
-  "version": "1.0.0-rc.6",
+  "version": "1.0.0-rc.7",
   "changelog": [
     {
       "version": "1.0.0-draft.1",
@@ -43,6 +43,11 @@
       "version": "1.0.0-rc.6",
       "summary": "Draft. New groups forms_read, forms_write, guidelines_read, guidelines_write. The admin tools state what the CMS does. list_folder_items no longer lists forms.",
       "detail": "(1) forms_read: get_form, list_form_types; forms_write: create_form, update_form, delete_form, publish_form. External forms are read and embedded, every write to one is refused. (2) guidelines_read: list_guidelines, get_guideline; guidelines_write: create_guideline, update_guideline, delete_guideline. (3) get_permissions accepts createform. (4) list_folder_items: form is removed, because the CMS cannot list forms together with the other types; search_content with types [form] finds them. (5) Admin group: permissions follow the CMS (useradmin createuser, userassignment on a parent group), useradmin and groupadmin are permission types and the instance-only types are gone, create_user is not previewed, assignment is not one transaction and node restrictions add up, the last group of a user cannot be removed, and a caller cannot remove their own account from a group."
+    },
+    {
+      "version": "1.0.0-rc.7",
+      "summary": "Draft. The design group for the Design Studio pilot.",
+      "detail": "(1) design: create_template, update_template and link_template_to_folders move to phase two; new get_template_usage, list_package_objects, add_template_to_package, list_design_files, read_design_file, write_design_files, list_portal_implementations, read_portal_implementation_file, write_portal_implementation_file, assign_portal_implementation and get_node_publish_status. (2) decompose_design is removed: decomposition is GenAIx's own work. render_diff stays future. (3) No tool uses devtools package synchronisation. See 15-design-studio-cms-and-si.md."
     }
   ],
   "status": "1.0.0-rc.6 draft, proposed for agreement; 1.0.0-rc.5 stays agreed until then; 1.0.0 at the demo-readiness checkpoint",
@@ -9256,7 +9261,7 @@
         {
           "name": "create_user",
           "title": "Create user in group",
-          "description": "Creates a CMS user and places them in a group in the same call. groupId is REQUIRED: the CMS has no standalone user-create endpoint, so there is no way to create a user without a group. Check with list_users that the login is free. A new user has no id to preview, so show get_group_permissions for the target group instead, and get the user's confirmation before calling this. There is no password argument: the CMS creates a one-time link on which the new user sets their password, and the result carries only its expiry (proposed). Only subgroups of your own groups can be used.",
+          "description": "Creates a CMS user and places them in a group in the same call. groupId is REQUIRED: the CMS has no standalone user-create endpoint, so there is no way to create a user without a group. Check with list_users that the login is free. A new user has no id to preview, so show get_group_permissions for the target group instead, and get the user's confirmation before calling this. There is no password argument: the CMS creates a one-time link on which the new user sets their password, and the result carries only its expiry; the administrator gets the link from the Workspace UI, never from you. Only subgroups of your own groups can be used.",
           "group": "admin",
           "access": "write",
           "roles": [
@@ -9367,7 +9372,7 @@
               },
               "passwordLink": {
                 "type": "object",
-                "description": "Proposed (rc.6 second revision): the CMS creates the user with a one-time link on which they set their own password. The result carries the link's expiry and never the link or its token, because a tool result reaches the model and the stored session. The link reaches the user outside the tool result; how (a CMS email, or an admin action in the Workspace that reissues it) is open for Gentics.",
+                "description": "The CMS creates the user with a one-time link, valid for 24 hours, on which they set their own password (GPU-2776). The result carries the link's expiry and never the link or its token, because a tool result reaches the model and the stored session. The Workspace UI fetches the link with POST /rest/user/{id}/passwordLink on the administrator's own CMS session.",
                 "properties": {
                   "expiresAt": {
                     "type": "string",
@@ -9818,8 +9823,8 @@
     },
     {
       "id": "design",
-      "title": "Design Studio (future)",
-      "description": "Template-level tools reserved for Design Studio. No tool in this group ships in Phase One; the group exists so the extension has a defined shape. list_templates moved to content_read in 1.0.0-rc.2.",
+      "title": "Design Studio",
+      "description": "Template-level tools for the Design Studio (1.0.0-rc.7, 15-design-studio-cms-and-si.md §1). Listed only for users with template rights. None uses devtools package synchronisation: each object is read or written by its own REST call. render_diff stays future; decompose_design is removed, decomposition is GenAIx's own work. Design files live in the private storage files-private of a package (Gentics TODO G1, 10-design-studio.md §5). ioflair builds these tools on a cms-oss branch; Gentics reviews and merges them.",
       "roles": [
         "chief_content_creator",
         "cmp_admin"
@@ -9828,7 +9833,7 @@
         {
           "name": "create_template",
           "title": "Create template",
-          "description": "Creates a page template from raw markup and links it to folders. Phase-future: template changes affect every page using the template, so this needs the render_diff safeguard and an explicit human gate.",
+          "description": "Creates a page template from raw markup and links it to folders. Design Studio: called only on a design target's node, or by a promotion plan the user accepted; template changes affect every page using the template.",
           "group": "design",
           "access": "write",
           "roles": [
@@ -9838,7 +9843,7 @@
           "scenarios": [
             "S1"
           ],
-          "phase": "future",
+          "phase": "two",
           "implementation": {
             "kind": "generated"
           },
@@ -9978,7 +9983,7 @@
           "scenarios": [
             "S1"
           ],
-          "phase": "future",
+          "phase": "two",
           "implementation": {
             "kind": "generated"
           },
@@ -10123,7 +10128,7 @@
           "scenarios": [
             "S1"
           ],
-          "phase": "future",
+          "phase": "two",
           "implementation": {
             "kind": "generated"
           },
@@ -10367,142 +10372,514 @@
           }
         },
         {
-          "name": "decompose_design",
-          "title": "Decompose a design into template and constructs",
-          "description": "Placeholder for the Design Studio flow that turns a supplied HTML design into one template plus a set of constructs. Phase-future and client-side planning: its outputs are create_construct, create_template and link_template_to_folders, so no new CMS endpoint is needed beyond template creation. Not callable in Phase One.",
+          "name": "get_template_usage",
+          "title": "Get template usage",
+          "description": "Returns, per template tag, how many pages using the template a change would put out of sync, and the pages that use the template where the CMS can list them. Call it before a promotion plan changes a template, and list the pages in the plan.",
           "group": "design",
           "access": "read",
           "roles": [
             "chief_content_creator",
             "cmp_admin"
           ],
-          "scenarios": [
-            "S1"
-          ],
-          "phase": "future",
+          "scenarios": [],
+          "phase": "two",
           "implementation": {
-            "kind": "composite",
-            "composes": [
-              "client-side planning with no CMS endpoint; its outputs are create_construct, create_template and link_template_to_folders"
-            ],
-            "transaction": "single"
+            "kind": "composite"
           },
-          "permissions": [],
+          "permissions": [
+            {
+              "type": "template",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
           "idempotent": true,
           "inputSchema": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "sourceHtml": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 2000000
+              "templateId": {
+                "type": "integer",
+                "minimum": 1
               },
               "nodeId": {
                 "type": "integer",
                 "minimum": 1
-              },
-              "reuseExistingConstructs": {
-                "type": "boolean",
-                "default": true
-              },
-              "maxConstructs": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 50,
-                "default": 20
               }
             },
             "required": [
-              "sourceHtml",
-              "nodeId"
+              "templateId"
             ]
           },
           "outputSchema": {
             "type": "object",
             "properties": {
-              "plan": {
+              "template": {
                 "type": "object",
                 "properties": {
-                  "template": {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "source": {
-                        "type": "string"
-                      }
-                    }
-                  },
-                  "constructs": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "keyword": {
-                          "type": "string"
-                        },
-                        "nameI18n": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "string"
-                          }
-                        },
-                        "handlebarsTemplate": {
-                          "type": "string"
-                        },
-                        "parts": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "keyword": {
-                                "type": "string"
-                              },
-                              "nameI18n": {
-                                "type": "object",
-                                "additionalProperties": {
-                                  "type": "string"
-                                }
-                              },
-                              "typeId": {
-                                "type": "integer"
-                              },
-                              "type": {
-                                "type": "string"
-                              },
-                              "editable": {
-                                "type": "boolean"
-                              },
-                              "liveEditable": {
-                                "type": "boolean"
-                              },
-                              "mandatory": {
-                                "type": "boolean"
-                              },
-                              "hidden": {
-                                "type": "boolean"
-                              },
-                              "partOrder": {
-                                "type": "integer"
-                              },
-                              "defaultValue": {},
-                              "globalId": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        },
-                        "reuseOf": {
-                          "$ref": "#/definitions/ObjectRef"
-                        }
-                      }
+                  "ref": {
+                    "$ref": "#/definitions/ObjectRef"
+                  }
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "inSync": {
+                      "type": "integer"
+                    },
+                    "outOfSync": {
+                      "type": "integer"
                     }
                   }
                 }
               },
-              "warnings": {
+              "pages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ref": {
+                      "$ref": "#/definitions/ObjectRef"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "tags"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/template/{id}/tagstatus"
+              }
+            ],
+            "notes": "tagstatus returns counts per template tag, not pages. The page list endpoint is Gentics TODO G8 (10-design-studio.md §5)."
+          }
+        },
+        {
+          "name": "list_package_objects",
+          "title": "List package objects",
+          "description": "Lists the constructs and templates a devtools package contains, with their global IDs. Used to snapshot a design target's base and to compare packages at promotion.",
+          "group": "design",
+          "access": "read",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "devtools_packages",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "package": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "types": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "construct",
+                    "template"
+                  ]
+                },
+                "default": [
+                  "construct",
+                  "template"
+                ]
+              }
+            },
+            "required": [
+              "package"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "constructs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ref": {
+                      "$ref": "#/definitions/ObjectRef"
+                    },
+                    "keyword": {
+                      "type": "string"
+                    },
+                    "globalId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "templates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ref": {
+                      "$ref": "#/definitions/ObjectRef"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "globalId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "required": []
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/devtools/packages/{name}/constructs"
+              },
+              {
+                "method": "GET",
+                "path": "/devtools/packages/{name}/templates"
+              }
+            ],
+            "notes": "Package REST API only; no package synchronisation."
+          }
+        },
+        {
+          "name": "add_template_to_package",
+          "title": "Add template to package",
+          "description": "Adds an existing template to a devtools package, as add_construct_to_package does for constructs. A design target's package holds the templates it creates.",
+          "group": "design",
+          "access": "write",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "devtools_packages",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "package": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "templateId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "package",
+              "templateId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "added": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "added"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "PUT",
+                "path": "/devtools/packages/{name}/templates/{template}"
+              }
+            ],
+            "notes": "Package REST API only; no package synchronisation."
+          }
+        },
+        {
+          "name": "list_design_files",
+          "title": "List design files",
+          "description": "Lists a directory of a design target's design files, under files-private/design/ of its package (12-design-studio-files.md). GenAIx's gate refuses the model's calls on evidence/ paths; the render check's evidence is written by the harness.",
+          "group": "design",
+          "access": "read",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "devtools_packages",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "package": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^design(/(?!\\.{1,2}(/|$))[A-Za-z0-9._-]+)*$",
+                "description": "A normalised path under files-private/design/ of the package: no . or .. segment. The CMS checks the normalised path too."
+              }
+            },
+            "required": [
+              "package",
+              "path"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "directory": {
+                      "type": "boolean"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "lastModified": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "name",
+                    "directory"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "items"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/devtools/packages/{name}/files-private"
+              }
+            ],
+            "notes": "Query parameter path; only paths under design/ are accepted, so guidelines and other internal files are out of reach. Works on the package's private storage files-private, which no URL serves (Gentics TODO G1, 10-design-studio.md §5); until it exists, on files-internal, for non-confidential sites only."
+          }
+        },
+        {
+          "name": "read_design_file",
+          "title": "Read design file",
+          "description": "Reads one design file of a design target: design.json, a revision's mapping.json or report.json, or a page. Binary files are returned as base64. GenAIx's gate refuses the model's calls on evidence/ paths; the render check's evidence is written by the harness.",
+          "group": "design",
+          "access": "read",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "devtools_packages",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "package": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^design(/(?!\\.{1,2}(/|$))[A-Za-z0-9._-]+)*$",
+                "description": "A normalised path under files-private/design/ of the package: no . or .. segment. The CMS checks the normalised path too."
+              }
+            },
+            "required": [
+              "package",
+              "path"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "base64": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "contentType"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/devtools/packages/{name}/files-private/{path}"
+              }
+            ],
+            "notes": "Only paths under design/. Works on the package's private storage files-private, which no URL serves (Gentics TODO G1, 10-design-studio.md §5); until it exists, on files-internal, for non-confidential sites only."
+          }
+        },
+        {
+          "name": "write_design_files",
+          "title": "Write design files",
+          "description": "Uploads one or more files into one directory under files-private/design/ of a design target's package. A revision directory is written once and never changed; design.json is written last, after checking that its current_revision is still the one the edit started from (12-design-studio-files.md §4). GenAIx's gate refuses the model's calls on evidence/ paths; the render check's evidence is written by the harness.",
+          "group": "design",
+          "access": "write",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "devtools_packages",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": false,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "package": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "directory": {
+                "type": "string",
+                "pattern": "^design(/(?!\\.{1,2}(/|$))[A-Za-z0-9._-]+)*$",
+                "description": "A normalised path under files-private/design/ of the package: no . or .. segment. The CMS checks the normalised path too."
+              },
+              "files": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 200,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[^/\\\\]+$"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "base64": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                }
+              },
+              "expectCurrentRevision": {
+                "type": "string",
+                "description": "For design.json: the revision the edit started from; the write is refused when another revision is current."
+              }
+            },
+            "required": [
+              "package",
+              "directory",
+              "files"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "written": {
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -10510,12 +10887,381 @@
               }
             },
             "required": [
-              "plan"
+              "written"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/devtools/packages/{name}/files-private/design/design.json"
+              },
+              {
+                "method": "POST",
+                "path": "/devtools/packages/{name}/files-private/{directory}"
+              }
+            ],
+            "notes": "Multipart upload, one part per file, into one directory. The package file API has no lock: the expectCurrentRevision check narrows the race, it does not close it. Works on the package's private storage files-private, which no URL serves (Gentics TODO G1, 10-design-studio.md §5); until it exists, on files-internal, for non-confidential sites only."
+          }
+        },
+        {
+          "name": "list_portal_implementations",
+          "title": "List portal implementations",
+          "description": "Lists the portal implementations assigned to a node, with their files (cms-oss f-gpu-2770, unreleased).",
+          "group": "design",
+          "access": "read",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "composite"
+          },
+          "permissions": [
+            {
+              "type": "node",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "withFiles": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "keyword": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "Java",
+                        "PHP"
+                      ]
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "items"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/portalimplementations"
+              },
+              {
+                "method": "GET",
+                "path": "/portalimplementations/{id}/files"
+              }
+            ],
+            "notes": "Follows the REST API of f-gpu-2770."
+          }
+        },
+        {
+          "name": "read_portal_implementation_file",
+          "title": "Read portal implementation file",
+          "description": "Reads one file of a portal implementation, for a design target's base, a revision's snapshot and the merge at promotion. Binary files are returned as base64.",
+          "group": "design",
+          "access": "read",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "node",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "implementationId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "implementationId",
+              "path"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "base64": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/portalimplementations/{id}/content/{path}"
+              }
+            ],
+            "notes": "Follows the REST API of f-gpu-2770."
+          }
+        },
+        {
+          "name": "write_portal_implementation_file",
+          "title": "Write portal implementation file",
+          "description": "Writes one file of a portal implementation (a Handlebars template, a GraphQL query, a translation or a static file). It reaches the portal with the node's next regular publish run.",
+          "group": "design",
+          "access": "write",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "portal_implementation",
+              "perms": [
+                "update"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "implementationId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "text": {
+                "type": "string"
+              },
+              "base64": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "implementationId",
+              "path"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "written": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "written"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "PUT",
+                "path": "/portalimplementations/{id}/content/{path}"
+              }
+            ],
+            "notes": "Follows the REST API of f-gpu-2770. Portal implementations are published by the regular publish run only, not by instant publish."
+          }
+        },
+        {
+          "name": "assign_portal_implementation",
+          "title": "Assign portal implementation",
+          "description": "Assigns a portal implementation to a master node; its channels follow the master.",
+          "group": "design",
+          "access": "write",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "node",
+              "perms": [
+                "update"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "implementationId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "nodeId",
+              "implementationId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "assigned": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "assigned"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "PUT",
+                "path": "/node/{id}/portalimplementations/{implementationId}"
+              }
+            ],
+            "notes": "Follows the REST API of f-gpu-2770."
+          }
+        },
+        {
+          "name": "get_node_publish_status",
+          "title": "Get node publish status",
+          "description": "Says whether the node's last publish run has completed and when, so GenAIx can wait for a revision to reach the preview portal before the render check.",
+          "group": "design",
+          "access": "read",
+          "roles": [
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [],
+          "phase": "two",
+          "implementation": {
+            "kind": "generated"
+          },
+          "permissions": [
+            {
+              "type": "node",
+              "perms": [
+                "view"
+              ]
+            }
+          ],
+          "idempotent": true,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nodeId": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "running": {
+                "type": "boolean"
+              },
+              "lastFinishedAt": {
+                "type": "string"
+              },
+              "lastFailed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "running"
             ]
           },
           "cms": {
             "endpoints": [],
-            "notes": "No CMS endpoint. Specification placeholder so the Design Studio extension has a named slot in this contract; the work is client-side planning whose outputs are existing write tools."
+            "notes": "No endpoint yet: Gentics TODO G4 (10-design-studio.md §5)."
           }
         }
       ]

@@ -837,6 +837,7 @@
                 "citationsBare": "Without markers and snippets",
                 "fileNamed": "With name",
                 "fileUnnamed": "Without name",
+                "designRevision": "With pages and text (shown by the fallback rule)",
                 "unknownWithText": "Unknown type, with text",
                 "unknownWithoutText": "Unknown type, without text (shows nothing)",
                 "brokenTable": "Known type that fails to render"
@@ -886,7 +887,10 @@
             "service_unavailable": "The AI service is currently unavailable.",
             "plan_not_revisable": "This plan is closed for good and can no longer be changed.",
             "dependency_order": "A step comes before a step it depends on.",
-            "revise_plan_missing": "There is no plan to revise."
+            "revise_plan_missing": "There is no plan to revise.",
+            "design_target_required": "A design needs a design target.",
+            "design_target_immutable": "The design target of a session cannot be changed.",
+            "design_revision_conflict": "This design revision is outdated: a newer one exists."
         },
         "cms": {
             "AUTHREQUIRED": "Please log in to the CMS.",

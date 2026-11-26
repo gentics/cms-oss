@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: GenAIx API
-  version: 1.0.0-rc.6
+  version: 1.0.0-rc.7
   summary: Agentic content API for Gentics CMP 9.
   description: |
     The GenAIx API drives agentic content work against a Gentics CMS installation. A
@@ -204,6 +204,26 @@ info:
     UUIDv4 strings; CMS object ids are integers as the CMS REST API reports them.
 
     ## Changelog
+
+    **1.0.0-rc.7** (draft, 2026-11-24, additive). **Requesting what the user may not create.** When a
+    plan needs a write the session's user has no permission for, GenAIx finds it out before trying and
+    asks a `choice` built from the workflow module's `permission_fallbacks`, never by the model. A
+    `choice` option may carry an `action` (`ClientAction`) the client performs before it answers:
+    `create_task` with a CMS `task_type`, the option's `ref` and the message part at `draft`. The first
+    use is a construct the user may not create: the `construct_draft` part says `can_create: false` and
+    `missing_permission`, and the options are the module's, e.g. `request_construct` (client creates a
+    `requestConstruct` task) and `continue_without`. The plan item ends `skipped`, with the picked
+    option in its `detail`. The workflow manifest adds `permission_fallbacks`. **Design Studio
+    section** (documents 10 to 15): `SessionContext.design_target` (`DesignTarget`), the
+    `design_revision` part, the `design_revision` and `design_region` reference types, an optional
+    `revision_id` on `preview.updated`, which may now name a template, `template` and
+    `portal_implementation` as `PlanItem.kind` and `PlannedObject.type`, `template` in
+    `Workflow.produces`, the mapping file format `DesignMapping`, and the problems
+    `design_target_required` (`422`), `design_target_immutable` (`409`) and
+    `design_revision_conflict` (`409`). The MCP tool specification moves to `1.0.0-rc.7` with the
+    pilot's `design` group.
+    `tool.started.group` also lists `forms_read`, `forms_write`, `guidelines_read` and
+    `guidelines_write`, missed when rc.6 added those groups, and `design`.
 
     **1.0.0-rc.6** (draft, 2026-11-06, revised 2026-11-16, additive except where marked). **Forms, guidelines, user
     administration and pickers.** `ContextReference.type` adds `form`, `user` and `group`, and a
@@ -7894,6 +7914,9 @@ components:
         - model_rate_limited
         - rate_limited
         - service_unavailable
+        - design_target_required
+        - design_target_immutable
+        - design_revision_conflict
       examples:
         - run_already_active
 
@@ -8628,6 +8651,9 @@ components:
             - session_file
             - url
             - document
+            - portal_implementation
+            - design_revision
+            - design_region
             - form
             - user
             - group
@@ -8695,7 +8721,7 @@ components:
       properties:
         type:
           type: string
-          enum: [node, folder, page, file, image, template, construct, user, group, form]
+          enum: [node, folder, page, file, image, template, construct, portal_implementation, user, group, form]
         id:
           type: integer
           format: int64
@@ -8785,6 +8811,8 @@ components:
             type: string
             format: uuid
           default: []
+        design_target:
+          $ref: '#/components/schemas/DesignTarget'
       additionalProperties: false
       examples:
         - node_id: 3
@@ -9954,6 +9982,7 @@ components:
         - api_call_log
         - citation
         - file_ref
+        - design_revision
 
     MessagePart:
       title: MessagePart
@@ -9984,6 +10013,7 @@ components:
         - $ref: '#/components/schemas/ApiCallLogPart'
         - $ref: '#/components/schemas/CitationPart'
         - $ref: '#/components/schemas/FileRefPart'
+        - $ref: '#/components/schemas/DesignRevisionPart'
       x-part-type-registry:
         $ref: '#/components/schemas/PartType'
       x-unknown-part-fallback:
@@ -10003,6 +10033,161 @@ components:
           api_call_log: '#/components/schemas/ApiCallLogPart'
           citation: '#/components/schemas/CitationPart'
           file_ref: '#/components/schemas/FileRefPart'
+          design_revision: '#/components/schemas/DesignRevisionPart'
+
+    DesignRevisionPart:
+      type: object
+      title: DesignRevisionPart
+      description: |
+        A revision of the design of a Design Studio session (since `1.0.0-rc.7`,
+        `12-design-studio-files.md`). The files are in the CMS, in the private storage of the design
+        target's devtools package at `files-private/design/<path>`, reachable only through the
+        authenticated package file API; the part only points at them. A revision never changes; a correction is a new revision.
+      required: [type, revision_id, package, path, status]
+      properties:
+        type:
+          type: string
+          const: design_revision
+        revision_id:
+          type: string
+          pattern: '^r[0-9]{4,}-[0-9a-f]{4}$'
+          description: A sequence number and four random hex digits, so concurrent writers never share a directory.
+        previous_revision_id:
+          type: [string, 'null']
+        package:
+          type: string
+          description: The design target's devtools package.
+        path:
+          type: string
+          description: The revision directory under `files-private/design/`, e.g. `revisions/r0004-7f3a`.
+        pages:
+          type: array
+          description: The revision's pages, one per page and language.
+          items:
+            type: object
+            required: [page_key, language, file]
+            properties:
+              page_key:
+                type: string
+              language:
+                type: string
+              file:
+                type: string
+                description: Path relative to the revision directory, e.g. `pages/home.de.html`.
+            additionalProperties: false
+        status:
+          type: string
+          enum: [draft, verified, approved, promoted]
+          description: >-
+            `draft` until the render check passes, `verified` after it, `approved` when the plan is
+            released, `promoted` when the promotion plan has written it to the live node.
+        text:
+          type: string
+          description: Plain rendering for clients that do not know this part.
+      additionalProperties: false
+      examples:
+        - type: design_revision
+          revision_id: r0004-7f3a
+          previous_revision_id: r0003-c21e
+          package: design-umdasch-2026-11
+          path: revisions/r0004-7f3a
+          pages:
+            - { page_key: home, language: de, file: pages/home.de.html }
+            - { page_key: home, language: en, file: pages/home.en.html }
+          status: verified
+          text: Revision r0004-7f3a, verified.
+    DesignTarget:
+      type: object
+      title: DesignTarget
+      description: |
+        Where a Design Studio session works until its design is approved (since `1.0.0-rc.7`,
+        `10-design-studio.md` §3). The client obtains it from the CMS side and sets it when it
+        creates the session; it cannot change afterwards (`409 design_target_immutable`). GenAIx
+        refuses every CMS write of the session's runs outside it, except that an accepted
+        `design_promote` plan may write the live objects its items name. An object the target shares
+        with the live site is copied into the target before it changes. A client never needs to know
+        whether a preview node or a CMS branch backs it.
+      required: [target_id, node_id, package, source_node_id, promotion_mode]
+      properties:
+        target_id:
+          type: string
+          maxLength: 128
+        node_id:
+          type: integer
+          description: The CMS node GenAIx writes to while designing.
+        package:
+          type: string
+          description: The target's devtools package, holding its design files and its constructs and templates.
+        source_node_id:
+          type: integer
+          description: The live node an approved design is promoted to.
+        promotion_mode:
+          type: string
+          enum: [replay, merge]
+          description: >-
+            `replay`: GenAIx merges and replays the approved design onto the live node
+            (`14-design-studio-promotion.md`); `merge`: the CMS merges its branch.
+      additionalProperties: false
+      examples:
+        - target_id: umdasch-2026-11
+          node_id: 41
+          package: design-umdasch-2026-11
+          source_node_id: 3
+          promotion_mode: replay
+    DesignMapping:
+      type: object
+      title: DesignMapping
+      description: |
+        **Not a wire type.** The format of a revision's `mapping.json` in the CMS (since `1.0.0-rc.7`,
+        `12-design-studio-files.md` §3): what each region of each page becomes. Also published as
+        `schemas/design-mapping.schema.json`.
+      required: [revision_id, regions]
+      properties:
+        revision_id:
+          type: string
+        locked_files:
+          type: object
+          description: Hashes of imported files that must stay byte-identical, keyed by path.
+          additionalProperties:
+            type: string
+            pattern: '^sha256:[0-9a-f]{64}$'
+        regions:
+          type: array
+          items:
+            type: object
+            required: [region_id, page_key, selector, kind]
+            properties:
+              region_id:
+                type: string
+                pattern: '^rg-[a-z0-9-]{1,60}$'
+                description: Stable across revisions while the region exists.
+              page_key:
+                type: string
+                description: The page, or `*` for a region shared by every page.
+              selector:
+                type: string
+                description: CSS selector of the region in the page.
+              kind:
+                type: string
+                enum: [static, construct, template, navigation, integration]
+              cms_ref:
+                $ref: '#/components/schemas/ContextReference'
+              proposed_key:
+                type: string
+                description: Keyword of a new object this revision creates.
+              field_bindings:
+                type: object
+                description: Construct part keyword to where its value appears in the region.
+                additionalProperties:
+                  type: string
+              integration:
+                type: string
+              operation:
+                type: string
+              placeholder:
+                type: boolean
+                default: false
+            additionalProperties: true
 
     UnknownPart:
       type: object
@@ -10576,6 +10761,25 @@ components:
           additionalProperties: false
         created_ref:
           $ref: '#/components/schemas/CmsObjectRef'
+        can_create:
+          type: boolean
+          default: true
+          description: >-
+            Whether the session's user may create this construct on its node (since `1.0.0-rc.7`). `false` when
+            GenAIx found the permission missing before trying; GenAIx then never calls `create_construct` for it
+            and offers the module's permission fallback as a `choice` instead.
+        missing_permission:
+          type: object
+          description: Present when `can_create` is `false` (since `1.0.0-rc.7`).
+          required: [permission, node_id]
+          properties:
+            permission:
+              type: string
+              description: The CMS permission the user lacks, e.g. `updateconstructs`.
+              examples: [updateconstructs]
+            node_id:
+              type: integer
+          additionalProperties: false
       additionalProperties: false
       examples:
         - type: construct_draft
@@ -11183,7 +11387,7 @@ components:
           maxLength: 500
         kind:
           type: string
-          enum: [create, update, delete, link, translate, publish, construct, report, other]
+          enum: [create, update, delete, link, translate, publish, construct, template, portal_implementation, report, other]
           description: >-
             Absent keeps the current item's `kind`; on a new step GenAIx chooses one.
         target:
@@ -11304,7 +11508,7 @@ components:
           description: Kinds of object a successful run of this workflow yields.
           items:
             type: string
-            enum: [page, form, construct, guideline, report, user, file, none]
+            enum: [page, form, construct, template, guideline, report, user, file, none]
         plan_approval:
           type: boolean
           default: false
@@ -12102,7 +12306,7 @@ components:
           type: string
         kind:
           type: string
-          enum: [create, update, delete, link, translate, publish, construct, report, other]
+          enum: [create, update, delete, link, translate, publish, construct, template, portal_implementation, report, other]
         workflow:
           type: string
           description: >-
@@ -12183,7 +12387,7 @@ components:
       properties:
         type:
           type: string
-          enum: [folder, page, file, image, construct, form, guideline, user]
+          enum: [folder, page, file, image, construct, template, portal_implementation, form, guideline, user]
         label:
           type: string
           maxLength: 512
@@ -12715,6 +12919,49 @@ components:
 
     # ----------------------------------------------------------- interactions
 
+    ClientAction:
+      type: object
+      title: ClientAction
+      description: |
+        Something the **client** does when the user picks this `choice` option, before it answers the
+        interaction with the option's id (since `1.0.0-rc.7`). GenAIx never performs it and does not check
+        that it happened. The options and their actions come from the workflow module's
+        `permission_fallbacks`, never from the model, so a client can rely on them.
+
+        `create_task`: create a CMS task of `task_type` through the CMS task API, with the option's `ref`
+        as the task's object and the message part at `draft` as its content (for `requestConstruct`, the
+        `construct_draft` part). If the task cannot be created, the client answers with another option or
+        lets the interaction expire.
+
+        A client that does not know an action type shows the option like any other and answers with its id.
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [create_task]
+        task_type:
+          type: string
+          description: The CMS task type for `create_task`.
+          examples: [requestConstruct]
+        draft:
+          type: object
+          description: The message part whose content the task carries.
+          required: [message_id, part_index]
+          properties:
+            message_id:
+              type: string
+              format: uuid
+            part_index:
+              type: integer
+              minimum: 0
+          additionalProperties: false
+      additionalProperties: false
+      examples:
+        - type: create_task
+          task_type: requestConstruct
+          draft:
+            message_id: 6b1f2c9e-4d3a-4c8e-9a51-0f2e7d1b3c44
+            part_index: 1
     InteractionKind:
       type: string
       title: InteractionKind
@@ -12761,6 +13008,8 @@ components:
                   option.
               ref:
                 $ref: '#/components/schemas/ContextReference'
+              action:
+                $ref: '#/components/schemas/ClientAction'
             additionalProperties: false
         multi:
           type: boolean
@@ -13540,7 +13789,7 @@ components:
                 - create_page
             group:
               type: string
-              enum: [identity, search, content_read, content_write, constructs, admin, genaix]
+              enum: [identity, search, content_read, content_write, constructs, forms_read, forms_write, guidelines_read, guidelines_write, admin, design, genaix]
             input_summary:
               type: string
               maxLength: 500
@@ -13735,7 +13984,8 @@ components:
       title: PreviewUpdatedEvent
       description: >-
         Fires after every CMS write that affects the preview, so a client can
-        reload it. Pages only in Phase One.
+        reload it. Pages only in Phase One; since `1.0.0-rc.7` also a template of a
+        Design Studio session, with the `revision_id` it shows.
       allOf:
         - $ref: '#/components/schemas/BaseEvent'
         - type: object
@@ -13757,6 +14007,9 @@ components:
               description: Tag keywords that changed, so the client can highlight them.
               items:
                 type: string
+            revision_id:
+              type: string
+              description: The design revision the preview shows (Design Studio sessions, since `1.0.0-rc.7`).
 
     PublicationsUpdatedEvent:
       title: PublicationsUpdatedEvent

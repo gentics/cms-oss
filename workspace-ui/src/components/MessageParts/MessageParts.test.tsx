@@ -210,6 +210,12 @@ describe('PartRenderer', () => {
         expect(screen.getByRole('link', { name: /page-draft-9142\.json/ })).toHaveAttribute('href', '/rest/proxy/genaix/sessions/s-1/files/f-1/content');
     });
 
+    it('shows a design revision by the UnknownPart rule, as its text (Design Studio not built yet)', () => {
+        renderPart({ type: 'design_revision', revision_id: 'r0004-7f3a', package: 'design-pkg', path: 'revisions/r0004-7f3a', status: 'verified', text: 'Revision r0004-7f3a, verified.' });
+
+        expect(screen.getByText('Revision r0004-7f3a, verified.')).toBeInTheDocument();
+    });
+
     describe('a part type outside the registry (contract `UnknownPart`)', () => {
         it('shows its text', () => {
             renderPart({ type: 'chart_v2', text: 'Three pages changed this week.', series: [1, 2, 3] });

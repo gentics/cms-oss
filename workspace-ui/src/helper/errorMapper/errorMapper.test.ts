@@ -56,6 +56,15 @@ describe('errorMessageKey', () => {
         expect(translation('errors.genaix.plan_not_revisable')).toEqual(expect.any(String));
     });
 
+    it('maps the Design Studio problems (rc.7)', () => {
+        expect(errorMessageKey(genaixError(409, 'design_revision_conflict'))).toBe('errors.genaix.design_revision_conflict');
+        expect(translation('errors.genaix.design_revision_conflict')).toEqual(expect.any(String));
+        expect(errorMessageKey(genaixError(422, 'design_target_required'))).toBe('errors.genaix.design_target_required');
+        expect(translation('errors.genaix.design_target_required')).toEqual(expect.any(String));
+        expect(errorMessageKey(genaixError(409, 'design_target_immutable'))).toBe('errors.genaix.design_target_immutable');
+        expect(translation('errors.genaix.design_target_immutable')).toEqual(expect.any(String));
+    });
+
     it('names a revise message without a plan to revise (rc.5)', () => {
         const problem = {
             type: 'x',

@@ -2,6 +2,7 @@ import { CheckIcon, CircleCheckIcon, CircleQuestionMarkIcon, MessageSquareIcon, 
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ImageReferenceField, type ImageReferenceType } from '@/components/ImageReferenceField/ImageReferenceField';
 import { PartCard } from '@/components/MessageParts/PartCard';
 import { SelectableList } from '@/components/MessageParts/SelectableList';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useAnswerInteraction } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
-import type { Interaction, InteractionAnswer, UserSettingPart } from '@/services/apiService/genaix/types';
+import type { ContextReference, Interaction, InteractionAnswer, UserSettingPart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 
@@ -33,7 +34,20 @@ interface KindProps {
     interaction: Interaction;
     onSubmit: Submit;
     disabled: boolean;
+    sessionId: string;
 }
+
+/** One property of a flat `form` schema (contract `Interaction.schema`: one property, one field). */
+interface SchemaProperty {
+    type?: string;
+    title?: string;
+    description?: string;
+    enum?: unknown[];
+    format?: string;
+    'x-reference-types'?: unknown;
+}
+
+const IMAGE_REFERENCE_TYPES: readonly ImageReferenceType[] = ['image', 'session_file'];
 
 // `ask_user`: free text, at most 4000 characters (contract `TextAnswer`).
 function AskUser({ interaction, onSubmit, disabled }: KindProps) {
@@ -183,12 +197,24 @@ function Confirm({ interaction, onSubmit, disabled }: KindProps) {
     );
 }
 
-/** One property of a flat `form` schema (contract `Interaction.schema`: one property, one field). */
-interface SchemaProperty {
-    type?: string;
-    title?: string;
-    description?: string;
-    enum?: unknown[];
+/**
+ * What a reference field may name, as far as an image picker can offer it; `null` for any other field. A reference
+ * field is `type: 'object'` with `format: 'context-reference'` and the allowed `ContextReference` types in
+ * `x-reference-types`; its value is a `ContextReference` (`FormAnswer.values`).
+ * Contract since `1.0.0-rc.6` (`openapi.yaml`, `Interaction.schema`, "A reference field"); this function and its tests
+ * are the only place that reads the marker. Other reference types still fall through to a text input, which rc.6 rules
+ * out (separate ticket, `TODO-reference-field-types.md`).
+ */
+function referenceTypes(property: SchemaProperty): ImageReferenceType[] | null {
+    const allowed = property['x-reference-types'];
+
+    if (property.type !== 'object' || property.format !== 'context-reference' || !Array.isArray(allowed)) {
+        return null;
+    }
+
+    const types = IMAGE_REFERENCE_TYPES.filter((type) => allowed.includes(type));
+
+    return types.length > 0 ? types : null;
 }
 
 function schemaOf(interaction: Interaction): { properties: [string, SchemaProperty][]; required: string[] } {
@@ -199,13 +225,14 @@ function schemaOf(interaction: Interaction): { properties: [string, SchemaProper
     return { properties: Object.entries(properties), required };
 }
 
-// `form`: one field per property of the flat schema (contract `FormAnswer`); GenAIx validates the values.
-function Form({ interaction, onSubmit, disabled }: KindProps) {
+// `form`: one field per property of the flat schema (contract `FormAnswer`); GenAIx validates the values. A field that
+// asks for an image (`referenceTypes`) is an image picker, its value a reference (`ImageReferenceField`).
+function Form({ interaction, onSubmit, disabled, sessionId }: KindProps) {
     const { t } = useTranslation();
     const { properties, required } = useMemo(() => schemaOf(interaction), [interaction]);
-    const [values, setValues] = useState<Record<string, string | boolean>>({});
+    const [values, setValues] = useState<Record<string, string | boolean | ContextReference | undefined>>({});
 
-    function set(key: string, value: string | boolean) {
+    function set(key: string, value: string | boolean | ContextReference | undefined) {
         setValues((current) => ({ ...current, [key]: value }));
     }
 
@@ -242,6 +269,17 @@ function Form({ interaction, onSubmit, disabled }: KindProps) {
                 const label = property.title || key;
                 const isRequired = required.includes(key);
                 const mark = isRequired ? <span className={styles.required} aria-hidden>*</span> : null;
+                const references = referenceTypes(property);
+
+                if (references) {
+                    return (
+                        <div key={key} className={styles.field}>
+                            <span id={id} className={styles.fieldLabel}>{label}{mark}</span>
+                            <ImageReferenceField sessionId={sessionId} types={references} onChange={(reference) => set(key, reference)} labelledBy={id} disabled={disabled} />
+                            {property.description && <span className={styles.hint}>{property.description}</span>}
+                        </div>
+                    );
+                }
 
                 if (property.type === 'boolean') {
                     return (
@@ -496,7 +534,7 @@ export function InteractionCard({ interaction, sessionId }: { interaction: Inter
             >
                 {/* A settings review is its fields alone; its prompt is not shown. */}
                 {interaction.kind !== 'settings_review' && <p className={styles.prompt}>{interaction.prompt}</p>}
-                <Kind interaction={interaction} onSubmit={submit} disabled={Boolean(lock)} />
+                <Kind interaction={interaction} onSubmit={submit} disabled={Boolean(lock)} sessionId={sessionId} />
             </PartCard>
         </div>
     );

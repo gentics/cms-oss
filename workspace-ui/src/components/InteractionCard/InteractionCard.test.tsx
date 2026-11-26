@@ -361,6 +361,102 @@ describe('InteractionCard', () => {
         expect(await sentAnswer(fetchMock)).toEqual({ values: { login: 'jdoe', age: 42, admin: true } });
     });
 
+    describe('a form field that asks for an image (context-reference reference field, contract 1.0.0-rc.6)', () => {
+        const NODE = { id: 3, name: 'Corporate Website', folderId: 7 };
+        const WORKSHOP = { id: 4411, name: 'team-workshop-2026.jpg', type: 'image' };
+
+        function headerImageForm(property: Record<string, unknown>) {
+            return interaction({
+                kind: 'form',
+                prompt: 'Which header image should the page get?',
+                schema: { type: 'object', required: ['headerImage'], properties: { headerImage: { title: 'Header image', ...property } } },
+            });
+        }
+
+        // The session works in node 3, which has one image; the answer is accepted.
+        function stubSessionCmsAndAnswer() {
+            const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+                const url = new URL(String(input), 'http://app.test');
+
+                if (init?.method === 'POST') {
+                    return Response.json({ id: 'i-1', status: 'answered' });
+                }
+
+                if (url.pathname === '/rest/proxy/genaix/sessions/s-1') {
+                    return Response.json({ id: 's-1', status: 'active', context: { node_id: 3 } });
+                }
+
+                if (url.pathname === '/rest/node') {
+                    return Response.json({ items: [NODE] });
+                }
+
+                if (url.pathname === '/rest/folder/getItems/7') {
+                    return Response.json({ items: [WORKSHOP] });
+                }
+
+                return new Response(null, { status: 404 });
+            });
+
+            vi.stubGlobal('fetch', fetchMock);
+
+            return fetchMock;
+        }
+
+        it('offers an image picker and answers with the picked image as a reference', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubSessionCmsAndAnswer();
+
+            renderCard(headerImageForm({ type: 'object', format: 'context-reference', 'x-reference-types': ['image', 'session_file'] }));
+
+            const send = screen.getByRole('button', { name: 'Send' });
+
+            expect(screen.getByRole('group', { name: /Header image/ })).toBeInTheDocument();
+            expect(screen.queryByRole('textbox', { name: /Header image/ })).not.toBeInTheDocument();
+            expect(send).toBeDisabled();
+
+            await user.click(await screen.findByRole('radio', { name: 'team-workshop-2026.jpg' }));
+            await user.click(send);
+
+            expect(await sentAnswer(fetchMock)).toEqual({
+                values: { headerImage: { type: 'image', id: '4411', node_id: 3, label: 'team-workshop-2026.jpg' } },
+            });
+        });
+
+        it('takes no other image once the answer is sent: the picker is locked with the card', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubSessionCmsAndAnswer();
+
+            renderCard(headerImageForm({ type: 'object', format: 'context-reference', 'x-reference-types': ['image', 'session_file'] }));
+
+            const workshop = await screen.findByRole('radio', { name: 'team-workshop-2026.jpg' });
+
+            expect(workshop).not.toHaveAttribute('aria-disabled', 'true');
+
+            await user.click(workshop);
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+            await sentAnswer(fetchMock);
+
+            await waitFor(() => expect(screen.getByRole('radio', { name: 'team-workshop-2026.jpg' })).toHaveAttribute('aria-disabled', 'true'));
+            expect(screen.getByRole('searchbox', { name: 'Search images' })).toBeDisabled();
+            expect(screen.getByLabelText('Upload image')).toBeDisabled();
+        });
+
+        it('keeps a field without the marker a text field, as GenAIx asks today', () => {
+            stubSessionCmsAndAnswer();
+            renderCard(headerImageForm({ type: 'string' }));
+
+            expect(screen.getByRole('textbox', { name: /Header image/ })).toBeInTheDocument();
+            expect(screen.queryByRole('group', { name: /Header image/ })).not.toBeInTheDocument();
+        });
+
+        it('keeps a reference field for other types a text field (only images are picked here)', () => {
+            stubSessionCmsAndAnswer();
+            renderCard(headerImageForm({ type: 'object', format: 'context-reference', 'x-reference-types': ['page'] }));
+
+            expect(screen.queryByRole('group', { name: /Header image/ })).not.toBeInTheDocument();
+        });
+    });
+
     it('answers an ask_user with the text', async () => {
         const user = userEvent.setup();
         const fetchMock = stubAnswer();

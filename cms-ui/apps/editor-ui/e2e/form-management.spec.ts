@@ -1,5 +1,6 @@
 import {
     AccessControlledType,
+    FormDataListResponse,
     FormSaveRequest,
     GcmsPermission,
     NodeFeature,
@@ -17,6 +18,7 @@ import {
     FOLDER_A,
     FORM_ONE,
     FORM_TWO,
+    FormImportData,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -30,7 +32,9 @@ import {
     LANGUAGE_DE,
     LANGUAGE_EN,
     loginWithForm,
+    matchesUrl,
     matchRequest,
+    mockResponse,
     navigateToApp,
     NODE_FULL,
     NODE_MINIMAL,
@@ -578,6 +582,121 @@ test.describe('Form Management', () => {
         await expect(usageModal).toBeVisible();
         await expect(usageModal.locator('.empty-message')).toBeHidden();
         await expect(usageModal.locator('gtx-item-usage-list .usage-item .item-name')).toHaveText([IMPORTER.get(USING_PAGE).name]);
+    });
+
+    test('should order the report columns like the elements in the form', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20487',
+        }],
+    }, async ({ page }) => {
+        const ELEMENT_IDS = ['firstInput', 'secondInput', 'thirdInput'];
+
+        const REPORT_FORM: FormImportData = {
+            [IMPORT_TYPE]: ITEM_TYPE_FORM,
+            [IMPORT_ID]: `form_${NAMESPACE}_report_order`,
+
+            nodeId: NODE_MINIMAL[IMPORT_ID],
+            folderId: NODE_MINIMAL[IMPORT_ID],
+
+            languages: [LANGUAGE_EN],
+
+            name: 'Report Order Form',
+            description: 'Form for checking the order of the report columns',
+            formType: FORM_TYPE_GENERIC,
+            data: {
+                schema: {
+                    key: '',
+                    version: '',
+                    properties: Object.fromEntries(ELEMENT_IDS.map((id) => [id, { type: 'string' }])),
+                },
+                'ui-schema': {
+                    key: '',
+                    version: '',
+                    pages: [
+                        {
+                            pagename: {
+                                de: 'Beispiel',
+                                en: 'Example',
+                            },
+                            elements: ELEMENT_IDS.map((id) => ({
+                                id,
+                                label: {
+                                    de: id,
+                                    en: id,
+                                },
+                                type: 'property',
+                                uiSchemaPage: 0,
+                                formGridOptions: {
+                                    type: 'string',
+                                    numberOfColumns: 12,
+                                },
+                            })),
+                        },
+                    ],
+                },
+            },
+        };
+
+        await test.step('Create published form', async () => {
+            await IMPORTER.importData([REPORT_FORM]);
+            await IMPORTER.client.form.publish(IMPORTER.get(REPORT_FORM).id).send();
+        });
+
+        const EDITING_FORM = IMPORTER.get(REPORT_FORM);
+        const ENTRY_UUID = 'e2e-report-entry';
+
+        // The form data comes from Mesh, whose element order is unrelated to the form definition.
+        // Deliberately deliver the elements in a different order than defined in the form.
+        await page.route((url) => matchesUrl(url, `/rest/form/${EDITING_FORM.id}/data`), mockResponse<FormDataListResponse>('GET', {
+            totalCount: 1,
+            currentPage: 1,
+            pageCount: 1,
+            perPage: 15,
+            elements: Object.fromEntries([ELEMENT_IDS[2], ELEMENT_IDS[0], ELEMENT_IDS[1]].map((id) => [id, {
+                active: true,
+                elements: [],
+                globalId: id,
+                mandatory: false,
+                multivalue: false,
+                type: 'string',
+            }])),
+            entries: [{
+                uuid: ENTRY_UUID,
+                fields: Object.fromEntries(ELEMENT_IDS.map((id) => [id, `value of ${id}`])),
+            }],
+        }));
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, EDITING_FORM.id);
+        await itemAction(item, 'properties');
+
+        const dataReq = page.waitForResponse(matchRequest('GET', `/rest/form/${EDITING_FORM.id}/data`));
+        await page.locator('content-frame combined-properties-editor .properties-tabs .tab-link[data-id="item-reports"]').click();
+        await dataReq;
+
+        const table = page.locator('form-reports-list gtx-table.reports-table');
+        const headerCells = table.locator('.header-row .grid-cell.data-column');
+        const rowCells = table.locator(`.grid-row.data-row[data-id="${ENTRY_UUID}"] .grid-cell.data-column`);
+
+        await expect(headerCells).toHaveCount(ELEMENT_IDS.length);
+        for (let i = 0; i < ELEMENT_IDS.length; i++) {
+            await expect(headerCells.nth(i)).toHaveAttribute('data-id', ELEMENT_IDS[i]);
+            await expect(headerCells.nth(i)).toHaveText(ELEMENT_IDS[i]);
+            await expect(rowCells.nth(i)).toHaveText(`value of ${ELEMENT_IDS[i]}`);
+        }
     });
 
     test('should be possible to toggle display of deleted items', {

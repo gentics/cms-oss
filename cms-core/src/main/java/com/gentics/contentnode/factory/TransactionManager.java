@@ -113,6 +113,14 @@ public final class TransactionManager {
 	}
 
 	/**
+	 * Get the transaction statistics (also exposed as JMX Bean)
+	 * @return optional transaction statistics, empty if the JMX Bean could not be created
+	 */
+	public static Optional<TransactionInfoMBean> getTransactionInfo() {
+		return Optional.ofNullable(transactionInfoMBean);
+	}
+
+	/**
 	 * Get the current (tread-local) transaction or null if none found
 	 * @return current transaction or null
 	 */
@@ -2423,19 +2431,19 @@ public final class TransactionManager {
 	 */
 	protected static class TransactionInfo extends StandardMBean implements TransactionInfoMBean {
 		/**
-		 * Total Transactions
+		 * Total Transactions. Modified while synchronized on {@link TransactionManager#openTransactions}, volatile for readers (JMX, metrics)
 		 */
-		private long total = 0;
+		private volatile long total = 0;
 
 		/**
 		 * Open Transactions
 		 */
-		private int open = 0;
+		private volatile int open = 0;
 
 		/**
 		 * Maximum number of open transactions
 		 */
-		private int maxOpen = 0;
+		private volatile int maxOpen = 0;
 
 		public TransactionInfo() throws NotCompliantMBeanException {
 			super(TransactionInfoMBean.class);

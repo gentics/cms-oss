@@ -241,7 +241,23 @@ public enum ConfigurationValue {
 	 * {@code whoami} returns as {@code cms.baseUrl}, so that a client can make the CMS's relative URLs absolute. Empty
 	 * (the default) omits it.
 	 */
-	MCP_BASE_URL("MCP_BASE_URL", "com.gentics.contentnode.mcp.baseUrl", "mcp.base_url", () -> "")
+	MCP_BASE_URL("MCP_BASE_URL", "com.gentics.contentnode.mcp.baseUrl", "mcp.base_url", () -> ""),
+
+	/**
+	 * Whether metrics shall be collected and served on the metrics port (see {@link #METRICS_HOST} and {@link #METRICS_PORT}).
+	 * Disabled (i.e. {@code false}) by default.
+	 */
+	METRICS_ENABLED("METRICS_ENABLED", "com.gentics.contentnode.metrics.enabled", "metrics.enabled", () -> "false"),
+
+	/**
+	 * Host (interface) the metrics server binds to. Defaults to {@code 127.0.0.1}, which makes the metrics only available locally.
+	 */
+	METRICS_HOST("METRICS_HOST", "com.gentics.contentnode.metrics.host", "metrics.host", () -> "127.0.0.1"),
+
+	/**
+	 * Port of the metrics server
+	 */
+	METRICS_PORT("METRICS_PORT", "com.gentics.contentnode.metrics.port", "metrics.port", () -> "8081")
 
 	;
 

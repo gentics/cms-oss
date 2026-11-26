@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +21,9 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.gentics.contentnode.rest.model.formtype.BaseSetting;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
+import com.gentics.contentnode.rest.model.formtype.OptionsSetting;
 import com.gentics.contentnode.rest.model.formtype.SelectSetting;
+import com.gentics.contentnode.rest.model.formtype.TranslationSetting;
 
 /**
  * Names, completes and checks a form's definition ({@code data}) against its form type, before create_form and
@@ -161,6 +164,9 @@ final class FormDefinitions {
 
 		JsonNode pages = data.path(UI_SCHEMA).path("pages");
 		for (int i = 0; i < pages.size(); i++) {
+			if (!pages.get(i).path("pagename").isObject()) {
+				reasons.add("page %d has no pagename (an object of language code to text)".formatted(i));
+			}
 			checkTexts(pages.get(i), "pagename", "page %d".formatted(i), languages, reasons);
 		}
 
@@ -181,7 +187,7 @@ final class FormDefinitions {
 				if (property == null) {
 					reasons.add("%s is a control without a schema property of the same name".formatted(where));
 				}
-				checkSelects(controls.get(gridType), property, where, reasons);
+				checkSettings(controls.get(gridType), property, element, where, languages, reasons);
 			} else if (!blocks.containsKey(gridType)) {
 				reasons.add("%s has formGridOptions.type '%s', which is neither a control nor a block of the form type"
 						.formatted(where, gridType));
@@ -209,42 +215,131 @@ final class FormDefinitions {
 		if (texts == null || texts.isNull()) {
 			return;
 		}
+		checkTextObject(texts, "%s: %s".formatted(where, field), languages, reasons);
+	}
+
+	/**
+	 * Check that a text object has a text for every language
+	 * @param texts text object
+	 * @param what description of the text object for a reason
+	 * @param languages languages
+	 * @param reasons reasons
+	 */
+	private static void checkTextObject(JsonNode texts, String what, List<String> languages, List<String> reasons) {
 		if (!texts.isObject()) {
-			reasons.add("%s: %s must be an object of language code to text".formatted(where, field));
+			reasons.add("%s must be an object of language code to text".formatted(what));
 			return;
 		}
 		for (String language : languages) {
 			if (texts.path(language).asText("").isBlank()) {
-				reasons.add("%s: %s has no text for language '%s'".formatted(where, field, language));
+				reasons.add("%s has no text for language '%s'".formatted(what, language));
 			}
 		}
 	}
 
 	/**
-	 * Check the values of a control's select settings against their options. A setting's value is read in the
-	 * control's schema property, at its propertyPath when given, else at its id; a value elsewhere is not checked.
-	 * @param config control configuration
-	 * @param property schema property, may be null
-	 * @param where description of the element for a reason
+	 * Check an options setting's value: a list of {value, label}, value a non-blank text, label a text object
+	 * @param options value of the setting
+	 * @param what description of the setting for a reason
+	 * @param languages languages
 	 * @param reasons reasons
 	 */
-	private static void checkSelects(ElementConfig config, JsonNode property, String where, List<String> reasons) {
+	private static void checkOptions(JsonNode options, String what, List<String> languages, List<String> reasons) {
+		if (!options.isArray()) {
+			reasons.add("%s must be a list of options {value, label}".formatted(what));
+			return;
+		}
+		for (int i = 0; i < options.size(); i++) {
+			JsonNode option = options.get(i);
+			String which = "%s, option %d".formatted(what, i);
+			if (!option.path("value").isTextual() || option.path("value").asText().isBlank()) {
+				reasons.add("%s needs a value (the text stored on submission)".formatted(which));
+			}
+			if (!option.has("label")) {
+				reasons.add("%s needs a label (an object of language code to text)".formatted(which));
+			} else {
+				checkTextObject(option.get("label"), "%s: label".formatted(which), languages, reasons);
+			}
+		}
+	}
+
+	/**
+	 * Where the form editor keeps a setting's value: at its propertyPath, else at formGridOptions.&lt;id&gt;, in the
+	 * control's schema property when the setting is a backend setting, else in its ui-schema element
+	 * @param setting setting
+	 * @return root ("schema property" or "ui-schema element") and path segments, null when the path is unusable
+	 */
+	private static Pair<Boolean, List<String>> place(BaseSetting setting) {
+		String path = StringUtils.isNotBlank(setting.propertyPath) ? setting.propertyPath : "formGridOptions." + setting.id;
+		if (setting.id == null || !path.matches("[\\w-]+(\\.[\\w-]+)*")) {
+			return null;
+		}
+		return Pair.of(setting.backend, List.of(path.split("\\.")));
+	}
+
+	private static JsonNode at(JsonNode root, List<String> path) {
+		JsonNode value = root;
+		for (String segment : path) {
+			value = value.path(segment);
+		}
+		return value;
+	}
+
+	private static String describe(boolean backend, List<String> path) {
+		return "%s.%s".formatted(backend ? "the schema property" : "the ui-schema element", String.join(".", path));
+	}
+
+	/**
+	 * Check a control's settings as the form editor stores them: each value in its place (see {@link #place}),
+	 * options as a list of {value, label} with a label for every language, translations with a text for every
+	 * language, and select values among their options
+	 * @param config control configuration
+	 * @param property schema property, may be null
+	 * @param element ui-schema element
+	 * @param where description of the element for a reason
+	 * @param languages the form's languages
+	 * @param reasons reasons
+	 */
+	private static void checkSettings(ElementConfig config, JsonNode property, JsonNode element, String where,
+			List<String> languages, List<String> reasons) {
 		if (config == null || config.settings == null || property == null) {
 			return;
 		}
 		for (BaseSetting setting : config.settings) {
-			if (!(setting instanceof SelectSetting select) || select.options == null) {
+			Pair<Boolean, List<String>> place = place(setting);
+			if (place == null) {
 				continue;
 			}
-			String path = StringUtils.defaultIfBlank(setting.propertyPath, setting.id);
-			if (path == null || !path.matches("[\\w-]+(\\.[\\w-]+)*")) {
-				continue;
+			boolean backend = place.getLeft();
+			List<String> path = place.getRight();
+			for (Pair<Boolean, List<String>> wrong : List.of(Pair.of(true, List.of(setting.id)),
+					Pair.of(true, List.of("formGridOptions", setting.id)), Pair.of(false, List.of(setting.id)),
+					Pair.of(false, List.of("formGridOptions", setting.id)))) {
+				// the place itself, or an object on its way (validation for validation.regexValidation)
+				List<String> other = wrong.getRight();
+				if (wrong.getLeft() == backend && other.size() <= path.size()
+						&& path.subList(0, other.size()).equals(other)) {
+					continue;
+				}
+				JsonNode misplaced = at(wrong.getLeft() ? property : element, wrong.getRight());
+				if (!misplaced.isMissingNode() && !misplaced.isNull()) {
+					reasons.add("%s: setting '%s' is at %s, but belongs at %s".formatted(where, setting.id,
+							describe(wrong.getLeft(), wrong.getRight()), describe(backend, path)));
+				}
 			}
-			JsonNode value = property;
-			for (String segment : path.split("\\.")) {
-				value = value.path(segment);
-			}
+			JsonNode value = at(backend ? property : element, path);
 			if (value.isMissingNode() || value.isNull()) {
+				continue;
+			}
+			if (setting instanceof OptionsSetting) {
+				checkOptions(value, "%s: setting '%s'".formatted(where, setting.id), languages, reasons);
+				continue;
+			}
+			if (setting instanceof TranslationSetting) {
+				checkTextObject(value, "%s: setting '%s'".formatted(where, setting.id), languages, reasons);
+				continue;
+			}
+			if (!(setting instanceof SelectSetting select) || select.options == null) {
 				continue;
 			}
 			List<JsonNode> values = new ArrayList<>();

@@ -29,6 +29,7 @@ import com.gentics.contentnode.rest.model.formtype.Blocks;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
+import com.gentics.contentnode.rest.model.formtype.OptionsSetting;
 import com.gentics.contentnode.rest.model.formtype.SelectOption;
 import com.gentics.contentnode.rest.model.formtype.SelectSetting;
 
@@ -163,13 +164,15 @@ public class FormToolsTest {
 		JsonNode given = json("""
 				{"flowId": "default",
 				 "schema": {"key": "k", "version": "1.0", "properties": {"string_1": {"name": "string_1", "type": "string"},
-				   "new:c": {"name": "new:c", "type": "choice", "size": "small",
-				     "validation": {"regexValidation": {"key": "email", "regex": ".+@.+"}}}}},
-				 "ui-schema": {"key": "k", "version": "1.0", "pages": [{"elements": [
+				   "new:c": {"name": "new:c", "type": "choice",
+				     "validation": {"regexValidation": {"key": "email", "regex": ".+@.+"}},
+				     "formGridOptions": {"selectOptions": [{"value": "a", "label": {"de": "A"}}]}}}},
+				 "ui-schema": {"key": "k", "version": "1.0", "pages": [{"pagename": {"de": "Seite"}, "elements": [
 				   {"type": "property", "id": "string_1", "label": {"de": "Frage"}, "formGridOptions": {"type": "string"}},
-				   {"type": "property", "id": "new:c", "formGridOptions": {"type": "choice", "size": "huge"}}]}]}}
+				   {"type": "property", "id": "new:c", "formGridOptions": {"type": "choice", "size": "small"}}]}]}}
 				""");
 		JsonNode data = FormDefinitions.prepare(given, type(), List.of("de"));
+		assertThat(data.at("/ui-schema/pages/0/elements/1/formGridOptions/size").asText()).isEqualTo("small");
 
 		assertThat(data.at("/schema/properties/string_1/name").asText()).isEqualTo("string_1");
 		assertThat(data.at("/ui-schema/pages/0/elements/0/id").asText()).isEqualTo("string_1");
@@ -185,15 +188,20 @@ public class FormToolsTest {
 				   "string_1": {"name": "string_1", "type": "string"},
 				   "orphan_1": {"name": "orphan_1", "type": "string"},
 				   "odd_1": {"name": "odd_1", "type": "slider"},
-				   "choice_1": {"name": "choice_1", "type": "choice", "size": "huge",
-				     "validation": {"regexValidation": {"key": "email", "regex": ".*"}}},
+				   "choice_1": {"name": "choice_1", "type": "choice", "size": "small",
+				     "validation": {"regexValidation": {"key": "email", "regex": ".*"}},
+				     "selectOptions": [{"key": "a", "value": "A"}]},
+				   "choice_2": {"name": "choice_2", "type": "choice",
+				     "formGridOptions": {"selectOptions": [{"key": "a"}, {"value": "b", "label": {"de": "B"}}]}},
 				   "new:lost": {"name": "new:lost", "type": "string"}}},
 				 "ui-schema": {"pages": [{"pagename": {"de": "Allgemein"}, "elements": [
 				   {"type": "property", "id": "string_1", "label": {"de": "Frage"}, "formGridOptions": {"type": "string"}},
 				   {"type": "property", "id": "missing_1", "formGridOptions": {"type": "string"}},
 				   {"type": "property", "id": "odd_1", "formGridOptions": {"type": "slider"}},
 				   {"type": "property", "id": "choice_1", "formGridOptions": {"type": "choice", "size": "huge"}},
-				   {"type": "property", "id": "new:untyped"}]}]}}
+				   {"type": "property", "id": "new:untyped"}]},
+				   {"Request": {"de": "Anfrage"}, "elements": [
+				   {"type": "property", "id": "choice_2", "formGridOptions": {"type": "choice"}}]}]}}
 				""");
 
 		assertThatThrownBy(() -> FormDefinitions.prepare(given, type(), List.of("de", "en")))
@@ -208,14 +216,25 @@ public class FormToolsTest {
 				.hasMessageContaining("page 0: pagename has no text for language 'en'")
 				.hasMessageContaining("element 'choice_1': setting 'size' has the value \"huge\", which is not one")
 				.hasMessageContaining("element 'choice_1': setting 'validation' has the value")
+				.hasMessageContaining("element 'choice_1': setting 'size' is at the schema property.size, but belongs at "
+						+ "the ui-schema element.formGridOptions.size")
+				.hasMessageContaining("element 'choice_1': setting 'selectOptions' is at the schema property.selectOptions, "
+						+ "but belongs at the schema property.formGridOptions.selectOptions")
+				.hasMessageContaining("element 'choice_2': setting 'selectOptions', option 0 needs a value")
+				.hasMessageContaining("element 'choice_2': setting 'selectOptions', option 0 needs a label")
+				.hasMessageContaining("element 'choice_2': setting 'selectOptions', option 1: label has no text for "
+						+ "language 'en'")
+				.hasMessageContaining("page 1 has no pagename")
 				.satisfies(e -> assertThat(Problem.of("create_form", e).type()).endsWith("/invalid-data"));
 		assertThatThrownBy(() -> FormDefinitions.prepare(json("{\"schema\": {}}"), type(), List.of("de")))
 				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("schema and ui-schema");
 	}
 
 	/**
-	 * Build a form type with the controls string and choice (select settings size, stored at its id, and
-	 * validation, stored at validation.regexValidation with object values) and the container block box
+	 * Build a form type with the controls string and choice (the frontend select setting size, kept in the ui-schema
+	 * element's formGridOptions; the backend select setting validation, kept in the schema property at
+	 * validation.regexValidation with object values; the backend options setting selectOptions, kept in the schema
+	 * property's formGridOptions) and the container block box
 	 * @return form type
 	 */
 	private static FormTypeConfigurationModel type() {
@@ -223,9 +242,12 @@ public class FormToolsTest {
 		SelectSetting validation = new SelectSetting("validation", Map.of("en", "Validation"), List.of(
 				new SelectOption(Map.of("key", "email", "regex", ".+@.+"), Map.of("en", "E-mail"))));
 		validation.propertyPath = "validation.regexValidation";
+		validation.backend = true;
+		OptionsSetting options = new OptionsSetting("selectOptions", Map.of("en", "Options"));
+		options.backend = true;
 		choice.settings = List.of(new SelectSetting("size", Map.of("en", "Size"),
 				List.of(new SelectOption("small", Map.of("en", "Small")), new SelectOption("large", Map.of("en", "Large")))),
-				validation);
+				validation, options);
 		BlockConfig box = new BlockConfig(Map.of("en", "Box"));
 		box.container = true;
 

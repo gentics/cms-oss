@@ -212,8 +212,8 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
                 this.pageSize.set(res.perPage);
 
                 // We only want to create the columns once on the first load.
-                if (this.columns().length === 0 && Object.keys(res.elements).length > 0) {
-                    this.createColumns(res.elements);
+                if (this.columns().length === 0) {
+                    this.createColumns();
                 }
 
                 const items = res.entries.map((entry) => this.mapToDisplayItem(entry));
@@ -240,10 +240,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         }));
     }
 
-    protected createColumns(elements: Record<string, FormDataListElement>): void {
-        const cols: TableColumn<DisplayItem>[] = Object.entries(elements).map(([id, el]) => {
-            const formEl = this.formElementMap.get(id);
-            const controlConf = this.formConfig().controls[el.type];
+    protected createColumns(): void {
+        const cols: TableColumn<DisplayItem>[] = Array.from(this.formElementMap.entries()).map(([id, formEl]) => {
+            const controlConf = this.formConfig().controls[formEl.type];
             const labelObj = formEl?.label ?? controlConf?.labelI18n;
 
             if (!labelObj) {
@@ -256,7 +255,6 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
                 fieldPath: ['values', id],
             };
         });
-
         this.columns.set(cols);
     }
 

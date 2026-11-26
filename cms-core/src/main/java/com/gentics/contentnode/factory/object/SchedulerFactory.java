@@ -90,6 +90,8 @@ import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.mail.MailSender;
 import com.gentics.lib.util.FileUtil;
 
+import io.opentelemetry.context.Context;
+
 /**
  * Factory for scheduler tasks, schedules and executions
  */
@@ -616,7 +618,9 @@ public class SchedulerFactory extends AbstractFactory {
 			return false;
 		}
 
-		executor.execute(() -> {
+		// the execution must not be part of the trace of the current request (which started the execution),
+		// so it is executed with the root context
+		executor.execute(Context.root().wrap(() -> {
 			Integer scheduleId = schedule.getId();
 			boolean useExecutionQueue = !schedule.isParallel();
 
@@ -716,7 +720,7 @@ public class SchedulerFactory extends AbstractFactory {
 					sendFailureEmails(recipients, schedule, execution.setLog(String.join("\n", output)), resultStatus, config);
 				}
 			}
-		});
+		}));
 
 		return true;
 	}

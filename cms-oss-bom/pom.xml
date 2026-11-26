@@ -272,6 +272,11 @@
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.cms-oss</groupId>
+				<artifactId>cms-otel-extension</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-core</artifactId>
 				<version>${project.version}</version>
 				<type>test-jar</type>

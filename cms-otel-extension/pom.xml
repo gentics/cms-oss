@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.gentics</groupId>
+		<artifactId>cms-oss</artifactId>
+		<version>9.0.0-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.gentics.cms-oss</groupId>
+	<artifactId>cms-otel-extension</artifactId>
+
+	<organization>
+		<name>Gentics Software GmbH</name>
+		<url>http://www.gentics.com/</url>
+	</organization>
+
+	<name>Gentics CMS - OpenTelemetry Extension</name>
+	<description>Extension for the OpenTelemetry Java agent, which restricts the traces of the CMS to the requests to the REST API and the GenticsImageStore</description>
+	<url>http://www.gentics.com</url>
+
+	<properties>
+		<!-- These tests do not use a database -->
+		<testdb.docker.skip>true</testdb.docker.skip>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.gentics.cms-oss</groupId>
+				<artifactId>cms-oss-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Provided by the OpenTelemetry Java agent -->
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-sdk</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-sdk-extension-autoconfigure-spi</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

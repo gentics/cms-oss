@@ -37,6 +37,7 @@
 		<module>cms-ui</module>
 		<module>workspace-ui</module>
 		<module>cms-cache</module>
+		<module>cms-otel-extension</module>
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>

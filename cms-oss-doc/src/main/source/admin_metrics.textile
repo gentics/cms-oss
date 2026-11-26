@@ -52,3 +52,16 @@ h3. OpenTelemetry
 When the CMS is started with the "OpenTelemetry Java agent":https://opentelemetry.io/docs/zero-code/java/agent/ (which is contained in the docker image at @/cms/opentelemetry-javaagent.jar@), the CMS specific metrics (all metrics starting with @cms_@) are additionally forwarded to the agent, which sends them to the configured OTLP endpoint (see the "configuration of the agent":https://opentelemetry.io/docs/zero-code/java/agent/configuration/).
 
 The Helm chart of the CMS configures the agent with the @otel@ settings.
+
+h3. Tracing
+
+When the CMS is started with the OpenTelemetry Java agent, the agent also sends traces. The docker images contain the agent extension @/cms/opentelemetry-cms-extension.jar@ and set the environment variables @OTEL_JAVAAGENT_EXTENSIONS=/cms/opentelemetry-cms-extension.jar@ and @OTEL_TRACES_SAMPLER=gentics_cms_rest@, which restrict the traces to the requests to the REST API (@/rest/*@) and the GenticsImageStore (@/GenticsImageStore/*@):
+
+* The trace of a request contains all work done for the request (e.g. database statements, requests to Gentics Mesh). This includes jobs, which are continued in the background, because they took too long. Those jobs have the span @Operator job@ with the attributes @cms.job.description@ and @cms.job.background@ (@true@, when the job was continued in the background).
+* Requests to @/rest/info/maintenance@ (used as readiness probe), requests to other paths and all work, which is not done for a request (e.g. the publish process, scheduler tasks, background jobs of the CMS), are not traced.
+* The span of an authenticated request to the REST API has the attributes @user.id@ (ID) and @user.name@ (login) of the user.
+* The response of a traced request to the REST API contains the ID of the trace in the header @X-Trace-Id@.
+
+NOTE: The traces contain the logins of the users.
+
+To trace everything (the default of the agent), set the environment variable @OTEL_TRACES_SAMPLER@ to @parentbased_always_on@.

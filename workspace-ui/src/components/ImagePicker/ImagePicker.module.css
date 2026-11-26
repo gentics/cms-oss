@@ -26,7 +26,6 @@
 .tile {
   position: relative;
   display: block;
-  max-height: 80px;
   aspect-ratio: 16 / 10;
   border: 2px solid transparent;
   border-radius: var(--corner-lg);
@@ -44,6 +43,27 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: var(--corner-md);
+}
+
+/* An uploaded file that is no image: its icon and name in place of a picture. */
+.fileTile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 8px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.fileName {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tileControl {

@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -159,5 +159,97 @@ describe('ImagePicker', () => {
             expect(onValueChange).not.toHaveBeenCalled();
             expect(screen.queryByRole('radio', { name: /terms|large/ })).not.toBeInTheDocument();
         });
+
+        it('offers only the upload without a node: no search, no image search, no status line', async () => {
+            const user = userEvent.setup();
+            const hero = new File(['png'], 'hero.png', { type: 'image/png' });
+            const fetchMock = stubCms();
+            const onValueChange = vi.fn();
+            const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+            render(<ImagePicker value={null} onValueChange={onValueChange} />, { wrapper: Wrapper });
+
+            expect(screen.queryByRole('searchbox', { name: 'Search images' })).not.toBeInTheDocument();
+            expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+            await user.upload(screen.getByLabelText('Upload image'), hero);
+
+            expect(onValueChange).toHaveBeenCalledWith(hero);
+            expect(fetchMock.mock.calls.map(([input]) => String(input)).filter((url) => url.includes('/rest/folder/'))).toEqual([]);
+        });
+    });
+
+    it('offers no upload where only the node\'s images may be picked', async () => {
+        stubCms();
+        const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+        render(<ImagePicker nodeId={3} canUpload={false} value={null} onValueChange={vi.fn()} />, { wrapper: Wrapper });
+
+        expect(await screen.findByRole('radio', { name: 'team-workshop-2026.jpg' })).toBeInTheDocument();
+        expect(screen.queryByLabelText('Upload image')).not.toBeInTheDocument();
+    });
+
+    it('asks the CMS nothing without a node, not even for its nodes', async () => {
+        // Fake timers, so the check runs only after every delay the picker could wait for has passed.
+        vi.useFakeTimers();
+
+        try {
+            const fetchMock = stubCms();
+            const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+            render(<ImagePicker value={null} onValueChange={vi.fn()} />, { wrapper: Wrapper });
+
+            // Past the search's debounce (250 ms) and TanStack Query's scheduling.
+            await act(() => vi.advanceTimersByTimeAsync(2_000));
+
+            expect(screen.getByLabelText('Upload image')).toBeInTheDocument();
+            expect(fetchMock).not.toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('makes no object URL for an uploaded file that is no image, since its tile shows only the name', async () => {
+        const user = userEvent.setup();
+        const createObjectURL = vi.fn(() => 'blob:terms');
+        const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+        vi.stubGlobal('URL', Object.assign(class extends URL {}, { createObjectURL, revokeObjectURL: vi.fn() }));
+        stubCms();
+        render(<ImagePicker imagesOnly={false} value={null} onValueChange={vi.fn()} />, { wrapper: Wrapper });
+
+        await user.upload(screen.getByLabelText('Upload file'), new File(['pdf'], 'terms.pdf', { type: 'application/pdf' }));
+
+        expect(screen.getByRole('radio', { name: 'terms.pdf' })).toBeInTheDocument();
+        expect(createObjectURL).not.toHaveBeenCalled();
+    });
+
+    it('takes any file a session upload takes where not only images may be picked, shown by its name', async () => {
+        const user = userEvent.setup();
+        const terms = new File(['pdf'], 'terms.pdf', { type: 'application/pdf' });
+        const onValueChange = vi.fn();
+        const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+        vi.stubGlobal('URL', Object.assign(class extends URL {}, { createObjectURL: vi.fn(() => 'blob:terms'), revokeObjectURL: vi.fn() }));
+        stubCms();
+        render(<ImagePicker imagesOnly={false} value={null} onValueChange={onValueChange} />, { wrapper: Wrapper });
+
+        await user.upload(screen.getByLabelText('Upload file'), terms);
+
+        expect(onValueChange).toHaveBeenCalledWith(terms);
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: 'terms.pdf' })).toBeInTheDocument();
+        expect(screen.queryByRole('img', { name: 'terms.pdf' })).not.toBeInTheDocument();
+    });
+
+    it('takes no choice while disabled: search, tiles and upload', async () => {
+        stubCms();
+        const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+        render(<ImagePicker nodeId={3} disabled value={null} onValueChange={vi.fn()} />, { wrapper: Wrapper });
+
+        expect(await screen.findByRole('radio', { name: 'team-workshop-2026.jpg' })).toHaveAttribute('aria-disabled', 'true');
+        expect(screen.getByRole('searchbox', { name: 'Search images' })).toBeDisabled();
+        expect(screen.getByLabelText('Upload image')).toBeDisabled();
     });
 });

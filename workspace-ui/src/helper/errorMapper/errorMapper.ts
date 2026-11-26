@@ -44,6 +44,9 @@ const GENAIX_CODES: Record<GenaixCode, true> = {
     model_rate_limited: true,
     rate_limited: true,
     service_unavailable: true,
+    design_target_required: true,
+    design_target_immutable: true,
+    design_revision_conflict: true,
 };
 
 const CMS_RESPONSE_CODES: Record<CmsResponseCode, true> = {

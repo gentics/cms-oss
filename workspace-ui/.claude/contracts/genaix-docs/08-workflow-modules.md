@@ -376,6 +376,7 @@ example above; the constraints worth stating in prose are:
 | `quality_gates[]` | `{id, label, kind, blocking, when}` required; `steps`, `inputs`, `timeout_seconds` (1-600), `retries` (0-2), `on_error`, `allow_mcp`, `source`, `description` optional |
 | `quality_gates[].kind` | `script`, `subagent`, `prompt`, `human` |
 | `quality_gates[].when` | one or more of `step_end`, `before_release`, `before_publish`. The catalogue publishes every trigger as `QualityGate.triggers[]` and the first one as `when` / `step_id` (`1.0.0-rc.2`) |
+| `permission_fallbacks[]` | `{tool, permission, prompt, options}` (`1.0.0-rc.7`). When a plan item needs `tool` and the session's user lacks `permission` on the item's node, the harness does not call the tool and asks a `choice` built from this entry (`03-genaix-api.md` §9.2). `prompt`, and each option's `label` and `reason`, are maps keyed by language code with `en` required, served in the session language. Options are `{id, label, reason, recommended, action}`; `action` is `{type: create_task, task_type}` and is served as the option's `ClientAction`, to which GenAIx adds `draft` and the option's `ref`. The module owns these texts and options; the model never composes them. Harness only, not served in the catalogue |
 
 Two constraints are enforced by the schema rather than by convention: a `prompt` gate cannot be
 blocking, because the model's own word is never a gate, and a gate triggered on `step_end` must name
@@ -668,13 +669,21 @@ unanswered interaction does, with no write having happened.
 Since `1.0.0-rc.4` every piece of work a module does is a **plan** with its own lifecycle
 (`PlanStatus`), living since `1.0.0-rc.5`:
 
-```
-drafting ─► proposed ─► accepted ─► running ─► done ─► released ─► published / review_requested
-              ▲  │          │          │        │        │              │
-              │  └ adjust   └── redirect ──┘    │        │              │
-              │                                 │        │              │
-              └─────── revise (version + 1, finished items kept) ───────┘
-any open status ─────────────────────────────────────────────► discarded
+```mermaid
+stateDiagram-v2
+    [*] --> drafting
+    drafting --> proposed: proposing run ends
+    proposed --> accepted: user accepts or adjusts
+    accepted --> running
+    running --> done: items finished
+    done --> released: release
+    released --> published: publish
+    released --> review_requested: request_review
+    proposed --> superseded: unrelated work instead
+    note right of drafting
+        A revision or a redirect comes back here at version + 1
+        and keeps the finished items. Any open status can be discarded.
+    end note
 ```
 
 Open is `drafting` to `released`; executing is `accepted` and `running`; settled is `published`
@@ -971,6 +980,22 @@ administration scenario being the case in this release.
 
 ### 7.2 Triggers, ordering and budget
 
+```mermaid
+flowchart TD
+    RUN@{ icon: "mdi:play-circle-outline", form: "rounded", label: "Execute run: a step finishes" }
+    SE{{"step_end gates<br/>of that step"}}
+    DONE(["Plan done"])
+    BR{{"before_release gates"}}
+    REL(["released"])
+    BP{{"before_publish gates"}}
+    PUB(["published or<br/>review_requested"])
+    RUN --> SE --> DONE
+    DONE -->|"user: release"| BR --> REL
+    REL -->|"user: publish or request_review"| BP --> PUB
+    BR -.->|"blocking fail"| DONE
+    BP -.->|"blocking fail"| REL
+```
+
 `when` takes `step_end`, `before_release` and `before_publish`. `before_publish` covers both the
 `publish` and `request_review` transitions of a plan, since both cross the same line from draft to
 something a reader or reviewer sees.
@@ -1206,6 +1231,34 @@ is §5.2 of the same document, with the interaction it describes recorded as the
 acknowledgement path. `preview_renders` catches what a compile cannot, a template that compiles and
 renders nothing useful.
 
+Since `1.0.0-rc.7` `construct_create` declares a `permission_fallbacks` entry for `create_construct`
+and `updateconstructs`: a user who may not create constructs on the node gets the validated draft
+with `can_create: false` and the choice `request_construct` (a `create_task` action of type
+`requestConstruct`, performed by the client) or `continue_without`, instead of a confirmation that
+then fails (`03-genaix-api.md` §9.2):
+
+```yaml
+permission_fallbacks:
+  - tool: create_construct
+    permission: updateconstructs
+    prompt:
+      en: "There is no matching construct, and you may not create one. How should I continue?"
+      de: "Es gibt keinen passenden Baustein, und Sie dürfen keine Bausteine anlegen. Wie soll ich weitermachen?"
+    options:
+      - id: request_construct
+        label: { en: "Request a construct", de: "Baustein beantragen" }
+        reason:
+          en: "A Chief Content Creator creates it; the page can use it afterwards."
+          de: "Ein Chief Content Creator legt ihn an; die Seite kann ihn danach verwenden."
+        recommended: true
+        action: { type: create_task, task_type: requestConstruct }
+      - id: continue_without
+        label: { en: "Continue without a new construct", de: "Ohne neuen Baustein fortfahren" }
+        reason:
+          en: "I use the existing constructs instead."
+          de: "Ich verwende stattdessen die vorhandenen Bausteine."
+```
+
 `construct_create` keeps `plan_approval: false`, so since `1.0.0-rc.4` it is a one-confirmation
 module (§6.5): its run raises a `confirm` interaction with the plan's `plan_id` before the first
 construct write, and the user's answer is the acceptance (`examples/s3-construct-create.sse`). Its
@@ -1230,8 +1283,19 @@ group 31" does not allow adding anyone else to it. A new user has no id to previ
 `derived_settings: false` and publishes nothing. A plan item's `target` may be a `group` or a `user`,
 and `creates` may be a `user`.
 
-The new user sets their password on a one-time CMS link (§4.6, proposed). The module reports the link's expiry
-and never handles the link itself. A caller cannot remove their own account from a group through MCP, so they cannot lose the
+**The group is GenAIx's proposal and the administrator's decision** (since `1.0.0-rc.7`). A group fits when it
+grants everything the request asks and nothing it excludes. When several fit, the run asks one `choice` with
+each group as an option carrying its `ref` (`{type: group}`) and what its permissions show as `reason`, the
+group that grants least beyond the request in `recommended`, and `reference_types: ["group"]`, so the
+administrator may pick another group. When exactly one fits, nothing extra is asked: the one `confirm` names the
+group and what it grants, and the administrator declines to choose another. When none fits, the run names the
+missing permissions and offers the closest groups the same way; the module never creates groups or changes
+permissions, so a group with exactly those permissions is set up in the Admin UI.
+
+The new user sets their password on a one-time CMS link (§4.6 of `04-mcp-scope.md`). The module reports the
+link's expiry and never handles the link itself; The Workspace UI shows the link to the administrator for a user in the plan's `cms_objects` and fetches it with `POST /rest/user/{id}/passwordLink` on the administrator's own CMS session.
+GenAIx also offers `admin_research`, the read-only companion for questions about users, groups and what a group
+may do: it writes nothing and asks no confirmation. A caller cannot remove their own account from a group through MCP, so they cannot lose the
 rights that allow these changes, and the CMS refuses to remove a user's last group. The module reports both refusals.
 
 ### 8.5 Editing existing pages, `content_edit`
@@ -1615,8 +1679,15 @@ Gate execution runs code and talks to the CMS, so its boundaries are stated expl
 
 ## 11. Extensibility: Design Studio modules
 
-Design Studio is outside this release, but the module shape was chosen so its workflows are new
-directories rather than a new mechanism (`04-mcp-scope.md` §8.1).
+Since `1.0.0-rc.7` the Design Studio pilot has two modules, `design_create` and `design_promote`
+(`10-design-studio.md` to `14-design-studio-promotion.md`). Their render check is a blocking script
+gate as sketched below (`13-design-studio-verification.md`). `design_promote` adds one capability a
+module did not have: a **script step**, a script shipped in the module that the harness runs in the
+run sandbox as a step of the plan, not as a gate, with read-only CMS access, for the git merge of
+`14-design-studio-promotion.md` §3. The sketch below predates them and is kept for its reasoning.
+
+The module shape was chosen so the Design Studio's workflows are new directories rather than a new
+mechanism (`04-mcp-scope.md` §8.1).
 
 A `template_set_import` module would declare a `cms` entry in `required_connectors` with a
 `templates` tool group that does not exist yet, an `inputs_schema` taking the package and target

@@ -52,9 +52,9 @@ The normative identity contract is `02-auth-and-context-flow.md`, the API in pro
 ## 2. Topology
 
 ```mermaid
-graph LR
+flowchart TB
     subgraph Browser
-        WS[Agentic Workspace UI]
+        WS@{ icon: "mdi:monitor-dashboard", form: "rounded", label: "Agentic Workspace UI" }
     end
     subgraph CMS installation
         PX[CMS custom proxy<br/>/rest/proxy/genaix]
@@ -66,7 +66,7 @@ graph LR
         GX[GenAIx API v1]
         HX[Agent harness<br/>workflow modules, gates]
     end
-    EX[External LLM agent]
+    EX@{ icon: "mdi:robot-outline", form: "rounded", label: "External LLM agent" }
 
     WS -->|"1 cookie session,<br/>/rest/proxy/genaix/*"| PX
     PX -->|"2 X-GenAIx-Installation +<br/>CMS identity assertion"| GX
@@ -1963,4 +1963,17 @@ with `reference_types` offers a picker beside its options and answers with `refe
 longer deletes a guideline after a discard, because GenAIx does. `admin_user` raises one `confirm`.
 Second revision (2026-11-16): forms are embedded with the CMS's default form construct; `create_user`
 takes no password, the new user sets it on a one-time CMS link, and its result carries only the
-link's expiry (proposed, open for Gentics: how the link reaches the user).
+link's expiry. How the link reaches the user is decided in rc.7.
+
+**rc.7 (draft, 2026-11-24, revised 2026-11-25).** **Requesting what the user may not create.** A
+`choice` option may carry an `action`: for `create_task` the client creates a CMS task of
+`task_type` with the option's `ref` as its object and the message part at `action.draft` as its
+content, then answers with the option's id. A `construct_draft` part says `can_create` and
+`missing_permission`, so the client can tell the user why the construct is not created
+(`03-genaix-api.md` §9.2). **User administration:** when several groups fit, `admin_user` asks a
+`choice` whose options are groups (`ref` of type `group`) with `reference_types: ["group"]`, so the
+client shows a group picker beside them. For a user the plan created (in `cms_objects`), the
+client offers the password link and fetches it with `POST /rest/user/{id}/passwordLink` on the
+administrator's own CMS session; it never comes from GenAIx (`04-mcp-scope.md` §4.6,
+`08-workflow-modules.md` §8.4). The Design Studio section (documents 10 to 15) is new and not
+implemented by GenAIx yet.

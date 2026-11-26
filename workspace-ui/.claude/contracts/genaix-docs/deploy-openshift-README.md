@@ -76,6 +76,7 @@ are served under a path prefix each, with their own sources, built site and API 
 
 | Prefix | Version | API mock |
 |---|---|---|
+| `/rc7/` | `1.0.0-rc.7`, a draft: the Design Studio section and permission fallbacks | container `genaix-mock-rc7`, port 8083 |
 | `/rc5/` | `1.0.0-rc.5`, agreed 2026-10-15 | container `genaix-mock-rc5`, port 8082 |
 | `/rc4/` | `1.0.0-rc.4` | container `genaix-mock-rc4`, port 8081 |
 

@@ -20,10 +20,23 @@ reference client that let it be tried out end to end.
 | 08 | `08-workflow-modules.md` | Workflows as versioned modules with quality gates: module layout, the manifest and verdict schemas, how several modules compose in one plan, the four gate kinds, the gate catalogue per scenario, security boundaries |
 | 09 | `09-integration-guide.md` | How the API contract and the MCP specification are wired together: the CMS custom proxy configuration and the two caller modes, credential provisioning, header forwarding, streaming, plan cards (propose, adjust, accept, revise, stop and change), several plans in one conversation, multi-page edits and per-page publishing from the Workspace |
 
-Read 01 first regardless of role. A Workspace UI developer then wants 03, 08 and the
-`examples/` directory; a CMS integrator wants 02, 04, 05, 06 and 09.
+Since `1.0.0-rc.7` a **Design Studio section** follows, a draft for the pilot:
 
-The documents describe **`1.0.0-rc.6`, a draft** (Forms, guidelines, user administration and
+| # | Document | Covers |
+|---|---|---|
+| 10 | `10-design-studio.md` | The Design Studio as a mode of the Workspace UI shell, the design target, the pilot setup and CMS branches later, who builds what |
+| 11 | `11-design-studio-use-cases.md` | Import from a URL, from a ZIP, design from a briefing, correct, verify, approve and promote, as API call and event sequences; the pilot's acceptance scenarios |
+| 12 | `12-design-studio-files.md` | Where a design lives: design files and metadata in a devtools package of the CMS, revisions, two writers |
+| 13 | `13-design-studio-verification.md` | The render check through the preview portal: viewports, verdicts, fonts |
+| 14 | `14-design-studio-promotion.md` | From an approved revision to the live node: base, git merge, verification, replay |
+| 15 | `15-design-studio-cms-and-si.md` | The CMS MCP tools the Design Studio needs, and what a System Integrator's integration must declare |
+
+Read 01 first regardless of role. A Workspace UI developer then wants 03, 08 and the
+`examples/` directory; a CMS integrator wants 02, 04, 05, 06 and 09. A Design Studio UI developer
+reads 01 and 03, then 10 to 14; the CMS and portal teams read 10, 12 and 15.
+
+The documents describe **`1.0.0-rc.7`, a draft** (requesting what the user may not create, below) on
+**`1.0.0-rc.6`, a draft** (Forms, guidelines, user administration and
 reference fields, below), on top of **`1.0.0-rc.5`, agreed by all parties on 2026-10-15** (living plans,
 below). Passages that change with rc.5 say "since `1.0.0-rc.5`", so a reader can tell what rc.4
 did: for the living plan
@@ -50,7 +63,8 @@ These are normative: where a prose document and one of these disagree, the artif
   credential-recovery events, `s6-content-edit.sse` for a three-page `content_edit` plan,
   `s7-continuous-session.sse` for one conversation with several plans (since `1.0.0-rc.4`), and
   `s8-living-plan.sse` for one plan revised four times across two modules, with a redirect (since
-  `1.0.0-rc.5`), each a complete schema-valid event stream), and `session-lifecycle.md` (the same ground as `03-genaix-api.md`, ordered as a
+  `1.0.0-rc.5`), `s9-design-studio-import.sse` and `s10-design-studio-promote.sse` for the Design Studio's
+  import and promotion (since `1.0.0-rc.7`), each a complete schema-valid event stream), and `session-lifecycle.md` (the same ground as `03-genaix-api.md`, ordered as a
   client's call sequence).
 
 ## Mocks and reference client
@@ -90,7 +104,7 @@ to rebuild after a contract change.
 ## Contract versions
 
 The GenAIx API (`openapi.yaml`) and the CMS MCP tool specification (`mcp/tools.json`) share the
-same version line. `openapi.yaml` and `mcp/tools.json` carry `1.0.0-rc.6`, a draft for agreement.
+same version line. `openapi.yaml` and `mcp/tools.json` carry `1.0.0-rc.7`, a draft for agreement.
 `1.0.0-rc.5`, **agreed by all parties on 2026-10-15**, stays frozen for development until then:
 implementations build against it as it stands. A change from here is made by agreement, recorded in the changelogs, and a breaking change only where no additive form exists. A revision that touches only one of the two leaves the other at its previous number. Both files carry their own changelog; the summary below
 omits detail already there.
@@ -223,6 +237,23 @@ omits detail already there.
   CMS tools are unchanged. New transcript `s8-living-plan.sse`; S1 to S7 carry the rc.5 shapes,
   and S7's "make it a news item instead" revises the proposed plan. The genaix-mock and the
   reference client follow.
+- **`1.0.0-rc.7`** (draft, 2026-11-24) — **Requesting what the user may not create.** When a plan needs a write the
+  user has no permission for, GenAIx checks before writing and asks a `choice` built from the
+  module's new `permission_fallbacks`, never by the model. A `choice` option may carry an `action`
+  (`ClientAction`, `create_task`) the client performs. A `construct_draft` part says `can_create`
+  and `missing_permission`. First use: a Content Creator without `updateconstructs` gets
+  `request_construct` (the client creates a `requestConstruct` task) or `continue_without`
+  (`03-genaix-api.md` §9.2, `08-workflow-modules.md` §4 and §8.3). **Design Studio section**
+  (documents 10 to 15): `SessionContext.design_target`, the `design_revision` part, the
+  `design_revision` and `design_region` reference types, `revision_id` on `preview.updated`,
+  `template` and `portal_implementation` as plan item kinds and planned objects, and three problems
+  (`design_target_required`, `design_target_immutable`, `design_revision_conflict`).
+  `mcp/tools.json` moves to `1.0.0-rc.7` with the `design` group for the pilot. Design files live in
+  a private package storage that Gentics is asked to add (`10-design-studio.md` §5, Gentics TODO G1 to G10). The genaix-mock and
+  the reference client follow. Revised 2026-11-25: `admin_user` proposes the group and the
+  administrator picks it (a `choice` of groups with a group picker, `08-workflow-modules.md` §8.4),
+  and the new user's password link is decided (GPU-2776): the Workspace UI fetches it from the CMS,
+  never from GenAIx (`04-mcp-scope.md` §4.6).
 - **`1.0.0-rc.6`** (draft) — **Forms, guidelines, user administration and reference fields.**
   `ContextReference.type` adds `form`, `user` and `group`, with `external` on a form;
   `PlannedObject.type` adds `form`, `guideline` and `user`; `PlanItem.kind` adds `delete`;

@@ -51,6 +51,7 @@ export type ConstructDraftPart = GenaixSchema<'ConstructDraftPart'>;
 export type ApiCallLogPart = GenaixSchema<'ApiCallLogPart'>;
 export type CitationPart = GenaixSchema<'CitationPart'>;
 export type FileRefPart = GenaixSchema<'FileRefPart'>;
+export type DesignRevisionPart = GenaixSchema<'DesignRevisionPart'>;
 export type CmsObjectRef = GenaixSchema<'CmsObjectRef'>;
 export type UserMessagePart = GenaixSchema<'UserMessagePart'>;
 export type UserTextPart = GenaixSchema<'UserTextPart'>;

@@ -33,6 +33,8 @@ const PART_RENDERERS: { [Type in PartType]: ComponentType<PartViewProps<PartOf<T
     api_call_log: ApiCallLogPartView,
     citation: CitationPartView,
     file_ref: FileRefPartView,
+    // Design Studio (rc.7, a pilot draft) is not built yet: its revision shows by the `UnknownPart` rule, as its `text`.
+    design_revision: UnknownPartView,
 };
 
 function isKnownPart(part: MessagePart | UnknownPart): part is MessagePart {

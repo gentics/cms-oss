@@ -335,10 +335,10 @@ the site" — it can mean "this wording lives only in a template," and only a fu
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant A as GenAIx agent
-    participant M as CMS MCP server (search group)
-    participant E as CMS + Elasticsearch
+    actor U as User
+    participant A@{ "type": "control" } as GenAIx agent
+    participant M@{ "type": "control" } as CMS MCP server (search group)
+    participant E@{ "type": "database" } as CMS + Elasticsearch
 
     U->>A: "Which pages mention the update?"
     A->>A: retrieval skill: decompose question

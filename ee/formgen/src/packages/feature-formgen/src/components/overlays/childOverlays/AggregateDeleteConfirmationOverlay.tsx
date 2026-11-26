@@ -26,6 +26,10 @@ const AggregateDeleteConfirmationOverlay: React.FC<ICommonOverlayProps> = (
       title: t('form_delete_entry'),
       onPress: () => {
         console.log('confirm delete and close');
+        const deletedRowId = utils.getValue(props.formState, additionalProps.parentJsonPath)?.[additionalProps.index]?.id;
+        if (deletedRowId) {
+          (props.formState.deletedAggregateRowIds ??= []).push(deletedRowId);
+        }
         utils.listDeleteElement(
           props.formState,
           additionalProps.parentJsonPath,

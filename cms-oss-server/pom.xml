@@ -139,6 +139,12 @@
 									<outputDirectory>${project.build.directory}</outputDirectory>
 									<destFileName>opentelemetry-javaagent.jar</destFileName>
 								</artifactItem>
+								<artifactItem>
+									<groupId>com.gentics.cms-oss</groupId>
+									<artifactId>cms-otel-extension</artifactId>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+									<destFileName>opentelemetry-cms-extension.jar</destFileName>
+								</artifactItem>
 							</artifactItems>
 						</configuration>
 					</execution>
@@ -273,6 +279,14 @@
 			<artifactId>jetty-jmx</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.glassfish.jersey.ext</groupId>
+			<artifactId>jersey-micrometer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.prometheus</groupId>
+			<artifactId>prometheus-metrics-exposition-textformats</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.glassfish.jersey.inject</groupId>
 			<artifactId>jersey-hk2</artifactId>
 		</dependency>
@@ -335,6 +349,11 @@
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>workspace-ui</artifactId>
 			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-otel-extension</artifactId>
 			<scope>provided</scope>
 		</dependency>
 

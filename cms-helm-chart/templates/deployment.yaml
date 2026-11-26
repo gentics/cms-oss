@@ -70,6 +70,14 @@ spec:
           - name: STATIC_SERVE_LIST
             value: {{ join "," .Values.cms.staticServePaths | quote }}
           {{- end }}
+          {{- if .Values.cms.metrics.enabled }}
+          - name: METRICS_ENABLED
+            value: "true"
+          - name: METRICS_HOST
+            value: "0.0.0.0"
+          - name: METRICS_PORT
+            value: {{ .Values.cms.metrics.port | quote }}
+          {{- end }}
           - name: NODE_USER_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -169,6 +177,11 @@ spec:
           - name: http
             containerPort: 8080
             protocol: TCP
+          {{- if .Values.cms.metrics.enabled }}
+          - name: metrics
+            containerPort: {{ .Values.cms.metrics.port }}
+            protocol: TCP
+          {{- end }}
 
         livenessProbe:
           {{- toYaml .Values.cms.livenessProbe | nindent 10 }}

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
@@ -81,7 +82,7 @@ public class PropertyNodeConfig implements NodeConfig {
 	private NodeLogger logger = NodeLogger.getNodeLogger(PropertyNodeConfig.class);
 
 	private Map<String, DataSource> datasources = new HashMap<String, DataSource>();
-	private Map<String, GenericObjectPool<Object>> connectionPools = new HashMap<>();
+	private Map<String, GenericObjectPool<Object>> connectionPools = new ConcurrentHashMap<>();
 
 	private NodePreferences defPrefs;
 
@@ -393,6 +394,11 @@ public class PropertyNodeConfig implements NodeConfig {
 	@Override
 	public Connection getConnection(boolean useConnectionPool) throws NodeException {
 		return createConnectionWithPrefix(getSQLHandle(useConnectionPool).getDBHandle(), useConnectionPool);
+	}
+
+	@Override
+	public Optional<GenericObjectPool<Object>> getConnectionPool() {
+		return Optional.ofNullable(connectionPools.get(NODE_DB_POOLED_KEY));
 	}
 
 	@Override

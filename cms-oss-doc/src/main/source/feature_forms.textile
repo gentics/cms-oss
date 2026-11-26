@@ -6,7 +6,7 @@ With the feature _forms_ it is possible to manage forms in Gentics CMS.
 * Forms can be published into Mesh ContentRepositories (Gentics Mesh Forms Plugin is required).
 * Forms are rendered on the client side by *FormGen*.
 
-NOTE: See the "Forms Migration Guide":forms_migration.html when updating from an older CMP Version (<= CMP 8.4).
+NOTE: See the "Forms Migration Guide":forms_migration.html when updating from an older CMP Version (<= CMP 8.4). For an overview over all CMP Components related to Forms, see the "Implementation Guide":https://www.gentics.com/implementation/cmp8.6/forms/forms.
 
 endprologue.
 
@@ -26,6 +26,8 @@ Elements in the context of forms are defined as things an editor can place into 
 
 Controls are Elements, the frontend user can interact with and which stores/handles form data.
 Blocks on the other hand are only for visual extras to the form, such as extra description texts or grouping of elements.
+
+An example configuration can be found "here":https://www.gentics.com/implementation/cmp8.6/forms/forms.yml
 
 h4. General configuration
 
@@ -60,11 +62,13 @@ h4. Form-Type Configuration
 | +blocks+ | map of block configs | optional | Defines all available layout and structural blocks for this form type. The map key is the block ID. See blocks table below. |
 | +captchaOptions+ | list of select options | optional | Defines which captcha types are available for this form type. Each option has a +value+ key and a +labelI18n+ translation map. |
 | +templateOptions+ | list of select options | optional | Defines available styling variations (themes) for the form type. Each option has a +value+ key and a +labelI18n+ translation map. |
-| +userEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the confirmation email sent to the user upon form submission. |
-| +adminEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the notification email sent to the administrator when a user submits the form. |
+| +userEmailTemplateOptions+* | list of select options | optional | Defines which email templates are available for the confirmation email sent to the user upon form submission. |
+| +adminEmailTemplateOptions+* | list of select options | optional | Defines which email templates are available for the notification email sent to the administrator when a user submits the form. |
 | +flows+ | list of flow configs | optional | Defines the available form flows for this type. A flow controls the sequence of screens (e.g. form, summary, success) presented to the user. The first entry is used as the default. Each flow has an +id+, +labelI18n+, +nameTranslationKey+, and a list of +steps+. Each step defines a +reactClass+ (the screen component), navigation +buttons+, and optional +variables+ passed to the component. See the Form flows section below. |
 | +pluginConfiguration+ | object | optional | Arbitrary configuration object passed to the Mesh plugin to configure type-specific behaviour. Structure depends on the plugin. |
 | +captchaOptions+ | list of select options | optional | Defines which captchas can be used for the form. |
+
+* Email Templates are @.hbs@ files located in the Mesh Forms Plugin. See the "Plugin Configuration":https://www.gentics.com/guides/latest/plugins/forms-plugin/index.html#_configuration for further information.
 
 h5. FormGen settings
 
@@ -90,7 +94,13 @@ Forms come in two kinds, *internal* and *external*, which are handled differentl
 | *Internal form* | +external: false+ (the default when the flag is omitted) | A Gentics Mesh plugin, named by +pluginName+ (e.g. the Gentics Mesh Forms Plugin for +pluginName: "forms"+), which processes and stores the submissions. |
 | *External form* | +external: true+ | Treated as an external form and *not* by the Gentics Mesh Forms Plugin. Editing forms is restricted and only allows editors to add block elements. |
 
-*Internal forms* are the forms managed by this feature: they are created and edited in the Editor and their submissions are processed by the configured Mesh plugin. This is the default, and all examples in this document are internal form types.
+*Internal forms* are the forms that have the CMS act as source, and are there fore created/managed in the CMS.
+The submission process is handled and configured via the Forms Mesh plugin (or a customized version of it).
+This is the default, and all examples in this document are internal form types.
+
+*External forms* are forms, where the management is handled by an external Source, such as Acta Nova.
+These forms are published to the CMS, where Editors can only add/manage block elements, and manage visual settings for controls.
+Submitted forms are handled with their own Plugin (ANDP Plugin for example) and are sent for processing to the source system.
 
 NOTE: The +external+ flag is a property of the form *type*, not of an individual form. All forms created from a form type therefore share the same kind.
 
@@ -101,19 +111,22 @@ Each option is defined by a +value+ (the identifier stored on the form) and a lo
 |_. Value |_. Label (en) |_. Label (de) |_. Description |
 | +recaptcha_checkbox+ | Recaptcha: Checkbox | Recaptcha: Häckchen | Google reCAPTCHA rendered as an explicit "I'm not a robot" checkbox |
 | +recaptcha_invisible+ | Recaptcha: Background | Recaptcha: Hintergrund | Google reCAPTCHA that runs invisibly in the background (no checkbox) |
-| +friendly_auto+ | Friendly Captcha | Friendly Captcha | Friendly Captcha that starts its verification automatically |
-| +friendly_button+ | Friendly Captcha: Button | Friendly Captcha: Button | Friendly Captcha triggered via a button |
-| +friendly_background+ | Friendly Captcha: Background | Friendly Captcha: Hintergrund | Friendly Captcha that runs in the background |
+| +friendlycaptcha_auto+ | Friendly Captcha | Friendly Captcha | Friendly Captcha that starts its verification automatically |
+| +friendlycaptcha_button+ | Friendly Captcha: Button | Friendly Captcha: Button | Friendly Captcha triggered via a button |
+| +friendlycaptcha_background+ | Friendly Captcha: Background | Friendly Captcha: Hintergrund | Friendly Captcha that runs in the background |
 
-IMPORTANT: +captchaOptions+ only selects *which* captcha variant is used. The provider credentials and endpoints themselves — e.g. the reCAPTCHA / Friendly Captcha *site key*, *secret / verification key* and the verification URL — are *not* part of the form configuration. They must be configured in the forms plugin configuration (+config.yml+ of the forms plugin), the same place where e.g. the +binary+ +allowedTypes+ are defined.
+IMPORTANT: +captchaOptions+ only selects *which* captcha variant is used. The provider credentials and endpoints themselves — e.g. the reCAPTCHA / Friendly Captcha *site key*, *secret / verification key* and the verification URL — are *not* part of the form configuration. They must be configured in the forms plugin configuration ("+config.yml+":https://www.gentics.com/guides/latest/plugins/forms-plugin/index.html#_configuration_options of the forms plugin), the same place where e.g. the +binary+ +allowedTypes+ are defined.
 
 h4. Element Configuration
 
-This section describes what can be configured *per element* as defined in the formtype configuration (forms.yml).
+This section describes what can be configured *per element* as defined in the formtype configuration ("forms.yml":https://www.gentics.com/implementation/cmp8.6/forms/forms.yml) as *control* or *block*.
 
-The following Properties are available for all settings:
+Note the difference between *controls* and *blocks* - *Controls* accept user input/store actual form data;
+where as *Blocks* are only for for visual clarity/information such as texts, images, and the like.
 
-|_. Property |_. type |_. required |_. Description |
+The following Properties are available for all elements:
+
+|_. Property |_. Type |_. Required |_. Description |
 | +labelI18n+ | translation | true | Label of the element, which will be displayed in the UI. |
 | +descriptionI18n+ | translation | false | Description for the element. |
 | +settings+ | list of settings | false | Setting definitions for the element. |
@@ -126,35 +139,53 @@ h5. Default Control-Types
 The following controls are supported with the default FormGen app:
 
 |_. Control |_. Plugin |_. Aggregate |_. Description |
-| +string+ | shared | no | Single-line text input |
-| +number+ | shared | no | Integer/numeric input |
-| +datetime+ | shared | no | Date input in +yyyy-MM-dd+ format. Supports a placeholder (label) and default value. |
-| +time+ | shared | no | Time input in +HH:MM+ format. Supports a placeholder (label) and default value. |
-| +boolean+ | shared | no | Checkbox control. Configures the value stored when checked and the default checked state. |
-| +catalog+ | shared | no | Selection control (dropdown or radio buttons). Editors define the available options as key-value pairs. An additional free-text option can optionally be enabled. |
-| +binary+ | shared | no | File upload control. maximum file size in MB, whether multiple uploads are allowed, and a filter for allowed file types (images, videos, documents). |
-| +usermail+ | +forms+ only | no | Email address input for the form submitter. When filled out, a confirmation email is sent to the entered address. Configures placeholder, maximum length, email subject, and email template. |
-| +adminmail+ | +forms+ only | no | Works like the +catalog+, but the selected value determines where the submitted form data will be sent to. Usually used in contact forms to direct the email to the correct department. |
-| +aggregate+ | +acta-nova+ only | yes | Acts as a sub-forms, where the values are aggregated together as one single array value. |
-| +lazyCatalog + | +acta-nova+ only | no | Version of +catalog+, but with a reference to predefined options from acta-nova, which are lazy loaded. |
-| +reference+ | +acta-nova+ only | no | Picker for an Acta-Nova element. |
+| "+string+":#string-control | shared | no | Single-line text input |
+| "+number+":#number-control | shared | no | Integer/numeric input |
+| "+datetime+"#datetime-control | shared | no | Date input in +yyyy-MM-dd+ format. Supports a placeholder (label) and default value. |
+| "+time+":#time-control | shared | no | Time input in +HH:MM+ format. Supports a placeholder (label) and default value. |
+| "+boolean+":#boolean-control | shared | no | Checkbox control. Configures the value stored when checked and the default checked state. |
+| "+catalog+":$catalog-control | shared | no | Selection control (dropdown or radio buttons). Editors define the available options as key-value pairs. An additional free-text option can optionally be enabled. |
+| "+binary+":#binary-control | shared | no | File upload control. maximum file size in MB, whether multiple uploads are allowed, and a filter for allowed file types (images, videos, documents). |
+| "+usermail+":#usermail-control | +forms+ only | no | Email address input for the form submitter. When filled out, a confirmation email is sent to the entered address. Configures placeholder, maximum length, email subject, and email template. |
+| "+adminmail+":#adminmail-control | +forms+ only | no | Works like the +catalog+, but the selected value determines where the submitted form data will be sent to. Usually used in contact forms to direct the email to the correct department. |
+| "+aggregate+":#aggregate-control | +acta-nova+ only | yes | Acts as a sub-forms, where the values are aggregated together as one single array value. |
+| "+lazyCatalog+":#lazycatalog-control | +acta-nova+ only | no | Version of +catalog+, but with a reference to predefined options from acta-nova, which are lazy loaded. |
+| "+reference+":#reference-control | +acta-nova+ only | no | Picker for an Acta-Nova element. |
 
-In the following sections, there's an overview of the settings each control-type supports.
+In the following sections, there's an overview of the "element settings":#element-settings each control-type supports on default.
 
-h6. +string+ control
+h6. Common Control Settings
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +defaultValue+ | string | true | — | Default value |
-| +maxLength+ | number | true | +validation.maxLength+ | Maximum number of allowed characters |
-| +validation+ | select | true | +validation.regexValidation+ | Validators based on regular expressions with error messages. The value has to be a validation object, see the table below for more info. |
-| +numberOfLines+ | number | false | — | Number of lines (renders the input as a multiline text field) |
+The following settings can be set on each control element.
 
-The Validation object has the following properties
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. multiple |_. Description |
+| +regexValidation+* | "select":#select-setting | true | false | +validation.regexValidation+ | Validators based on regular expressions with error messages. The value has to be a validation regex object, see the table below for more info. |
+| +minValue+* | "number":#number-setting | true | false | +validation.minValue+ | Minimal value |
+| +maxValue+* | "number":#number-setting | true | false | +validation.maxValue+ | Maximal value |
+| +minLength+* | "number":#number-setting | true | false | +validation.minLength+ | Minimum number of allowed characters |
+| +maxLength+* | "number":#number-setting | true | false | +validation.maxLength+ | Maximum number of allowed characters |
+| +maxFilesize+* | "number":#number-setting | true | false | +validation.binary.maxFilesize+ | Maximum filesize in MB |
+| +allowedFileTypes+* | "select":#select-setting | true | true | +validation.binary.allowedFileTypes+ | Selection list of allowed file types, which are defined in the plugin +config.yml+ as keys in +fileUpload.allowedFileTypes+. |
+| +allowedFileNames+* | "select":#select-setting | true | true | +validation.binary.allowedFileNames+ | Selection list of allowed file names, which are defined in the plugin +config.yml+ as keys in +fileUpload.allowedFileNames+. |
+| +allowedTypes+* | "select":#select-setting | true | true | +validation.binary.allowedTypes+ | Values from here are keys from both @allowedFileTypes@ and @allowedFileNames@ - Therefore combines these. It is recommended to use this property/setting in favour of the other two. If not provided, it'll use the +fileUpload.defaultAllowed+ setting from the Form Plugin configuration; which may cause unexpected validations/allowed files. |
+| +isList+ | "boolean":#boolean-setting | true | - | false | If the control allows multiple values (for example Multiselect) |
+
+* The id of the setting is more or less irrelevant/free to choose, as a +propertyPath+ has to be provided anyways.
+
+The Validation Regex object has the following properties
 
 |_. Property |_. type |_. Description |
 | +key+ | string | Acts as an ID between the various validation options |
 | +regex+ | string | A *java* regex string to validate against |
 | +errorMessage+ | translation object | The error message for the frontend user |
+
+For an in depth example of the @validation.binary@ settings, see the "binary control":#binary-control section.
+
+h6. +string+ control
+
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. Description |
+| +defaultValue+ | "string":#string-setting | true | — | Default value |
+| +numberOfLines+ | "number":#number-setting | false | — | Number of lines (renders the input as a multiline text field) |
 
 Example:
 
@@ -181,7 +212,7 @@ forms:
                 en: Maximum Length
               backend: true
               propertyPath: validation.maxLength
-            - id: validation
+            - id: regexValidation
               type: select
               labelI18n:
                 de: Validierung
@@ -203,10 +234,10 @@ forms:
 
 h6. +number+ control
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +defaultValue+ | number | true | — | Default value |
-| +minValue+ | number | true | +validation.minValue+ | Minimum value for number inputs |
-| +maxValue+ | number | true | +validation.maxValue+ | Maximum value for number inputs |
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. Description |
+| +defaultValue+ | "number":#number-setting | true | — | Default value |
+| +minValue+ | "number":#number-setting | true | +validation.minValue+ | Minimum value for number inputs |
+| +maxValue+ | "number":#number-setting | true | +validation.maxValue+ | Maximum value for number inputs |
 
 Example:
 
@@ -244,9 +275,9 @@ forms:
 
 h6. +datetime+ control
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +defaultValue+ | date | true | — | Default value |
-| +dateOnly+ | boolean | true | +dateOnly+ | Only a date (without time component) can be selected |
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. Description |
+| +defaultValue+ | "date":#date-setting | true | — | Default value |
+| +dateOnly+ | "boolean":#boolean-setting | true | +dateOnly+ | Only a date (without time component) can be selected |
 
 Example:
 
@@ -278,56 +309,357 @@ h6. +time+ control
 
 Same as +datetime+ but without the +dateOnly+ setting:
 
-|_. Setting |_. type |_. backend |_. Description |
-| +defaultValue+ | date | true | Default value |
+|_. Setting |_. Type |_. Backend |_. Description |
+| +defaultValue+ | "date":#date-srting | true | Default value |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        time:
+          labelI18n:
+            de: Zeit Beispiel
+            en: Time example
+          settings:
+            - id: defaultValue
+              type: number
+              labelI18n:
+                de: Standardbefüllung
+                en: Default value
+              backend: true
+</shell>
 
 h6. +boolean+ control
 
-|_. Setting |_. type |_. backend |_. Description |
-| +storedValue+ | string | false | Value that is submitted by this checkbox in the form-report, when the checkbox is checked. Defaults to "X". |
-| +defaultValue+ | boolean | true | This checkbox is checked by default |
+|_. Setting |_. Type |_. Backend |_. Description |
+| +storedValue+ | "string":#string-setting | false | Value that is submitted by this checkbox in the form-report, when the checkbox is checked. Defaults to "X". |
+| +defaultValue+ | "boolean":#boolean-setting | true | This checkbox is checked by default |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        boolean:
+          labelI18n:
+            de: Boolean Beispiel
+            en: Boolean example
+          settings:
+            - id: defaultValue
+              type: boolean
+              labelI18n:
+                de: Standardbefüllung
+                en: Default value
+              backend: true
+            - id: storedValue
+              type: string
+              labelI18n:
+                de: Wert
+                en: Value
+</shell>
 
 h6. +catalog+ control
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +selectOptions+ | options | true | — | List of selectable key/value pairs |
-| +customOption+ | boolean | false | — | Allows entering an additional selection option |
-| +isList+ | boolean | true | +isList+ | Multiselection (allows selecting multiple options) |
-| +radio+ | boolean | false | — | Render as radio buttons (single value) or checkboxes (multivalue) |
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. Description |
+| +selectOptions+ | "options":#options-setting | true | — | List of selectable key/value pairs |
+| +customOption+ | "boolean":#boolean-setting | false | — | Allows entering an additional selection option |
+| +radio+ | "boolean":#boolean-setting | false | — | Render as radio buttons (single value) or checkboxes (multivalue) |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        catalog:
+          labelI18n:
+            de: Auswahl
+            en: Select
+          settings:
+            - id: selectOptions
+              type: options
+              labelI18n:
+                de: Auswahlmöglichkeiten
+                en: Selectable Options
+              backend: true
+            -  id: customOption
+              type: boolean
+              labelI18n:
+                de: Zusätzliches Element
+                en: Additional Element
+              backend: true
+            - id: isList
+              type: boolean
+              labelI18n:
+                de: Mehrfachauswahl
+                en: Multiselection
+              backend: true
+              propertyPath: isList
+            - id: radio
+              type: boolean
+              labelI18n:
+                de: Radio Buttons/Checkboxen
+                en: Radio Buttons/Checkboxes
+</shell>
 
 h6. +binary+ control
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +maxFilesize+ | number | true | +validation.binary.maxFilesize+ | Max. allowed filesize (MB) |
-| +allowedTypes+ | select | true | +validation.binary.allowedTypes+ | Selection list of allowed file types (the categories selected in the CMS — the same +allowedTypes+ that the plugin then resolves into +allowedFileTypes+ & +allowedFileNames+. The options should be defined in +config.yml+ of forms plugin). |
-| +multiple+ | boolean | true | +isList+ | Allow upload of multiple files |
+No additional settings, but an example plugin configuration to better illustrate how the @allowedFileNames@ and @allowedFileTypes@ play together:
+
+<shell filename="mesh/plugins/forms/config.yml">
+fileUpload:
+  allowedFileTypes:
+    all:
+      - ".*"
+    image:
+      - "image/.*"
+    audio:
+      - "audio/.*"
+    video:
+      - "video/.*"
+  allowedFileNames:
+    all:
+      - ".*"
+    archive:
+      - ".*\\.zip"
+      - ".*\\.rar"
+      - ".*\\.7z"
+      - ".*\\.bz"
+      - ".*\\.bz2"
+      - ".*\\.gz"
+    image:
+      - ".*\\.png"
+      - ".*\\.jp(e)?g"
+    documents:
+      - ".*\\.doc"
+      - ".*\\.docx"
+      - ".*\\.xls"
+      - ".*\\.xlsx"
+      - ".*\\.pdf"
+      - ".*\\.txt"
+      - ".*\\.ods"
+      - ".*\\.odt"
+  defaultAllowed:
+    - "all"
+</shell>
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        binary:
+          labelI18n:
+            de: Fileupload
+            en: File Upload
+          settings:
+            - id: maxFilesize
+              type: number
+              labelI18n:
+                de: Max. Dateigröße (MB)
+                en: Max. Filesize (MB)
+              backend: true
+              propertyPath: validation.binary.maxFilesize
+            - id: allowedFileTypes
+              type: select
+              labelI18n:
+                de: Erlaubte Dateitypen
+                en: Allowed filetypes
+              backend: true
+              multiple: true
+              propertyPath: validation.binary.allowedFileNames
+              options:
+                - value: all
+                  labelI18n:
+                    de: Alle
+                    en: Everything
+                - value: image
+                  labelI18n:
+                    de: Bilder
+                    en: Images
+                - value: audio
+                  labelI18n:
+                    de: Audio
+                    en: Audio
+                - value: video
+                  labelI18n:
+                    de: Video
+                    en: Video
+            - id: allowedFileNames
+              type: select
+              labelI18n:
+                de: Erlaubte Dateinamen
+                en: Allowed filenames
+              backend: true
+              multiple: true
+              propertyPath: validation.binary.allowedFileNames
+              options:
+                - value: all
+                  labelI18n:
+                    de: Alle
+                    en: Everything
+                - value: archive
+                  labelI18n:
+                    de: Archive
+                    en: Archives
+                - value: image
+                  labelI18n:
+                    de: Bilder
+                    en: Images
+                - value: documents
+                  labelI18n:
+                    de: Dokumente
+                    en: Documents
+            - id: allowedTypes
+              type: select
+              labelI18n:
+                de: Erlaubte Datein
+                en: Allowed files
+              backend: true
+              multiple: true
+              propertyPath: validation.binary.allowedTypes
+              options:
+                - value: all
+                  labelI18n:
+                    de: Alle
+                    en: Everything
+                - value: image
+                  labelI18n:
+                    de: Bilder
+                    en: Images
+                - value: audio
+                  labelI18n:
+                    de: Audio
+                    en: Audio
+                - value: video
+                  labelI18n:
+                    de: Video
+                    en: Video
+                - value: archive
+                  labelI18n:
+                    de: Archive
+                    en: Archives
+                - value: documents
+                  labelI18n:
+                    de: Dokumente
+                    en: Documents
+            - id: isList
+              type: boolean
+              labelI18n:
+                de: Mehrfach Upload
+                en: Multiupload
+              backend: true
+</shell>
 
 h6. +usermail+ control
 
 Sends an email to the entered address after the form was submitted.
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +maxLength+ | number | true | +validation.maxLength+ | Maximum number of allowed characters |
-| +mailsubject+ | translation | true | — | Subject of the email sent to the user |
-| +mailtemplate+ | select | true | — | Email template if set then the defined template inside forms plugin and the configured +userEmailTemplateOptions+ is overwritten. |
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. Description |
+| +maxLength+ | "number":#number-setting | true | +validation.maxLength+ | Maximum number of allowed characters |
+| +mailsubject+ | "translation":#translation-setting | true | — | Subject of the email sent to the user |
+| +mailtemplate+ | "select":#select-setting | true | — | Email template if set then the defined template inside forms plugin and the configured +userEmailTemplateOptions+ is overwritten. |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        usermail:
+          labelI18n:
+            de: Benutzer E-Mail Feld
+            en: User Email Field
+          settings:
+            - id: maxLength
+              type: number
+              labelI18n:
+                de: Eingabelänge
+                en: Input Length
+              backend: true
+              propertyPath: validation.maxLength
+            - id: mailsubject
+              type: translation
+              labelI18n:
+                de: E-Mail Betreff
+                en: Email Subject
+              backend: true
+            - id: mailtemplateReference
+              type: reference
+              labelI18n:
+                de: E-Mail Vorlage
+                en: Email Template
+              referenceTypes:
+                - page
+              publishAs: content
+              allowedMarkupLanguageIds: [21]
+              backend: true
+              propertyPath: formGridOptions.mailtemplate
+              condition:
+                emtpy: true
+                source:
+                  setting: mailtemplate
+            - id: mailtemplate
+              type: select
+              labelI18n:
+                de: E-Mail Vorlage
+                en: Email Template
+              options:
+                - value: useremail
+                  labelI18n:
+                    de: Standard
+                    en: Default
+              backend: true
+              condition:
+                emtpy: true
+                source:
+                  setting: mailtemplateReference
+</shell>
 
 h6. +adminmail+ control
 
 Element to specify which admin mail addresses submission notifications should be sent to. If such an element is present in the form, the form's +email+ property is ignored, and the recipients are instead taken from the selected option keys (which are mapped to the configured mail addresses). When no +adminmail+ element is present, mail sending falls back to the admin email configured on the form (+email+).
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +selectOptions+ | options | true | — | List of selectable key/value pairs |
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. Description |
+| +selectOptions+ | "options":#options-setting | true | — | List of selectable key/value pairs |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+        adminmail:
+          labelI18n:
+            de: Auswahl
+            en: Select
+          settings:
+            - id: selectOptions
+              type: options
+              labelI18n:
+                de: Auswahlmöglichkeiten
+                en: Selectable Options
+              backend: true
+</shell>
 
 h6. +aggregate+ control
 
 An special element which creates a sub-form, where multiple entries can be created/submitted, aggregated under one common name.
 
-An example would be, a list of attendees for an event, where each attendee has and input for +firstName+, +lastName+, and +email+. The aggregate would hold info for the three controls, but these can be entered *n* times, and the reports receives a single list value with all the attendees.
+An example would be, a list of attendees for an event, where each attendee has and input for +firstName+, +lastName+, and +email+.
+The aggregate would hold info for the three controls, but these can be entered *n* times, and the reports receives a single list value with all the attendees.
 
-|_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +showFilter+ | boolean | false | none | If the aggregation table should add a filter input, where displayed elements are filtered by the input's content. |
-| +showOnlyFirstLine+ | boolean | false | none | If true, then each element is displayed as individual collapsible. Only the first element is always displayed, even when collapsed. |
-| +buttonDisplayStyle+ | select | false | none | How the buttons for adding/editing/removing elements should be displayed. Possible option-values: +icon+, +text+, +icontext+ |
+NOTE: The regular Forms Plugin does not support this type
+
+|_. Setting |_. +type+ |_. +backend+ |_. +propertyPath+ |_. Description |
+| +showFilter+ | "boolean":#boolean-setting | false | none | If the aggregation table should add a filter input, where displayed elements are filtered by the input's content. |
+| +showOnlyFirstLine+ | "boolean":#boolean-setting | false | none | If true, then each element is displayed as individual collapsible. Only the first element is always displayed, even when collapsed. |
+| +buttonDisplayStyle+ | "select":#select-setting | false | none | How the buttons for adding/editing/removing elements should be displayed. Possible option-values: +icon+, +text+, +icontext+ |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    example:
+      controls:
+</shell>
 
 h6. +lazyCatalog+ control
 
@@ -365,7 +697,7 @@ h6. +text+ block
 A simple block element which renders the text content which was entered.
 
 |_. Setting |_. type |_. Description |
-| +text+ or +value+ | string or translation | The text that should be rendered. May be simple text or HTML (use `richContent: true`). |
+| +text+ or +value+ | "string":#string-setting or "translation":#translation-setting | The text that should be rendered. May be simple text or HTML (use @richContent: true@). |
 
 h6. +conditionalcontainer+ block
 
@@ -399,12 +731,12 @@ The following setting types are available
 Each setting has the following properties:
 
 |_. Property |_. Type |_. Required |_. Description |
-| +id+ | string | true | ID of the setting. If no +propertyPath+ is used, then this ID is the property name the value gets stored in, in the element. |
+| +id+ | string | true | ID of the setting. If no +propertyPath+ is used, then this ID is the property name the value gets stored in, in the element. Otherwise only used internally to differentiate between settings, so you can name them however you wish. |
 | +labelI18n+ | translation-object | true | The name of the setting in multiple languages, which is seen only by the editor. |
 | +descriptionI18n+ | translation-object | false | A description for the setting. |
 | +required+ | boolean | false | If the editor is required to fill out this property. |
-| +backend+ | boolean | false | Only available in +control+ elements. If +true+, then the value is not stored in the `ui-schema`, but in the `schema`, and can be read/used in the Plugin. Additionally, the value will then not be sent to the frontend/formgen. |
-| +propertyPath+ | string | false | The path, relative to the element root, where the property should be saved instead. Default is `formGridOptions.<id>` |
+| +backend+ | boolean | false | Only available in +control+ elements. If +true+, then the value is not stored in the @ui-schema@, but in the @schema@, and can be read/used in the Plugin. Additionally, the value will then not be sent to the frontend/formgen. |
+| +propertyPath+ | string | false | The path, relative to the element root, where the property should be saved instead. Default is @formGridOptions.<id>@ |
 | +condition+ | condition object | false | If set, the setting will only be *visible* when the condition is met. |
 
 h5. +string+ setting
@@ -414,7 +746,7 @@ String settings have the following additional properties
 |_. Property |_. Type |_. Required |_. Description |
 | +multiline+ | boolean | If the input should be rendered as textarea instead, to allow multiline text. |
 | +multiple+ | boolean | If the editor should be able to enter multiple string values. A list of inputs will be rendered in that case. |
-| +richContent+ | boolean | false | If `true`, then the input will be rendered as a contenteditable with Aloha. Implicitly allows multiline content. |
+| +richContent+ | boolean | false | If @true@, then the input will be rendered as a contenteditable with Aloha. Implicitly allows multiline content. |
 | +aloha+ | object | false | Configuration for aloha. Only used when +richContent+ is +true+. See section Aloha Configuration for more information. |
 
 h5. +translation+ setting
@@ -639,9 +971,9 @@ h3. Translations
 Translations can be managed in two ways: Globally or per Type.
 Usually all common translations are managed globally, and if a type has some additional translations, then these are added per type.
 
-Configuration for these is quite simple: Create a property `formGenTranslations` under `forms` for a global configuration, and `formGenTranslations` under `forms.types.<type>` for a type specific one.
+Configuration for these is quite simple: Create a property @formGenTranslations@ under @forms@ for a global configuration, and @formGenTranslations@ under @forms.types.<type>@ for a type specific one.
 
-Each key under the `formGenTranslations` property is then the translation key, and has a translation object as a default value. The translations themself are managed via a custom tool in the CMS.
+Each key under the @formGenTranslations@ property is then the translation key, and has a translation object as a default value. The translations themself are managed via a "custom tool in the CMS":https://www.gentics.com/implementation/cmp8.6/forms/forms#translations-custom-tool.
 
 Example:
 

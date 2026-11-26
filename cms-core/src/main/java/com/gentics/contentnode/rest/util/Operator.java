@@ -48,6 +48,13 @@ import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
 import de.jkeylockmanager.manager.ReturnValueLockCallback;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 
 /**
  * Operator class, that executes instances of {@link Callable} in a thread pool.
@@ -64,6 +71,26 @@ public class Operator {
 	 * Thread factory
 	 */
 	protected static ThreadFactory threadFactory = new PrefixedThreadFactory("operator");
+
+	/**
+	 * Name of the tracer for the spans of the jobs
+	 */
+	public final static String TRACER_NAME = "com.gentics.contentnode";
+
+	/**
+	 * Name of the span of a job
+	 */
+	public final static String JOB_SPAN_NAME = "Operator job";
+
+	/**
+	 * Span attribute containing the job description
+	 */
+	public final static AttributeKey<String> JOB_DESCRIPTION = AttributeKey.stringKey("cms.job.description");
+
+	/**
+	 * Span attribute, which is set to true, when the job is continued in the background
+	 */
+	public final static AttributeKey<Boolean> JOB_BACKGROUND = AttributeKey.booleanKey("cms.job.background");
 
 	/**
 	 * Generator for the internal "jobId"
@@ -176,6 +203,7 @@ public class Operator {
 					return futureResult.get(timeout, TimeUnit.MILLISECONDS);
 				}
 			} catch (TimeoutException e) {
+				markInBackground(wrapper);
 				futureResult.whenComplete(handleInBackground(wrapper));
 				if (backgroundCallback != null) {
 					backgroundCallback.run();
@@ -242,6 +270,7 @@ public class Operator {
 					return futureResult.get(timeout, TimeUnit.MILLISECONDS);
 				}
 			} catch (TimeoutException e) {
+				markInBackground(wrapper);
 				futureResult.whenComplete(handleInBackground(wrapper));
 				return continueInBackground(description, responseTransformer);
 			}
@@ -322,6 +351,7 @@ public class Operator {
 
 				return merged;
 			} catch (TimeoutException e) {
+				wrappedCallables.forEach(Operator::markInBackground);
 				for (CompletableFuture<T> future : futureResults) {
 					future.whenComplete((result, ex) -> {
 						try {
@@ -496,13 +526,37 @@ public class Operator {
 	 * @return completable future
 	 */
 	protected static <T extends GenericResponse> CompletableFuture<T> submit(RestCallable<T> wrapper) {
+		// the span is started in the calling thread (so it is a child of the current span, e.g. the span of the REST request)
+		// and will be the parent of all spans created while executing the job
+		SpanBuilder spanBuilder = GlobalOpenTelemetry.getTracer(TRACER_NAME).spanBuilder(JOB_SPAN_NAME);
+		if (!ObjectTransformer.isEmpty(wrapper.description)) {
+			spanBuilder.setAttribute(JOB_DESCRIPTION, wrapper.description);
+		}
+		Span span = spanBuilder.startSpan();
+		wrapper.span = span;
+		Context context = Context.current().with(span);
+
 		return CompletableFuture.supplyAsync(() -> {
-			try {
+			try (Scope scope = context.makeCurrent()) {
 				return wrapper.call();
 			} catch (Exception e) {
+				span.recordException(e);
+				span.setStatus(StatusCode.ERROR);
 				throw new CompletionException(e);
+			} finally {
+				span.end();
 			}
 		}, executor);
+	}
+
+	/**
+	 * Mark the span of the given job, because the job will be continued in the background
+	 * @param wrapper callable wrapper
+	 */
+	protected static void markInBackground(RestCallable<?> wrapper) {
+		if (wrapper.span != null) {
+			wrapper.span.setAttribute(JOB_BACKGROUND, true);
+		}
 	}
 
 	/**

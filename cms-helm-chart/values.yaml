@@ -97,6 +97,13 @@ cms:
     port: 80
     useHttp2: false
 
+  ## Metrics (Prometheus format at /metrics). When enabled, the CMS collects metrics, serves
+  ## them on the metrics port (container and service, not exposed by the ingress) and forwards
+  ## the CMS specific metrics to OpenTelemetry (when enabled, see otel above).
+  metrics:
+    enabled: false
+    port: 8081
+
   ingress:
     enabled: false
     host: example.local

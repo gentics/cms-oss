@@ -1116,6 +1116,7 @@ public class FormTransformer {
 				toLocalId(referenceNode, referenceSetting.id, node, referenced, idNames);
 				break;
 			case publish:
+			case preview:
 				switch (referenceSetting.publishAs) {
 				case content:
 					if (referenced instanceof Page page) {
@@ -1150,6 +1151,7 @@ public class FormTransformer {
 			case fromContentPackage:
 				break;
 			case publish:
+			case preview:
 				String text = node.path(stringSetting.id).asText("");
 				if (!StringUtils.isBlank(text)) {
 					text = renderUrls(text, null);
@@ -1176,6 +1178,7 @@ public class FormTransformer {
 			case fromContentPackage:
 				break;
 			case publish:
+			case preview:
 				for (Entry<String, JsonNode> entry : node.optional(translationSetting.id).filter(JsonNode::isObject)
 						.map(JsonNode::properties).orElse(Collections.emptySet())) {
 					String language = entry.getKey();

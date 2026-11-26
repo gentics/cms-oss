@@ -37,6 +37,7 @@
 		<module>cms-ui</module>
 		<module>workspace-ui</module>
 		<module>cms-cache</module>
+		<module>cms-otel-extension</module>
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
@@ -63,6 +64,11 @@
 		<mesh.version>3.3.3</mesh.version>
 
 		<otel.javaagent.version>2.27.0</otel.javaagent.version>
+		<!-- The OpenTelemetry API must not be newer than the API version the javaagent (otel.javaagent.version) is built for -->
+		<otel.api.version>1.61.0</otel.api.version>
+		<micrometer.version>1.15.12</micrometer.version>
+		<!-- Must be the version of the prometheus client used by micrometer-registry-prometheus (micrometer.version) -->
+		<prometheus.metrics.version>1.3.10</prometheus.metrics.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>

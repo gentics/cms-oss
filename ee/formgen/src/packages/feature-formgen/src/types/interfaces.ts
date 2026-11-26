@@ -314,6 +314,9 @@ export interface UIState {
     } | null;
     isDialogFormOpen?: boolean;
     scrollReference?: string;
+    // pending file uploads of the main form, kept by reference (the JSON snapshot loses File objects).
+    // Normally only filled with formSettings.disableSave: otherwise every upload is saved right away and fileUploads is emptied.
+    mainFileUploads?: FormState['fileUploads'];
   };
   overlayState: OverlayState;
   loadingText?: string;
@@ -360,10 +363,26 @@ export interface FormState {
   // Keyed by language code (e.g. { "de": "http://..." }).
   successUrl?: { [language: string]: string };
   formgenSettings?: FormgenSettings;
+  // Form-level settings from the load response (formSettings).
+  formSettings?: FormSettings;
+  // IDs of deleted aggregate rows: ActaNova only learns about them with the submit, so they are
+  // sent with refreshForm to keep them out of the refreshed aggregate.
+  deletedAggregateRowIds?: string[];
 }
 
 export interface FormgenSettings {
   maxFileSizeToPreviewMB?: number;
+  [key: string]: any;
+}
+
+/**
+ * Form-level settings delivered by the load response as `formSettings`.
+ * @property disableSave Only `true` disables intermediate saving: no autosave, no save button in the leave dialog,
+ *   the detail info button shows the leave dialog instead of saving,
+ *   and uploaded files are kept in fileUploads and only sent with the submit.
+ */
+export interface FormSettings {
+  disableSave?: boolean;
   [key: string]: any;
 }
 

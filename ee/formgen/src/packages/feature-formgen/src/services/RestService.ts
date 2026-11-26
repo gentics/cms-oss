@@ -806,6 +806,8 @@ export class RestService {
     dialogPortalFormHostObjectID: string,
     refreshPropertyID: string,
     businessObjectID?: string,
+    mainFormStateData?: IData,
+    deletedRowIds?: string[],
   ) {
     let path = 'refreshForm';
     //TODO v8.2 derzeit funktionierit nur auf web
@@ -819,6 +821,8 @@ export class RestService {
       DialogPortalFormHostObjectID: string;
       RefreshPropertyReferenceID: string;
       BusinessObjectID?: string;
+      mainFormStateData?: IData;
+      deletedRowIds?: string[];
     } = {
       FormID: formId,
       DialogPortalFormHostObjectID: dialogPortalFormHostObjectID,
@@ -828,6 +832,8 @@ export class RestService {
     if (businessObjectID) {
       requestData.BusinessObjectID = businessObjectID;
     }
+    if (mainFormStateData) requestData.mainFormStateData = mainFormStateData;
+    if (deletedRowIds?.length) requestData.deletedRowIds = deletedRowIds;
     const apiResponse: ApiResponse = await this.post(
       formState.formid,
       path,
@@ -860,6 +866,11 @@ export class RestService {
 
     this.post(data.formID, 'search', data, requestHeaders)
       .then((apiResponse) => {
+        // Problem details (ActaNova problem type) go to the error handler
+        if (!apiResponse.success && typeof apiResponse.responseData?.type === 'string') {
+          errorFunc(apiResponse);
+          return;
+        }
         callback(apiResponse.responseData);
       })
       .catch((err) => {
@@ -892,6 +903,11 @@ export class RestService {
     // Sende den Request über die post-Methode
     this.post(data.formID, 'lazycatalog', data, requestHeaders)
       .then((apiResponse) => {
+        // Problem details (ActaNova problem type) go to the error handler
+        if (!apiResponse.success && typeof apiResponse.responseData?.type === 'string') {
+          errorFunc(apiResponse);
+          return;
+        }
         callback(apiResponse.responseData);
       })
       .catch((err) => {
@@ -917,6 +933,11 @@ export class RestService {
     }else{
       this.post(data.formID, 'autocomplete', data, requestHeaders)
       .then((apiResponse) => {
+        // Problem details (ActaNova problem type) go to the error handler
+        if (!apiResponse.success && typeof apiResponse.responseData?.type === 'string') {
+          errorFunc(apiResponse);
+          return;
+        }
         callback(apiResponse.responseData);
       })
       .catch((err) => {

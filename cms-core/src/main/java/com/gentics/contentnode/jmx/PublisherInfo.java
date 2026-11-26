@@ -19,7 +19,7 @@ public class PublisherInfo implements PublisherInfoMBean, Serializable {
 	/**
 	 * Flag to mark whether the publish process is running
 	 */
-	protected boolean running = false;
+	protected volatile boolean running = false;
 
 	/**
 	 * Flag to mark whether the publish process is multithreaded
@@ -69,7 +69,7 @@ public class PublisherInfo implements PublisherInfoMBean, Serializable {
 	/**
 	 * Current publisher phase
 	 */
-	protected PublisherPhase phase = PublisherPhase.IDLE;
+	protected volatile PublisherPhase phase = PublisherPhase.IDLE;
 
 	/* (non-Javadoc)
 	 * @see com.gentics.contentnode.jmx.PublisherInfoMBean#isRunning()

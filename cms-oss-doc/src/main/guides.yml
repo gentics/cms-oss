@@ -88,6 +88,9 @@ index:
       text: "Configure & control the Scheduler including its API"
     - title: "Monitoring"
       url: "admin_jmx_monitoring"
+    - title: "Metrics"
+      url: "admin_metrics"
+      text: "Collect metrics for Prometheus and OpenTelemetry"
     - title: "ContentRepositories"
       url: "admin_contentrepositories"
     - title: Node specific settings

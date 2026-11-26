@@ -56,6 +56,19 @@ describe('errorMessageKey', () => {
         expect(translation('errors.genaix.plan_not_revisable')).toEqual(expect.any(String));
     });
 
+    it('names a revise message without a plan to revise (rc.5)', () => {
+        const problem = {
+            type: 'x',
+            title: 'x',
+            status: 422,
+            genaix_code: 'validation_failed',
+            errors: [{ pointer: '/options/plan_id', detail: 'no plan to revise' }],
+        } as Problem;
+
+        expect(errorMessageKey(new GenaixApiError('/rest/proxy/genaix/x', 422, problem, new Headers()))).toBe('errors.genaix.revise_plan_missing');
+        expect(translation('errors.genaix.revise_plan_missing')).toEqual(expect.any(String));
+    });
+
     it('says when there is no cms connection to start a session with', () => {
         expect(errorMessageKey(new NoCmsConnectionError())).toBe('errors.noCmsConnection');
         expect(translation('errors.noCmsConnection')).toEqual(expect.any(String));

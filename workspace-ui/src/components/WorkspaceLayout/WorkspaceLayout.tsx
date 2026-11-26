@@ -26,6 +26,11 @@ interface WorkspaceLayoutProps {
      * content stays mounted (draft `hidePreview`). Default `true`.
      */
     isRightColumnVisible?: boolean;
+    /**
+     * A column shown or hidden slides in or out (design.md §10) instead of appearing at once: while GenAIx is at work,
+     * so a preview that arrives slides in, while one there on opening a session is simply there. Default `false`.
+     */
+    animatesColumns?: boolean;
 }
 
 /**
@@ -40,6 +45,7 @@ export function WorkspaceLayout({
     right,
     isLeftColumnVisible = true,
     isRightColumnVisible = true,
+    animatesColumns = false,
 }: WorkspaceLayoutProps) {
     const { t } = useTranslation();
     const gridRef = useRef<HTMLDivElement>(null);
@@ -124,8 +130,10 @@ export function WorkspaceLayout({
                 styles.layout,
                 isLeftColumnVisible ? '' : styles.leftHidden,
                 isRightColumnVisible ? '' : styles.rightHidden,
+                animatesColumns ? styles.animated : '',
                 dragging ? styles.resizing : '',
             ].filter(Boolean).join(' ')}
+            data-animated={animatesColumns || undefined}
             style={style}
         >
             <div ref={leftRef} className={`${styles.column} ${styles.left}`} hidden={!isLeftColumnVisible}>

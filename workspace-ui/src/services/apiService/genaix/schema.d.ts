@@ -2237,13 +2237,20 @@ export interface components {
          *     }
          * @example {
          *       "type": "guideline",
-         *       "id": "tone-of-voice-de",
-         *       "label": "Tone of voice (German)"
+         *       "id": "corporate/tone-of-voice.default",
+         *       "label": "Tone of voice"
+         *     }
+         * @example {
+         *       "type": "form",
+         *       "id": "4410",
+         *       "node_id": 3,
+         *       "label": "Newsletter sign-up",
+         *       "external": true
          *     }
          */
         ContextReference: {
             /** @enum {string} */
-            type: "node" | "folder" | "page" | "file" | "image" | "template" | "construct" | "guideline" | "language" | "session_file" | "url" | "document";
+            type: "node" | "folder" | "page" | "file" | "image" | "template" | "construct" | "guideline" | "language" | "session_file" | "url" | "document" | "form" | "user" | "group";
             /**
              * @description CMS object id, session file UUID, guideline slug, language code, URL, or the id of a `document`: a source outside the CMS and outside the session, such as a page of GenAIx's own knowledge corpus (since `1.0.0-rc.2`; a `citation` part over a non-CMS source points here, `label` carrying its title).
              * @example 8871
@@ -2255,6 +2262,8 @@ export interface components {
             node_id?: number;
             /** @description The CMS global id when known, for stable cross-installation reference. */
             global_id?: string;
+            /** @description For `type: form`: the form is of an external form type (since `1.0.0-rc.6`). Set by GenAIx on the references it produces; the CMS decides. Such a form is picked and embedded like any other and is never created or deleted through GenAIx. Informational. */
+            external?: boolean;
             /** @description The object's path in the CMS when known, for display: a folder's own path (`/Manual/Guides/`), a page's folder path. Informational, like `label`: it tells apart two objects of the same name, `id` alone identifies the object. Since `1.0.0-rc.4` (2026-10-14); GenAIx fills it on the folders a `settings_review` shows, a client may send it on a reference. */
             path?: string;
         };
@@ -4047,7 +4056,7 @@ export interface components {
              * @description Absent keeps the current item's `kind`; on a new step GenAIx chooses one.
              * @enum {string}
              */
-            kind?: "create" | "update" | "link" | "translate" | "publish" | "construct" | "report" | "other";
+            kind?: "create" | "update" | "delete" | "link" | "translate" | "publish" | "construct" | "report" | "other";
             target?: components["schemas"]["ContextReference"];
             /**
              * @description The workflow module that carries the step out (since `1.0.0-rc.5`), one of the installed modules. Absent keeps the current item's module; a new step without it gets the module GenAIx picks.
@@ -4117,7 +4126,7 @@ export interface components {
              */
             entry_hints?: string[];
             /** @description Kinds of object a successful run of this workflow yields. */
-            produces?: ("page" | "construct" | "report" | "user" | "file" | "none")[];
+            produces?: ("page" | "form" | "construct" | "guideline" | "report" | "user" | "file" | "none")[];
             /**
              * @description `true` when the module proposes its plan and waits for the user's approval before
              *     it writes anything (since `1.0.0-rc.3`; the manifest flag of the same name). The
@@ -4618,7 +4627,7 @@ export interface components {
             id: string;
             label: string;
             /** @enum {string} */
-            kind: "create" | "update" | "link" | "translate" | "publish" | "construct" | "report" | "other";
+            kind: "create" | "update" | "delete" | "link" | "translate" | "publish" | "construct" | "report" | "other";
             /**
              * @description The workflow module that carries the item out (since `1.0.0-rc.5`), one of the plan's `workflows`. The item is bound by that module's write scope.
              * @example content_edit
@@ -4662,7 +4671,7 @@ export interface components {
          */
         PlannedObject: {
             /** @enum {string} */
-            type: "folder" | "page" | "file" | "image" | "construct";
+            type: "folder" | "page" | "file" | "image" | "construct" | "form" | "guideline" | "user";
             /** @description The name it will get, as the user will see it. */
             label: string;
             /** @description Where it will appear, for display, e.g. `/Acme GmbH Website/Events 2027/`. */
@@ -4865,6 +4874,11 @@ export interface components {
          *     from the user's permissions on that page's folder, so one page may go out directly
          *     while another goes to review.
          *
+         *     Since `1.0.0-rc.6` an entry may also name a form the plan created or changed
+         *     (`cms_ref.type: form`), and these go online before the plan's pages, under `publish` and
+         *     `request_review` alike. If a form fails, the pages stay `pending`. A form has no review:
+         *     its `approval_chain` is empty, and a user who may not publish it gets `failed`.
+         *
          *     - `pending`: not handled yet. Every entry starts here and stays until a `publish` or
          *       `request_review` handles it.
          *     - `published`: the CMS published the page, or scheduled it for `publish_at`.
@@ -5058,7 +5072,32 @@ export interface components {
              * @default false
              */
             other_allowed: boolean;
-            /** @description For kind `form`, a JSON Schema (draft 2020-12) the `values` object must validate against. Keep it flat: one property is one answer field. */
+            /** @description For `choice`: the answer may instead be a CMS object or session file the user picks, as a `reference` of one of these `ContextReference` types (since `1.0.0-rc.6`). A client offers a picker beside the options. */
+            reference_types?: string[];
+            /**
+             * @description For kind `form`, a JSON Schema (draft 2020-12) the `values` object must
+             *     validate against. Keep it flat: one property is one answer field.
+             *
+             *     **A reference field** (since `1.0.0-rc.6`) is a property that opens a picker. It
+             *     is one answer field, answered with one `ContextReference` of a listed type:
+             *
+             *     ```json
+             *     "headerImage": {
+             *       "type": "object",
+             *       "format": "context-reference",
+             *       "x-reference-types": ["image", "session_file"],
+             *       "title": "Header image"
+             *     }
+             *     ```
+             *
+             *     GenAIx answers `422` at `/answer/values/<field>` when the type is not listed, a
+             *     `page`, `folder`, `file`, `image`, `template`, `construct` or `form` has no `node_id`, a session file is not in this session, or, where
+             *     `image` is listed too, a session file is not an image. It does not ask the CMS at
+             *     this point: the agent reads the object later. For a `session_file`, the client
+             *     uploads with `POST /sessions/{session_id}/files` first, `mode: source` being the
+             *     default, and answers with the file's id. The interaction keeps its `expires_at`
+             *     during an upload.
+             */
             schema?: {
                 [key: string]: unknown;
             };
@@ -5160,13 +5199,16 @@ export interface components {
             selected?: string[];
             /** @description The user's own answer, only where `other_allowed` (since `1.0.0-rc.5` addition, 2026-10-15). */
             other?: string;
+            /** @description The object the user picked instead of an option, where the interaction has `reference_types` (since `1.0.0-rc.6`; `selected` may then be empty). `422` at `/answer/reference` without `reference_types`, for a type it does not list, for a `page`, `folder`, `file`, `image`, `template`, `construct` or `form` without `node_id`, or for a session file not in this session. */
+            reference?: components["schemas"]["ContextReference"];
             comment?: string;
         } | {
             selected: unknown;
-        } | unknown) | {
+        } | unknown | unknown) | {
             approved: boolean;
             comment?: string;
         } | {
+            /** @description The answer per field. A reference field's value is one `ContextReference` (since `1.0.0-rc.6`). */
             values: {
                 [key: string]: unknown;
             };
@@ -5897,6 +5939,28 @@ export interface components {
         };
     };
     parameters: {
+        /**
+         * @description The Workspace UI's language (since the `1.0.0-rc.5` addition of 2026-10-19), a standard
+         *     `Accept-Language` value (RFC 9110 §12.5.4). The client sets it from its own language
+         *     setting, not the browser default; a proxy forwards it unchanged. GenAIx reads only
+         *     `createSession` and `postMessage`; every other route ignores it.
+         *
+         *     GenAIx takes the primary subtag (`de-AT` is `de`), orders by `q` and uses the first
+         *     language it supports (Phase One: `en`, `de`, `hu`, `fr`, `it`, `es`, `nl`, `pl`, `cs`).
+         *     Others are skipped; with none left, or the header absent, nothing changes.
+         *
+         *     - On `createSession` the session's module steps and checks are labelled in it.
+         *     - On every `postMessage` it becomes the session's UI language; a later message with
+         *       another value replaces it. `answerInteraction` does not read it.
+         *     - The language the user writes in wins: once GenAIx has recognised the language of
+         *       the user's messages, its replies, questions and check texts follow that. The UI
+         *       language applies until then, and for messages without text. Without either, English.
+         *
+         *     It never changes a write-governing `language` setting: the language of a page comes from
+         *     the `setting` part, the session context or the settings review as before.
+         * @example de-AT,de;q=0.9,en;q=0.5
+         */
+        AcceptLanguage: string;
         /**
          * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
          *     required on every user route, that is everything except `GET /ping`,
@@ -6763,6 +6827,28 @@ export interface operations {
                  * @example sub_c3f1a07d9e5b4826
                  */
                 "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+                /**
+                 * @description The Workspace UI's language (since the `1.0.0-rc.5` addition of 2026-10-19), a standard
+                 *     `Accept-Language` value (RFC 9110 §12.5.4). The client sets it from its own language
+                 *     setting, not the browser default; a proxy forwards it unchanged. GenAIx reads only
+                 *     `createSession` and `postMessage`; every other route ignores it.
+                 *
+                 *     GenAIx takes the primary subtag (`de-AT` is `de`), orders by `q` and uses the first
+                 *     language it supports (Phase One: `en`, `de`, `hu`, `fr`, `it`, `es`, `nl`, `pl`, `cs`).
+                 *     Others are skipped; with none left, or the header absent, nothing changes.
+                 *
+                 *     - On `createSession` the session's module steps and checks are labelled in it.
+                 *     - On every `postMessage` it becomes the session's UI language; a later message with
+                 *       another value replaces it. `answerInteraction` does not read it.
+                 *     - The language the user writes in wins: once GenAIx has recognised the language of
+                 *       the user's messages, its replies, questions and check texts follow that. The UI
+                 *       language applies until then, and for messages without text. Without either, English.
+                 *
+                 *     It never changes a write-governing `language` setting: the language of a page comes from
+                 *     the `setting` part, the session context or the settings review as before.
+                 * @example de-AT,de;q=0.9,en;q=0.5
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
             };
             path?: never;
             cookie?: never;
@@ -7353,6 +7439,28 @@ export interface operations {
                  * @example sub_c3f1a07d9e5b4826
                  */
                 "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+                /**
+                 * @description The Workspace UI's language (since the `1.0.0-rc.5` addition of 2026-10-19), a standard
+                 *     `Accept-Language` value (RFC 9110 §12.5.4). The client sets it from its own language
+                 *     setting, not the browser default; a proxy forwards it unchanged. GenAIx reads only
+                 *     `createSession` and `postMessage`; every other route ignores it.
+                 *
+                 *     GenAIx takes the primary subtag (`de-AT` is `de`), orders by `q` and uses the first
+                 *     language it supports (Phase One: `en`, `de`, `hu`, `fr`, `it`, `es`, `nl`, `pl`, `cs`).
+                 *     Others are skipped; with none left, or the header absent, nothing changes.
+                 *
+                 *     - On `createSession` the session's module steps and checks are labelled in it.
+                 *     - On every `postMessage` it becomes the session's UI language; a later message with
+                 *       another value replaces it. `answerInteraction` does not read it.
+                 *     - The language the user writes in wins: once GenAIx has recognised the language of
+                 *       the user's messages, its replies, questions and check texts follow that. The UI
+                 *       language applies until then, and for messages without text. Without either, English.
+                 *
+                 *     It never changes a write-governing `language` setting: the language of a page comes from
+                 *     the `setting` part, the session context or the settings review as before.
+                 * @example de-AT,de;q=0.9,en;q=0.5
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
             };
             path: {
                 /**

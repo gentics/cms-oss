@@ -1,3 +1,9 @@
+import { afterAll } from 'vitest';
+
+import i18n from '@/i18n';
+
+import { untilEditorsDestroyed } from './untilEditorsDestroyed';
+
 import '@testing-library/jest-dom/vitest';
 
 // jsdom does no layout, but ProseMirror (the composer's Tiptap editor) measures ranges and hit-tests
@@ -26,3 +32,11 @@ if (typeof document !== 'undefined') {
     document.elementFromPoint ??= () => null;
     window.matchMedia ??= noMediaQuery;
 }
+
+// Testing Library unmounts after each test, and Tiptap destroys an unmounted editor only on a timer, which reads the
+// global `document`. After a file's last test that timer must run before the test environment, and `document`, is
+// gone, else it fails as "document is not defined".
+afterAll(untilEditorsDestroyed);
+
+// The app starts in German (`src/i18n`); the tests expect its English texts unless they switch themselves.
+await i18n.changeLanguage('en');

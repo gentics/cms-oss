@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { UiProvider } from '@/components/ui/provider';
 import type { LivePreview } from '@/store/useWorkspaceEventStore';
+import { createWrapper } from '@/test/renderWithProviders';
+import { stubCmsPublishPaths } from '@/test/stubCmsPublishPaths';
 
 import { PreviewColumn } from './PreviewColumn';
 
@@ -19,26 +20,26 @@ function preview(seq: number, previewUrl = URL_9142): LivePreview {
 
 // The URL the column loads for `previewUrl`.
 function loadedUrl(previewUrl: string): string {
-    render(<PreviewColumn {...noActions} preview={preview(1, previewUrl)} />, { wrapper: UiProvider });
+    render(<PreviewColumn {...noActions} preview={preview(1, previewUrl)} />, { wrapper: createWrapper() });
 
     return screen.getByTitle('Preview of the page in the CMS').getAttribute('src')!;
 }
 
 // The column's actions on a part, unused here.
-const noActions = { onReferenceInChat: () => {}, onSendFeedback: () => Promise.resolve(), onSendEdit: () => Promise.resolve(), onSendImage: () => Promise.resolve(), onSendLink: () => Promise.resolve(), onSendSettings: () => Promise.resolve(), canSendFeedback: true };
+const noActions = { onReferenceInChat: () => {}, onSendFeedback: () => Promise.resolve(), onSendImage: () => Promise.resolve(), onSendSettings: () => Promise.resolve(), canSendFeedback: true };
 
 describe('PreviewColumn', () => {
     it('frames the CMS preview read-only', () => {
-        render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+        render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
 
         expect(screen.getByRole('heading', { name: 'Preview' })).toBeInTheDocument();
         expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', READ_ONLY_9142);
     });
 
     it('always shows a link that opens the read-only URL in a new tab', () => {
-        render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+        render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
 
-        const open = screen.getByRole('link', { name: 'Open' });
+        const open = screen.getByRole('link', { name: 'Preview' });
 
         expect(open).toHaveAttribute('href', READ_ONLY_9142);
         expect(open).toHaveAttribute('target', '_blank');
@@ -46,12 +47,60 @@ describe('PreviewColumn', () => {
     });
 
     it('reloads the frame on a new preview.updated with the same URL', () => {
-        const { rerender } = render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+        const { rerender } = render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
         const first = screen.getByTitle('Preview of the page in the CMS');
 
         rerender(<PreviewColumn {...noActions} preview={preview(2)} />);
 
         expect(screen.getByTitle('Preview of the page in the CMS')).not.toBe(first);
+    });
+
+    // jsdom loads no page into a frame: writes one into it, then fires its `load`, as a browser would.
+    function loadFrame(frame: HTMLElement) {
+        const doc = (frame as HTMLIFrameElement).contentDocument!;
+
+        doc.open();
+        doc.write('<!doctype html><p>Page</p>');
+        doc.close();
+        fireEvent.load(frame);
+    }
+
+    it('keeps the page shown until the new one has loaded, so the page never goes blank, with one titled frame at a time', () => {
+        // Reading the loaded page measures it; jsdom has no layout to observe.
+        vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+        onTestFinished(() => {
+            vi.unstubAllGlobals();
+        });
+
+        const { container, rerender } = render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
+        const first = screen.getByTitle('Preview of the page in the CMS');
+
+        loadFrame(first);
+        rerender(<PreviewColumn {...noActions} preview={preview(2)} />);
+
+        // The new frame loads, titled; the one before stays under it, hidden from assistive technology.
+        const frames = container.querySelectorAll('iframe');
+        const next = screen.getByTitle('Preview of the page in the CMS');
+
+        expect(frames).toHaveLength(2);
+        expect(next).not.toBe(first);
+        expect(first).toHaveAttribute('aria-hidden', 'true');
+        expect(first).not.toHaveAttribute('title');
+
+        loadFrame(next);
+
+        expect(container.querySelectorAll('iframe')).toHaveLength(1);
+        expect(container.querySelector('iframe')).toBe(next);
+    });
+
+    it('shows a building strip only while GenAIx is still at work on the page', () => {
+        const { container, rerender } = render(<PreviewColumn {...noActions} preview={preview(1)} isBuilding />, { wrapper: createWrapper() });
+
+        expect(container.querySelector('[data-building]')).toBeInTheDocument();
+
+        rerender(<PreviewColumn {...noActions} preview={preview(1)} isBuilding={false} />);
+
+        expect(container.querySelector('[data-building]')).not.toBeInTheDocument();
     });
 
     describe('read-only URL', () => {
@@ -95,7 +144,7 @@ describe('PreviewColumn', () => {
 
     describe('width and full screen', () => {
         it('starts at desktop width', () => {
-            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
 
             expect(screen.getByRole('group', { name: 'Preview width' })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: 'Desktop' })).toHaveAttribute('aria-pressed', 'true');
@@ -105,7 +154,7 @@ describe('PreviewColumn', () => {
         it('switches between mobile and desktop width', async () => {
             const user = userEvent.setup();
 
-            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
 
             await user.click(screen.getByRole('button', { name: 'Mobile · 390 px' }));
             expect(screen.getByRole('button', { name: 'Mobile · 390 px' })).toHaveAttribute('aria-pressed', 'true');
@@ -117,7 +166,7 @@ describe('PreviewColumn', () => {
 
         it('keeps the width when the preview reloads', async () => {
             const user = userEvent.setup();
-            const { rerender } = render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+            const { rerender } = render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
 
             await user.click(screen.getByRole('button', { name: 'Mobile · 390 px' }));
             rerender(<PreviewColumn {...noActions} preview={preview(2)} />);
@@ -128,7 +177,7 @@ describe('PreviewColumn', () => {
         it('enters full screen and leaves it with the same button', async () => {
             const user = userEvent.setup();
 
-            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
 
             await user.click(screen.getByRole('button', { name: 'Full screen' }));
             expect(screen.getByRole('button', { name: 'Leave full screen' })).toHaveAttribute('aria-pressed', 'true');
@@ -140,7 +189,7 @@ describe('PreviewColumn', () => {
         it('leaves full screen with Escape', async () => {
             const user = userEvent.setup();
 
-            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: UiProvider });
+            render(<PreviewColumn {...noActions} preview={preview(1)} />, { wrapper: createWrapper() });
 
             await user.click(screen.getByRole('button', { name: 'Full screen' }));
             await user.keyboard('{Escape}');
@@ -151,6 +200,10 @@ describe('PreviewColumn', () => {
 });
 
 describe('PreviewColumn with several pages', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
     const HOME_URL = 'https://cms.example.com/alohapage?realid=1&nodeid=3&mode=view';
     const NEWS_URL = 'https://cms.example.com/alohapage?realid=2&nodeid=3&mode=view';
 
@@ -170,7 +223,7 @@ describe('PreviewColumn with several pages', () => {
     it('has no page select for a single page', () => {
         const home = page(1, 1, 'Home', HOME_URL);
 
-        render(<PreviewColumn {...noActions} preview={home} previews={[home]} />, { wrapper: UiProvider });
+        render(<PreviewColumn {...noActions} preview={home} previews={[home]} />, { wrapper: createWrapper() });
 
         expect(screen.queryByRole('combobox', { name: 'Pages' })).not.toBeInTheDocument();
     });
@@ -180,7 +233,7 @@ describe('PreviewColumn with several pages', () => {
         const home = page(1, 1, 'Home', HOME_URL);
         const news = page(2, 2, 'News', NEWS_URL);
 
-        render(<PreviewColumn {...noActions} preview={news} previews={[home, news]} />, { wrapper: UiProvider });
+        render(<PreviewColumn {...noActions} preview={news} previews={[home, news]} />, { wrapper: createWrapper() });
 
         expect(screen.getByRole('combobox', { name: 'Pages' })).toHaveTextContent('News');
         expect(frameUrl()).toContain('realid=2');
@@ -191,11 +244,34 @@ describe('PreviewColumn with several pages', () => {
         expect(frameUrl()).toContain('realid=1');
     });
 
+    it('offers the page picked as preview and, once one of the session\'s plans published it, live', async () => {
+        const user = userEvent.setup();
+        const home = page(1, 1, 'Home', HOME_URL);
+        const news = page(2, 2, 'News', NEWS_URL);
+        // As GenAIx sends them: recorded with the connection, without an address; the address comes from the CMS.
+        const publications = [
+            { cms_ref: { ...news.cms_ref, connection_id: 'c-1' }, status: 'published' as const, approval_chain: [] },
+            { cms_ref: { ...home.cms_ref, connection_id: 'c-1' }, status: 'review_requested' as const, approval_chain: [] },
+        ];
+
+        stubCmsPublishPaths({ 1: '/index.html', 2: '/news.html' });
+        render(<PreviewColumn {...noActions} preview={news} previews={[home, news]} publications={publications} />, { wrapper: createWrapper() });
+
+        expect(screen.getByRole('link', { name: 'Preview' })).toHaveAttribute('href', expect.stringContaining('realid=2'));
+        expect(await screen.findByRole('link', { name: 'Live' })).toHaveAttribute('href', 'https://www.gentics.com/news.html');
+
+        await pick(user, 'Home');
+
+        // Only in review: its preview, nothing live yet.
+        expect(screen.getByRole('link', { name: 'Preview' })).toHaveAttribute('href', expect.stringContaining('realid=1'));
+        expect(screen.queryByRole('link', { name: 'Live' })).not.toBeInTheDocument();
+    });
+
     it('names a page without a name by its id', () => {
         const home = page(1, 1, 'Home', HOME_URL);
         const unnamed: LivePreview = { seq: 2, cms_ref: { type: 'page', id: 2, node_id: 3 }, preview_url: NEWS_URL, mode: 'view' };
 
-        render(<PreviewColumn {...noActions} preview={unnamed} previews={[home, unnamed]} />, { wrapper: UiProvider });
+        render(<PreviewColumn {...noActions} preview={unnamed} previews={[home, unnamed]} />, { wrapper: createWrapper() });
 
         expect(screen.getByRole('combobox', { name: 'Pages' })).toHaveTextContent('Page 2');
     });
@@ -204,7 +280,7 @@ describe('PreviewColumn with several pages', () => {
         const user = userEvent.setup();
         const home = page(1, 1, 'Home', HOME_URL);
         const news = page(2, 2, 'News', NEWS_URL);
-        const { rerender } = render(<PreviewColumn {...noActions} preview={news} previews={[home, news]} />, { wrapper: UiProvider });
+        const { rerender } = render(<PreviewColumn {...noActions} preview={news} previews={[home, news]} />, { wrapper: createWrapper() });
 
         await pick(user, 'Home');
         expect(frameUrl()).toContain('realid=1');

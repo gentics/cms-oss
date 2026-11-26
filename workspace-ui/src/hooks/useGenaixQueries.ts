@@ -251,9 +251,10 @@ export function useStartSession() {
     });
 }
 
-/** A turn from the chat composer; `replyTo` answers the run's pending interaction with it. */
+/** A turn from the chat composer; `replyTo` answers the run's pending interaction with it, `options` e.g. revises a plan. */
 export interface SendTurnInput extends StartSessionInput {
     replyTo?: { interaction_id: string; answer: InteractionAnswer };
+    options?: MessageCreateBody['options'];
 }
 
 /**
@@ -268,7 +269,7 @@ export function useSendTurn(sessionId: string) {
     const { mutateAsync: sendMessage } = useSendMessage(sessionId);
 
     return useMutation({
-        mutationFn: async ({ parts, files, onFileProgress, replyTo }: SendTurnInput) => {
+        mutationFn: async ({ parts, files, onFileProgress, replyTo, options }: SendTurnInput) => {
             const fileParts = await uploadFileParts(sessionId, files, onFileProgress);
             const fileIds = fileParts.map((part) => part.file_id);
 
@@ -280,6 +281,7 @@ export function useSendTurn(sessionId: string) {
             return sendMessage({
                 parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts],
                 ...(replyTo && { reply_to_interaction: replyTo }),
+                ...(options && { options }),
             });
         },
         retry: false,
@@ -384,6 +386,21 @@ export function usePlanTransition(sessionId: string, planId: string): PlanTransi
     ));
 
     return { pending: own.find(({ status }) => status === 'pending')?.input, latest: own.at(-1) };
+}
+
+/**
+ * POST /sessions/{session_id}/files: uploads one file into the session as a source, outside a message, e.g. an image
+ * picked to answer a question (`ImageReferenceField`); `onProgress` gets the share sent, 0 to 1. The session's uploads
+ * are read again, as after a turn with files (`useSendTurn`). Never retried: a repeat would upload twice.
+ */
+export function useUploadSessionFile(sessionId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ file, onProgress }: { file: File; onProgress?: (fraction: number) => void }) => uploadSessionFile(sessionId, file, 'source', onProgress),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.uploads(sessionId) }),
+        retry: false,
+    });
 }
 
 /**

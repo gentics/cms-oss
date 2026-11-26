@@ -212,11 +212,11 @@ rest in one round trip.
 
 ```mermaid
 sequenceDiagram
-    participant U as User (browser)
-    participant W as Workspace UI
-    participant P as CMS custom proxy
-    participant G as GenAIx API
-    participant C as CMS (its own cookie session)
+    actor U as User (browser)
+    participant W@{ "type": "boundary" } as Workspace UI
+    participant P@{ "type": "boundary" } as CMS custom proxy
+    participant G@{ "type": "control" } as GenAIx API
+    participant C@{ "type": "entity" } as CMS (its own cookie session)
 
     U->>W: Open Workspace, compose the first message
     W->>C: Create an API token (using the browser's own session cookie — never sent to GenAIx)
@@ -235,10 +235,10 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant W as Workspace UI
-    participant P as CMS custom proxy
-    participant G as GenAIx API
-    participant C as MCP server behind the connection's url
+    participant W@{ "type": "boundary" } as Workspace UI
+    participant P@{ "type": "boundary" } as CMS custom proxy
+    participant G@{ "type": "control" } as GenAIx API
+    participant C@{ "type": "control" } as MCP server behind the connection's url
 
     W->>P: GET /sessions/{id}/authorizations
     P->>G: Forward. X-GenAIx-Installation: <installation token>. Authorization: Bearer <CMS assertion>
@@ -259,11 +259,11 @@ This call is a live probe, not a cache read, so a client can trust it as the sou
 
 ```mermaid
 sequenceDiagram
-    participant W as Workspace UI
-    participant P as CMS custom proxy
-    participant G as GenAIx API
-    participant C as MCP server behind the connection's url
-    participant R as CMS REST resources
+    participant W@{ "type": "boundary" } as Workspace UI
+    participant P@{ "type": "boundary" } as CMS custom proxy
+    participant G@{ "type": "control" } as GenAIx API
+    participant C@{ "type": "control" } as MCP server behind the connection's url
+    participant R@{ "type": "database" } as CMS REST resources
 
     W->>P: POST /sessions/{id}/messages
     P->>G: Forward. X-GenAIx-Installation: <installation token>. Authorization: Bearer <CMS assertion>
@@ -284,10 +284,10 @@ The remote MCP connection is configured per run, from the session's own register
 
 ```mermaid
 sequenceDiagram
-    participant U as User (CMS token management, or Workspace)
-    participant G as GenAIx API
-    participant C as MCP server behind the connection's url
-    participant W as Workspace UI
+    actor U as User (CMS token management, or Workspace)
+    participant G@{ "type": "control" } as GenAIx API
+    participant C@{ "type": "control" } as MCP server behind the connection's url
+    participant W@{ "type": "boundary" } as Workspace UI
 
     U->>U: Deletes the CMS API token, or its expires_at passes
     Note over G: A run is active and about to call an MCP tool on conn_1
@@ -310,8 +310,8 @@ Self-healing stays deliberately simple: GenAIx does not pause and silently resum
 ```mermaid
 sequenceDiagram
     participant A as External LLM agent (e.g. Claude Code)
-    participant C as cms MCP server
-    participant R as CMS REST resources
+    participant C@{ "type": "control" } as cms MCP server
+    participant R@{ "type": "database" } as CMS REST resources
 
     Note over A: Operator has created a CMS API token for this agent directly
     A->>C: MCP tool call. Authorization: Bearer <agent's own CMS API token>. No X-GenAIx-Session/Run

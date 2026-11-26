@@ -1,0 +1,109 @@
+.viewports {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+/* In a narrow column (below 1180 px the column is 42 % of the window, design.md §11) the buttons move to a
+   second line, on the right, instead of sliding over the title and the page select. */
+.head {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 8px;
+  /* With the padding at least 44 px high (design.md §7, "Panel-Kopf"). */
+  min-height: 32px;
+  padding: 6px 9px 6px 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* The title and the page select, on the left; the rest of the head sits on the right. The head wraps when
+   the title and the select at its smallest (`.pages`) no longer fit beside the buttons, instead of sliding
+   the buttons over them; on its line it takes the rest. */
+.lead {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+/* design.md §9 "Ansehen". */
+.titleIcon {
+  flex: none;
+  color: var(--interactive);
+}
+
+/* The page select, when the session wrote several pages: as wide as the page's name, at most 240 px,
+   which it cuts off. Counted at 160 px, the select's smallest width, when the head decides where to wrap. */
+.pages {
+  display: flex;
+  flex: 1 1 auto;
+  width: 160px;
+  min-width: 0;
+  max-width: 240px;
+}
+
+/* "Preview · Live": the page in a new tab, as text links (design.md §4.1: `--interactive`, underlined on hover and focus),
+   one icon for both. */
+.open {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+
+  & svg {
+    color: var(--interactive);
+  }
+
+  & a {
+    border-radius: var(--corner-xs);
+    color: var(--interactive);
+    font-weight: 500;
+    text-decoration: none;
+    text-underline-offset: 2px;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--interactive);
+    }
+  }
+}
+
+/* The selected part, named in the header, with a button to clear it. A long name is cut off at the head's
+   width (the whole name is the text's title), instead of running out of the head. */
+.selection {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.selectionName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

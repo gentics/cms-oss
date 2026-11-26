@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PartRenderer } from '@/components/MessageParts/MessageParts';
 import { Button } from '@/components/ui/button';
+import { CardLayoutBody, CardLayoutFooter, CardLayoutHeader } from '@/components/ui/card-layout';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogBody, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Drawer, DrawerBody, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
@@ -464,6 +465,28 @@ export function Catalogue() {
                                 <Textarea id="catalogue-popover-field" placeholder={t('catalogue.textarea.placeholder')} />
                                 <PopoverClose render={<Button variant="secondary" size="sm" />}>{t('catalogue.popover.close')}</PopoverClose>
                             </div>
+                        </PopoverContent>
+                    </Popover>
+                </Section>
+
+                <Section id="catalogue-card-layout" title={t('catalogue.cardLayout.title')}>
+                    <Popover>
+                        <PopoverTrigger render={<Button variant="secondary" />}>{t('catalogue.cardLayout.open')}</PopoverTrigger>
+                        <PopoverContent>
+                            <CardLayoutHeader>
+                                <PencilIcon size={16} aria-hidden="true" />
+                                <PopoverTitle>{t('catalogue.cardLayout.heading')}</PopoverTitle>
+                                <PopoverClose render={<Button variant="ghost" size="icon" aria-label={t('catalogue.cardLayout.cancel')} title={t('catalogue.cardLayout.cancel')} />}>
+                                    <XIcon size={16} />
+                                </PopoverClose>
+                            </CardLayoutHeader>
+                            <CardLayoutBody>
+                                <Label htmlFor="catalogue-card-layout-field">{t('catalogue.cardLayout.label')}</Label>
+                                <Input id="catalogue-card-layout-field" defaultValue={t('catalogue.cardLayout.value')} />
+                            </CardLayoutBody>
+                            <CardLayoutFooter>
+                                <PopoverClose render={<Button variant="primary" size="sm" />}>{t('catalogue.cardLayout.apply')}</PopoverClose>
+                            </CardLayoutFooter>
                         </PopoverContent>
                     </Popover>
                 </Section>

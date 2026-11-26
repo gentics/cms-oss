@@ -58,6 +58,21 @@
   }
 }
 
+/* The open-on-the-website button sits in the row's top right corner, beside its link. */
+.item {
+  position: relative;
+}
+
+.withOpen {
+  padding-right: 38px;
+}
+
+.open {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
 .name {
   overflow: hidden;
   font-weight: 500;

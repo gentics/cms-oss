@@ -128,6 +128,18 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
       ]),
     ]).start();
   }, []);
+
+  // returnUrl (given when the form was opened) wins over successUrl and the success content
+  const returnUrl = Platform.OS === 'web' ? props.formState?.returnUrl : undefined;
+  useEffect(() => {
+    if (returnUrl) {
+      window.open(returnUrl, '_self')?.focus();
+    }
+  }, [returnUrl]);
+
+  if (returnUrl) {
+    return null;
+  }
   /* ---------- Markup ---------- */
   if (Platform.OS === 'web' && props.successContent?.trim()) {
     return (

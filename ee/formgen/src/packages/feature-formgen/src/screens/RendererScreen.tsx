@@ -910,6 +910,10 @@ const RendererScreen: React.FC<{
       formState.successUrl = responseBody.successUrl;
       formState.formgenSettings = responseBody.formgenSettings;
       formState.formSettings = responseBody.formSettings;
+      if (Platform.OS === 'web') {
+        // only a returnUrl in the URL of this page counts, it is not stored anywhere else
+        formState.returnUrl = utils.getAllowedReturnUrl(window.location.search, formState.formSettings);
+      }
       uiState.lastPage = responseBody.uiSchema.pages.length;
       const missingFlowResponse2 = applyFormFlow(responseBody);
       if (missingFlowResponse2) return missingFlowResponse2;

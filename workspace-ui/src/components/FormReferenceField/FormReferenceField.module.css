@@ -1,0 +1,19 @@
+/* The form field of a question card: a search over the node's forms, then the forms to pick one from. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* The forms scroll inside the card, as the image picker's grid does. */
+.list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.status {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+}

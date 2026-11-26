@@ -203,17 +203,19 @@ export interface CmsNode {
 }
 
 /** The CMS object types the composer's @-menu searches. */
-export const CMS_ITEM_TYPES = ['page', 'folder', 'image'] as const;
+export const CMS_ITEM_TYPES = ['page', 'folder', 'image', 'form'] as const;
 
 export type CmsItemType = typeof CMS_ITEM_TYPES[number];
 
-/** A page, folder or image listed by `searchCmsItems`, as far as the composer needs it. */
+/** A page, folder, image or form listed by `searchCmsItems`, as far as the composer needs it. */
 export interface CmsItem {
     id: number;
     name: string;
     type: CmsItemType;
     /** The folder path, e.g. `/Campaigns/`; not every type carries it. */
     path?: string;
+    /** A form's type, which says whether it is external (`listCmsExternalFormTypes`). */
+    formType?: string;
 }
 
 /** The nodes the current CMS user can see: `GET /rest/node`. */
@@ -242,6 +244,7 @@ const ELASTIC_WILDCARD_FIELDS: Record<CmsItemType, readonly string[]> = {
     page: ['niceUrl', 'filename', 'name.raw'],
     folder: ['name.raw'],
     image: ['filename', 'name.raw'],
+    form: ['name.raw'],
 };
 
 // The Elasticsearch query of the editor UI's search: `query` in name (weighted twice), path,
@@ -294,6 +297,10 @@ export async function searchCmsItems(
     query: string,
     { elastic = false, recursive = false, folderId = node.folderId, signal }: { elastic?: boolean; recursive?: boolean; folderId?: number; signal?: AbortSignal } = {},
 ): Promise<CmsItem[]> {
+    if (type === 'form') {
+        return searchCmsForms(node, query, { elastic, recursive, folderId, signal });
+    }
+
     if (elastic && query !== '') {
         try {
             return await elasticSearchCmsItems(node, type, query, signal);
@@ -327,6 +334,65 @@ export async function searchCmsItems(
     const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${folderId}?${params}`, { ...CMS_GET, signal });
 
     return items ?? [];
+}
+
+/**
+ * The forms of `node`, as `searchCmsItems` lists the other types: `GET /rest/form` in `folderId` (the root folder by
+ * default; `recursive` for a query or on request), its query in `q`, or Elasticsearch where it is on. A `FormModel`
+ * carries no `type`, so every hit gets `form`. A node without the Forms feature answers `405`
+ * (`FeatureRequiredException`), which means it has no forms rather than that the search failed.
+ */
+async function searchCmsForms(
+    node: CmsNode,
+    query: string,
+    { elastic, recursive, folderId, signal }: { elastic: boolean; recursive: boolean; folderId: number; signal?: AbortSignal },
+): Promise<CmsItem[]> {
+    const asForms = (items: CmsItem[]) => items.map((item): CmsItem => ({ ...item, type: 'form' }));
+
+    if (elastic && query !== '') {
+        try {
+            return asForms(await elasticSearchCmsItems(node, 'form', query, signal));
+        } catch (error) {
+            if (signal?.aborted) {
+                throw error;
+            }
+
+            console.warn('Elasticsearch search failed, searching without it.', error);
+        }
+    }
+
+    const params = new URLSearchParams({ folderId: String(folderId), pageSize: String(CMS_SEARCH_MAX_ITEMS) });
+
+    if (query !== '') {
+        params.set('q', query);
+    }
+
+    if (query !== '' || recursive) {
+        params.set('recursive', 'true');
+    }
+
+    try {
+        const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/form?${params}`, { ...CMS_GET, signal });
+
+        return asForms(items ?? []);
+    } catch (error) {
+        if (error instanceof HttpError && error.status === 405) {
+            return [];
+        }
+
+        throw error;
+    }
+}
+
+/**
+ * The form types of the node `nodeId` that are external (`GET /rest/form/types?external=true`): a form of one of them
+ * was made in the CMS by an external system (`FormTypeConfigurationModel.external`, as the CMS MCP reads it).
+ */
+export async function listCmsExternalFormTypes(nodeId: number, signal?: AbortSignal): Promise<Set<string>> {
+    const params = new URLSearchParams({ nodeId: String(nodeId), external: 'true' });
+    const { items } = await httpRequest<{ items?: { type?: string }[] }>(`/rest/form/types?${params}`, { ...CMS_GET, signal });
+
+    return new Set((items ?? []).flatMap(({ type }) => (type ? [type] : [])));
 }
 
 /**

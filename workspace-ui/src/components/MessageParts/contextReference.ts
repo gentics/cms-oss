@@ -1,4 +1,5 @@
 import {
+    ClipboardListIcon,
     FileIcon,
     FileTextIcon,
     FolderIcon,
@@ -26,9 +27,18 @@ export const REF_ICONS: Partial<Record<ContextReference['type'], LucideIcon>> = 
     template: LayersIcon,
     construct: PuzzleIcon,
     guideline: ScrollTextIcon,
+    form: ClipboardListIcon,
     language: LanguagesIcon,
     url: LinkIcon,
 };
+
+/** The longest label a `ContextReference` takes (`openapi.yaml`, `ContextReference.label`, `maxLength`). */
+const LABEL_MAX_LENGTH = 512;
+
+/** `name` as a reference's label: cut to `LABEL_MAX_LENGTH`, ending with "…" where it was cut. */
+export function referenceLabel(name: string): string {
+    return name.length > LABEL_MAX_LENGTH ? `${name.slice(0, LABEL_MAX_LENGTH - 1)}…` : name;
+}
 
 /** The wording of a reference: its `label`, else its type and id. */
 export function refText(ref: ContextReference): string {

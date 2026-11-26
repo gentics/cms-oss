@@ -8,6 +8,7 @@ import {
     type CmsItemType,
     type CmsNode,
     isCmsFeatureActive,
+    listCmsExternalFormTypes,
     listCmsFolders,
     listCmsLanguages,
     listCmsNodes,
@@ -28,6 +29,8 @@ export const cmsKeys = {
     folderLevel: (nodeId: number, folderId: number) => ['cms', 'nodes', nodeId, 'folders', folderId] as const,
     folderSearch: (nodeId: number, folderId: number, query: string) => ['cms', 'nodes', nodeId, 'folder-search', folderId, query] as const,
     images: (node: CmsNode | undefined, query: string) => ['cms', 'nodes', node?.id, 'images', query] as const,
+    forms: (node: CmsNode | undefined, query: string) => ['cms', 'nodes', node?.id, 'forms', query] as const,
+    externalFormTypes: (nodeId: number) => ['cms', 'nodes', nodeId, 'form-types', 'external'] as const,
     folderPages: (node: CmsNode | undefined, folderId: number | undefined) => ['cms', 'nodes', node?.id, 'folder-pages', folderId] as const,
     page: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId] as const,
     publishPermission: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId, 'perm', 'publish'] as const,
@@ -68,6 +71,29 @@ export function useCmsLanguages(nodeIds: number[]) {
                 .filter((language, index, all) => all.findIndex(({ code }) => code === language.code) === index),
             isPending: results.some((result) => result.isPending),
         }),
+    });
+}
+
+/**
+ * Whether a form is external, by the external form types of the nodes `nodeIds` (`listCmsExternalFormTypes`); like the
+ * nodes, 5 minutes fresh. `isExternal(nodeId, formType)` is `false` while a node's types are not known or could not be
+ * loaded: the mark is informational (contract `ContextReference.external`), a write to an external form is refused by
+ * the CMS whatever the UI says.
+ */
+export function useCmsExternalFormTypes(nodeIds: number[]) {
+    return useQueries({
+        queries: nodeIds.map((nodeId) => ({
+            queryKey: cmsKeys.externalFormTypes(nodeId),
+            queryFn: ({ signal }: { signal: AbortSignal }) => listCmsExternalFormTypes(nodeId, signal),
+            staleTime: 5 * 60 * 1000,
+        })),
+        combine: (results) => {
+            const byNode = new Map(nodeIds.map((nodeId, index) => [nodeId, results[index]?.data] as const));
+
+            return {
+                isExternal: (nodeId: number, formType: string | undefined) => formType !== undefined && byNode.get(nodeId)?.has(formType) === true,
+            };
+        },
     });
 }
 
@@ -176,6 +202,17 @@ export function useCmsImages(node: CmsNode | undefined, query: string) {
     return useQuery({
         queryKey: cmsKeys.images(node, query),
         queryFn: node ? ({ signal }) => searchCmsItems(node, 'image', query, { recursive: true, signal }) : skipToken,
+    });
+}
+
+/**
+ * The forms in `node` that match `query` (`searchCmsItems`, forms only); an empty query lists all of the node's forms,
+ * also those below its root folder (`recursive`), as `useCmsImages` does. Off while there is no node.
+ */
+export function useCmsForms(node: CmsNode | undefined, query: string) {
+    return useQuery({
+        queryKey: cmsKeys.forms(node, query),
+        queryFn: node ? ({ signal }) => searchCmsItems(node, 'form', query, { recursive: true, signal }) : skipToken,
     });
 }
 

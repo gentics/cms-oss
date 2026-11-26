@@ -44,6 +44,16 @@ describe('usePublishedUrls', () => {
         expect(pageLoads).toEqual(['/rest/page/load/72?nodeId=1']);
     });
 
+    it('gives a form a plan published no address and does not load it as a page (rc.6)', async () => {
+        const fetchMock = stubCmsPublishPaths({ 72: '/Aufgaben/72.html' }, { host: 'https://www.example.com', nodeId: 1 });
+        const form: Publication = { cms_ref: { type: 'form', id: 4410, node_id: 1, name: 'Contact', connection_id: 'c-1' }, status: 'published', approval_chain: [] };
+        const { result } = renderUrls([form, publication(72, 'published')]);
+
+        await waitFor(() => expect(result.current[1]?.href).toBe('https://www.example.com/Aufgaben/72.html'));
+        expect(result.current[0]).toBeUndefined();
+        expect(fetchMock.mock.calls.map(([input]) => String(input)).filter((url) => url.includes('/rest/page/load/'))).toEqual(['/rest/page/load/72?nodeId=1']);
+    });
+
     it('gives no address when the page cannot be read', async () => {
         // The CMS gives no page 72.
         const fetchMock = stubCmsPublishPaths({}, { host: 'https://www.example.com', nodeId: 1 });

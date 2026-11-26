@@ -130,6 +130,17 @@ const listMulti: SelectableListPart = {
     ],
 };
 
+// Forms as objects (rc.6): a CMS form and one of an external form type, which its token marks as external.
+const listForms: SelectableListPart = {
+    type: 'selectable_list',
+    label: 'Formulare',
+    multi: false,
+    items: [
+        { id: '4410', label: 'Kontaktformular', ref: { type: 'form', id: '4410', node_id: 3, label: 'Kontaktformular' } },
+        { id: '4412', label: 'Newsletter-Anmeldung', ref: { type: 'form', id: '4412', node_id: 3, label: 'Newsletter-Anmeldung', external: true } },
+    ],
+};
+
 const properties: PropertiesListPart = {
     type: 'properties_list',
     label: 'Seiteneigenschaften',
@@ -333,7 +344,7 @@ const samplesByType: { [Type in PartType]: PartSample[] } & { fallback: PartSamp
     text: [{ id: 'textMarkdown', part: textMarkdown }, { id: 'textPlain', part: textPlain }],
     status_note: [{ id: 'noteInfo', part: noteInfo }, { id: 'noteWarning', part: noteWarning }, { id: 'noteSkipped', part: noteSkipped }],
     tree_view: [{ id: 'treeNested', part: treeNested }, { id: 'treeFlat', part: treeFlat }],
-    selectable_list: [{ id: 'listSingle', part: listSingle }, { id: 'listMulti', part: listMulti }],
+    selectable_list: [{ id: 'listSingle', part: listSingle }, { id: 'listMulti', part: listMulti }, { id: 'listForms', part: listForms }],
     properties_list: [{ id: 'properties', part: properties }],
     image_grid: [{ id: 'imagesSingle', part: imagesSingle }, { id: 'imagesMulti', part: imagesMulti }],
     table: [{ id: 'tableFull', part: tableFull }, { id: 'tableSmall', part: tableSmall }],

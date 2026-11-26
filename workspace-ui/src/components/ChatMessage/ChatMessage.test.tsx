@@ -84,6 +84,23 @@ describe('ChatMessage', () => {
         expect(token?.querySelector('svg')).toHaveClass('lucide-sliders-horizontal');
     });
 
+    it('says when a form sent as context is an external one (rc.6)', () => {
+        render(
+            <ChatMessage
+                role="user"
+                sessionId="s-1"
+                parts={[
+                    { type: 'reference', ref: { type: 'form', id: '4410', node_id: 3, label: 'Kontaktformular' } },
+                    { type: 'reference', ref: { type: 'form', id: '4412', node_id: 3, label: 'Kontakt CRM', external: true } },
+                ]}
+            />,
+            { wrapper: UiProvider },
+        );
+
+        expect(screen.getByText('Kontaktformular')).toBeInTheDocument();
+        expect(screen.getByText('Kontakt CRM · External')).toBeInTheDocument();
+    });
+
     it('marks a streaming message as busy, without a cursor in its text', () => {
         const { container } = render(
             <ChatMessage

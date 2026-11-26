@@ -9,6 +9,7 @@ import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
+import { pagePublicationsOf } from '@/helper/planActions/planActions';
 import { readOnlyPreviewUrl } from '@/helper/previewUrl/previewUrl';
 import { usePlanState } from '@/hooks/useGenaixQueries';
 import { usePublishedUrls } from '@/hooks/usePublishedUrls';
@@ -33,7 +34,8 @@ const OUTCOMES: Publication['status'][] = ['published', 'review_requested'];
 function Outcome({ sessionId, state }: { sessionId: string; state: PlanState }) {
     const { t } = useTranslation();
     const headlineId = useId();
-    const pages = state.publications ?? [];
+    // The pages only: a form the plan published too (rc.6) has no address and is no page to count.
+    const pages = pagePublicationsOf(state.publications ?? []);
     const counts = OUTCOMES.map((status) => [status, pages.filter((page) => page.status === status).length] as const).filter(([, count]) => count > 0);
     const isMixed = counts.length > 1;
     const isReview = !isMixed && counts[0]?.[0] === 'review_requested';

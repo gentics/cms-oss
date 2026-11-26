@@ -39,10 +39,11 @@ export function publishedUrlFrom(host: string | undefined, publishPath: string |
  * (`onlinePublicationOf`), its `publishPath` on its node's `host`, both read from the CMS (`publishedUrlFrom`),
  * which needs no CMS feature, unlike `liveUrl`. GenAIx's `cms_ref.url` is not used: GenAIx may leave it out.
  * Only an online page is loaded (`GET /rest/page/load`, under `cmsKeys.page` like `useCmsPage`); the nodes come
- * from `useCmsNodes`. `undefined` for a page not online, while loading, and when a load fails.
+ * from `useCmsNodes`. `undefined` for a page not online, while loading, and when a load fails, and for anything that is
+ * not a page (a form a plan published, rc.6), which has no address of its own.
  */
 export function usePublishedUrls(publications: Publication[], pages: CmsObjectRef[]): (URL | undefined)[] {
-    const online = pages.map((page) => onlinePublicationOf(publications, page) !== undefined);
+    const online = pages.map((page) => page.type === 'page' && onlinePublicationOf(publications, page) !== undefined);
     const nodes = useCmsNodes().data;
     const loaded = useQueries({
         queries: pages.map((page, index) => ({

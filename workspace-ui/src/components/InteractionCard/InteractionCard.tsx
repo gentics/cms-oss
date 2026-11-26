@@ -2,6 +2,7 @@ import { CheckIcon, CircleCheckIcon, CircleQuestionMarkIcon, MessageSquareIcon, 
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { FormReferenceField } from '@/components/FormReferenceField/FormReferenceField';
 import { ImageReferenceField, type ImageReferenceType } from '@/components/ImageReferenceField/ImageReferenceField';
 import { PartCard } from '@/components/MessageParts/PartCard';
 import { SelectableList } from '@/components/MessageParts/SelectableList';
@@ -82,8 +83,9 @@ function recommendedOf(interaction: Interaction): string[] {
 // addition): what GenAIx recommends first, preselected, with a "Recommended" badge, and every option with
 // why it is offered (`reason`). With `other_allowed`, "Something else" takes the user's own text, sent as
 // `other`: instead of the option in a single choice (`selected` then empty), besides those chosen in a
-// multiple one.
-function Choice({ interaction, onSubmit, disabled }: KindProps) {
+// multiple one. With `reference_types` naming `form` (rc.6, e.g. the form a page embeds), a form picker below the
+// options takes another existing form, sent as `reference`, in the same way.
+function Choice({ interaction, onSubmit, disabled, sessionId }: KindProps) {
     const { t } = useTranslation();
     const recommended = useMemo(() => recommendedOf(interaction), [interaction]);
     const items = useMemo(() => {
@@ -97,23 +99,45 @@ function Choice({ interaction, onSubmit, disabled }: KindProps) {
     const [selected, setSelected] = useState<string[]>(recommended);
     const [isOther, setIsOther] = useState(false);
     const [otherText, setOtherText] = useState('');
+    const [reference, setReference] = useState<ContextReference | undefined>(undefined);
     const isMulti = interaction.multi ?? false;
     const other = interaction.other_allowed && isOther ? otherText.trim() : '';
+    const picksForm = interaction.reference_types?.includes('form') ?? false;
+    const pickLabel = t('chat.interaction.pickForm');
     const answer = useMemo(() => {
-        if (other) {
-            return { selected, other };
+        if (other || reference) {
+            return { selected, ...(other && { other }), ...(reference && { reference }) };
         }
 
         return selected.length > 0 ? { selected } : undefined;
-    }, [selected, other]);
+    }, [selected, other, reference]);
 
     useDraft(interaction.id, answer);
+
+    // In a single choice an option, "Something else" and a picked form each replace the others.
+    function select(ids: string[]) {
+        setSelected(ids);
+
+        if (!isMulti) {
+            setReference(undefined);
+        }
+    }
 
     function selectOther(isSelected: boolean) {
         setIsOther(isSelected);
 
         if (isSelected && !isMulti) {
             setSelected([]);
+            setReference(undefined);
+        }
+    }
+
+    function pickReference(picked: ContextReference) {
+        setReference(picked);
+
+        if (!isMulti) {
+            setSelected([]);
+            setIsOther(false);
         }
     }
 
@@ -123,7 +147,7 @@ function Choice({ interaction, onSubmit, disabled }: KindProps) {
                 items={items}
                 multi={isMulti}
                 value={selected}
-                onChange={setSelected}
+                onChange={select}
                 label={interaction.prompt}
                 other={interaction.other_allowed
                     ? {
@@ -138,6 +162,12 @@ function Choice({ interaction, onSubmit, disabled }: KindProps) {
                     }
                     : undefined}
             />
+            {picksForm && (
+                <div className={styles.field}>
+                    <span className={styles.fieldLabel}>{pickLabel}</span>
+                    <FormReferenceField sessionId={sessionId} value={reference} onChange={pickReference} label={pickLabel} disabled={disabled} />
+                </div>
+            )}
             <div className={styles.actions}>
                 <Button variant="primary" size="sm" disabled={disabled || !answer} onClick={() => answer && onSubmit(answer)}>
                     {t('chat.interaction.send')}
@@ -201,9 +231,9 @@ function Confirm({ interaction, onSubmit, disabled }: KindProps) {
  * What a reference field may name, as far as an image picker can offer it; `null` for any other field. A reference
  * field is `type: 'object'` with `format: 'context-reference'` and the allowed `ContextReference` types in
  * `x-reference-types`; its value is a `ContextReference` (`FormAnswer.values`).
- * Contract since `1.0.0-rc.6` (`openapi.yaml`, `Interaction.schema`, "A reference field"); this function and its tests
- * are the only place that reads the marker. Other reference types still fall through to a text input, which rc.6 rules
- * out (separate ticket, `TODO-reference-field-types.md`).
+ * Contract since `1.0.0-rc.6` (`openapi.yaml`, `Interaction.schema`, "A reference field"); this function,
+ * `isFormReference` and their tests are the only places that read the marker. Other reference types than images and
+ * forms still fall through to a text input, which rc.6 rules out (separate ticket, `TODO-reference-field-types.md`).
  */
 function referenceTypes(property: SchemaProperty): ImageReferenceType[] | null {
     const allowed = property['x-reference-types'];
@@ -217,6 +247,13 @@ function referenceTypes(property: SchemaProperty): ImageReferenceType[] | null {
     return types.length > 0 ? types : null;
 }
 
+/** Whether a reference field may name a CMS form (`x-reference-types` lists `form`): it is then a form picker. */
+function isFormReference(property: SchemaProperty): boolean {
+    const allowed = property['x-reference-types'];
+
+    return property.type === 'object' && property.format === 'context-reference' && Array.isArray(allowed) && allowed.includes('form');
+}
+
 function schemaOf(interaction: Interaction): { properties: [string, SchemaProperty][]; required: string[] } {
     const schema = interaction.schema ?? {};
     const properties = typeof schema.properties === 'object' && schema.properties !== null ? schema.properties as Record<string, SchemaProperty> : {};
@@ -226,7 +263,8 @@ function schemaOf(interaction: Interaction): { properties: [string, SchemaProper
 }
 
 // `form`: one field per property of the flat schema (contract `FormAnswer`); GenAIx validates the values. A field that
-// asks for an image (`referenceTypes`) is an image picker, its value a reference (`ImageReferenceField`).
+// asks for a form (`isFormReference`) is a form picker (`FormReferenceField`), one that asks for an image
+// (`referenceTypes`) an image picker (`ImageReferenceField`); the value of either is a reference.
 function Form({ interaction, onSubmit, disabled, sessionId }: KindProps) {
     const { t } = useTranslation();
     const { properties, required } = useMemo(() => schemaOf(interaction), [interaction]);
@@ -270,6 +308,24 @@ function Form({ interaction, onSubmit, disabled, sessionId }: KindProps) {
                 const isRequired = required.includes(key);
                 const mark = isRequired ? <span className={styles.required} aria-hidden>*</span> : null;
                 const references = referenceTypes(property);
+
+                if (isFormReference(property)) {
+                    const value = values[key];
+
+                    return (
+                        <div key={key} className={styles.field}>
+                            <span id={id} className={styles.fieldLabel}>{label}{mark}</span>
+                            <FormReferenceField
+                                sessionId={sessionId}
+                                value={typeof value === 'object' ? value : undefined}
+                                onChange={(reference) => set(key, reference)}
+                                label={label}
+                                disabled={disabled}
+                            />
+                            {property.description && <span className={styles.hint}>{property.description}</span>}
+                        </div>
+                    );
+                }
 
                 if (references) {
                     return (

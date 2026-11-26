@@ -13,7 +13,10 @@ export function showsProgress(status: PlanStatus): boolean {
 }
 
 // The kinds a glance counts: the items that write. `report` and `other` are never counted.
-const COUNTED: ReadonlySet<Kind> = new Set<Kind>(['create', 'update', 'link', 'translate', 'publish', 'construct']);
+const COUNTED: ReadonlySet<Kind> = new Set<Kind>(['create', 'update', 'delete', 'link', 'translate', 'publish', 'construct']);
+
+// The kinds an external form never counts for: GenAIx neither creates nor deletes one (rc.6, 03-genaix-api.md §8).
+const NOT_FOR_EXTERNAL: ReadonlySet<Kind> = new Set<Kind>(['create', 'delete']);
 
 // The kinds that bring an object into being, counted as "+3".
 const NEW_KINDS: ReadonlySet<Kind> = new Set<Kind>(['create', 'translate']);
@@ -34,13 +37,18 @@ export interface GlanceEntry {
 /**
  * The plan at a glance (rc.5 addition, 09-integration-guide.md "The plan at a glance"): its items
  * without a `parent`, but neither `removed` nor `report` or `other`, grouped by `kind` and by the type of
- * the object each concerns (`creates.type`, else `target.type`), in the order the groups first appear.
+ * the object each concerns (`creates.type`, else `target.type`, as for a `delete`), in the order the groups first
+ * appear. An external form never counts as created or deleted (rc.6).
  */
 export function planGlance(items: PlanItem[]): GlanceEntry[] {
     const groups = new Map<string, GlanceEntry & { allCreate: boolean }>();
 
     for (const item of items) {
         if (item.parent || item.status === 'removed' || !COUNTED.has(item.kind)) {
+            continue;
+        }
+
+        if (item.target?.external && NOT_FOR_EXTERNAL.has(item.kind)) {
             continue;
         }
 

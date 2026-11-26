@@ -40,6 +40,8 @@ interface SelectableListProps {
     /** The accessible name of the list. */
     label: string;
     other?: SelectableOther;
+    /** Takes no choice, e.g. once a question card's answer is sent. */
+    disabled?: boolean;
 }
 
 // The radio value of the `other` row in a single choice; item ids come from GenAIx and never start with NUL.
@@ -50,17 +52,18 @@ const OTHER_VALUE = '\u0000other';
  * interaction. Controlled: `value` holds the ids of the selected items. With `other`, a last row takes
  * the user's own text; typing into its field selects it, and in a single choice it is one of the radios.
  */
-export function SelectableList({ items, multi, value, onChange, label, other }: SelectableListProps) {
+export function SelectableList({ items, multi, value, onChange, label, other, disabled = false }: SelectableListProps) {
     const rows = items.map((item) => (
         <label key={item.id} className={styles.row}>
             {multi
                 ? (
                     <Checkbox
                         checked={value.includes(item.id)}
+                        disabled={disabled}
                         onCheckedChange={(checked) => onChange(checked ? [...value, item.id] : value.filter((id) => id !== item.id))}
                     />
                 )
-                : <Radio value={item.id} />}
+                : <Radio value={item.id} disabled={disabled} />}
             <span className={styles.rowText}>
                 <span className={styles.rowLabel}>
                     {item.label}

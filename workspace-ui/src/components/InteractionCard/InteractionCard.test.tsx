@@ -457,6 +457,126 @@ describe('InteractionCard', () => {
         });
     });
 
+    describe('a form field or a choice that asks for a CMS form (contract 1.0.0-rc.6)', () => {
+        const NODE = { id: 3, name: 'Corporate Website', folderId: 7 };
+
+        // The session works in node 3, which has a CMS form and an external one; the answer is accepted.
+        function stubSessionFormsAndAnswer() {
+            const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+                const url = new URL(String(input), 'http://app.test');
+
+                if (init?.method === 'POST') {
+                    return Response.json({ id: 'i-1', status: 'answered' });
+                }
+
+                if (url.pathname === '/rest/proxy/genaix/sessions/s-1') {
+                    return Response.json({ id: 's-1', status: 'active', context: { node_id: 3 } });
+                }
+
+                if (url.pathname === '/rest/node') {
+                    return Response.json({ items: [NODE] });
+                }
+
+                if (url.pathname === '/rest/form') {
+                    return Response.json({ items: [{ id: 4410, name: 'Kontaktformular', formType: 'contact' }, { id: 4412, name: 'Newsletter-Anmeldung', formType: 'crm-lead' }] });
+                }
+
+                if (url.pathname === '/rest/form/types') {
+                    return Response.json({ items: [{ type: 'crm-lead', external: true }] });
+                }
+
+                return new Response(null, { status: 404 });
+            });
+
+            vi.stubGlobal('fetch', fetchMock);
+
+            return fetchMock;
+        }
+
+        it('offers a form picker for a reference field that lists form, and answers with the picked form', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubSessionFormsAndAnswer();
+
+            renderCard(interaction({
+                kind: 'form',
+                prompt: 'Which form should the page embed?',
+                schema: { type: 'object', required: ['form'], properties: { form: { title: 'Form', type: 'object', format: 'context-reference', 'x-reference-types': ['form'] } } },
+            }));
+
+            const send = screen.getByRole('button', { name: 'Send' });
+
+            expect(screen.queryByRole('textbox', { name: /Form/ })).not.toBeInTheDocument();
+            expect(send).toBeDisabled();
+
+            await user.click(await screen.findByRole('radio', { name: /Newsletter-Anmeldung/ }));
+            await user.click(send);
+
+            expect(await sentAnswer(fetchMock)).toEqual({
+                values: { form: { type: 'form', id: '4412', node_id: 3, label: 'Newsletter-Anmeldung', external: true } },
+            });
+        });
+
+        // The form a content module picked, confirmed on a choice (08-workflow-modules.md §8.6).
+        const formChoice = interaction({
+            kind: 'choice',
+            prompt: 'Welches Formular soll die Seite einbetten?',
+            options: [
+                { id: 'form-4410', label: 'Kontaktformular', reason: 'Fragt Name, E-Mail und Nachricht ab.', ref: { type: 'form', id: '4410', node_id: 3, label: 'Kontaktformular' } },
+                { id: 'form-4412', label: 'Newsletter-Anmeldung', ref: { type: 'form', id: '4412', node_id: 3, label: 'Newsletter-Anmeldung', external: true } },
+            ],
+            recommended: ['form-4410'],
+            reference_types: ['form'],
+        });
+
+        it('answers a choice with another form picked beside the options as reference, no option selected', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubSessionFormsAndAnswer();
+
+            renderCard(formChoice);
+
+            const [recommended] = screen.getAllByRole('radio');
+
+            expect(recommended).toBeChecked();
+
+            await user.click(within(await screen.findByRole('radiogroup', { name: 'Or pick another form' })).getByRole('radio', { name: /Kontaktformular/ }));
+
+            expect(recommended).not.toBeChecked();
+
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+
+            expect(await sentAnswer(fetchMock)).toEqual({ selected: [], reference: { type: 'form', id: '4410', node_id: 3, label: 'Kontaktformular' } });
+        });
+
+        it('drops a picked form again when an option is chosen after it', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubSessionFormsAndAnswer();
+
+            renderCard(formChoice);
+
+            const picker = await screen.findByRole('radiogroup', { name: 'Or pick another form' });
+
+            await user.click(within(picker).getByRole('radio', { name: /Newsletter-Anmeldung/ }));
+            await user.click(within(screen.getByRole('radiogroup', { name: 'Welches Formular soll die Seite einbetten?' })).getByRole('radio', { name: /Newsletter-Anmeldung/ }));
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+
+            expect(await sentAnswer(fetchMock)).toEqual({ selected: ['form-4412'] });
+        });
+
+        it('shows an option\'s form as a token marked external where it is one', () => {
+            stubSessionFormsAndAnswer();
+            renderCard(formChoice);
+
+            expect(screen.getByTitle('Newsletter-Anmeldung · External')).toBeInTheDocument();
+        });
+
+        it('offers no form picker for a choice without reference_types', () => {
+            stubSessionFormsAndAnswer();
+            renderCard(interaction({ kind: 'choice', prompt: 'Which one?', options: [{ id: 'a', label: 'A' }] }));
+
+            expect(screen.queryByText('Or pick another form')).not.toBeInTheDocument();
+        });
+    });
+
     it('answers an ask_user with the text', async () => {
         const user = userEvent.setup();
         const fetchMock = stubAnswer();

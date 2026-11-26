@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { ReferenceToken } from '@/components/ReferenceToken/ReferenceToken';
 import { Button } from '@/components/ui/button';
-import { FILE_REF_NODE, type FileRefAttrs, SETTING_NODE, TOKEN_ATTRIBUTE, tokenLabel } from '@/helper/composerParts/composerParts';
+import { FILE_REF_NODE, type FileRefAttrs, REFERENCE_NODE, type ReferenceAttrs, SETTING_NODE, TOKEN_ATTRIBUTE, tokenLabel } from '@/helper/composerParts/composerParts';
 
 // The icon of each kind of token (design.md §9); a reference keeps `ReferenceToken`'s `@`.
 const ICONS: Partial<Record<string, LucideIcon>> = { [SETTING_NODE]: SlidersHorizontalIcon, [FILE_REF_NODE]: PaperclipIcon };
@@ -15,7 +15,9 @@ const ICONS: Partial<Record<string, LucideIcon>> = { [SETTING_NODE]: SlidersHori
  */
 export function TokenChip({ node, deleteNode }: ReactNodeViewProps) {
     const { t } = useTranslation();
-    const label = tokenLabel(node);
+    // A form of an external form type says so after its name (rc.6, `ContextReference.external`).
+    const isExternal = node.type.name === REFERENCE_NODE && (node.attrs as ReferenceAttrs).ref.external === true;
+    const label = isExternal ? `${tokenLabel(node)} · ${t('reference.external')}` : tokenLabel(node);
     const removeLabel = t('composer.removeToken', { label });
     const isVerbatim = node.type.name === FILE_REF_NODE && (node.attrs as FileRefAttrs).mode === 'verbatim';
 

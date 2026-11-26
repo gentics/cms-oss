@@ -30,6 +30,9 @@ const UPLOAD = {
 const ROOT_ITEMS = [{ id: 1, name: 'Home', type: 'page' }, { id: 2, name: 'News', type: 'folder', path: '/Corporate Website/' }];
 const FOUND_ITEMS = [{ id: 8871, name: 'Campaign launch', type: 'page', path: '/Corporate Website/Campaigns/' }, { id: 42, name: 'Campaigns', type: 'folder' }];
 
+// The forms of the node that "Kont" finds: a CMS form and one of an external form type (`crm-lead`).
+const FORMS = [{ id: 4410, name: 'Kontaktformular', formType: 'contact' }, { id: 4412, name: 'Kontakt CRM', formType: 'crm-lead' }];
+
 // While set, CMS searches for text wait for it before they answer.
 let searchesHeld: Promise<void> | null = null;
 
@@ -54,6 +57,16 @@ function stubBackend() {
             const items = listed.filter((item) => item.type === type);
 
             return Response.json(type === 'folder' ? { folders: items } : { items });
+        }
+
+        if (url.pathname === '/rest/form') {
+            const query = url.searchParams.get('q');
+
+            return Response.json({ items: query?.toLowerCase().startsWith('kont') ? FORMS : [] });
+        }
+
+        if (url.pathname === '/rest/form/types') {
+            return Response.json({ items: [{ type: 'crm-lead', external: true }] });
         }
 
         if (url.pathname.endsWith('/sessions/s-1/files')) {
@@ -142,13 +155,34 @@ describe('ReferenceMenu', () => {
 
         const list = await screen.findByRole('listbox', { name: 'Context' });
 
-        expect(within(list).getAllByRole('option').map((option) => option.textContent)).toEqual(['Pages', 'Folders', 'Images', 'Files', 'Project']);
+        expect(within(list).getAllByRole('option').map((option) => option.textContent)).toEqual(['Pages', 'Folders', 'Images', 'Forms', 'Files', 'Project']);
         expect(screen.queryByText('No context found.')).not.toBeInTheDocument();
 
         await user.click(within(list).getByRole('option', { name: 'Files' }));
         await user.click(await within(list).findByRole('option', { name: /brief\.pdf/ }));
 
         expect(parts()).toEqual([{ type: 'file_ref', file_id: UPLOAD.id, mode: 'verbatim' }]);
+    });
+
+    it('finds forms, and inserts one of an external form type as an external form reference (rc.6)', async () => {
+        const user = userEvent.setup();
+        const { field, parts } = renderField();
+
+        await user.click(field);
+        await user.keyboard('@form:Kont');
+
+        const list = await screen.findByRole('listbox', { name: 'Context' });
+
+        expect(await within(list).findByText('Forms · 2')).toBeInTheDocument();
+
+        const external = await within(list).findByRole('option', { name: /Kontakt CRM/ });
+
+        await waitFor(() => expect(external).toHaveTextContent('Corporate Website · External'));
+        expect(within(list).getByRole('option', { name: /Kontaktformular/ })).not.toHaveTextContent('External');
+
+        await user.click(external);
+
+        expect(parts()).toEqual([{ type: 'reference', ref: { type: 'form', id: '4412', node_id: 3, label: 'Kontakt CRM', external: true } }]);
     });
 
     it('offers no Files group without a session', async () => {
@@ -160,7 +194,7 @@ describe('ReferenceMenu', () => {
 
         const list = await screen.findByRole('listbox', { name: 'Context' });
 
-        expect(within(list).getAllByRole('option').map((option) => option.textContent)).toEqual(['Pages', 'Folders', 'Images', 'Project']);
+        expect(within(list).getAllByRole('option').map((option) => option.textContent)).toEqual(['Pages', 'Folders', 'Images', 'Forms', 'Project']);
     });
 
     it('shows the root level of the group chosen with the keyboard, and Backspace goes back to the groups', async () => {
@@ -202,7 +236,7 @@ describe('ReferenceMenu', () => {
         await user.keyboard('{ArrowLeft}');
 
         expect(screen.queryByRole('button', { name: 'Remove filter' })).not.toBeInTheDocument();
-        expect(within(list).getAllByRole('option').map((option) => option.textContent)).toEqual(['Pages', 'Folders', 'Images', 'Project']);
+        expect(within(list).getAllByRole('option').map((option) => option.textContent)).toEqual(['Pages', 'Folders', 'Images', 'Forms', 'Project']);
     });
 
     it('scrolls the entry the keyboard moves to into view, with its group head when it is the first there', async () => {

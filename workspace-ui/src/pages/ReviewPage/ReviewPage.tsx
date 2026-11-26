@@ -7,6 +7,7 @@ import { ReviewPages } from '@/components/ReviewPages/ReviewPages';
 import { ReviewPanel } from '@/components/ReviewPanel/ReviewPanel';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
+import { formPublicationsOf, pagePublicationsOf } from '@/helper/planActions/planActions';
 import { usePlanState } from '@/hooks/useGenaixQueries';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { PlanState } from '@/services/apiService/genaix/types';
@@ -57,7 +58,9 @@ export function ReviewPage() {
     // The session's, of all its plans: a page a plan published earlier is offered live too.
     const sessionPublications = useWorkspaceEventStore((store) => selectSession(id)(store).publications);
     const { preview: latest, previews } = planPreviews(state.data, livePreviews);
-    const publications = state.data?.publications ?? [];
+    // The pages to pick and preview; the forms the plan publishes too (rc.6) are listed apart, without a preview.
+    const publications = pagePublicationsOf(state.data?.publications ?? []);
+    const forms = formPublicationsOf(state.data?.publications ?? []);
     const page = publications.length > 1
         ? publications.find(({ cms_ref: ref }) => ref.id === pageId) ?? publications.find(({ cms_ref: ref }) => latest !== undefined && isSameCmsObject(ref, latest.cms_ref)) ?? publications[0]
         : undefined;
@@ -89,7 +92,7 @@ export function ReviewPage() {
                 <h1 className={styles.title}>{t('review.pageTitle')}</h1>
             </header>
             <main className={styles.main}>
-                {state.data && page && <ReviewPages sessionId={id} publications={publications} checks={state.data.checks} selectedId={page.cms_ref.id} />}
+                {state.data && page && <ReviewPages sessionId={id} publications={publications} forms={forms} checks={state.data.checks} selectedId={page.cms_ref.id} />}
                 <div className={styles.preview}>
                     {preview
                         ? <PreviewColumn preview={preview} previews={page ? undefined : previews} publications={[...Object.values(sessionPublications ?? {}).flat(), ...publications]} />

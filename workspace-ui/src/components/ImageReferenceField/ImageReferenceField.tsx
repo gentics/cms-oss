@@ -2,20 +2,13 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ImagePicker } from '@/components/ImagePicker/ImagePicker';
+import { referenceLabel } from '@/components/MessageParts/contextReference';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useSession, useUploadSessionFile } from '@/hooks/useGenaixQueries';
 import type { ContextReference } from '@/services/apiService/genaix/types';
 import type { CmsItem } from '@/services/cmsApiService/cmsApiService';
 
 import styles from './ImageReferenceField.module.css';
-
-/** The longest label a `ContextReference` takes (`openapi.yaml`, `ContextReference.label`, `maxLength`). */
-const LABEL_MAX_LENGTH = 512;
-
-/** `name` as a reference's label: cut to `LABEL_MAX_LENGTH`, ending with "…" where it was cut. */
-function referenceLabel(name: string): string {
-    return name.length > LABEL_MAX_LENGTH ? `${name.slice(0, LABEL_MAX_LENGTH - 1)}…` : name;
-}
 
 /**
  * Tells files apart for the uploads: the same file chosen again from the device is a new `File` object, but has the

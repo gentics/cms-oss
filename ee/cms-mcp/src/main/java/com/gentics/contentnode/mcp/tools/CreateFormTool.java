@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.ObjectRef;
@@ -16,6 +18,7 @@ import com.gentics.contentnode.mcp.util.ExternalFormException;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.resource.FormResource;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
@@ -31,10 +34,12 @@ public class CreateFormTool extends AbstractMcpTool {
 	static final String ARG_FORM_TYPE = "formType";
 
 	/**
-	 * Result of the tool
+	 * Result of the tool. Fields that are not set are omitted on serialization.
 	 * @param ref reference to the new form
+	 * @param version version of the new form
 	 */
-	public record Result(ObjectRef ref) {
+	@JsonInclude(Include.NON_NULL)
+	public record Result(ObjectRef ref, Forms.Version version) {
 	}
 
 	@Override
@@ -49,12 +54,15 @@ public class CreateFormTool extends AbstractMcpTool {
 		return Tool.builder().name("create_form").title("Create form")
 				.description("Creates one offline CMS form in a folder, or in the node's default form folder when "
 						+ "folderId is left out. formType must not be an external type: such a form is refused with "
-						+ "external-form-read-only, because external forms come from their external system.")
+						+ "external-form-read-only, because external forms come from their external system. data must "
+						+ "fit the form type (get_form_type): a control or block the type lacks, a select value that "
+						+ "is not an option or a label missing for one of the form's languages is refused with invalid-data listing every reason, and nothing is created. Name new "
+						+ "controls and blocks new:<anything>; the server names them.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties)
 						.required(List.of(Forms.ARG_NAME, ARG_FORM_TYPE, Forms.ARG_LANGUAGES))
 						.additionalProperties(false).build())
-				.outputSchema(schema("object", null, "properties", Map.of("ref", ObjectRef.jsonSchema("The new form.")),
-						"required", List.of("ref")))
+				.outputSchema(schema("object", null, "properties", Map.of("ref", ObjectRef.jsonSchema("The new form."),
+						"version", Forms.versionSchema()), "required", List.of("ref")))
 				.build();
 	}
 
@@ -74,9 +82,13 @@ public class CreateFormTool extends AbstractMcpTool {
 					.formatted(formType));
 		}
 
-		FormResponse response = Forms.resource().create(form, Forms.string(nodeId));
+		FormResource resource = Forms.resource();
+		if (form.getData() != null) {
+			form.setData(FormDefinitions.prepare(form.getData(), Forms.type(resource, formType), form.getLanguages()));
+		}
+		FormResponse response = resource.create(form, Forms.string(nodeId));
 		requireOk(response, "The form could not be created");
 		releaseLock(Form.class, Integer.toString(response.getItem().getId()));
-		return new Result(Forms.ref(response.getItem(), nodeId));
+		return new Result(Forms.ref(response.getItem(), nodeId), Forms.version(response.getItem()));
 	}
 }

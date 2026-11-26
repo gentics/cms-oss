@@ -67,7 +67,7 @@ public class ListFormTypesTool extends AbstractMcpTool {
 
 		return Tool.builder().name("list_form_types").title("List form types")
 				.description("Lists the form types a node offers, each saying whether it is external. create_form "
-						+ "needs one that is not.")
+						+ "needs one that is not; get_form_type gives what a type allows.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties)
 						.required(List.of(Forms.ARG_NODE_ID)).additionalProperties(false).build())
 				.outputSchema(schema("object", null, "properties", Map.of("items", schema("array", null, "items",

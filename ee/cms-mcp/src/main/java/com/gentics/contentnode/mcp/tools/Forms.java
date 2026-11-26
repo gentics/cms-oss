@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
@@ -16,8 +18,11 @@ import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.ExternalFormException;
 import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.rest.model.ItemVersion;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
 import com.gentics.contentnode.rest.resource.FormResource;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 
@@ -39,7 +44,50 @@ final class Forms {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
+	/**
+	 * A form's version, as the form editor's version history shows it
+	 * @param number version number
+	 * @param timestamp timestamp of the version
+	 */
+	@JsonInclude(Include.NON_NULL)
+	record Version(String number, int timestamp) {
+	}
+
 	private Forms() {
+	}
+
+	/**
+	 * Get a form's current version
+	 * @param form form
+	 * @return version, null if the form has none
+	 */
+	static Version version(FormModel form) {
+		ItemVersion version = form.getVersion();
+		return version != null && version.getNumber() != null ? new Version(version.getNumber(), version.getTimestamp())
+				: null;
+	}
+
+	/**
+	 * Build the schema of a form's version
+	 * @return schema
+	 */
+	static Map<String, Object> versionSchema() {
+		return schema("object", "The form's current version, as the CMS form editor's version history shows it. A "
+				+ "write over a version the caller has not seen is the caller's to prevent.", "properties",
+				Map.of("number", schema("string", null), "timestamp", schema("integer", null)), "required",
+				List.of("number"));
+	}
+
+	/**
+	 * Get a form type's configuration, as GET /form/types/{type} does
+	 * @param resource form resource
+	 * @param type form type
+	 * @return configuration
+	 * @throws Exception not found for an unknown type
+	 */
+	static FormTypeConfigurationModel type(FormResource resource, String type) throws Exception {
+		FormTypeConfigurationResponse response = resource.getFormTypeconfiguration(type);
+		return response.getItem();
 	}
 
 	/**
@@ -155,7 +203,24 @@ final class Forms {
 		properties.put(ARG_DESCRIPTION, schema("string", "Description of the form."));
 		properties.put(ARG_LANGUAGES, schema("array", "Language codes of the form.", "minItems", 1, "items",
 				schema("string", null)));
-		properties.put(ARG_DATA, Map.of("description", "The form's definition, in the shape its form type uses."));
+		properties.put(ARG_DATA, schema("object", "A CMS form's definition, the shape the CMS form editor saves. "
+				+ "schema.properties holds one entry per control, keyed by its name: {name, type, mandatory?, formPage?, "
+				+ "...the control's settings}; type is a control key of the form type. ui-schema.pages is the form's "
+				+ "pages, each {pagename: {<lang>: text}, elements: [...]}, an element {type: property (container or aggregate "
+				+ "for one holding elements), id: <the control's name or the block's id>, label?: {<lang>: text}, "
+				+ "description?: {<lang>: text}, uiSchemaPage: <page index>, formGridOptions: {type: <control or block key>, numberOfColumns: 1-12, "
+				+ "inForm, inSummary, ...}, elements?: [...] for a container}. Form-level settings sit beside them: "
+				+ "flowId, formWidth, adminEmailAddress, adminEmailSubject, adminEmailTemplate, adminEmailNodeId, "
+				+ "adminEmailPageId, captchaId, successNodeId, successPageId, successUrlI18n, templateContext. "
+				+ "get_form_type gives the controls, blocks and settings a type allows. NAMES: never invent a name. "
+				+ "Give each new control or block an id of the form new:<anything>, the same in its schema.properties "
+				+ "key, its name and its element id, and in any condition that refers to it; the server replaces every "
+				+ "new: placeholder with <control or block key>_<UUID v4 without dashes>, the name the form editor "
+				+ "gives, and keeps every other name, so stored submissions stay attached. schema.key and ui-schema.key "
+				+ "(one UUID per form) and version are filled in when missing. A write replaces the whole definition: "
+				+ "send all of it, not a change.", "properties",
+				Map.of(FormDefinitions.SCHEMA, schema("object", null), FormDefinitions.UI_SCHEMA, schema("object", null)),
+				"additionalProperties", true));
 		return properties;
 	}
 

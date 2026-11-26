@@ -14,6 +14,7 @@ import com.gentics.contentnode.mcp.tools.CreateFormTool;
 import com.gentics.contentnode.mcp.tools.DeleteFormTool;
 import com.gentics.contentnode.mcp.tools.FindSimilarTool;
 import com.gentics.contentnode.mcp.tools.GetFormTool;
+import com.gentics.contentnode.mcp.tools.GetFormTypeTool;
 import com.gentics.contentnode.mcp.tools.ListFormTypesTool;
 import com.gentics.contentnode.mcp.tools.PublishFormTool;
 import com.gentics.contentnode.mcp.tools.SearchContentTool;
@@ -32,8 +33,8 @@ public class McpModuleToolsContractTest {
 	@Test
 	public void testFormToolsConform() {
 		List<String> mismatches = new ArrayList<>();
-		for (AbstractMcpTool tool : List.of(new GetFormTool(), new ListFormTypesTool(), new CreateFormTool(),
-				new UpdateFormTool(), new DeleteFormTool(), new PublishFormTool())) {
+		for (AbstractMcpTool tool : List.of(new GetFormTool(), new ListFormTypesTool(), new GetFormTypeTool(),
+				new CreateFormTool(), new UpdateFormTool(), new DeleteFormTool(), new PublishFormTool())) {
 			mismatches.addAll(McpContractTest.mismatches(tool.tool()));
 		}
 		assertThat(mismatches).isEmpty();

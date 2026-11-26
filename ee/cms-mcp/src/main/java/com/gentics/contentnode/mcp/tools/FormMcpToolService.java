@@ -15,7 +15,7 @@ public class FormMcpToolService implements McpToolService {
 		if (!Feature.FORMS.isAvailable()) {
 			return List.of();
 		}
-		return List.of(new GetFormTool(), new ListFormTypesTool(), new CreateFormTool(), new UpdateFormTool(),
-				new DeleteFormTool(), new PublishFormTool());
+		return List.of(new GetFormTool(), new ListFormTypesTool(), new GetFormTypeTool(), new CreateFormTool(),
+				new UpdateFormTool(), new DeleteFormTool(), new PublishFormTool());
 	}
 }

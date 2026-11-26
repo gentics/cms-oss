@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.ObjectRef;
@@ -26,11 +28,13 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
  */
 public class UpdateFormTool extends AbstractMcpTool {
 	/**
-	 * Result of the tool
+	 * Result of the tool. Fields that are not set are omitted on serialization.
 	 * @param ref reference to the form
 	 * @param changed names of the fields given
+	 * @param version version after the change
 	 */
-	public record Result(ObjectRef ref, List<String> changed) {
+	@JsonInclude(Include.NON_NULL)
+	public record Result(ObjectRef ref, List<String> changed, Forms.Version version) {
 	}
 
 	@Override
@@ -43,11 +47,14 @@ public class UpdateFormTool extends AbstractMcpTool {
 		Map<String, Object> output = new LinkedHashMap<>();
 		output.put("ref", ObjectRef.jsonSchema("The form."));
 		output.put("changed", schema("array", "The fields given.", "items", schema("string", null)));
+		output.put("version", Forms.versionSchema());
 
 		return Tool.builder().name("update_form").title("Update form")
 				.description("Changes one form's name, description, languages or definition, and completes its own "
-						+ "lock cycle. A published form stays online in its published version until publish_form. "
-						+ "Refused with external-form-read-only for an external form.")
+						+ "lock cycle. data replaces the whole definition and is checked like create_form's; names the "
+						+ "form already has are kept, new:<anything> placeholders are named by the server. A published "
+						+ "form stays online in its published version until publish_form. Refused with "
+						+ "external-form-read-only for an external form.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties)
 						.required(List.of(Forms.ARG_FORM_ID)).additionalProperties(false).build())
 				.outputSchema(schema("object", null, "properties", output, "required", List.of("ref")))
@@ -68,12 +75,17 @@ public class UpdateFormTool extends AbstractMcpTool {
 		FormResponse loaded = Forms.load(resource, id, Forms.string(nodeId));
 		requireOk(loaded, "The form %d could not be loaded".formatted(id));
 		Forms.requireWritable(loaded.getItem());
+		if (form.getData() != null) {
+			List<String> languages = form.getLanguages() != null ? form.getLanguages() : loaded.getItem().getLanguages();
+			form.setData(FormDefinitions.prepare(form.getData(), Forms.type(resource, loaded.getItem().getFormType()),
+					languages != null ? languages : List.of()));
+		}
 
 		String idString = Integer.toString(id);
 		FormResponse response = (FormResponse) saveOrReleaseLock(Form.class, idString,
 				"The form %d was not saved".formatted(id), () -> resource.update(idString, Forms.string(nodeId), form));
 		releaseLock(Form.class, idString);
-		return new Result(Forms.ref(response.getItem(), nodeId), changed);
+		return new Result(Forms.ref(response.getItem(), nodeId), changed, Forms.version(response.getItem()));
 	}
 
 	/**

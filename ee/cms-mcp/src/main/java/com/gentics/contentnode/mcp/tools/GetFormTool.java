@@ -35,10 +35,12 @@ public class GetFormTool extends AbstractMcpTool {
 	 * @param modified whether the form has changes that are not online
 	 * @param locked whether the form is locked
 	 * @param data definition
+	 * @param version current version
 	 */
 	@JsonInclude(Include.NON_NULL)
 	public record Result(ObjectRef ref, String name, String description, String formType, boolean external,
-			List<String> languages, boolean online, boolean modified, boolean locked, Object data) {
+			List<String> languages, boolean online, boolean modified, boolean locked, Object data,
+			Forms.Version version) {
 	}
 
 	/**
@@ -66,7 +68,8 @@ public class GetFormTool extends AbstractMcpTool {
 		output.put("online", schema("boolean", null));
 		output.put("modified", schema("boolean", null));
 		output.put("locked", schema("boolean", null));
-		output.put("data", Map.of("description", "The form's definition, in the shape its form type uses."));
+		output.put("data", Map.of("description", "The form's definition, the shape the CMS form editor saves."));
+		output.put("version", Forms.versionSchema());
 
 		return Tool.builder().name("get_form").title("Get form")
 				.description("Reads one form: name, type, languages, publish state, whether it is external, and its "
@@ -88,6 +91,6 @@ public class GetFormTool extends AbstractMcpTool {
 		FormModel form = response.getItem();
 		return new Result(Forms.ref(form, nodeId), form.getName(), form.getDescription(), form.getFormType(),
 				Forms.isExternal(form.getFormType()), form.getLanguages(), form.isOnline(), form.isModified(),
-				form.isLocked(), Forms.data(form.getData()));
+				form.isLocked(), Forms.data(form.getData()), Forms.version(form));
 	}
 }

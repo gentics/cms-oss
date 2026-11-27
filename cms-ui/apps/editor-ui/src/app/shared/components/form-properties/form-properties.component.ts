@@ -7,11 +7,15 @@ import {
     OnInit,
     SimpleChanges,
 } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import {
     EditableFormData,
     EditableFormProperties,
     Form,
+    FormElement,
+    FormElementConfiguration,
+    FormSettingConfiguration,
+    FormSettingType,
     FormTypeConfiguration,
     I18nString,
     ItemInNode,
@@ -21,7 +25,9 @@ import {
     Page,
     Raw,
 } from '@gentics/cms-models';
+import { getValueByPath } from '@gentics/common';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { isSettingVisible } from '@gentics/form-grid';
 import {
     BaseFormPropertiesComponent,
     FormProperties,
@@ -38,6 +44,9 @@ export enum FormPropertiesMode {
 export interface FormPropertiesData extends EditableFormProperties {
     formType: string;
 }
+
+/** Default property in the form data, in which the values of the form settings are stored. */
+export const FORM_SETTINGS_PROPERTY = 'formSettings';
 
 @Component({
     selector: 'gtx-form-properties',
@@ -94,6 +103,24 @@ export class FormPropertiesComponent
     public formLanguages: Language[] = [];
     public activeLanguage: Language | null = null;
 
+    /**
+     * The form settings of the active configuration. The `propertyPath` is always set (relative to the form data),
+     * so that the generic settings components store the values in the correct place of the form data.
+     */
+    public formSettings: FormSettingConfiguration[] = [];
+    /** Pseudo element configuration for the form settings, required by the generic settings components. */
+    public formSettingsConfig: FormElementConfiguration | null = null;
+    /** Copy of the form data, which is edited by the generic settings components. */
+    public formSettingsData: FormElement | null = null;
+    /** Context ID for the generic settings components. Changes whenever the settings data is re-initialized. */
+    public formSettingsContextId = '';
+    /** If any of the form settings has translatable content. */
+    public hasTranslatableFormSettings = false;
+
+    /** Top-level properties of the form data, which have been added as controls for the form settings. */
+    private formSettingsControlNames: string[] = [];
+    private formSettingsResetCounter = 0;
+
     protected override delayedSetup = true;
 
     constructor(
@@ -124,6 +151,7 @@ export class FormPropertiesComponent
 
         if (changes.configuration) {
             this.activeConfiguration = this.configuration;
+            this.setupFormSettings();
         }
     }
 
@@ -159,10 +187,19 @@ export class FormPropertiesComponent
             this.item?.data?.adminEmailTemplate,
         );
 
+        this.setupFormSettings();
         this.configureForm(this.form.value as any, false);
     }
 
+    protected override onValueReset(): void {
+        super.onValueReset();
+        this.setupFormSettings();
+    }
+
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
+        // Clear, as the form is created from scratch
+        this.formSettingsControlNames = [];
+
         this.formData = new FormGroup<FormProperties<Partial<EditableFormData>>>({
             formWidth: new FormControl(this.item?.data?.formWidth ?? this.safeValue(['data', 'formWidth']) ?? 12),
             flowId: new FormControl(this.item?.data?.flowId || this.safeValue(['data', 'flowId'])),
@@ -176,6 +213,8 @@ export class FormPropertiesComponent
             adminEmailPageId: new FormControl(this.item?.data?.adminEmailPageId || this.safeValue(['data', 'adminEmailPageId'])),
             adminEmailNodeId: new FormControl(this.item?.data?.adminEmailNodeId || this.safeValue(['data', 'adminEmailNodeId'])),
             adminEmailTemplate: new FormControl(this.item?.data?.adminEmailTemplate || this.safeValue(['data', 'adminEmailTemplate'])),
+        }, {
+            validators: (ctl) => this.validateFormSettings(ctl),
         });
 
         return new FormGroup<FormProperties<FormPropertiesData>>({
@@ -212,6 +251,103 @@ export class FormPropertiesComponent
 
     public setActiveFormType(type: string): void {
         this.activeConfiguration = this.formTypeConfigurations[type];
+        this.setupFormSettings();
+    }
+
+    /**
+     * Prepares the form settings of the active configuration: Creates the controls in the data form-group
+     * for all top-level properties the settings are stored in, and initializes the data for the settings components.
+     */
+    protected setupFormSettings(): void {
+        if (this.formData == null) {
+            return;
+        }
+
+        const settings = this.activeConfiguration?.settings || [];
+        this.formSettings = settings.map((setting) => ({
+            ...setting,
+            propertyPath: setting.propertyPath || `${FORM_SETTINGS_PROPERTY}.${setting.id}`,
+            // There is no schema for the form, therefore all values are stored in the form data
+            backend: false,
+        }));
+        this.formSettingsConfig = {
+            labelI18n: this.activeConfiguration?.nameI18n || {},
+            settings: this.formSettings,
+        };
+        this.hasTranslatableFormSettings = this.formSettings.some((setting) =>
+            setting.type === FormSettingType.TRANSLATION || setting.type === FormSettingType.OPTIONS);
+
+        const controlNames = Array.from(new Set(this.formSettings.map((setting) => setting.propertyPath.split('.')[0])));
+
+        // Remove controls of settings from a previously selected form type
+        for (const name of this.formSettingsControlNames) {
+            if (!controlNames.includes(name)) {
+                (this.formData as FormGroup).removeControl(name, { emitEvent: false });
+            }
+        }
+
+        // Add controls for the properties, which aren't present yet
+        const currentData = this.getCurrentFormData();
+        for (const name of controlNames) {
+            if (!this.formData.contains(name)) {
+                (this.formData as FormGroup).addControl(name, new FormControl(structuredClone(currentData[name] ?? null)), { emitEvent: false });
+                this.formSettingsControlNames.push(name);
+            }
+        }
+        this.formSettingsControlNames = this.formSettingsControlNames.filter((name) => controlNames.includes(name));
+
+        const settingsData: Record<string, unknown> = {};
+        for (const name of controlNames) {
+            settingsData[name] = structuredClone(this.formData.get(name).value ?? null);
+        }
+        this.formSettingsData = settingsData as any;
+        this.formSettingsResetCounter++;
+        this.formSettingsContextId = `${this.activeConfiguration?.type ?? ''}:${this.formSettingsResetCounter}`;
+
+        this.formData.updateValueAndValidity({ emitEvent: false });
+        this.changeDetector.markForCheck();
+    }
+
+    /**
+     * Handler for when the generic settings components changed the values of the form settings.
+     */
+    public updateFormSettingsData(data: FormElement): void {
+        this.formSettingsData = data;
+
+        for (const name of this.formSettingsControlNames) {
+            const ctl = this.formData.get(name);
+            ctl.setValue(structuredClone(data?.[name] ?? null), { emitEvent: false });
+            ctl.markAsDirty();
+        }
+
+        this.form.markAsDirty();
+        this.formData.updateValueAndValidity();
+        this.changeDetector.markForCheck();
+    }
+
+    /**
+     * Validator for the data form-group, which checks if all visible and required form settings have a value.
+     */
+    protected validateFormSettings(ctl: AbstractControl): ValidationErrors | null {
+        if (!this.formSettings?.length || ctl.disabled) {
+            return null;
+        }
+
+        const data = (ctl as FormGroup).getRawValue();
+        const missing = this.formSettings
+            .filter((setting) => setting.required
+                && isSettingVisible(setting, this.formSettingsConfig, data)
+                && isEmptySettingValue(getValueByPath(data, setting.propertyPath)))
+            .map((setting) => setting.id);
+
+        return missing.length > 0 ? { formSettingsRequired: missing } : null;
+    }
+
+    /**
+     * Get the current form data, from the item, or the value.
+     */
+    private getCurrentFormData(): Record<string, any> {
+        return (this.item?.data ?? this.safeValue('data') ?? {}) as Record<string, any>;
     }
 
     updateEmailTemplate(doUse: boolean): void {
@@ -275,4 +411,17 @@ export class FormPropertiesComponent
     private isPageUsed(pageId: number, nodeId: number, other: I18nString | string): boolean {
         return (pageId != null && pageId !== 0 && nodeId != null && nodeId !== 0) || !other;
     }
+}
+
+function isEmptySettingValue(value: unknown): boolean {
+    if (value == null || value === '') {
+        return true;
+    }
+    if (Array.isArray(value)) {
+        return value.length === 0;
+    }
+    if (typeof value === 'object') {
+        return Object.values(value).every((inner) => inner == null || inner === '');
+    }
+    return false;
 }

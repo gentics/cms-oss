@@ -32,6 +32,11 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 
 	public final static String ANDP_TYPE = "andp";
 
+	/**
+	 * ID of the form setting of the form type {@link #GENERIC_TYPE}
+	 */
+	public final static String FORM_SETTING_ID = "formSetting";
+
 	@Override
 	public void accept(MapPreferences prefs) throws NodeException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -50,6 +55,9 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 		stringControl.settings = Arrays.asList(stringSetting);
 
 		formsConfig.controls = new Controls(Map.of("string", stringControl));
+
+		StringSetting formSetting = new StringSetting(FORM_SETTING_ID, Map.of("de", "Formular Einstellung", "en", "Form setting"));
+		formsConfig.settings = Arrays.asList(formSetting);
 
 		try {
 			formsConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);

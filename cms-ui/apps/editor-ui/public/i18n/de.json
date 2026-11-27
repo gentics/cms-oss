@@ -178,6 +178,7 @@
         "form_type_detail_label": "Formular Typ: {{type}}",
         "form_administrator_email_title": "Administrator E-Mail",
         "form_success_page_title": "Bestätigungsseite",
+        "form_settings_title": "Formular-Einstellungen",
         "form_flow_label": "Formular Ablauf",
         "form_captcha_label": "Formular Captcha",
         "form_width_label": "Formularbreite",

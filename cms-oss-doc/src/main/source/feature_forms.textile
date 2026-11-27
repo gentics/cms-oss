@@ -60,6 +60,7 @@ h4. Form-Type Configuration
 | +external+ | boolean | optional | If +true+, the form is treated as an external form and not a Gentics Mesh Forms Plugin form. |
 | +controls+ | map of control configs | required | Defines all available input controls for this form type. The map key is the control ID used to reference the control in form definitions. See controls table below. |
 | +blocks+ | map of block configs | optional | Defines all available layout and structural blocks for this form type. The map key is the block ID. See blocks table below. |
+| +settings+ | list of settings | optional | Settings for the form itself, which can be edited in the properties of the form. See "Form settings" below. |
 | +captchaOptions+ | list of select options | optional | Defines which captcha types are available for this form type. Each option has a +value+ key and a +labelI18n+ translation map. |
 | +templateOptions+ | list of select options | optional | Defines available styling variations (themes) for the form type. Each option has a +value+ key and a +labelI18n+ translation map. |
 | +userEmailTemplateOptions+* | list of select options | optional | Defines which email templates are available for the confirmation email sent to the user upon form submission. |
@@ -791,6 +792,48 @@ h5. +reference+ setting
 | +multiple+ | boolean | false | If the editor is able to select multiple references. |
 | +onlyInCurrentNode+ | false | If the editor may only pick items from the current node from the form. |
 | +titleI18n+ | translation object | false | Custom title for the repository browser. |
+
+h4. Form settings
+
+In addition to the settings of the elements, a form type can define settings for the form itself with the +settings+ property of the form type configuration.
+When a form type with settings is selected in the properties of a form, the editor can edit the values of the settings there.
+
+Form settings support the same setting types and properties as the element settings, with the following differences:
+
+* The values are stored in the form data under `formSettings.<id>`. If +propertyPath+ is set, it is resolved relative to the root of the form data instead.
+* When a form is saved, values in `formSettings` which do not belong to any form setting of the form type (e.g. because the setting was removed from the configuration) are removed. Values stored with a +propertyPath+ outside of `formSettings` are not removed.
+* +backend+ does not apply, since the whole form data is passed to the plugin.
+* Conditions can only use the +setting+ source, which refers to other form settings.
+
+The values are published to Mesh together with the form data. Values of +reference+ settings are transformed according to their +publishAs+ setting and links in +string+ and +translation+ settings with +richContent+ are rendered, like for element settings.
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    generic:
+      settings:
+        - id: "category"
+          type: "select"
+          labelI18n:
+            de: "Kategorie"
+            en: "Category"
+          options:
+            - value: "contact"
+              labelI18n:
+                de: "Kontakt"
+                en: "Contact"
+            - value: "survey"
+              labelI18n:
+                de: "Umfrage"
+                en: "Survey"
+        - id: "privacyPage"
+          type: "reference"
+          labelI18n:
+            de: "Datenschutzseite"
+            en: "Privacy page"
+          referenceTypes: ["page"]
+          publishAs: "url"
+</shell>
 
 h4. Setting conditions
 

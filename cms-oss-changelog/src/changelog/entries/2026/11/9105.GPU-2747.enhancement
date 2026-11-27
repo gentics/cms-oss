@@ -1,0 +1,1 @@
+Forms: Form types can now define settings for the form itself (property "settings" in the form type configuration). The settings are shown in the properties of a form once the form type is selected, are stored in the form data and published to Mesh together with the form.

@@ -187,6 +187,15 @@ public class NodeConfigRuntimeConfiguration {
 	}
 
 	/**
+	 * Get the config of the singleton instance, without creating (and initializing) the singleton instance, if it does not exist
+	 * (in contrast to {@link #getDefault()}).
+	 * @return optional config, empty if the singleton instance does not exist (e.g. after {@link #shutdown()})
+	 */
+	public static Optional<NodeConfig> peek() {
+		return Optional.ofNullable(singleton).map(NodeConfigRuntimeConfiguration::getNodeConfig);
+	}
+
+	/**
 	 * Get the configuration properties
 	 * @return configuration properties
 	 */

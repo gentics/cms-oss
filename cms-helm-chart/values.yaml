@@ -26,6 +26,26 @@ database:
 # customCert:
 #   secretName: "my-certs"
 
+# OpenTelemetry: loads the OTel Java agent from the image (via JDK_JAVA_OPTIONS, so
+# JAVA_TOOL_OPTIONS and the heap settings stay untouched) and sends traces, metrics
+# and logs to an OTLP endpoint. Any OTEL_* or JDK_JAVA_OPTIONS variable set in
+# cms.extraEnv wins. Under the CMP umbrella, global.otel.* provides the defaults.
+otel:
+  # null: follow global.otel.enabled (off when unset); true/false: override
+  enabled: null
+  # OTLP endpoint; empty: global.otel.endpoint, then the umbrella's bundled
+  # Collector http://<release>-opentelemetry-collector:4318
+  endpoint: ""
+  # OTLP protocol; empty: global.otel.protocol, then http/protobuf
+  protocol: ""
+  # Secret with key "headers", e.g. "Authorization=Bearer <token>", sent with every
+  # export (only for endpoints that need authentication); empty: global.otel.headersSecret
+  headersSecret: ""
+  # empty: "Gentics CMS"
+  serviceName: ""
+  # empty: /cms/opentelemetry-javaagent.jar (part of the CMS images)
+  agentPath: ""
+
 cms:
   replicaCount: 1
 
@@ -76,6 +96,13 @@ cms:
     type: ClusterIP
     port: 80
     useHttp2: false
+
+  ## Metrics (Prometheus format at /metrics). When enabled, the CMS collects metrics, serves
+  ## them on the metrics port (container and service, not exposed by the ingress) and forwards
+  ## the CMS specific metrics to OpenTelemetry (when enabled, see otel above).
+  metrics:
+    enabled: false
+    port: 8081
 
   ingress:
     enabled: false

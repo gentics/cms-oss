@@ -20,9 +20,11 @@ ENV CONF_FILES="" \
     PACKAGES_PATH="packages" \
     CONTENT_PACKAGES_PATH="content-packages" \
     SCHEDULER_COMMANDS_PATH="scheduler-commands" \
-    JAVA_TOOL_OPTIONS="-Xmx1g"
+    JAVA_TOOL_OPTIONS="-Xmx1g" \
+    OTEL_JAVAAGENT_EXTENSIONS="/cms/opentelemetry-cms-extension.jar" \
+    OTEL_TRACES_SAMPLER="gentics_cms_rest"
 
-EXPOSE 8080
+EXPOSE 8080 8081
 
 USER root
 RUN adduser -D -u 1000 -G root -h /cms node && \
@@ -40,6 +42,8 @@ RUN adduser -D -u 1000 -G root -h /cms node && \
     apk add --no-cache bash rsync curl iputils busybox-extras tar nano mariadb-client
 
 ADD --chown=1000:0 ./target/cms-oss-server*jar /cms/cms-oss-server.jar
+ADD --chown=1000:0 ./target/opentelemetry-javaagent.jar /cms/opentelemetry-javaagent.jar
+ADD --chown=1000:0 ./target/opentelemetry-cms-extension.jar /cms/opentelemetry-cms-extension.jar
 ADD --chown=1000:0 entrypoint.sh /cms/
 
 RUN chmod 700 /cms/entrypoint.sh

@@ -1,0 +1,67 @@
+h2. Metrics
+
+The CMS Server can collect metrics with "Micrometer":https://micrometer.io/ and serve them in the "Prometheus":https://prometheus.io/ format on a separate port.
+The CMS specific metrics can additionally be sent to an OpenTelemetry (OTLP) endpoint.
+
+endprologue.
+
+h3. Configuration
+
+Metrics are disabled by default and can be enabled with the configuration option @metrics.enabled@ (or the environment variable @METRICS_ENABLED@).
+
+<shell filename="conf/*.yml">
+metrics:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8081
+</shell>
+
+|_. Property name   |_. Environment variable |_. Description |_. Default |
+| metrics.enabled   | METRICS_ENABLED        | true to collect and serve metrics | false |
+| metrics.host      | METRICS_HOST           | Host (interface) the metrics server binds to | 127.0.0.1 |
+| metrics.port      | METRICS_PORT           | Port of the metrics server | 8081 |
+
+The metrics are served at @http://<host>:<port>/metrics@. The metrics server is separate from the server of the CMS (which listens to the port @HTTP_PORT@), so the metrics are not available on the port of the CMS.
+
+WARNING: Access to the metrics is not restricted by the CMS. By default, the metrics server only binds to 127.0.0.1. When binding to other interfaces (e.g. @0.0.0.0@ when running in a container), make sure that the port is only reachable by the monitoring system (e.g. do not expose it via ingress or route).
+
+Changing the configuration requires a restart of the CMS.
+
+h3. Metrics
+
+Besides the metrics about the JVM (prefix @jvm_@, @process_@ and @system_@) and the requests to the REST API (@http_server_requests@), the following CMS specific metrics are available:
+
+|_. Name                         |_. Tags                 |_. Description |
+| cms_publish_running            |                        | 1 while the publish process is running, 0 otherwise |
+| cms_publish_phase              | phase                  | 1 for the current phase of the publish process, 0 for all others |
+| cms_publish_objects            | type, status           | Number of objects (pages, files, folders, forms) in the current publish run, which are to be published in total, already published or remaining |
+| cms_transactions_total         |                        | Number of started transactions |
+| cms_transactions_open          |                        | Number of currently open transactions |
+| cms_transactions_open_max      |                        | Maximum number of open transactions since the start |
+| cms_sessions_active            |                        | Number of active sessions (refreshed every minute) |
+| cms_db_pool_connections        | state                  | Number of active and idle connections in the database connection pool |
+| cms_db_pool_max_active         |                        | Maximum number of active connections in the pool |
+| cms_db_pool_max_idle           |                        | Maximum number of idle connections in the pool |
+| cms_cache_size                 | region                 | Number of objects in the memory cache of the cache region |
+| cms_cache_gets_total           | region, result         | Number of gets from the cache region by result (hit_ram, hit_aux, miss_notfound, miss_expired) |
+
+The names are given in the Prometheus format. New cache regions are detected once a minute.
+
+h3. OpenTelemetry
+
+When the CMS is started with the "OpenTelemetry Java agent":https://opentelemetry.io/docs/zero-code/java/agent/ (which is contained in the docker image at @/cms/opentelemetry-javaagent.jar@), the CMS specific metrics (all metrics starting with @cms_@) are additionally forwarded to the agent, which sends them to the configured OTLP endpoint (see the "configuration of the agent":https://opentelemetry.io/docs/zero-code/java/agent/configuration/).
+
+The Helm chart of the CMS configures the agent with the @otel@ settings.
+
+h3. Tracing
+
+When the CMS is started with the OpenTelemetry Java agent, the agent also sends traces. The docker images contain the agent extension @/cms/opentelemetry-cms-extension.jar@ and set the environment variables @OTEL_JAVAAGENT_EXTENSIONS=/cms/opentelemetry-cms-extension.jar@ and @OTEL_TRACES_SAMPLER=gentics_cms_rest@, which restrict the traces to the requests to the REST API (@/rest/*@) and the GenticsImageStore (@/GenticsImageStore/*@):
+
+* The trace of a request contains all work done for the request (e.g. database statements, requests to Gentics Mesh). This includes jobs, which are continued in the background, because they took too long. Those jobs have the span @Operator job@ with the attributes @cms.job.description@ and @cms.job.background@ (@true@, when the job was continued in the background).
+* Requests to @/rest/info/maintenance@ (used as readiness probe), requests to other paths and all work, which is not done for a request (e.g. the publish process, scheduler tasks, background jobs of the CMS), are not traced.
+* The span of an authenticated request to the REST API has the attributes @user.id@ (ID) and @user.name@ (login) of the user.
+* The response of a traced request to the REST API contains the ID of the trace in the header @X-Trace-Id@.
+
+NOTE: The traces contain the logins of the users.
+
+To trace everything (the default of the agent), set the environment variable @OTEL_TRACES_SAMPLER@ to @parentbased_always_on@.

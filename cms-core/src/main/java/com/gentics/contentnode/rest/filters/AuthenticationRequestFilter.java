@@ -17,10 +17,13 @@ import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.log.NodeLogger;
 
 import io.micrometer.common.util.StringUtils;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -41,6 +44,16 @@ import jakarta.ws.rs.ext.Provider;
 public class AuthenticationRequestFilter implements ContainerRequestFilter {
 	protected final static Pattern BEARER_TOKEN = Pattern.compile("Bearer\s(.*)");
 
+	/**
+	 * Span attribute for the ID of the authenticated user (OpenTelemetry semantic conventions)
+	 */
+	public final static AttributeKey<String> USER_ID = AttributeKey.stringKey("user.id");
+
+	/**
+	 * Span attribute for the login of the authenticated user (OpenTelemetry semantic conventions)
+	 */
+	public final static AttributeKey<String> USER_NAME = AttributeKey.stringKey("user.name");
+
 	@Context
 	UriInfo uriInfo;
 
@@ -58,6 +71,7 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 
 			if (optSession.isPresent()) {
 				ContentNodeHelper.setSession(optSession.get());
+				addUserToSpan(optSession.get());
 			} else {
 				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("").build());
 			}
@@ -66,6 +80,25 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 		} catch (NodeException e) {
 			NodeLogger.getNodeLogger(getClass()).error(e);
 			requestContext.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(MiscUtils.serverError()).build());
+		}
+	}
+
+	/**
+	 * Add the ID and login of the authenticated user to the current span (the span of the request), if the span is recorded
+	 * @param session session
+	 * @throws NodeException
+	 */
+	private void addUserToSpan(Session session) throws NodeException {
+		Span span = Span.current();
+		if (!span.isRecording()) {
+			return;
+		}
+
+		int userId = session.getUserId();
+		span.setAttribute(USER_ID, Integer.toString(userId));
+		SystemUser user = supply(t -> t.getObject(SystemUser.class, userId));
+		if (user != null) {
+			span.setAttribute(USER_NAME, user.getLogin());
 		}
 	}
 

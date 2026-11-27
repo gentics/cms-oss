@@ -33,6 +33,7 @@ import com.gentics.lib.i18n.CNI18nString;
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 import de.jkeylockmanager.manager.ReturnValueLockCallback;
+import io.opentelemetry.api.trace.Span;
 
 /**
  * Implementation of a callable, that can be sent to the background
@@ -107,6 +108,11 @@ public class RestCallable<T extends GenericResponse> implements Callable<T> {
 	 * Flag to throw caught NodeException
 	 */
 	protected boolean throwNodeException = false;
+
+	/**
+	 * Span of the job (set when the job is submitted to the executor)
+	 */
+	protected Span span;
 
 	/**
 	 * Create an instance

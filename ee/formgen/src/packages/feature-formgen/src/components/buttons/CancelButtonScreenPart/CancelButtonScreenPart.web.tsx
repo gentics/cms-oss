@@ -21,7 +21,7 @@ const CancelButtonScreenPart: React.FC<IFormPageComponent> = (props) => {
   const handleCancelButtonClick = async () => {
     if (Platform.OS == "web") {
       const isOnlyCloseDialog = props.uiState.dialogForm.isDialogFormOpen;
-      await props.handleFormCancel?.(() => formEventsUtils.cancelRedirect(uiState), isOnlyCloseDialog);
+      await props.handleFormCancel?.(() => formEventsUtils.cancelRedirect(uiState, formState.returnUrl), isOnlyCloseDialog);
     } else {
       const overlayLeaveExtraProps: IOverlayLeaveExtraProps = { link: '' };
       overlayUtils.setOverlay(

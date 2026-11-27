@@ -6230,6 +6230,10 @@
     }
   },
   "transactionId": "",
+  "formSettings": {
+    "returnUrlEnabled": true,
+    "returnUrlDomains": ["localhost", "www.example.com"]
+  },
   "flowId": "default",
   "flows": [
     {

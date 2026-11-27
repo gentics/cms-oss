@@ -1012,6 +1012,10 @@ const RendererScreen: React.FC<{
         formState.successUrl = responseBody!.successUrl;
         formState.captchaConfig = mapCaptchaConfig(responseBody!.captchaConfig);
         formState.formgenSettings = responseBody?.formgenSettings;
+        formState.formSettings = responseBody?.formSettings;
+        if (Platform.OS === 'web') {
+          formState.returnUrl = utils.getAllowedReturnUrl(window.location.search, formState.formSettings);
+        }
       }
     }
     if (formState?.form?.pages) {

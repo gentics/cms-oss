@@ -1108,7 +1108,7 @@ This behavior is built into the default flow and requires no additional implemen
 
 h4. Return URL (returnUrl)
 
-An external application can open a form with the URL parameter +returnUrl+ to get the user back after the form has been submitted. In this case, FormGen redirects automatically to this URL instead of showing the success screen, and the +returnUrl+ takes precedence over a configured successUrl.
+An external application can open a form with the URL parameter +returnUrl+ to get the user back after the form has been submitted. In this case, FormGen redirects automatically to this URL instead of showing the success screen, and the +returnUrl+ takes precedence over a configured successUrl. When the user cancels the form (cancel button, leaving because of unmet preconditions or closing an error dialog), the user is also redirected to the +returnUrl+ instead of the cancel URL of the page.
 
 The +returnUrl+ is only used, if all of the following applies:
 

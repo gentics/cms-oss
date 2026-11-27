@@ -22,7 +22,7 @@ const LoadOverlayWithCancelRedirectOnClose: React.FC<ICommonOverlayProps> = (
         t('form_error_overlay__second_line'),
       ]}
       closeAble={true}
-      onClose={() => formEventsUtils.cancelRedirect(props.uiState)}
+      onClose={() => formEventsUtils.cancelRedirect(props.uiState, props.formState.returnUrl)}
       debugInfo={extraProps ? extraProps.response : undefined}
     />
   );

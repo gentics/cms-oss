@@ -268,8 +268,10 @@ turn, since a session credential can have expired while the client was away; `GE
 ## 3. Resource model
 
 ```mermaid
-graph TD
-    INST[Installation<br/>installation token] --> USER[Subject<br/>derived from the CMS assertion, opaque]
+flowchart TD
+    INST@{ icon: "mdi:domain", form: "rounded", label: "Installation · installation token" }
+    USER@{ icon: "mdi:account-circle", form: "circle", label: "Subject · opaque, from the CMS assertion" }
+    INST --> USER
     USER --> CONN[MCP connections<br/>cms, each with its own URL]
     CONN --> AUTH[Standing authorization<br/>one credential per connection, per user]
     USER --> SESSION[Session<br/>one conversation]
@@ -279,8 +281,8 @@ graph TD
     SESSION --> LEDGER[Ledger<br/>closed plans + user decisions]
     SESSION --> RUN[Runs<br/>session, side, propose, execute, transition]
     RUN -.->|"plan_id, or none"| PLAN
-    SESSION --> EVT[Events<br/>ordered SSE log]
-    SESSION --> FILE[Files<br/>uploads / artifacts / cms_snapshot]
+    SESSION --> EVT[(Events<br/>ordered SSE log)]
+    SESSION --> FILE[(Files<br/>uploads / artifacts / cms_snapshot)]
     SESSION --> INTER[Interactions<br/>blocking questions]
     SESSION --> SAUTH[Session authorizations<br/>one credential per connection, this session only]
     SESSION -.->|"binds via context.connection_ids"| CONN
@@ -350,6 +352,18 @@ context is assembled by GenAIx from the session's record, in this order:
    from this session and the sessions it `continued_from` (§4.3), same installation and subject
    only.
 
+### 3.2 Design Studio sessions (since `1.0.0-rc.7`)
+
+A session whose `context.design_target` is set is a Design Studio session. The client sets the
+target when it creates the session: `target_id`, `node_id` (the node GenAIx writes to while
+designing), `package` (the target's devtools package), `source_node_id` (the live node) and
+`promotion_mode` (`replay` or `merge`). A design module without a target is
+`422 design_target_required`, and a `PATCH` that would change a set target is
+`409 design_target_immutable`. GenAIx's tool gate refuses every CMS write of the session's runs
+outside the target. A run reports a revision as a `design_revision` part; a comment on a region is a
+`reference` part of type `design_region`; `preview.updated` carries the `revision_id`. Everything
+else is as for any session. The Design Studio section, documents 10 to 15, describes the rest.
+
 ## 4. Session lifecycle
 
 `POST /sessions` can create a session and send its first user turn in a single call. Alongside
@@ -397,6 +411,15 @@ text** — an at-mention, a tree selection, a guideline or an uploaded file all 
 `ContextReference` (`type`, `id`, optional `label`/`node_id`/`global_id`), so the agent resolves
 them through CMS tools instead of guessing from a string.
 
+**Language.** The client sends its UI language as `Accept-Language` on `POST /sessions` and on
+every `POST /sessions/{session_id}/messages` (since the `1.0.0-rc.5` addition of 2026-10-19),
+taken from its own language setting rather than the browser default. A new session's steps and
+checks are labelled in it, and GenAIx speaks it until it has recognised the language the user
+writes in, which then wins; a later message with another value replaces it. Only languages GenAIx
+supports count (primary subtag, ordered by `q`); otherwise nothing changes, and without either
+GenAIx speaks English. The header never sets a page's `language`, which stays a write-governing
+setting.
+
 `continued_from` (optional, a session id) links the new conversation to an earlier one
 (`1.0.0-rc.3`, §4.3).
 
@@ -428,13 +451,21 @@ plan takes the next turn like any other.
 
 **A plan** (`PlanStatus`, living since `1.0.0-rc.5`):
 
-```
-drafting ─► proposed ─► accepted ─► running ─► done ─► released ─► published / review_requested
-              ▲  │          │          │        │        │              │
-              │  └ adjust   └── redirect ──┘    │        │              │
-              │                                 │        │              │
-              └─────── revise (version + 1, finished items kept) ───────┘
-any open status ─────────────────────────────────────────────► discarded
+```mermaid
+stateDiagram-v2
+    [*] --> drafting
+    drafting --> proposed: proposing run ends
+    proposed --> accepted: user accepts or adjusts
+    accepted --> running
+    running --> done: items finished
+    done --> released: release
+    released --> published: publish
+    released --> review_requested: request_review
+    proposed --> superseded: unrelated work instead
+    note right of drafting
+        A revision or a redirect comes back here at version + 1
+        and keeps the finished items. Any open status can be discarded.
+    end note
 ```
 
 | Status | Meaning | Moved by |
@@ -558,7 +589,9 @@ page changed removes it from the work by adjusting the plan before accepting it 
 pages the plan wrote as they are, unpublished changes staying as drafts in the CMS, and answers
 `200`; `restore` restores each page's version from before the plan in a transition run and
 answers `202`, the plan becoming `discarded` once the run has landed. Discarding a plan that wrote
-nothing just closes it (`200`). The conversation goes on either way.
+nothing just closes it (`200`). The conversation goes on either way. Under either value, a
+guideline the plan created is deleted as part of the discard (since `1.0.0-rc.6`): left behind, a
+default guideline would keep applying to the node's sessions, so a client does not delete it itself.
 
 Three details fixed in `1.0.0-rc.2`, per plan since `1.0.0-rc.4`. The `202` body carries the
 plan **as it is when the call returns** (`released`); the outcome arrives on the stream and in
@@ -574,6 +607,14 @@ the page, while for a page the user may publish it is a GenAIx-side step — the
 performs it. `publish` maps the CMS outcome `published` or `scheduled` to the entry status
 `published` and `queued_for_approval` to `review_requested`; a CMS problem marks that entry
 `failed` with its `error`, and the plan status then follows the rules above.
+
+**Forms** (since `1.0.0-rc.6`). A plan's `publish` also covers the forms it created or changed, each
+with its own `Publication` entry, and they go online before its pages, so that a page never goes out
+with an offline form. If a form fails, the plan's pages stay `pending`, the run fails with the plan
+left `released`, and a repeated `publish` retries. A form has no review: `request_review` takes it
+online too, because an approval later in the CMS would otherwise publish the page with an offline
+form, and a user who may not publish it gets `failed`. An external form the plan only embeds
+is not written, so it has no entry.
 
 **Quality gates run before `release`, `publish` and `request_review`** (§8.1), per plan: the
 gates of every module of the plan for that moment, each over its own module's items (since
@@ -1285,7 +1326,7 @@ subject, never a login), `accepted_at`, `closed_at` (cleared when a settled plan
 - **`inputs`**: the module inputs of the plan, keyed by module id (since `1.0.0-rc.5`; one object
   before), each validated against that module's `inputs_schema`.
 - **`plan`**: the `Plan` above. `items` are `PlanItem`s (`id`, `label`, `kind`:
-  `create`\|`update`\|`link`\|`translate`\|`publish`\|`construct`\|`report`\|`other`,
+  `create`\|`update`\|`delete`\|`link`\|`translate`\|`publish`\|`construct`\|`report`\|`other`,
   `workflow`, `target?`, `status`: `pending`\|`running`\|`done`\|`skipped`\|`failed`\|`removed`,
   and since `1.0.0-rc.5` `version`, `change` and `depends_on`, §4.4 and §4.6; `creates`, `created`
   and `parent` since the `1.0.0-rc.5` addition, 2026-10-15), plus `reason` on every version after the first. Versioned
@@ -1304,7 +1345,10 @@ subject, never a login), `accepted_at`, `closed_at` (cleared when a settled plan
 
   **A plan at a glance.** A client counts only the items without a `parent`, grouped by `kind`
   and by the object type (`creates.type`, else `target.type`): "+3 folders · +4 pages · 2 pages
-  edited · +2 translations". A `report` or `other` item is never counted.
+  edited · +2 translations". A `report` or `other` item is never counted. A `delete` item's
+  object is its `target`, as in "+1 form · 1 form edited · 1 form deleted" (since `1.0.0-rc.6`).
+  Embedding a form in a page is a sub-step of the item that creates or edits the page, so it
+  counts as that page, and an external form is never counted as created or deleted.
 - **`steps`**: `Step` objects (`id`, `workflow`, `label`, `status`:
   `pending`\|`running`\|`done`\|`skipped`\|`failed`\|`waiting`, `detail?`, `substeps?`,
   `tool_calls?`), each module's `steps_template` in plan order. `waiting` means blocked on a user
@@ -1483,6 +1527,38 @@ first with its reason and preselects it; with `other_allowed` it offers a free-t
 sent as `other`, and `selected` may then be empty. `other` without `other_allowed` is `422` at
 `/answer/other`; an empty `selected` without `other` is `422` at `/answer/selected`.
 
+**Reference fields and answers** (since `1.0.0-rc.6`). A question can ask for an object from a
+picker, and the answer is one `ContextReference`. In a `form`, a property of `type: object` with
+`format: context-reference` and `x-reference-types` is such a field, and it stays one answer field:
+
+```json
+"headerImage": {
+  "type": "object",
+  "format": "context-reference",
+  "x-reference-types": ["image", "session_file"],
+  "title": "Header image"
+}
+```
+
+```json
+{ "values": { "headerImage": { "type": "image", "id": "4411", "node_id": 1 } } }
+{ "values": { "headerImage": { "type": "session_file", "id": "6b0d9e31-44a8-4c57-9f2e-8d1a3c7b5e02" } } }
+```
+
+A `choice` with `reference_types` lets the user pick another object instead of an option:
+`{"selected": [], "reference": {"type": "form", "id": "4410", "node_id": 3}}`. An option that
+names a CMS object carries it in `ref`.
+
+GenAIx answers `422` at `/answer/values/<field>` or `/answer/reference` when the type is not
+listed, a `page`, `folder`, `file`, `image`, `template`, `construct` or `form` has no `node_id`, a session file is not in this session, or, in a field that
+also lists `image`, a session file is not an image. `reference` without `reference_types` is `422`
+as well. GenAIx does not ask the CMS at this point: the agent reads the object later, and asks
+again if it cannot be used where the plan needs it. To answer with a new file, upload it first
+with `POST /sessions/{session_id}/files` (`mode: source`, the default, which suits images because
+they hold no text to lock; the allowed types are in `capabilities.upload_media_types`), then answer
+with its id. An upload does not stop `expires_at`, so a client shows the remaining time, and a late
+answer is `410`.
+
 Resolve with `POST /sessions/{session_id}/interactions/{interaction_id}` (the blocked run
 continues on the same stream), or with `reply_to_interaction` on the next `POST .../messages`
 call when the user types into the composer instead of clicking a dedicated control.
@@ -1632,6 +1708,83 @@ everything the run needs is already covered, no review is raised at all.
 
 Expiry, double answers and cancellation follow §9 unchanged: a review that times out or is
 cancelled ends the run without a CMS write, exactly as an unanswered `choice` would.
+
+### 9.2 When the user may not do what the plan needs (since `1.0.0-rc.7`)
+
+Some writes need a CMS permission the session's user may not hold: a Content Creator who needs a new
+construct but lacks `updateconstructs` is the first case. GenAIx finds this out **before** it writes,
+not by failing. It reads the user's permission on the item's node, and when it is missing it never
+calls the tool. Instead it asks one `choice` whose prompt and options come from the module's
+`permission_fallbacks` (`08-workflow-modules.md` §3), in the session language. The model does not
+write these options, so their ids are stable and a client can act on them.
+
+An option may carry an `action`, a `ClientAction` the **client** performs when the user picks it,
+before it answers with the option's id. The one action type today is `create_task`: the client
+creates a CMS task of `task_type` through the CMS task API, with the option's `ref` as the task's
+object and the message part at `action.draft` as its content. The `ref` is the node whose permission
+is missing (`missing_permission.node_id`): the one object GenAIx always knows at that point, since
+the page may not exist yet. GenAIx never creates that task and does not check it was created. A
+client that does not know an action type shows the option like any other.
+
+```mermaid
+sequenceDiagram
+    actor U as Content Creator
+    participant W@{ "type": "boundary" } as Workspace UI
+    participant G@{ "type": "control" } as GenAIx
+    participant C@{ "type": "entity" } as CMS
+    U->>W: "Add a countdown to the terms page"
+    W->>G: POST /sessions/{id}/messages
+    G->>C: Permission check on the item's node
+    C-->>G: updateconstructs: false
+    Note over G: create_construct is never called
+    G-->>W: construct_draft part, can_create: false
+    G-->>W: interaction.requested, choice from permission_fallbacks
+    U->>W: Picks "Request a construct"
+    W->>C: Create a requestConstruct task (draft + ref)
+    W->>G: Answer with the option id request_construct
+    G-->>W: Item skipped, the run continues
+```
+
+For a construct, the run first emits the validated `construct_draft` part with `can_create: false`
+and `missing_permission`, then asks:
+
+```json
+{
+  "kind": "choice",
+  "prompt": "Für die Gegenüberstellung gibt es keinen passenden Baustein, und Sie dürfen keine Bausteine anlegen. Wie soll ich weitermachen?",
+  "options": [
+    {
+      "id": "request_construct",
+      "label": "Baustein beantragen",
+      "reason": "Ein Chief Content Creator legt ihn an; die Seite kann ihn danach verwenden.",
+      "ref": { "type": "node", "id": "3" },
+      "action": {
+        "type": "create_task",
+        "task_type": "requestConstruct",
+        "draft": { "message_id": "6b1f2c9e-4d3a-4c8e-9a51-0f2e7d1b3c44", "part_index": 1 }
+      }
+    },
+    {
+      "id": "continue_without",
+      "label": "Ohne neuen Baustein fortfahren",
+      "reason": "Ich setze die Gegenüberstellung als Text in den bestehenden Textbaustein."
+    }
+  ],
+  "recommended": ["request_construct"]
+}
+```
+
+Whatever the user picks, the plan item that needed the write ends `skipped`, with the picked
+option in its `detail`, and the run continues with the rest of the plan. The texts and options are
+the module's to change; the ids in this example are those of the shipped construct modules.
+
+**When the permission cannot be read.** The check is best effort: when the CMS does not answer it
+(no `get_permissions` tool for this user, an error, a timeout), GenAIx offers no fallback and asks
+the module's usual `confirm`. If the user then lacks the permission, the CMS refuses the write: the
+stream shows `tool.failed` for `create_construct` (`424 cms_request_failed`, the CMS's refusal in
+`detail`) followed by `error {recoverable: true}`, and the run continues without the construct. A
+client can therefore see a construct refused even without a `can_create: false` draft; it offers the
+same request only if it chooses to, from the refused tool and its `detail`.
 
 ## 10. Files and the per-session filesystem
 

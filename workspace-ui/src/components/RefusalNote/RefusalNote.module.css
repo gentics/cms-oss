@@ -1,0 +1,6 @@
+/* Why an edit could not be saved directly in the CMS (as `ImagePicker`'s problem line). */
+.refusal {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--font-size-sm);
+}

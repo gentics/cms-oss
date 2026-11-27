@@ -26,13 +26,17 @@ Design Studio â€” a second, later user interface for template and design work â€
 
 ```mermaid
 flowchart TD
-    UI["Agentic Workspace UI<br/>(Gentics)"]
-    EXT["Other MCP-capable agents<br/>(e.g. Claude Code)"]
-    PROXY["CMS custom proxy<br/>/rest/proxy/genaix<br/>(Gentics; part of the CMS)"]
-    GENAIX["GenAIx API<br/>(ioflair)"]
-    MCP["CMS MCP module<br/>(Gentics, in-process)"]
-    STORE["Per-session filesystem,<br/>database, agent runtime"]
-    REST["CMS REST resources<br/>+ search index passthrough"]
+    UI@{ icon: "mdi:monitor-dashboard", form: "rounded", label: "Agentic Workspace UI (Gentics)" }
+    EXT@{ icon: "mdi:robot-outline", form: "rounded", label: "Other MCP-capable agents (e.g. Claude Code)" }
+    subgraph CMS["Gentics CMS"]
+        PROXY["CMS custom proxy<br/>/rest/proxy/genaix"]
+        MCP["CMS MCP module<br/>in-process"]
+        REST[("CMS REST resources<br/>+ search index passthrough")]
+    end
+    subgraph GX["GenAIx (ioflair)"]
+        GENAIX["GenAIx API"]
+        STORE[("Per-session filesystem,<br/>database, agent runtime")]
+    end
 
     UI -->|CMS session cookie| PROXY
     PROXY -->|"X-GenAIx-Installation;<br/>CMS identity assertion (RS256)"| GENAIX
@@ -175,7 +179,12 @@ The Workspace reaches GenAIx through the CMS's existing custom proxy (`/rest/pro
 
 ## Extension points
 
-Design Studio is out of scope for this phase, but every shape described above was chosen so it can extend to it without a rewrite:
+Since `1.0.0-rc.7` the Design Studio has its own section, documents 10 to 15, starting with
+`10-design-studio.md`; it replaces the sketch of the Design Studio in the list below where they
+differ (a design target instead of writing to the working node, a render check through a preview
+portal, promotion by merge).
+
+The shapes described above were chosen so they can extend to the Design Studio without a rewrite:
 
 - The workflow catalogue is additive by construction: a new workflow for Design Studio is simply a new module with its own manifest, prompts, and gates, discovered at startup, with no change to the core session, event, or check contract.
 - The message-part registry already reserves a part type for API-call transparency, useful for Design Studio; the unknown-part fallback rule lets further Design-Studio-specific part types be introduced later without breaking the Workspace UI.

@@ -44,6 +44,9 @@ const GENAIX_CODES: Record<GenaixCode, true> = {
     model_rate_limited: true,
     rate_limited: true,
     service_unavailable: true,
+    design_target_required: true,
+    design_target_immutable: true,
+    design_revision_conflict: true,
 };
 
 const CMS_RESPONSE_CODES: Record<CmsResponseCode, true> = {
@@ -108,6 +111,11 @@ export function errorMessageKey(error: unknown): string {
 
     if (fieldCode) {
         return `errors.genaix.${fieldCode}`;
+    }
+
+    // A `revise` message without a plan to revise (rc.5; contract, `MessageCreate.options.plan_id`).
+    if (error instanceof GenaixApiError && error.problem?.errors?.some(({ pointer }) => pointer === '/options/plan_id')) {
+        return 'errors.genaix.revise_plan_missing';
     }
 
     if (error instanceof GenaixApiError && isKnown(GENAIX_CODES, error.genaixCode)) {

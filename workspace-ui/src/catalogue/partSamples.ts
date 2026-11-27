@@ -3,6 +3,7 @@ import type {
     ApiCallLogPart,
     CitationPart,
     ConstructDraftPart,
+    DesignRevisionPart,
     FileRefPart,
     ImageGridPart,
     MessagePart,
@@ -228,6 +229,7 @@ const draftValid: ConstructDraftPart = {
         { keyword: 'rows', name: { de: 'Zeilen', en: 'Rows' }, type_id: 21, editable: true, mandatory: false, hidden: false },
         { keyword: 'css_class', type_id: 1, editable: false, mandatory: false, hidden: true, default: 'changes' },
     ],
+    can_create: true,
     template: '<table class="{{cms.tag.parts.css_class}}">\n  <caption>{{cms.tag.parts.title}}</caption>\n  {{cms.tag.parts.rows}}\n</table>',
     validation: { ok: true },
 };
@@ -237,6 +239,7 @@ const draftIssues: ConstructDraftPart = {
     keyword: 'webinar_teaser',
     name: { de: 'Webinar-Teaser', en: 'Webinar teaser' },
     parts: [{ keyword: 'headline', type_id: 1, editable: true, mandatory: true, hidden: false }],
+    can_create: true,
     template: '<div class="teaser">\n  <h3>{{cms.tag.parts.headline}</h3>\n  {{#if cms.tag.parts.date}}<p>{{cms.tag.parts.date}}</p>\n</div>',
     validation: {
         ok: false,
@@ -254,6 +257,7 @@ const draftMinimal: ConstructDraftPart = {
     name: {},
     parts: [],
     template: '',
+    can_create: true,
 };
 
 const apiCalls: ApiCallLogPart = {
@@ -303,6 +307,21 @@ const fileNamed: FileRefPart = {
 
 const fileUnnamed: FileRefPart = { type: 'file_ref', file_id: '0f3e9a21-5c84-4b17-a6d2-8e1b7c4f9a30' };
 
+// The contract's example (`DesignRevisionPart`).
+const designRevision: DesignRevisionPart = {
+    type: 'design_revision',
+    revision_id: 'r0004-7f3a',
+    previous_revision_id: 'r0003-c21e',
+    package: 'design-umdasch-2026-11',
+    path: 'revisions/r0004-7f3a',
+    pages: [
+        { page_key: 'home', language: 'de', file: 'pages/home.de.html' },
+        { page_key: 'home', language: 'en', file: 'pages/home.en.html' },
+    ],
+    status: 'verified',
+    text: 'Revision r0004-7f3a, verified.',
+};
+
 const unknownWithText: UnknownPart = { type: 'chart_v2', text: 'Aufrufe der letzten 30 Tage: 12 840 (+14 %).', series: [1, 2, 3] };
 const unknownWithoutText: UnknownPart = { type: 'chart_v2', series: [1, 2, 3] };
 // A known type whose renderer fails on it: the error boundary shows the `UnknownPart` fallback. Not a
@@ -323,6 +342,7 @@ const samplesByType: { [Type in PartType]: PartSample[] } & { fallback: PartSamp
     api_call_log: [{ id: 'apiCalls', part: apiCalls }],
     citation: [{ id: 'citations', part: citations }, { id: 'citationsBare', part: citationsBare }],
     file_ref: [{ id: 'fileNamed', part: fileNamed }, { id: 'fileUnnamed', part: fileUnnamed }],
+    design_revision: [{ id: 'designRevision', part: designRevision }],
     fallback: [
         { id: 'unknownWithText', part: unknownWithText },
         { id: 'unknownWithoutText', part: unknownWithoutText },

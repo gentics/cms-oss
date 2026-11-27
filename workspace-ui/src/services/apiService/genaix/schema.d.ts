@@ -1808,7 +1808,7 @@ export interface components {
          * @example run_already_active
          * @enum {string}
          */
-        GenaixCode: "malformed_request" | "invalid_cursor" | "subject_missing" | "identity_invalid" | "unsupported_accept" | "invalid_installation_token" | "session_forbidden" | "session_not_found" | "run_not_found" | "file_not_found" | "interaction_not_found" | "plan_not_found" | "unknown_workflow" | "run_already_active" | "session_archived" | "workflow_transition_invalid" | "plan_outdated" | "plan_closed" | "plan_not_proposed" | "plan_not_revisable" | "plan_scope_violation" | "interaction_already_answered" | "interaction_expired" | "events_pruned" | "file_too_large" | "unsupported_media_type" | "validation_failed" | "quality_gate_failed" | "cms_object_locked" | "mcp_connection_not_found" | "mcp_connection_limit" | "mcp_authorization_required" | "mcp_authorization_rejected" | "mcp_unreachable" | "cms_request_failed" | "model_error" | "model_rate_limited" | "rate_limited" | "service_unavailable";
+        GenaixCode: "malformed_request" | "invalid_cursor" | "subject_missing" | "identity_invalid" | "unsupported_accept" | "invalid_installation_token" | "session_forbidden" | "session_not_found" | "run_not_found" | "file_not_found" | "interaction_not_found" | "plan_not_found" | "unknown_workflow" | "run_already_active" | "session_archived" | "workflow_transition_invalid" | "plan_outdated" | "plan_closed" | "plan_not_proposed" | "plan_not_revisable" | "plan_scope_violation" | "interaction_already_answered" | "interaction_expired" | "events_pruned" | "file_too_large" | "unsupported_media_type" | "validation_failed" | "quality_gate_failed" | "cms_object_locked" | "mcp_connection_not_found" | "mcp_connection_limit" | "mcp_authorization_required" | "mcp_authorization_rejected" | "mcp_unreachable" | "cms_request_failed" | "model_error" | "model_rate_limited" | "rate_limited" | "service_unavailable" | "design_target_required" | "design_target_immutable" | "design_revision_conflict";
         /**
          * Ping
          * @description Result of the installation-token check.
@@ -2237,13 +2237,20 @@ export interface components {
          *     }
          * @example {
          *       "type": "guideline",
-         *       "id": "tone-of-voice-de",
-         *       "label": "Tone of voice (German)"
+         *       "id": "corporate/tone-of-voice.default",
+         *       "label": "Tone of voice"
+         *     }
+         * @example {
+         *       "type": "form",
+         *       "id": "4410",
+         *       "node_id": 3,
+         *       "label": "Newsletter sign-up",
+         *       "external": true
          *     }
          */
         ContextReference: {
             /** @enum {string} */
-            type: "node" | "folder" | "page" | "file" | "image" | "template" | "construct" | "guideline" | "language" | "session_file" | "url" | "document";
+            type: "node" | "folder" | "page" | "file" | "image" | "template" | "construct" | "guideline" | "language" | "session_file" | "url" | "document" | "portal_implementation" | "design_revision" | "design_region" | "form" | "user" | "group";
             /**
              * @description CMS object id, session file UUID, guideline slug, language code, URL, or the id of a `document`: a source outside the CMS and outside the session, such as a page of GenAIx's own knowledge corpus (since `1.0.0-rc.2`; a `citation` part over a non-CMS source points here, `label` carrying its title).
              * @example 8871
@@ -2255,6 +2262,8 @@ export interface components {
             node_id?: number;
             /** @description The CMS global id when known, for stable cross-installation reference. */
             global_id?: string;
+            /** @description For `type: form`: the form is of an external form type (since `1.0.0-rc.6`). Set by GenAIx on the references it produces; the CMS decides. Such a form is picked and embedded like any other and is never created or deleted through GenAIx. Informational. */
+            external?: boolean;
             /** @description The object's path in the CMS when known, for display: a folder's own path (`/Manual/Guides/`), a page's folder path. Informational, like `label`: it tells apart two objects of the same name, `id` alone identifies the object. Since `1.0.0-rc.4` (2026-10-14); GenAIx fills it on the folders a `settings_review` shows, a client may send it on a reference. */
             path?: string;
         };
@@ -2264,7 +2273,7 @@ export interface components {
          */
         CmsObjectRef: {
             /** @enum {string} */
-            type: "node" | "folder" | "page" | "file" | "image" | "template" | "construct" | "user" | "group" | "form";
+            type: "node" | "folder" | "page" | "file" | "image" | "template" | "construct" | "portal_implementation" | "user" | "group" | "form";
             /** Format: int64 */
             id: number;
             global_id?: string;
@@ -2339,6 +2348,7 @@ export interface components {
              * @default []
              */
             connection_ids: string[];
+            design_target?: components["schemas"]["DesignTarget"];
         };
         /**
          * SessionStatus
@@ -3026,7 +3036,7 @@ export interface components {
          *     What a client may *send* is the separate, closed `UserPartType` registry.
          * @enum {string}
          */
-        PartType: "text" | "status_note" | "tree_view" | "selectable_list" | "properties_list" | "image_grid" | "table" | "page_structure" | "construct_draft" | "api_call_log" | "citation" | "file_ref";
+        PartType: "text" | "status_note" | "tree_view" | "selectable_list" | "properties_list" | "image_grid" | "table" | "page_structure" | "construct_draft" | "api_call_log" | "citation" | "file_ref" | "design_revision";
         /**
          * MessagePart
          * @description One element of a message. `type` discriminates. Parts carry data with a
@@ -3043,7 +3053,130 @@ export interface components {
          *     the `part.*` events. A user message carries `UserMessagePart` items instead, which
          *     are a closed set and are validated strictly on input.
          */
-        MessagePart: components["schemas"]["TextPart"] | components["schemas"]["StatusNotePart"] | components["schemas"]["TreeViewPart"] | components["schemas"]["SelectableListPart"] | components["schemas"]["PropertiesListPart"] | components["schemas"]["ImageGridPart"] | components["schemas"]["TablePart"] | components["schemas"]["PageStructurePart"] | components["schemas"]["ConstructDraftPart"] | components["schemas"]["ApiCallLogPart"] | components["schemas"]["CitationPart"] | components["schemas"]["FileRefPart"];
+        MessagePart: components["schemas"]["TextPart"] | components["schemas"]["StatusNotePart"] | components["schemas"]["TreeViewPart"] | components["schemas"]["SelectableListPart"] | components["schemas"]["PropertiesListPart"] | components["schemas"]["ImageGridPart"] | components["schemas"]["TablePart"] | components["schemas"]["PageStructurePart"] | components["schemas"]["ConstructDraftPart"] | components["schemas"]["ApiCallLogPart"] | components["schemas"]["CitationPart"] | components["schemas"]["FileRefPart"] | components["schemas"]["DesignRevisionPart"];
+        /**
+         * DesignRevisionPart
+         * @description A revision of the design of a Design Studio session (since `1.0.0-rc.7`,
+         *     `12-design-studio-files.md`). The files are in the CMS, in the private storage of the design
+         *     target's devtools package at `files-private/design/<path>`, reachable only through the
+         *     authenticated package file API; the part only points at them. A revision never changes; a correction is a new revision.
+         * @example {
+         *       "type": "design_revision",
+         *       "revision_id": "r0004-7f3a",
+         *       "previous_revision_id": "r0003-c21e",
+         *       "package": "design-umdasch-2026-11",
+         *       "path": "revisions/r0004-7f3a",
+         *       "pages": [
+         *         {
+         *           "page_key": "home",
+         *           "language": "de",
+         *           "file": "pages/home.de.html"
+         *         },
+         *         {
+         *           "page_key": "home",
+         *           "language": "en",
+         *           "file": "pages/home.en.html"
+         *         }
+         *       ],
+         *       "status": "verified",
+         *       "text": "Revision r0004-7f3a, verified."
+         *     }
+         */
+        DesignRevisionPart: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "design_revision";
+            /** @description A sequence number and four random hex digits, so concurrent writers never share a directory. */
+            revision_id: string;
+            previous_revision_id?: string | null;
+            /** @description The design target's devtools package. */
+            package: string;
+            /** @description The revision directory under `files-private/design/`, e.g. `revisions/r0004-7f3a`. */
+            path: string;
+            /** @description The revision's pages, one per page and language. */
+            pages?: {
+                page_key: string;
+                language: string;
+                /** @description Path relative to the revision directory, e.g. `pages/home.de.html`. */
+                file: string;
+            }[];
+            /**
+             * @description `draft` until the render check passes, `verified` after it, `approved` when the plan is released, `promoted` when the promotion plan has written it to the live node.
+             * @enum {string}
+             */
+            status: "draft" | "verified" | "approved" | "promoted";
+            /** @description Plain rendering for clients that do not know this part. */
+            text?: string;
+        };
+        /**
+         * DesignTarget
+         * @description Where a Design Studio session works until its design is approved (since `1.0.0-rc.7`,
+         *     `10-design-studio.md` §3). The client obtains it from the CMS side and sets it when it
+         *     creates the session; it cannot change afterwards (`409 design_target_immutable`). GenAIx
+         *     refuses every CMS write of the session's runs outside it, except that an accepted
+         *     `design_promote` plan may write the live objects its items name. An object the target shares
+         *     with the live site is copied into the target before it changes. A client never needs to know
+         *     whether a preview node or a CMS branch backs it.
+         * @example {
+         *       "target_id": "umdasch-2026-11",
+         *       "node_id": 41,
+         *       "package": "design-umdasch-2026-11",
+         *       "source_node_id": 3,
+         *       "promotion_mode": "replay"
+         *     }
+         */
+        DesignTarget: {
+            target_id: string;
+            /** @description The CMS node GenAIx writes to while designing. */
+            node_id: number;
+            /** @description The target's devtools package, holding its design files and its constructs and templates. */
+            package: string;
+            /** @description The live node an approved design is promoted to. */
+            source_node_id: number;
+            /**
+             * @description `replay`: GenAIx merges and replays the approved design onto the live node (`14-design-studio-promotion.md`); `merge`: the CMS merges its branch.
+             * @enum {string}
+             */
+            promotion_mode: "replay" | "merge";
+        };
+        /**
+         * DesignMapping
+         * @description **Not a wire type.** The format of a revision's `mapping.json` in the CMS (since `1.0.0-rc.7`,
+         *     `12-design-studio-files.md` §3): what each region of each page becomes. Also published as
+         *     `schemas/design-mapping.schema.json`.
+         */
+        DesignMapping: {
+            revision_id: string;
+            /** @description Hashes of imported files that must stay byte-identical, keyed by path. */
+            locked_files?: {
+                [key: string]: string;
+            };
+            regions: ({
+                /** @description Stable across revisions while the region exists. */
+                region_id: string;
+                /** @description The page, or `*` for a region shared by every page. */
+                page_key: string;
+                /** @description CSS selector of the region in the page. */
+                selector: string;
+                /** @enum {string} */
+                kind: "static" | "construct" | "template" | "navigation" | "integration";
+                cms_ref?: components["schemas"]["ContextReference"];
+                /** @description Keyword of a new object this revision creates. */
+                proposed_key?: string;
+                /** @description Construct part keyword to where its value appears in the region. */
+                field_bindings?: {
+                    [key: string]: string;
+                };
+                integration?: string;
+                operation?: string;
+                /** @default false */
+                placeholder: boolean;
+            } & {
+                [key: string]: unknown;
+            })[];
+        };
         /**
          * UnknownPart
          * @description **Not a wire type.** This schema states the normative fallback rule, which every
@@ -3574,6 +3707,20 @@ export interface components {
                 }[];
             };
             created_ref?: components["schemas"]["CmsObjectRef"];
+            /**
+             * @description Whether the session's user may create this construct on its node (since `1.0.0-rc.7`). `false` when GenAIx found the permission missing before trying; GenAIx then never calls `create_construct` for it and offers the module's permission fallback as a `choice` instead.
+             * @default true
+             */
+            can_create: boolean;
+            /** @description Present when `can_create` is `false` (since `1.0.0-rc.7`). */
+            missing_permission?: {
+                /**
+                 * @description The CMS permission the user lacks, e.g. `updateconstructs`.
+                 * @example updateconstructs
+                 */
+                permission: string;
+                node_id: number;
+            };
         };
         /**
          * ApiCallLogPart
@@ -4047,7 +4194,7 @@ export interface components {
              * @description Absent keeps the current item's `kind`; on a new step GenAIx chooses one.
              * @enum {string}
              */
-            kind?: "create" | "update" | "link" | "translate" | "publish" | "construct" | "report" | "other";
+            kind?: "create" | "update" | "delete" | "link" | "translate" | "publish" | "construct" | "template" | "portal_implementation" | "report" | "other";
             target?: components["schemas"]["ContextReference"];
             /**
              * @description The workflow module that carries the step out (since `1.0.0-rc.5`), one of the installed modules. Absent keeps the current item's module; a new step without it gets the module GenAIx picks.
@@ -4117,7 +4264,7 @@ export interface components {
              */
             entry_hints?: string[];
             /** @description Kinds of object a successful run of this workflow yields. */
-            produces?: ("page" | "construct" | "report" | "user" | "file" | "none")[];
+            produces?: ("page" | "form" | "construct" | "template" | "guideline" | "report" | "user" | "file" | "none")[];
             /**
              * @description `true` when the module proposes its plan and waits for the user's approval before
              *     it writes anything (since `1.0.0-rc.3`; the manifest flag of the same name). The
@@ -4618,7 +4765,7 @@ export interface components {
             id: string;
             label: string;
             /** @enum {string} */
-            kind: "create" | "update" | "link" | "translate" | "publish" | "construct" | "report" | "other";
+            kind: "create" | "update" | "delete" | "link" | "translate" | "publish" | "construct" | "template" | "portal_implementation" | "report" | "other";
             /**
              * @description The workflow module that carries the item out (since `1.0.0-rc.5`), one of the plan's `workflows`. The item is bound by that module's write scope.
              * @example content_edit
@@ -4662,7 +4809,7 @@ export interface components {
          */
         PlannedObject: {
             /** @enum {string} */
-            type: "folder" | "page" | "file" | "image" | "construct";
+            type: "folder" | "page" | "file" | "image" | "construct" | "template" | "portal_implementation" | "form" | "guideline" | "user";
             /** @description The name it will get, as the user will see it. */
             label: string;
             /** @description Where it will appear, for display, e.g. `/Acme GmbH Website/Events 2027/`. */
@@ -4865,6 +5012,11 @@ export interface components {
          *     from the user's permissions on that page's folder, so one page may go out directly
          *     while another goes to review.
          *
+         *     Since `1.0.0-rc.6` an entry may also name a form the plan created or changed
+         *     (`cms_ref.type: form`), and these go online before the plan's pages, under `publish` and
+         *     `request_review` alike. If a form fails, the pages stay `pending`. A form has no review:
+         *     its `approval_chain` is empty, and a user who may not publish it gets `failed`.
+         *
          *     - `pending`: not handled yet. Every entry starts here and stays until a `publish` or
          *       `request_review` handles it.
          *     - `published`: the CMS published the page, or scheduled it for `publish_at`.
@@ -5018,6 +5170,43 @@ export interface components {
             updated_at?: string;
         };
         /**
+         * ClientAction
+         * @description Something the **client** does when the user picks this `choice` option, before it answers the
+         *     interaction with the option's id (since `1.0.0-rc.7`). GenAIx never performs it and does not check
+         *     that it happened. The options and their actions come from the workflow module's
+         *     `permission_fallbacks`, never from the model, so a client can rely on them.
+         *
+         *     `create_task`: create a CMS task of `task_type` through the CMS task API, with the option's `ref`
+         *     as the task's object and the message part at `draft` as its content (for `requestConstruct`, the
+         *     `construct_draft` part). If the task cannot be created, the client answers with another option or
+         *     lets the interaction expire.
+         *
+         *     A client that does not know an action type shows the option like any other and answers with its id.
+         * @example {
+         *       "type": "create_task",
+         *       "task_type": "requestConstruct",
+         *       "draft": {
+         *         "message_id": "6b1f2c9e-4d3a-4c8e-9a51-0f2e7d1b3c44",
+         *         "part_index": 1
+         *       }
+         *     }
+         */
+        ClientAction: {
+            /** @enum {string} */
+            type: "create_task";
+            /**
+             * @description The CMS task type for `create_task`.
+             * @example requestConstruct
+             */
+            task_type?: string;
+            /** @description The message part whose content the task carries. */
+            draft?: {
+                /** Format: uuid */
+                message_id: string;
+                part_index: number;
+            };
+        };
+        /**
          * InteractionKind
          * @enum {string}
          */
@@ -5045,6 +5234,7 @@ export interface components {
                 /** @description Why GenAIx offers this option (since `1.0.0-rc.5` addition, 2026-10-15), as for a `settings_review` option. */
                 reason?: string;
                 ref?: components["schemas"]["ContextReference"];
+                action?: components["schemas"]["ClientAction"];
             }[];
             /**
              * @description For `choice`: whether several options may be selected.
@@ -5058,7 +5248,32 @@ export interface components {
              * @default false
              */
             other_allowed: boolean;
-            /** @description For kind `form`, a JSON Schema (draft 2020-12) the `values` object must validate against. Keep it flat: one property is one answer field. */
+            /** @description For `choice`: the answer may instead be a CMS object or session file the user picks, as a `reference` of one of these `ContextReference` types (since `1.0.0-rc.6`). A client offers a picker beside the options. */
+            reference_types?: string[];
+            /**
+             * @description For kind `form`, a JSON Schema (draft 2020-12) the `values` object must
+             *     validate against. Keep it flat: one property is one answer field.
+             *
+             *     **A reference field** (since `1.0.0-rc.6`) is a property that opens a picker. It
+             *     is one answer field, answered with one `ContextReference` of a listed type:
+             *
+             *     ```json
+             *     "headerImage": {
+             *       "type": "object",
+             *       "format": "context-reference",
+             *       "x-reference-types": ["image", "session_file"],
+             *       "title": "Header image"
+             *     }
+             *     ```
+             *
+             *     GenAIx answers `422` at `/answer/values/<field>` when the type is not listed, a
+             *     `page`, `folder`, `file`, `image`, `template`, `construct` or `form` has no `node_id`, a session file is not in this session, or, where
+             *     `image` is listed too, a session file is not an image. It does not ask the CMS at
+             *     this point: the agent reads the object later. For a `session_file`, the client
+             *     uploads with `POST /sessions/{session_id}/files` first, `mode: source` being the
+             *     default, and answers with the file's id. The interaction keeps its `expires_at`
+             *     during an upload.
+             */
             schema?: {
                 [key: string]: unknown;
             };
@@ -5160,13 +5375,16 @@ export interface components {
             selected?: string[];
             /** @description The user's own answer, only where `other_allowed` (since `1.0.0-rc.5` addition, 2026-10-15). */
             other?: string;
+            /** @description The object the user picked instead of an option, where the interaction has `reference_types` (since `1.0.0-rc.6`; `selected` may then be empty). `422` at `/answer/reference` without `reference_types`, for a type it does not list, for a `page`, `folder`, `file`, `image`, `template`, `construct` or `form` without `node_id`, or for a session file not in this session. */
+            reference?: components["schemas"]["ContextReference"];
             comment?: string;
         } | {
             selected: unknown;
-        } | unknown) | {
+        } | unknown | unknown) | {
             approved: boolean;
             comment?: string;
         } | {
+            /** @description The answer per field. A reference field's value is one `ContextReference` (since `1.0.0-rc.6`). */
             values: {
                 [key: string]: unknown;
             };
@@ -5448,7 +5666,7 @@ export interface components {
             /** @example create_page */
             tool: string;
             /** @enum {string} */
-            group: "identity" | "search" | "content_read" | "content_write" | "constructs" | "admin" | "genaix";
+            group: "identity" | "search" | "content_read" | "content_write" | "constructs" | "forms_read" | "forms_write" | "guidelines_read" | "guidelines_write" | "admin" | "design" | "genaix";
             input_summary: string;
             /** @description CMS objects the call is about, known before it runs. */
             cms_objects?: components["schemas"]["CmsObjectRef"][];
@@ -5606,7 +5824,7 @@ export interface components {
         };
         /**
          * PreviewUpdatedEvent
-         * @description Fires after every CMS write that affects the preview, so a client can reload it. Pages only in Phase One.
+         * @description Fires after every CMS write that affects the preview, so a client can reload it. Pages only in Phase One; since `1.0.0-rc.7` also a template of a Design Studio session, with the `revision_id` it shows.
          */
         PreviewUpdatedEvent: components["schemas"]["BaseEvent"] & {
             /** @constant */
@@ -5618,6 +5836,8 @@ export interface components {
             mode: "edit" | "view";
             /** @description Tag keywords that changed, so the client can highlight them. */
             changed_elements?: string[];
+            /** @description The design revision the preview shows (Design Studio sessions, since `1.0.0-rc.7`). */
+            revision_id?: string;
         } & {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5897,6 +6117,28 @@ export interface components {
         };
     };
     parameters: {
+        /**
+         * @description The Workspace UI's language (since the `1.0.0-rc.5` addition of 2026-10-19), a standard
+         *     `Accept-Language` value (RFC 9110 §12.5.4). The client sets it from its own language
+         *     setting, not the browser default; a proxy forwards it unchanged. GenAIx reads only
+         *     `createSession` and `postMessage`; every other route ignores it.
+         *
+         *     GenAIx takes the primary subtag (`de-AT` is `de`), orders by `q` and uses the first
+         *     language it supports (Phase One: `en`, `de`, `hu`, `fr`, `it`, `es`, `nl`, `pl`, `cs`).
+         *     Others are skipped; with none left, or the header absent, nothing changes.
+         *
+         *     - On `createSession` the session's module steps and checks are labelled in it.
+         *     - On every `postMessage` it becomes the session's UI language; a later message with
+         *       another value replaces it. `answerInteraction` does not read it.
+         *     - The language the user writes in wins: once GenAIx has recognised the language of
+         *       the user's messages, its replies, questions and check texts follow that. The UI
+         *       language applies until then, and for messages without text. Without either, English.
+         *
+         *     It never changes a write-governing `language` setting: the language of a page comes from
+         *     the `setting` part, the session context or the settings review as before.
+         * @example de-AT,de;q=0.9,en;q=0.5
+         */
+        AcceptLanguage: string;
         /**
          * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
          *     required on every user route, that is everything except `GET /ping`,
@@ -6763,6 +7005,28 @@ export interface operations {
                  * @example sub_c3f1a07d9e5b4826
                  */
                 "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+                /**
+                 * @description The Workspace UI's language (since the `1.0.0-rc.5` addition of 2026-10-19), a standard
+                 *     `Accept-Language` value (RFC 9110 §12.5.4). The client sets it from its own language
+                 *     setting, not the browser default; a proxy forwards it unchanged. GenAIx reads only
+                 *     `createSession` and `postMessage`; every other route ignores it.
+                 *
+                 *     GenAIx takes the primary subtag (`de-AT` is `de`), orders by `q` and uses the first
+                 *     language it supports (Phase One: `en`, `de`, `hu`, `fr`, `it`, `es`, `nl`, `pl`, `cs`).
+                 *     Others are skipped; with none left, or the header absent, nothing changes.
+                 *
+                 *     - On `createSession` the session's module steps and checks are labelled in it.
+                 *     - On every `postMessage` it becomes the session's UI language; a later message with
+                 *       another value replaces it. `answerInteraction` does not read it.
+                 *     - The language the user writes in wins: once GenAIx has recognised the language of
+                 *       the user's messages, its replies, questions and check texts follow that. The UI
+                 *       language applies until then, and for messages without text. Without either, English.
+                 *
+                 *     It never changes a write-governing `language` setting: the language of a page comes from
+                 *     the `setting` part, the session context or the settings review as before.
+                 * @example de-AT,de;q=0.9,en;q=0.5
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
             };
             path?: never;
             cookie?: never;
@@ -7353,6 +7617,28 @@ export interface operations {
                  * @example sub_c3f1a07d9e5b4826
                  */
                 "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+                /**
+                 * @description The Workspace UI's language (since the `1.0.0-rc.5` addition of 2026-10-19), a standard
+                 *     `Accept-Language` value (RFC 9110 §12.5.4). The client sets it from its own language
+                 *     setting, not the browser default; a proxy forwards it unchanged. GenAIx reads only
+                 *     `createSession` and `postMessage`; every other route ignores it.
+                 *
+                 *     GenAIx takes the primary subtag (`de-AT` is `de`), orders by `q` and uses the first
+                 *     language it supports (Phase One: `en`, `de`, `hu`, `fr`, `it`, `es`, `nl`, `pl`, `cs`).
+                 *     Others are skipped; with none left, or the header absent, nothing changes.
+                 *
+                 *     - On `createSession` the session's module steps and checks are labelled in it.
+                 *     - On every `postMessage` it becomes the session's UI language; a later message with
+                 *       another value replaces it. `answerInteraction` does not read it.
+                 *     - The language the user writes in wins: once GenAIx has recognised the language of
+                 *       the user's messages, its replies, questions and check texts follow that. The UI
+                 *       language applies until then, and for messages without text. Without either, English.
+                 *
+                 *     It never changes a write-governing `language` setting: the language of a page comes from
+                 *     the `setting` part, the session context or the settings review as before.
+                 * @example de-AT,de;q=0.9,en;q=0.5
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
             };
             path: {
                 /**

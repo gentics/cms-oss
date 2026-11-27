@@ -44,3 +44,68 @@ test.describe('Composer attachments', () => {
         await expect(page.getByRole('button', { name: 'Remove: huge.pdf' })).toHaveCount(0);
     });
 });
+
+test.describe('Composer on the dashboard with a long text', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    // Types `count` lines, more than the composer shows, so its text scrolls.
+    async function typeLines(page: Page, count: number) {
+        const field = page.getByRole('textbox', { name: 'What would you like to do?' });
+
+        await field.click();
+
+        for (let line = 1; line <= count; line++) {
+            await page.keyboard.type(`Line ${line} of a longer request for the new campaign page`);
+            await page.keyboard.press('Shift+Enter');
+        }
+    }
+
+    // The element that scrolls the composer's text, and where the send button is in its visible area.
+    function scrollingOf(page: Page) {
+        return page.getByRole('button', { name: 'Start a session' }).evaluate((send) => {
+            let scroller: Element | null = document.querySelector('[role="textbox"]');
+
+            while (scroller && !(scroller.scrollHeight > scroller.clientHeight + 1 && getComputedStyle(scroller).overflowY !== 'visible')) {
+                scroller = scroller.parentElement;
+            }
+
+            const area = scroller?.getBoundingClientRect();
+            const button = send.getBoundingClientRect();
+
+            return {
+                holdsSend: scroller?.contains(send) ?? false,
+                gapBelowSend: area ? Math.round(area.bottom - button.bottom) : -1,
+                // Room for the scrollbar at the area's right edge, so it does not run over the buttons.
+                roomRightOfSend: area ? Math.round(area.right - button.right) : -1,
+                scrollTop: scroller?.scrollTop ?? -1,
+            };
+        });
+    }
+
+    test('scrolls the text with the buttons beside it, the scrollbar at the edge, and keeps send and voice at the bottom', async ({ page }) => {
+        await page.goto('/');
+        await typeLines(page, 9);
+
+        const atEnd = await scrollingOf(page);
+
+        expect(atEnd.holdsSend).toBe(true);
+        expect(atEnd.gapBelowSend).toBeLessThanOrEqual(8);
+        expect(atEnd.roomRightOfSend).toBeGreaterThanOrEqual(8);
+
+        // Scrolled up to the first line: send stays at the bottom.
+        await page.getByRole('button', { name: 'Start a session' }).evaluate((send) => {
+            let scroller: Element | null = send;
+
+            while (scroller && !(scroller.scrollHeight > scroller.clientHeight + 1 && getComputedStyle(scroller).overflowY !== 'visible')) {
+                scroller = scroller.parentElement;
+            }
+
+            scroller?.scrollTo({ top: 0 });
+        });
+
+        const atStart = await scrollingOf(page);
+
+        expect(atStart.scrollTop).toBe(0);
+        expect(atStart.gapBelowSend).toBeLessThanOrEqual(8);
+    });
+});

@@ -166,6 +166,26 @@ half of the original requirement treated as out of scope for now.
 
 ## 3. Exact REST call sequence
 
+```mermaid
+sequenceDiagram
+    participant G@{ "type": "control" } as GenAIx (via CMS MCP)
+    participant R@{ "type": "database" } as CMS REST
+    G->>R: POST /rest/construct?nodeId=3 (construct, parts, template)
+    R-->>G: construct id 42
+    opt construct needed on another node
+        G->>R: PUT /rest/node/5/constructs/42
+    end
+    opt template changes later
+        G->>R: GET /rest/construct/42
+        G->>R: PUT /rest/construct/42?nodeId=3 (full replacement)
+    end
+    opt keep it in a devtools package
+        G->>R: PUT /rest/devtools/packages/genaix-poc/constructs/legalnote
+    end
+    G->>R: GET /rest/devtools/preview/page/789?nodeId=3
+    R-->>G: Rendered page using the construct
+```
+
 Worked example: a construct with a Handlebars wrapper template and two editable parts — a
 short-text headline and a rich-text body.
 

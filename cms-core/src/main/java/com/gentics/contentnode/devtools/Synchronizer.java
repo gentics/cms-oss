@@ -49,6 +49,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.PortalImplementation;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -84,7 +85,7 @@ public class Synchronizer {
 	 * Classes of synchronizable objects in the order they must be synchronized
 	 */
 	public final static List<Class<? extends SynchronizableNodeObject>> CLASSES = Arrays.asList(Datasource.class, Construct.class, ObjectTagDefinition.class,
-			Template.class, CrFragment.class, ContentRepository.class);
+			Template.class, CrFragment.class, ContentRepository.class, PortalImplementation.class);
 
 	/**
 	 * Logger

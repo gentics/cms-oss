@@ -410,6 +410,41 @@ objects published into Gentics Mesh.
 When the URL is set and a page must be rendered in the CMS (for preview or in edit mode), the CMS will transform the page into a Mesh Node and +POST+ that to the preview URL.
 The response is then used as template for rendering the page in edit or preview mode.
 
+h4. Static files in the preview
+
+Static files referenced by the preview rendered by the portal (URLs starting with @/static/@) are fetched from the portal:
+
+* When the page is rendered by the portal, the CMS sets the cookie @gcms_portal_preview_node@ containing the ID of the node, which provides the preview URL.
+* Requests to @/static/[package]/files/...@ are served from the "devtool package":devtools_overview.html#static-files, if the file exists in the package.
+* All other requests to @/static/...@ are forwarded to the portal, if the cookie is set, the request contains a valid CMS session,
+  the user is allowed to view the node and the node has a preview URL set.
+  The request is forwarded to the protocol, host and port of the preview URL, keeping the path and the query string
+  (e.g. @https://portal:8080/static/css/main.css@ for the preview URL @https://portal:8080/preview@).
+  Only +GET+ and +HEAD+ requests are forwarded, and the cookies of the CMS are not sent to the portal.
+* Otherwise, the response is @401 Unauthorized@ (no valid session), @403 Forbidden@ (no permission on the node) or @404 Not Found@.
+
+h3. Portal Implementations
+
+"Portal Implementations":admin_portal_implementations.html assigned to a node are published into the node's Mesh project
+using the schema @[prefix]_implementation@. See "Publishing into Mesh ContentRepositories":admin_portal_implementations.html#publishing-into-mesh-contentrepositories for details.
+
+h3. Portal Type
+
+The properties dialog of Nodes in the CMS have a field _Portal Type_, which defines the type of the portal that renders the objects of the node published into Gentics Mesh.
+The possible values are +Java+ (Gentics Portal | java) and +PHP+ (Gentics Portal | php).
+
+The portal type can either be selected directly or be read from a system property or environment variable.
+The property must be given in the format +${env:NODE_PORTALTYPE_...}+ or +${sys:NODE_PORTALTYPE_...}+, the name must start with +NODE_PORTALTYPE_+.
+The value of the property is matched case-insensitively (e.g. +java+ is accepted as +Java+). If the value is no portal type, the portal type of the node is not set and a warning is logged.
+The property is resolved when the node is saved and when the CMS is started.
+
+The field is mandatory in the Administration UI. Nodes created over the REST API without a portal type have no portal type.
+
+A new channel starts with the portal type of its master: the Administration UI preselects it, and a channel created over the REST API without a portal type gets the portal type (or the property) of its master.
+The portal type of the channel can be changed afterwards. Note that the preview of pages in a channel is always rendered by the preview URL of the master, so a channel with another portal type than its master may show its forms incorrectly in the preview.
+
+The portal type is available for rendering as +node.portalType+ (see "Meta Attributes":meta_attributes.html), which is used by the default form construct (see "Default Form Construct":feature_forms.html#default-form-construct).
+
 h3. Synchronize Mesh roles
 
 The datasource used in the "Roles Property":#roles-property has to be filled with the Mesh roles, that should be available for selection.

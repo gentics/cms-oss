@@ -84,6 +84,23 @@ public class RenderUtils {
 	protected static ObjectMapper mapper = new ObjectMapper();
 
 	/**
+	 * Name of the cookie, which is set when a page preview is rendered by a portal (using the meshPreviewUrl of the node).
+	 * The value is the ID of the node, so that requests to static files (/static/...) can be proxied to the portal.
+	 */
+	public final static String PORTAL_PREVIEW_NODE_COOKIE = "gcms_portal_preview_node";
+
+	/**
+	 * Get the ID of the node, which is used for rendering the preview of the given page with a portal
+	 * (this is the node, which provides the meshPreviewUrl in {@link #getPreviewTemplate(Page, int, String)})
+	 * @param page page
+	 * @return node ID
+	 * @throws NodeException
+	 */
+	public static Integer getPortalPreviewNodeId(Page page) throws NodeException {
+		return page.getFolder().getNode().getMaster().getId();
+	}
+
+	/**
 	 * Get the preview template for the given page, if the page preview must be rendered on a mesh portal, or null otherwise
 	 * @param page page to preview
 	 * @param renderMode render mode

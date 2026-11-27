@@ -10,6 +10,7 @@ import jakarta.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
+import com.gentics.contentnode.rest.model.PortalType;
 
 /**
  * REST entity for the node, contained in the Content Staging package.
@@ -63,6 +64,10 @@ public class StagedNode extends StagingBase {
 	private String meshProjectName;
 
 	private String meshPreviewUrlProperty;
+
+	private PortalType portalType;
+
+	private String portalTypeProperty;
 
 	/**
 	 * Publish directory
@@ -476,6 +481,38 @@ public class StagedNode extends StagingBase {
 		this.meshPreviewUrlProperty = meshPreviewUrlProperty;
 	}
 
+	/**
+	 * Portal type
+	 * @return portal type or null
+	 */
+	public PortalType getPortalType() {
+		return portalType;
+	}
+
+	/**
+	 * Set the portal type
+	 * @param portalType portal type
+	 */
+	public void setPortalType(PortalType portalType) {
+		this.portalType = portalType;
+	}
+
+	/**
+	 * Property containing the portal type
+	 * @return portal type property
+	 */
+	public String getPortalTypeProperty() {
+		return portalTypeProperty;
+	}
+
+	/**
+	 * Set the portal type property
+	 * @param portalTypeProperty portal type property
+	 */
+	public void setPortalTypeProperty(String portalTypeProperty) {
+		this.portalTypeProperty = portalTypeProperty;
+	}
+
 	public String getMeshProjectName() {
 		return meshProjectName;
 	}
@@ -510,6 +547,8 @@ public class StagedNode extends StagingBase {
 		this.hostname = origin.hostname;
 		this.hostnameProperty = origin.hostnameProperty;
 		this.meshPreviewUrlProperty = origin.meshPreviewUrlProperty;
+		this.portalType = origin.portalType;
+		this.portalTypeProperty = origin.portalTypeProperty;
 		this.fileUrls = origin.fileUrls;
 		this.pageUrls = origin.pageUrls;
 		this.meshProjectName = origin.meshProjectName;

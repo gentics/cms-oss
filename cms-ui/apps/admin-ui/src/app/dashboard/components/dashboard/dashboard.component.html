@@ -170,6 +170,15 @@
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.PORTAL_IMPLEMENTATIONS"
+                icon="portal-implementations"
+                [attr.data-id]="AdminUIModuleRoutes.PORTAL_IMPLEMENTATIONS"
+                [title]="'dashboard.item_portal_implementations' | gtxI18n"
+                [class.disabled]="!portalImplementationsModuleEnabled"
+                [disabled]="!portalImplementationsModuleEnabled"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.DEV_TOOL_PACKAGES"
                 icon="packages"
                 [attr.data-id]="AdminUIModuleRoutes.DEV_TOOL_PACKAGES"

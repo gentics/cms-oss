@@ -37,6 +37,7 @@ export * from './object-property-category';
 export * from './package';
 export * from './package-check';
 export * from './page';
+export * from './portal-implementation';
 export * from './permissions';
 export * from './privileges';
 export * from './publish-log';

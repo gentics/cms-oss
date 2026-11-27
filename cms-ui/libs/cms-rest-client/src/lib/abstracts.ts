@@ -286,6 +286,13 @@ import {
     PolicyGroupResponse,
     PolicyMapOptions,
     PolicyResponse,
+    PortalImplementationCreateRequest,
+    PortalImplementationFileListOptions,
+    PortalImplementationFileListResponse,
+    PortalImplementationListOptions,
+    PortalImplementationListResponse,
+    PortalImplementationResponse,
+    PortalImplementationUpdateRequest,
     PublishInfo,
     PublishLogEntry,
     PublishLogListOption,
@@ -588,6 +595,10 @@ export interface AbstractDevToolsAPI extends BasicAPI {
     listObjectProperties: (name: string, options?: ObjectPropertyListOptions) => ObjectPropertyListResponse;
     assignObjectProperty: (name: string, opId: number | string) => Response;
     unassignObjectProperty: (name: string, opId: number | string) => Response;
+
+    listPortalImplementations: (name: string, options?: PortalImplementationListOptions) => PortalImplementationListResponse;
+    assignPortalImplementation: (name: string, portalImplementationId: number | string) => Response;
+    unassignPortalImplementation: (name: string, portalImplementationId: number | string) => Response;
 
     listTemplates: (name: string, options?: TemplateListRequest) => ListResponse<Template>;
     assignTemplate: (name: string, templateId: number | string) => Response;
@@ -912,6 +923,10 @@ export interface AbstractNodeAPI extends BasicAPI {
     listObjectProperties: (id: number | string, options?: ObjectPropertyListOptions) => ObjectPropertyListResponse;
     assignObjectProperty: (id: number | string, opId: number | string) => Response;
     unassignObjectProperty: (id: number | string, opId: number | string) => Response;
+
+    listPortalImplementations: (id: number | string, options?: PortalImplementationListOptions) => PortalImplementationListResponse;
+    assignPortalImplementation: (id: number | string, portalImplementationId: number | string) => Response;
+    unassignPortalImplementation: (id: number | string, portalImplementationId: number | string) => Response;
 }
 
 export interface AbstractObjectPropertyAPI extends BasicAPI {
@@ -1143,6 +1158,17 @@ export interface AbstractPublishProtocolAPI extends BasicAPI {
     list: (options?: PublishLogListOption) => ListResponse<PublishLogEntry>;
 }
 
+export interface AbstractPortalImplementationAPI extends BasicAPI {
+    list: (options?: PortalImplementationListOptions) => PortalImplementationListResponse;
+    create: (body: PortalImplementationCreateRequest) => PortalImplementationResponse;
+    get: (id: number | string) => PortalImplementationResponse;
+    update: (id: number | string, body: PortalImplementationUpdateRequest) => PortalImplementationResponse;
+    delete: (id: number | string) => void;
+
+    listNodes: (id: number | string) => NodeListResponse;
+    listFiles: (id: number | string, options?: PortalImplementationFileListOptions) => PortalImplementationFileListResponse;
+}
+
 export interface AbstractKeycloakAPI extends BasicAPI {
     configuration: () => KeycloakConfiguration;
 }
@@ -1178,6 +1204,7 @@ export interface AbstractRootAPI {
     partType: AbstractPartTypeAPI;
     permission: AbstractPermissionAPI;
     policyMap: AbstractPolicyMapAPI;
+    portalImplementation: AbstractPortalImplementationAPI;
     publishProtocol: AbstractPublishProtocolAPI;
     role: AbstractRoleAPI;
     scheduler: AbstractSchedulerAPI;

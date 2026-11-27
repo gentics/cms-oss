@@ -32,6 +32,7 @@ import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
+import com.gentics.contentnode.rest.model.PortalType;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
@@ -83,6 +84,11 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	 * Predicate for validation of host properties
 	 */
 	public final static Predicate<String> NODE_HOST_FILTER = value -> StringUtils.startsWith(value, "NODE_HOST_");
+
+	/**
+	 * Predicate for validation of portal type properties
+	 */
+	public final static Predicate<String> NODE_PORTALTYPE_FILTER = value -> StringUtils.startsWith(value, "NODE_PORTALTYPE_");
 
 	/**
 	 * How URLs will be rendered in publish mode
@@ -690,6 +696,13 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	List<ObjectTagDefinition> getObjectTagDefinitions() throws NodeException;
 
 	/**
+	 * Get the list of Portal Implementations assigned to this node (for channels, the Portal Implementations assigned to the master node)
+	 * @return list of Portal Implementations assigned to this node
+	 * @throws NodeException
+	 */
+	List<PortalImplementation> getPortalImplementations() throws NodeException;
+
+	/**
 	 * Get the contentrepository for the node
 	 * @return contentrepository for the node
 	 * @throws NodeException
@@ -901,6 +914,57 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	}
 
 	/**
+	 * Get the type of the portal, which renders the content of the node
+	 * @return portal type or null, if not set
+	 */
+	@FieldGetter("portal_type")
+	PortalType getPortalType();
+
+	/**
+	 * Set the portal type
+	 * @param portalType portal type, may be null
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("portal_type")
+	void setPortalType(PortalType portalType) throws ReadOnlyException;
+
+	/**
+	 * Get the portal type property
+	 * @return portal type property
+	 */
+	@FieldGetter("portal_type_property")
+	String getPortalTypeProperty();
+
+	/**
+	 * Set the portal type property
+	 * @param portalTypeProperty portal type property
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("portal_type_property")
+	void setPortalTypeProperty(String portalTypeProperty) throws ReadOnlyException;
+
+	/**
+	 * If a portal type property is set, resolve it now and set it as portal type.
+	 * A resolved value, which is no portal type, unsets the portal type.
+	 * If the portal type changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	void resolvePortalTypeProperty() throws ReadOnlyException;
+
+	/**
+	 * Get the effective portal type. This will do property substitution.
+	 * @return effective portal type or null, if not set or the property does not resolve to a portal type
+	 */
+	default PortalType getEffectivePortalType() {
+		String portalTypeProperty = getPortalTypeProperty();
+		if (!StringUtils.isBlank(portalTypeProperty)) {
+			return PortalType.parse(substituteSingleProperty(portalTypeProperty, NODE_PORTALTYPE_FILTER));
+		} else {
+			return getPortalType();
+		}
+	}
+
+	/**
 	 * Check whether insecure connections to the preview URL are allowed.
 	 * @return Whether insecure connections to the preview URL are allowed
 	 */
@@ -1008,6 +1072,20 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	 * @throws NodeException
 	 */
 	void removeObjectTagDefinition(ObjectTagDefinition def) throws NodeException;
+
+	/**
+	 * Assign the Portal Implementation to the node (for channels, the Portal Implementation is assigned to the master node)
+	 * @param portalImplementation Portal Implementation
+	 * @throws NodeException
+	 */
+	void addPortalImplementation(PortalImplementation portalImplementation) throws NodeException;
+
+	/**
+	 * Remove the Portal Implementation from the node (for channels, the Portal Implementation is removed from the master node)
+	 * @param portalImplementation Portal Implementation
+	 * @throws NodeException
+	 */
+	void removePortalImplementation(PortalImplementation portalImplementation) throws NodeException;
 
 	/**
 	 * Get the mesh project, this node publishes into

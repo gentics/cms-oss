@@ -28,6 +28,7 @@ import {
     ObjectPropertyCategoryApi,
     PageApi,
     PermissionApi,
+    PortalImplementationApi,
     PublishQueueApi,
     RoleApi,
     SchedulerApi,
@@ -77,6 +78,7 @@ export class Api implements IGcmsApi {
     objectPropertycategories: ObjectPropertyCategoryApi;
     pages: PageApi;
     permissions: PermissionApi;
+    portalImplementations: PortalImplementationApi;
     publishQueue: PublishQueueApi;
     role: RoleApi;
     scheduler: SchedulerApi;
@@ -113,6 +115,7 @@ export class Api implements IGcmsApi {
         this.objectPropertycategories = gcmsApi.objectPropertycategories;
         this.pages = gcmsApi.pages;
         this.permissions = gcmsApi.permissions;
+        this.portalImplementations = gcmsApi.portalImplementations;
         this.publishQueue = gcmsApi.publishQueue;
         this.role = gcmsApi.role;
         this.scheduler = gcmsApi.scheduler;

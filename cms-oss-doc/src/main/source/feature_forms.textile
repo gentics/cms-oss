@@ -1014,6 +1014,13 @@ The Handlebars Part should have the following template:
 
 For details on the +gtx_form+ helper see "Rendering with Handlebars":handlebars.html#gtx_form
 
+h3. Default Form Construct
+
+The CMS contains the tagtype +gtxform+ (category _Gentics CMP Standard_), which includes a form like the tagtype above, but renders it for the portal type of the node
+(see "Portal Type":feature_mesh_contentrepository.html#portal-type). If the node has no portal type, the form is rendered for the Java portal.
+
+The tagtype is not assigned to any node automatically. It is only contained in the Enterprise Edition, because the +gtx_form+ helper is part of the Forms feature.
+
 h3. Rendering and customizing with FormGen
 
 The forms configured above are rendered by *FormGen*. FormGen offers a wide range of configuration and customization options, such as custom form controls, lifecycle hooks, navigation buttons, overlays, screens and styling.

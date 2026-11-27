@@ -850,6 +850,13 @@ public class StagingModelBuilder {
 		node.setMeshPreviewUrlProperty(stagedNode.getMeshPreviewUrlProperty());
 		node.setMeshProjectName(stagedNode.getMeshProjectName());
 
+		// unlike the preview URL, the portal type does not differ between systems, so the value is staged as well.
+		// When a property is staged, the value resolved on this system wins over the value resolved on the source system.
+		if (StringUtils.isBlank(stagedNode.getPortalTypeProperty())) {
+			node.setPortalType(stagedNode.getPortalType());
+		}
+		node.setPortalTypeProperty(stagedNode.getPortalTypeProperty());
+
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT)) {
 			node.setPubDirSegment(stagedNode.isPubDirSegment());
 		}
@@ -1070,6 +1077,8 @@ public class StagingModelBuilder {
 
 		node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
 		node.setMeshProjectName(nodeNode.getMeshProjectName());
+		node.setPortalType(nodeNode.getPortalType());
+		node.setPortalTypeProperty(nodeNode.getPortalTypeProperty());
 
 		return node;
 	}

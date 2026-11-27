@@ -130,6 +130,7 @@ h4. Node
 | master | The master node of the current node, if it is a channel or null if the current node is not a channel |
 | utf8 | True if utf8 encoding is enabled, false otherwise |
 | alohaeditor | True if Aloha Editor is enabled for editing, false otherwise |
+| portalType | Portal type of the node as _java_ or _php_ (see "Portal Type":feature_mesh_contentrepository.html#portal-type), empty if not set |
 | "languages":#language | list of references of languages of the node |
 
 h4. Tag

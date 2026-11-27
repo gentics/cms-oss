@@ -5,6 +5,7 @@
 <div class="modal-content row">
     <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
 
+    @if (createdUser) {
     @if (passwordLinkUrl) {
     <div class="gtx-create-user-modal-password-link" data-context="password-link">
         <p>{{ 'modal.password_link_created' | gtxI18n }}</p>
@@ -16,6 +17,11 @@
             [value]="passwordLinkUrl"
         ></gtx-textarea>
     </div>
+    } @else if (passwordLinkFailed) {
+    <div class="gtx-create-user-modal-password-link" data-context="password-link-failed">
+        <p>{{ 'modal.password_link_failed' | gtxI18n }}</p>
+    </div>
+    }
     } @else {
     <gtx-tabs pure [activeId]="currentTab">
         <gtx-tab id="1" [title]="'shared.title_properties' | gtxI18n">
@@ -162,7 +168,8 @@
   </div>
 
   <div class="modal-footer">
-    @if (passwordLinkUrl) {
+    @if (createdUser) {
+      @if (passwordLinkUrl) {
       <gtx-button
         type="secondary"
         data-action="copy-link"
@@ -170,9 +177,20 @@
         >
         {{ 'modal.password_link_copy_button' | gtxI18n }}
       </gtx-button>
+      } @else if (passwordLinkFailed) {
+      <gtx-button
+        type="secondary"
+        data-action="retry-link"
+        [disabled]="loading"
+        (click)="buttonRetryPasswordLinkClicked()"
+        >
+        {{ 'modal.password_link_retry_button' | gtxI18n }}
+      </gtx-button>
+      }
       <gtx-button
         type="primary"
         data-action="close"
+        [disabled]="loading"
         (click)="buttonCloseClicked()"
         >
         {{ 'modal.close_button' | gtxI18n }}

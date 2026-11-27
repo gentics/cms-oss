@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
+import com.gentics.contentnode.rest.model.request.PasswordTokenRequest;
 import com.gentics.contentnode.rest.model.request.SetPasswordRequest;
 import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -14,7 +15,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 
 /**
@@ -106,12 +106,13 @@ public interface AuthenticationResource {
 	/**
 	 * Check whether the token of a password link (see {@code PUT /group/{id}/users?passwordLink=true}) can still be
 	 * used. Needs no session. The response does not tell why a token is not valid (expired, used, replaced or unknown).
-	 * @param token token
+	 * The token is sent in the body, so that it does not end up in access logs.
+	 * @param request token
 	 * @return response code OK if the token is valid, FAILURE otherwise
 	 */
-	@GET
-	@Path("/password")
-	GenericResponse validatePasswordToken(@QueryParam("token") String token) throws Exception;
+	@POST
+	@Path("/password/validate")
+	GenericResponse validatePasswordToken(PasswordTokenRequest request) throws Exception;
 
 	/**
 	 * Set the password of a user with the token of a password link. Needs no session. On success the token is used up.

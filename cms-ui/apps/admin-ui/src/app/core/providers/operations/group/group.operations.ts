@@ -215,14 +215,19 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
 
     /**
      * Create a new user in group with id {groupId}, who sets the password with a link.
-     * Emits the user and the token for the link. The creation only returns the link's expiry, so the token
-     * is fetched afterwards with `POST /user/{id}/passwordLink`, which replaces the token of the creation.
+     * The creation only returns the link's expiry, the token is fetched with `createPasswordLink()`.
      */
-    createUserWithPasswordLink(groupId: number, payload: GroupUserCreateRequest): Observable<{ user: User<Raw>; passwordToken: string }> {
-        return this.addCreatedUser(groupId, this.client.group.createUser(groupId, payload, { passwordLink: true })).pipe(
-            switchMap((user) => this.client.user.createPasswordLink(user.id).pipe(
-                map((res) => ({ user, passwordToken: res.token })),
-            )),
+    createUserWithPasswordLink(groupId: number, payload: GroupUserCreateRequest): Observable<User<Raw>> {
+        return this.addCreatedUser(groupId, this.client.group.createUser(groupId, payload, { passwordLink: true }));
+    }
+
+    /**
+     * Issue a new token for the password link of the user, which replaces any earlier token.
+     * Separate from the creation, so that a failure can be retried for the user, who exists by then.
+     */
+    createPasswordLink(userId: number): Observable<string> {
+        return this.client.user.createPasswordLink(userId).pipe(
+            map((res) => res.token),
             this.catchAndRethrowError(),
         );
     }

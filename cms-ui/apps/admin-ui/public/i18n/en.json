@@ -917,6 +917,8 @@
         "password_link_copy_button": "Copy link",
         "password_link_copied": "The link has been copied",
         "password_link_copy_failed": "The link could not be copied",
+        "password_link_failed": "The user was created, but the link for setting the password could not be created. You can try again, or close the dialog and set the password in the user details.",
+        "password_link_retry_button": "Create link again",
         "previous_button": "Previous",
         "reload_button": "Reload the page",
         "send_message_groups": "Groupdated_passwords",

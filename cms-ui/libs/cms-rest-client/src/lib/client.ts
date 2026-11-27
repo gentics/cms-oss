@@ -232,7 +232,8 @@ export class GCMSRestClient implements GCMSRootAPI {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             Authorization: `Bearer ${bearerToken}`,
         }),
-        validatePasswordToken: (token) => this.executeMappedJsonRequest(GET, '/auth/password', null, { token }),
+        // the token goes into the body, a query parameter would end up in the access logs
+        validatePasswordToken: (token) => this.executeMappedJsonRequest(POST, '/auth/password/validate', { token }),
         setPassword: (body) => this.executeMappedJsonRequest(POST, '/auth/password', body),
     } as const;
 

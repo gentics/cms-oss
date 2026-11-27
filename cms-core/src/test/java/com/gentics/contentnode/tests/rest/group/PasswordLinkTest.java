@@ -29,6 +29,7 @@ import com.gentics.contentnode.rest.configuration.KeyProvider;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
+import com.gentics.contentnode.rest.model.request.PasswordTokenRequest;
 import com.gentics.contentnode.rest.model.request.SetPasswordRequest;
 import com.gentics.contentnode.rest.model.response.PasswordLinkResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -75,7 +76,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 		String token = token(created);
 		assertThat(token).as("Password token").isNotBlank();
 
-		assertSuccess(() -> getAuthResource().validatePasswordToken(token), null);
+		assertSuccess(() -> getAuthResource().validatePasswordToken(new PasswordTokenRequest().setToken(token)), null);
 		assertSuccess(() -> getAuthResource().setPassword(new SetPasswordRequest().setToken(token).setPassword(PASSWORD)),
 				null);
 
@@ -159,7 +160,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 		String second = passwordLink(userId).getToken();
 
 		assertInvalid(first);
-		assertSuccess(() -> getAuthResource().validatePasswordToken(second), null);
+		assertSuccess(() -> getAuthResource().validatePasswordToken(new PasswordTokenRequest().setToken(second)), null);
 	}
 
 	/**
@@ -216,7 +217,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 		String newToken = Trx.supply(() -> PasswordTokens.create(created.getUser().getId())).token();
 
 		assertInvalid(oldToken);
-		assertSuccess(() -> getAuthResource().validatePasswordToken(newToken), null);
+		assertSuccess(() -> getAuthResource().validatePasswordToken(new PasswordTokenRequest().setToken(newToken)), null);
 	}
 
 	/**
@@ -306,7 +307,7 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 		assertResponse(getAuthResource().setPassword(new SetPasswordRequest().setToken(token).setPassword("a".repeat(21))),
 				ResponseCode.INVALIDDATA);
 
-		assertSuccess(() -> getAuthResource().validatePasswordToken(token), null);
+		assertSuccess(() -> getAuthResource().validatePasswordToken(new PasswordTokenRequest().setToken(token)), null);
 	}
 
 	/**
@@ -413,7 +414,8 @@ public class PasswordLinkTest extends AbstractGroupEditTest {
 	 * @throws NodeException
 	 */
 	private static void assertInvalid(String token) throws NodeException {
-		assertResponse(getAuthResource().validatePasswordToken(token), ResponseCode.FAILURE);
+		assertResponse(getAuthResource().validatePasswordToken(new PasswordTokenRequest().setToken(token)),
+				ResponseCode.FAILURE);
 		assertResponse(getAuthResource().setPassword(new SetPasswordRequest().setToken(token).setPassword(PASSWORD)),
 				ResponseCode.FAILURE);
 	}

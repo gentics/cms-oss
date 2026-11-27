@@ -287,4 +287,99 @@ test.describe('Users Module', () => {
         const createUserRow = await findTableRowById(table, createdUserId);
         await expect(createUserRow).toBeVisible();
     });
+
+    test('can create the password link again when creating it failed', {
+        annotation: [{
+            type: 'ticket',
+            description: 'GPU-2776',
+        }],
+    }, async ({ page }) => {
+        const module = await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.ADMIN,
+                perms: [
+                    GcmsPermission.READ,
+                ],
+            },
+            {
+                type: AccessControlledType.USER_ADMIN,
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.CREATE_USER,
+                    // the link requires the permission to edit the user (PermHandler: PERM_USER_UPDATE)
+                    GcmsPermission.UPDATE_USER,
+                ],
+            },
+            {
+                type: AccessControlledType.GROUP_ADMIN,
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.USER_ASSIGNMENT,
+                ],
+            },
+        ]);
+
+        // the first request for the link fails, every further one reaches the CMS
+        let linkRequests = 0;
+        await page.route(/\/rest\/user\/\d+\/passwordLink/, (route) => {
+            linkRequests++;
+            if (linkRequests === 1) {
+                return route.fulfill({
+                    status: 500,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ responseInfo: { responseCode: 'FAILURE', responseMessage: 'Link failed' }, messages: [] }),
+                });
+            }
+            return route.continue();
+        });
+
+        const table = module.locator('gtx-user-table');
+        await table.locator('.entity-table-actions-bar [data-action="create"]').click();
+
+        const modal = page.locator('gtx-create-user-modal');
+        let createdUserId: number;
+
+        await test.step('Create the user, while creating the link fails', async () => {
+            await expect(modal).toBeVisible();
+
+            const userForm = modal.locator('gtx-tab .tab-content[data-id="1"] form');
+            await userForm.locator('[formControlName="login"] input').fill('linkretry123');
+            await userForm.locator('[formControlName="firstName"] input').fill('Hello');
+            await userForm.locator('[formControlName="lastName"] input').fill('Retry');
+            await userForm.locator('gtx-checkbox[formcontrolname="passwordLink"] label').click();
+
+            await clickModalAction(modal, 'next');
+
+            const groupsTable = modal.locator('gtx-tab .tab-content[data-id="2"] gtx-group-table');
+            const DUMMY_GROUP = IMPORTER.get(TEST_GROUP_DUMMY);
+            const dummyGroupRow = await findTableRowById(groupsTable, DUMMY_GROUP.id);
+            await selectTableRow(dummyGroupRow);
+
+            const createReq = waitForResponseFrom(page, 'PUT', `/rest/group/${DUMMY_GROUP.id}/users`);
+            await clickModalAction(modal, 'confirm');
+            createdUserId = (await (await createReq).json()).user.id;
+
+            await expect(modal.locator('[data-context="password-link-failed"]')).toBeVisible();
+            await expect(modal.locator('[data-context="password-link"]')).toBeHidden();
+        });
+
+        await test.step('Create the link again', async () => {
+            const linkReq = waitForResponseFrom(page, 'POST', /\/rest\/user\/\d+\/passwordLink/);
+            await clickModalAction(modal, 'retry-link');
+            const linkRes = await linkReq;
+            expect(new URL(linkRes.url()).pathname).toContain(`/rest/user/${createdUserId}/passwordLink`);
+            const passwordToken = (await linkRes.json()).token;
+
+            const link = modal.locator('[data-context="password-link"] [data-control="password-link-url"] textarea');
+            await expect(link).toHaveValue(new RegExp(`\\?skip-sso#/set-password\\?token=${encodeURIComponent(passwordToken)}$`));
+            await expect(modal.locator('[data-context="password-link-failed"]')).toBeHidden();
+            expect(linkRequests).toBe(2);
+
+            await clickModalAction(modal, 'close');
+            await expect(modal).toBeHidden();
+        });
+
+        const createUserRow = await findTableRowById(table, createdUserId);
+        await expect(createUserRow).toBeVisible();
+    });
 });

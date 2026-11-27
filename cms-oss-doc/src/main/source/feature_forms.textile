@@ -1106,6 +1106,44 @@ Because flows are individually configurable and an automatic redirect would rest
 
 This behavior is built into the default flow and requires no additional implementation.
 
+h4. Return URL (returnUrl)
+
+An external application can open a form with the URL parameter +returnUrl+ to get the user back after the form has been submitted. In this case, FormGen redirects automatically to this URL instead of showing the success screen, and the +returnUrl+ takes precedence over a configured successUrl. When the user cancels the form (cancel button, leaving because of unmet preconditions or closing an error dialog), the user is also redirected to the +returnUrl+ instead of the cancel URL of the page.
+
+The +returnUrl+ is only used, if all of the following applies:
+
+* The form settings of the load response (+formSettings+) contain +returnUrlEnabled: true+.
+* The +returnUrl+ parameter is in the URL of the page when the form is loaded. It is not stored anywhere else.
+* The URL uses +http+ or +https+ and its host is exactly one of the hosts in +formSettings.returnUrlDomains+ (case-insensitive). Subdomains must be listed individually.
+
+Otherwise the parameter is ignored and the default behavior applies. The redirect is only done in the web version of FormGen.
+
+Example: The form settings +returnUrlEnabled+ and +returnUrlDomains+ are defined as settings of the form type, so they can be set per form in the form properties.
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    generic:
+      settings:
+        - id: "returnUrlEnabled"
+          type: "boolean"
+          labelI18n:
+            de: "Rücksprung über returnUrl erlauben"
+            en: "Allow return via returnUrl"
+        - id: "returnUrlDomains"
+          type: "string"
+          multiple: true
+          labelI18n:
+            de: "Erlaubte Domains für returnUrl"
+            en: "Allowed domains for returnUrl"
+          condition:
+            equals: true
+            source:
+              setting: "returnUrlEnabled"
+</shell>
+
+With +app.example.com+ in the allowed domains, the form page opened as +https://www.example.com/contact.html?returnUrl=https%3A%2F%2Fapp.example.com%2Fdone+ redirects the user to +https://app.example.com/done+ after submitting.
+
 h4. Behavior With Customized Flows
 
 If the flow is overridden or extended for a specific project, the default behavior no longer applies. In this case, the redirect logic must be implemented explicitly. Two options are available:

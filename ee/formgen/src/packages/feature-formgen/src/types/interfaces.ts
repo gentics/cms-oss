@@ -362,6 +362,9 @@ export interface FormState {
   // Optional redirect target shown as a button on the SuccessScreen.
   // Keyed by language code (e.g. { "de": "http://..." }).
   successUrl?: { [language: string]: string };
+  // Allowed `returnUrl` query parameter of the page (web only); after submit the user is redirected there,
+  // it takes precedence over successUrl.
+  returnUrl?: string;
   formgenSettings?: FormgenSettings;
   // Form-level settings from the load response (formSettings).
   formSettings?: FormSettings;
@@ -380,9 +383,13 @@ export interface FormgenSettings {
  * @property disableSave Only `true` disables intermediate saving: no autosave, no save button in the leave dialog,
  *   the detail info button shows the leave dialog instead of saving,
  *   and uploaded files are kept in fileUploads and only sent with the submit.
+ * @property returnUrlEnabled Only `true` allows the `returnUrl` query parameter (redirect after submit).
+ * @property returnUrlDomains Hosts allowed for `returnUrl`, compared exactly (case-insensitive).
  */
 export interface FormSettings {
   disableSave?: boolean;
+  returnUrlEnabled?: boolean;
+  returnUrlDomains?: string[];
   [key: string]: any;
 }
 

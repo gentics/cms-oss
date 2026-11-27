@@ -68,7 +68,9 @@ const PreconditionOverlay: React.FC<ICommonOverlayProps> = (
             key: 'precondition-overlay-leave-btn',
             title: t('form_preconditions_overlay__leave_button'),
             onPress: async () =>
-              await props.handleFormCancel?.(formEventsUtils.cancelRedirect),
+              await props.handleFormCancel?.(() =>
+                formEventsUtils.cancelRedirect(undefined, props.formState.returnUrl),
+              ),
           },
         ]}
         //footerMessages={[]}

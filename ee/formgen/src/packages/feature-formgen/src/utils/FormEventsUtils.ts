@@ -721,11 +721,12 @@ function clientSideDeleteBinary(
 
 //TODO v8.2 overlay
 /**
- * Redirect user to configured cancel url or otherwise call andpHistoryackCallback
+ * Redirect user to the returnUrl of the form, the configured cancel url or otherwise call andpHistoryackCallback
+ * @param returnUrl allowed returnUrl of the form (formState.returnUrl), takes precedence over the cancel url
  */
-export const cancelRedirect = (uiState?: UIState) => {
+export const cancelRedirect = (uiState?: UIState, returnUrl?: string) => {
   if(Platform.OS == "web"){
-    var url = document.getElementById('egov-template--aside')?.dataset.cancelurl;
+    var url = returnUrl || document.getElementById('egov-template--aside')?.dataset.cancelurl;
     if (url && url !== '') {
       window.location.href = url;
     } else {

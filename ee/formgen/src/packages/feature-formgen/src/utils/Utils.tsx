@@ -27,6 +27,7 @@ import {
   reCaptchaMode,
   ICmsCondition,
   IFormFlowClass,
+  FormSettings,
 } from '../types/interfaces';
 import JsonPath from 'jsonpath';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
@@ -1132,4 +1133,39 @@ export function mapCaptchaConfig(
     baseUrl: raw.baseUrl,
     language: raw.language,
   };
+}
+
+/**
+ * Get the `returnUrl` query parameter, if the form allows it.
+ * It is only returned when `formSettings.returnUrlEnabled` is `true`, the URL uses http or https
+ * and its host is exactly one of `formSettings.returnUrlDomains` (case-insensitive).
+ *
+ * @param search query string of the page (e.g. `window.location.search`)
+ * @param formSettings form settings of the load response
+ * @returns the allowed return URL or `undefined`
+ */
+export function getAllowedReturnUrl(
+  search: string,
+  formSettings?: FormSettings,
+): string | undefined {
+  const returnUrl = new URLSearchParams(search).get('returnUrl');
+  if (!returnUrl || formSettings?.returnUrlEnabled !== true) {
+    return undefined;
+  }
+  let url: URL;
+  try {
+    url = new URL(returnUrl);
+  } catch (e) {
+    console.warn(`returnUrl ${returnUrl} is not a valid URL`);
+    return undefined;
+  }
+  const domains = Array.isArray(formSettings.returnUrlDomains)
+    ? formSettings.returnUrlDomains.map((domain) => String(domain).trim().toLowerCase())
+    : [];
+  // URL already lower-cases the hostname
+  if ((url.protocol === 'http:' || url.protocol === 'https:') && domains.includes(url.hostname)) {
+    return url.href;
+  }
+  console.warn(`returnUrl ${returnUrl} is not allowed for this form`);
+  return undefined;
 }

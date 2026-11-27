@@ -81,7 +81,7 @@ const ActaNovaProblemOverlay: React.FC<ICommonOverlayProps> = (
       contentMessages={[t('form_dialog_portal_error_content')]}
       buttonList={buttonList}
       closeAble={true}
-      onClose={() => formEventsUtils.cancelRedirect(props.uiState)}
+      onClose={() => formEventsUtils.cancelRedirect(props.uiState, mainFormState.returnUrl)}
       debugInfo={response}
     />
   );

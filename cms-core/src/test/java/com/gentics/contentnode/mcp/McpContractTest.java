@@ -30,9 +30,9 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
  */
 public class McpContractTest {
 	/**
-	 * Registered tools that are not part of the contract
+	 * Registered tools that are not part of the contract. The task tools wait for the contract addendum.
 	 */
-	private static final Set<String> EXEMPT = Set.of();
+	private static final Set<String> EXEMPT = Set.of("list_tasks", "create_task", "update_task", "delete_task");
 
 	private static String version;
 

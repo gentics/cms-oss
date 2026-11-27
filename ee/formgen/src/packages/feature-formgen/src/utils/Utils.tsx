@@ -1138,7 +1138,9 @@ export function mapCaptchaConfig(
 /**
  * Get the `returnUrl` query parameter, if the form allows it.
  * It is only returned when `formSettings.returnUrlEnabled` is `true`, the URL uses http or https
- * and its host is exactly one of `formSettings.returnUrlDomains` (case-insensitive).
+ * and its origin (protocol, host and port) equals one of `formSettings.returnUrlOrigins`
+ * (e.g. `https://app.example.com` or `https://app.example.com:8443`, case-insensitive, a path of the entry is ignored).
+ * Entries without protocol never match.
  *
  * @param search query string of the page (e.g. `window.location.search`)
  * @param formSettings form settings of the load response
@@ -1159,11 +1161,17 @@ export function getAllowedReturnUrl(
     console.warn(`returnUrl ${returnUrl} is not a valid URL`);
     return undefined;
   }
-  const domains = Array.isArray(formSettings.returnUrlDomains)
-    ? formSettings.returnUrlDomains.map((domain) => String(domain).trim().toLowerCase())
-    : [];
-  // URL already lower-cases the hostname
-  if ((url.protocol === 'http:' || url.protocol === 'https:') && domains.includes(url.hostname)) {
+  const origins = Array.isArray(formSettings.returnUrlOrigins) ? formSettings.returnUrlOrigins : [];
+  // URL lower-cases protocol and host and drops the default port, so origins compare case-insensitive
+  const matches = (origin: unknown) => {
+    try {
+      return new URL(String(origin).trim()).origin === url.origin;
+    } catch (e) {
+      console.warn(`returnUrlOrigins entry ${origin} is not a valid origin (protocol missing?)`);
+      return false;
+    }
+  };
+  if ((url.protocol === 'http:' || url.protocol === 'https:') && origins.some(matches)) {
     return url.href;
   }
   console.warn(`returnUrl ${returnUrl} is not allowed for this form`);

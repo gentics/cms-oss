@@ -384,12 +384,13 @@ export interface FormgenSettings {
  *   the detail info button shows the leave dialog instead of saving,
  *   and uploaded files are kept in fileUploads and only sent with the submit.
  * @property returnUrlEnabled Only `true` allows the `returnUrl` query parameter (redirect after submit).
- * @property returnUrlDomains Hosts allowed for `returnUrl`, compared exactly (case-insensitive).
+ * @property returnUrlOrigins Origins allowed for `returnUrl`: protocol, host and optional port
+ *   (e.g. `https://app.example.com`), compared case-insensitive. Entries without protocol never match.
  */
 export interface FormSettings {
   disableSave?: boolean;
   returnUrlEnabled?: boolean;
-  returnUrlDomains?: string[];
+  returnUrlOrigins?: string[];
   [key: string]: any;
 }
 

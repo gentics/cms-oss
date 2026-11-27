@@ -297,6 +297,17 @@ export interface UserUpdateResponse extends Response {
 }
 
 /**
+ * Response from `POST /user/{id}/passwordLink`: a new token for the link, with which the user sets the password.
+ * It replaces any earlier token of the user.
+ */
+export interface UserPasswordLinkResponse extends Response {
+    /** Token for `POST /auth/password`, usable once */
+    token: string;
+    /** Expiry of the token as Unix timestamp in seconds */
+    expiresAt: number;
+}
+
+/**
  * Response from `GET language/${id}` and `PUT /language/{id}`
  */
 export interface LanguageResponse extends Response {
@@ -323,6 +334,11 @@ export interface GroupListResponse extends PermissionListResponse<Group<Raw>> {}
 export interface GroupUserCreateResponse extends Response {
     user: User<Raw>;
     messages: ResponseMessage[];
+    /**
+     * Expiry of the password link as Unix timestamp in seconds, only when the user was created with
+     * `GroupUserCreateOptions.passwordLink`. The link itself is fetched with `POST /user/{id}/passwordLink`.
+     */
+    expiresAt?: number;
 }
 
 /**

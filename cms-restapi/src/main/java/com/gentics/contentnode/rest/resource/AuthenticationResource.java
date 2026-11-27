@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
+import com.gentics.contentnode.rest.model.request.SetPasswordRequest;
 import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
@@ -13,6 +14,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 
 /**
@@ -100,4 +102,24 @@ public interface AuthenticationResource {
 	@GET
 	@Path("/globalprefix")
 	GenericResponse globalPrefix();
+
+	/**
+	 * Check whether the token of a password link (see {@code PUT /group/{id}/users?passwordLink=true}) can still be
+	 * used. Needs no session. The response does not tell why a token is not valid (expired, used, replaced or unknown).
+	 * @param token token
+	 * @return response code OK if the token is valid, FAILURE otherwise
+	 */
+	@GET
+	@Path("/password")
+	GenericResponse validatePasswordToken(@QueryParam("token") String token) throws Exception;
+
+	/**
+	 * Set the password of a user with the token of a password link. Needs no session. On success the token is used up.
+	 * @param request token and new password
+	 * @return response code OK if the password was set, INVALIDDATA if it does not satisfy the password rule, FAILURE
+	 *         if the token is not valid
+	 */
+	@POST
+	@Path("/password")
+	GenericResponse setPassword(SetPasswordRequest request) throws Exception;
 }

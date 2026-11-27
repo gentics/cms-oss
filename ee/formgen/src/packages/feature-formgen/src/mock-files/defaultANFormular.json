@@ -6232,7 +6232,7 @@
   "transactionId": "",
   "formSettings": {
     "returnUrlEnabled": true,
-    "returnUrlDomains": ["localhost", "www.example.com"]
+    "returnUrlOrigins": ["https://www.example.com"]
   },
   "flowId": "default",
   "flows": [

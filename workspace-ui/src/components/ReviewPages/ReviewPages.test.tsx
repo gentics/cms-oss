@@ -54,6 +54,23 @@ describe('ReviewPages', () => {
         expect(within(pages).getByRole('link', { name: /Versand/ })).not.toHaveAttribute('aria-current');
     });
 
+    it('lists the forms the plan publishes below the pages, with their status and why one failed, without a link (rc.6)', async () => {
+        const forms: Publication[] = [
+            { cms_ref: { type: 'form', id: 4410, node_id: 3, name: 'Kontaktformular' }, status: 'published', approval_chain: [] },
+            { cms_ref: { type: 'form', id: 4411, node_id: 3 }, status: 'failed', approval_chain: [], error: { type: 'about:blank', title: 'Failed', status: 424, genaix_code: 'cms_request_failed', detail: 'The form is locked.' } },
+        ];
+
+        renderWithProviders(<ReviewPages sessionId={SESSION} publications={PUBLICATIONS} forms={forms} checks={CHECKS} selectedId={9011} />, { path: `/sessions/${SESSION}/review` });
+
+        const nav = await screen.findByRole('navigation', { name: 'Pages' });
+
+        expect(within(nav).getByRole('heading', { name: 'Forms' })).toBeInTheDocument();
+        expect(within(nav).getAllByRole('link')).toHaveLength(3);
+        expect(within(nav).getByText('Kontaktformular').closest('a')).toBeNull();
+        expect(within(nav).getByText('Form 4411')).toBeInTheDocument();
+        expect(within(nav).getByText('The form is locked.')).toBeInTheDocument();
+    });
+
     it('opens a published page on the website in a new tab, beside its row; a page not published has no such link', async () => {
         stubCmsPublishPaths({ 8644: '/versand.html', 9011: '/service.html', 8871: '/garantie.html' });
 

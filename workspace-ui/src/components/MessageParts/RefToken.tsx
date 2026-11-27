@@ -1,4 +1,5 @@
 import { AtSignIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import type { ContextReference, PlannedObject } from '@/services/apiService/genaix/types';
 
@@ -6,15 +7,21 @@ import { REF_ICONS, refText } from './contextReference';
 
 import styles from './MessageParts.module.css';
 
-/** A `ContextReference` as an `@`-token (design.md §12 "`@`-Token / Referenz"). */
+/**
+ * A `ContextReference` as an `@`-token (design.md §12 "`@`-Token / Referenz"). A form of an external form type
+ * (`external`, rc.6) says so after its name: it comes from another system, and GenAIx neither creates nor deletes it.
+ */
 export function RefToken({ value }: { value: ContextReference }) {
+    const { t } = useTranslation();
     const Icon = REF_ICONS[value.type] ?? AtSignIcon;
     const text = refText(value);
+    const marker = value.external ? t('reference.external') : '';
 
     return (
-        <span className={styles.ref} title={text}>
+        <span className={styles.ref} title={marker ? `${text} · ${marker}` : text}>
             <Icon size={13} aria-hidden />
             <span className={styles.refText}>{text}</span>
+            {marker && <span className={styles.refMarker}>{marker}</span>}
         </span>
     );
 }

@@ -23,9 +23,9 @@ import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 /**
- * Searches the CMS Elasticsearch indices through the enterprise passthrough ({@link EnterpriseSearch}), which adds the
+ * Searches the CMS Elasticsearch indices through the cms-search passthrough ({@link EnterpriseSearch}), which adds the
  * CMS permission group, node, folder and wastebin filters; the hits are post-filtered by
- * {@code ObjectPermission.view}. Answers {@code search-unavailable} without the enterprise search.
+ * {@code ObjectPermission.view}. Answers {@code search-unavailable} while the {@code elasticsearch} feature is off.
  */
 public class SearchContentTool extends AbstractMcpTool {
 	static final String ARG_QUERY = "query";

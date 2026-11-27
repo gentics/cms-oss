@@ -186,6 +186,13 @@
   white-space: nowrap;
 }
 
+/* "External" after the name of an external form's token: always shown, the name gives way first. */
+.refMarker {
+  flex: none;
+  color: var(--fg-secondary);
+  font-weight: 400;
+}
+
 /* An object a plan item will create (`PlannedToken`): shaped like `.ref`, read-only (design.md §8 "Nur
    lesen": `--bg-subtle`, `--fg-secondary`, `--border-subtle`), as it does not exist yet. */
 .planned {

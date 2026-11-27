@@ -199,7 +199,8 @@
                 "file": "Dateien",
                 "project": "Projekt",
                 "template": "Templates",
-                "language": "Sprachen"
+                "language": "Sprachen",
+                "form": "Formulare"
             },
             "clearScope": "Filter entfernen",
             "loading": "Suche läuft",
@@ -329,7 +330,13 @@
             "required": "Auswahl erforderlich",
             "enterValue": "Wert eingeben…",
             "stillToChoose": "Noch zu wählen: {{names}}",
-            "confirm": "Bestätigen"
+            "confirm": "Bestätigen",
+            "pickForm": "Oder ein anderes Formular wählen",
+            "formSearch": "Formulare suchen",
+            "formLoading": "Formulare werden geladen …",
+            "formNoMatch": "Keine Formulare gefunden.",
+            "formFailed": "Die Formulare konnten nicht geladen werden.",
+            "formNoNode": "Diese Session arbeitet in keinem CMS-Knoten, daher gibt es keine Formulare zur Auswahl."
         },
         "sideRun": "Neben dem laufenden Plan beantwortet"
     },
@@ -656,7 +663,9 @@
             "restore": "Der Plan wird geschlossen und die Seiten, die er geändert hat, gehen auf ihre Version von vorher zurück.",
             "cancel": "Abbrechen",
             "confirm": "Verwerfen"
-        }
+        },
+        "forms": "Formulare",
+        "unnamedForm": "Formular {{id}}"
     },
     "todos": {
         "title": "Offene To-dos",
@@ -849,7 +858,8 @@
                 "designRevision": "Mit Seiten und Text (über die Fallback-Regel)",
                 "unknownWithText": "Unbekannter Typ, mit Text",
                 "unknownWithoutText": "Unbekannter Typ, ohne Text (zeigt nichts)",
-                "brokenTable": "Bekannter Typ, der nicht dargestellt werden kann"
+                "brokenTable": "Bekannter Typ, der nicht dargestellt werden kann",
+                "listForms": "Mit einem CMS-Formular und einem externen Formular"
             }
         }
     },
@@ -983,6 +993,17 @@
         "publish_one": "Objekt zu veröffentlichen",
         "publish_other": "Objekte zu veröffentlichen",
         "construct_one": "Baustein",
-        "construct_other": "Bausteine"
+        "construct_other": "Bausteine",
+        "create_form_one": "Formular",
+        "create_form_other": "Formulare",
+        "update_form_one": "Formular bearbeitet",
+        "update_form_other": "Formulare bearbeitet",
+        "delete_form_one": "Formular gelöscht",
+        "delete_form_other": "Formulare gelöscht",
+        "delete_one": "Objekt gelöscht",
+        "delete_other": "Objekte gelöscht"
+    },
+    "reference": {
+        "external": "Extern"
     }
 }

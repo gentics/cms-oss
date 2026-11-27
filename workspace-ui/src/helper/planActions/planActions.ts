@@ -31,6 +31,19 @@ export function writtenPagesOf(cmsObjects: CmsObjectRef[]): CmsObjectRef[] {
     return cmsObjects.filter(({ type, operation }) => type === 'page' && WRITTEN.has(operation));
 }
 
+/**
+ * The publications of a plan's pages. Since rc.6 `publish` also covers the forms a plan created or changed, each with
+ * a publication of its own that goes online before the pages (03-genaix-api.md §4.2, "Forms"); those are not pages.
+ */
+export function pagePublicationsOf(publications: Publication[]): Publication[] {
+    return publications.filter(({ cms_ref: ref }) => ref.type === 'page');
+}
+
+/** The publications of the forms a plan created or changed (rc.6): published with the plan, before its pages. */
+export function formPublicationsOf(publications: Publication[]): Publication[] {
+    return publications.filter(({ cms_ref: ref }) => ref.type === 'form');
+}
+
 /** Whether the plan's status allows a gated transition, which is made on the review page. */
 export function hasGatedActions(status: PlanStatus): boolean {
     return (ACTIONS[status] ?? []).some((action) => GATED_ACTIONS.has(action));

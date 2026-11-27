@@ -19,7 +19,8 @@ function UserPart({ part }: { part: UserMessagePart }) {
         case 'verbatim':
             return <span className={styles.verbatim}>{part.text}</span>;
         case 'reference':
-            return <ReferenceToken tone="onSolid" icon={AtSignIcon}>{refText(part.ref)}</ReferenceToken>;
+            // A form of an external form type says so (rc.6, `ContextReference.external`).
+            return <ReferenceToken tone="onSolid" icon={AtSignIcon}>{part.ref.external ? `${refText(part.ref)} · ${t('reference.external')}` : refText(part.ref)}</ReferenceToken>;
         case 'file_ref':
             return <ReferenceToken tone="onSolid" icon={PaperclipIcon} verbatim={part.mode === 'verbatim'}>{t(part.mode === 'verbatim' ? 'chat.fileVerbatim' : 'chat.file')}</ReferenceToken>;
         case 'setting':

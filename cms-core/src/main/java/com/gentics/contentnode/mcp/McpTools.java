@@ -1,26 +1,29 @@
 package com.gentics.contentnode.mcp;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.mcp.tools.AddConstructToPackageTool;
 import com.gentics.contentnode.mcp.tools.AddPageTagTool;
 import com.gentics.contentnode.mcp.tools.AssignConstructToNodesTool;
 import com.gentics.contentnode.mcp.tools.AssignUserToGroupTool;
-import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreateConstructTool;
 import com.gentics.contentnode.mcp.tools.CreateFolderTool;
+import com.gentics.contentnode.mcp.tools.CreateGuidelineTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
 import com.gentics.contentnode.mcp.tools.CreateTaskTool;
 import com.gentics.contentnode.mcp.tools.CreateUserTool;
+import com.gentics.contentnode.mcp.tools.DeleteGuidelineTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
 import com.gentics.contentnode.mcp.tools.DeleteTaskTool;
 import com.gentics.contentnode.mcp.tools.EnsureConstructCategoryTool;
-import com.gentics.contentnode.mcp.tools.FindSimilarTool;
 import com.gentics.contentnode.mcp.tools.GetConstructTool;
 import com.gentics.contentnode.mcp.tools.GetDatasourceTool;
 import com.gentics.contentnode.mcp.tools.GetFileTool;
 import com.gentics.contentnode.mcp.tools.GetFolderTreeTool;
 import com.gentics.contentnode.mcp.tools.GetGroupPermissionsTool;
+import com.gentics.contentnode.mcp.tools.GetGuidelineTool;
 import com.gentics.contentnode.mcp.tools.GetImageTool;
 import com.gentics.contentnode.mcp.tools.GetPageTagsTool;
 import com.gentics.contentnode.mcp.tools.GetPageTool;
@@ -33,6 +36,7 @@ import com.gentics.contentnode.mcp.tools.ListConstructsTool;
 import com.gentics.contentnode.mcp.tools.ListDatasourcesTool;
 import com.gentics.contentnode.mcp.tools.ListFolderItemsTool;
 import com.gentics.contentnode.mcp.tools.ListGroupsTool;
+import com.gentics.contentnode.mcp.tools.ListGuidelinesTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.ListPackagesTool;
 import com.gentics.contentnode.mcp.tools.ListPartTypesTool;
@@ -44,10 +48,10 @@ import com.gentics.contentnode.mcp.tools.PublishPageTool;
 import com.gentics.contentnode.mcp.tools.RemoveUserFromGroupTool;
 import com.gentics.contentnode.mcp.tools.RenderPreviewTool;
 import com.gentics.contentnode.mcp.tools.RestorePageVersionTool;
-import com.gentics.contentnode.mcp.tools.SearchContentTool;
 import com.gentics.contentnode.mcp.tools.TakeOfflineTool;
 import com.gentics.contentnode.mcp.tools.TranslatePageTool;
 import com.gentics.contentnode.mcp.tools.UpdateConstructTool;
+import com.gentics.contentnode.mcp.tools.UpdateGuidelineTool;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool;
 import com.gentics.contentnode.mcp.tools.UpdateTaskTool;
@@ -64,14 +68,25 @@ public final class McpTools {
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(McpTools.class);
 
 	/**
-	 * Every tool, in registration order.
+	 * Service loader for the modules that add tools
+	 */
+	private static final ServiceLoaderUtil<McpToolService> SERVICES = ServiceLoaderUtil.load(McpToolService.class);
+
+	/**
+	 * The guideline tools, registered after {@link #TOOLS}. A list of their own, so that other tool groups can be
+	 * added to {@link #TOOLS} without touching them.
+	 */
+	private static final List<AbstractMcpTool> GUIDELINE_TOOLS = List.of(new ListGuidelinesTool(),
+			new GetGuidelineTool(), new CreateGuidelineTool(), new UpdateGuidelineTool(), new DeleteGuidelineTool());
+
+	/**
+	 * Every tool of this module, in registration order.
 	 */
 	private static final List<AbstractMcpTool> TOOLS = List.of(new ListNodesTool(),
 			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(),
 			new GetImageTool(), new GetPageVersionsTool(), new GetPageTool(), new GetPageTagsTool(),
 			new ListFolderItemsTool(), new GetFolderTreeTool(), new ListTemplatesTool(), new GetTemplateTool(),
-			new RenderPreviewTool(), new GetRelatedTool(), new SearchContentTool(), new CountContentTool(),
-			new FindSimilarTool(), new CreatePageTool(), new RestorePageVersionTool(), new AddPageTagTool(),
+			new RenderPreviewTool(), new GetRelatedTool(), new CreatePageTool(), new RestorePageVersionTool(), new AddPageTagTool(),
 			new UpdatePageTagsTool(), new PublishPageTool(), new TakeOfflineTool(), new TranslatePageTool(),
 			new DeletePageTool(), new UploadFileTool(), new ListPartTypesTool(), new ListDatasourcesTool(),
 			new GetDatasourceTool(), new ListConstructCategoriesTool(), new ListConstructsTool(),
@@ -89,19 +104,22 @@ public final class McpTools {
 	}
 
 	/**
-	 * Get every tool, in registration order
+	 * Get every tool, those of this module first
 	 * @return tools
 	 */
 	static List<AbstractMcpTool> tools() {
-		return TOOLS;
+		List<AbstractMcpTool> tools = new ArrayList<>(TOOLS);
+		tools.addAll(GUIDELINE_TOOLS);
+		SERVICES.forEach(service -> tools.addAll(service.tools()));
+		return tools;
 	}
 
 	/**
-	 * Register every tool in {@link #TOOLS} on the given server.
+	 * Register every tool of {@link #tools()} on the given server.
 	 * @param server MCP server to register the tools on
 	 */
 	public static void registerAll(McpSyncServer server) {
-		for (AbstractMcpTool provider : TOOLS) {
+		for (AbstractMcpTool provider : tools()) {
 			server.addTool(provider.toSyncToolSpecification());
 			logger.info(String.format("Registered MCP tool '%s' (%s)", provider.tool().name(),
 					provider.getClass().getName()));

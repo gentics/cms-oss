@@ -8,7 +8,7 @@ import { PublishingOverlay } from '@/components/PublishingOverlay/PublishingOver
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { errorMessageKey, problemMessageKey } from '@/helper/errorMapper/errorMapper';
-import { isFirstDraft, planActions } from '@/helper/planActions/planActions';
+import { isFirstDraft, pagePublicationsOf, planActions } from '@/helper/planActions/planActions';
 import { canAcknowledgeRefusal, latestGateRefusal, useCancelRun, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
 import type { Plan, Publication, TransitionRequest, Workflow } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
@@ -215,15 +215,18 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
         }
     }, [publishing, hasPublished, publishEnd, navigate, sessionId, plan.id]);
 
-    const counts = countByStatus(publications ?? []);
+    // The summary and the publishing overlay speak of pages; a form the plan publishes too (rc.6) is not one, but its
+    // failure holds the pages back, so it still turns the head to failed.
+    const counts = countByStatus(pagePublicationsOf(publications ?? []));
+    const hasFailed = (publications ?? []).some(({ status }) => status === 'failed');
     const summary = PUBLICATION_STATUSES
         .filter((status) => counts[status])
         .map((status) => t(`planBar.count.${status}`, { count: counts[status] }))
         .join(', ');
     const isUnderWay = plan.status === 'drafting' || plan.status === 'proposed' || plan.status === 'accepted' || plan.status === 'running';
     const isClosed = plan.status === 'discarded' || plan.status === 'superseded';
-    const tone = counts.failed ? styles.bad : isUnderWay || isClosed ? undefined : styles.ok;
-    const Icon = counts.failed ? CircleAlertIcon : isUnderWay || isClosed ? RouteIcon : CircleCheckIcon;
+    const tone = hasFailed ? styles.bad : isUnderWay || isClosed ? undefined : styles.ok;
+    const Icon = hasFailed ? CircleAlertIcon : isUnderWay || isClosed ? RouteIcon : CircleCheckIcon;
     const actions = planActions(plan.status, withGatedActions).filter((action) => canPublish || action !== 'publish');
     // Discard leads the head, before the status; the other actions follow it.
     const canDiscard = actions.includes('discard');

@@ -22,6 +22,8 @@ interface ReviewPagesProps {
     sessionId: string;
     /** The plan's pages, one publication each, in the order the plan wrote them. */
     publications: Publication[];
+    /** The forms the plan publishes too (rc.6), each with its publication; they go online before the pages. */
+    forms?: Publication[];
     /** The plan's checks, to count each page's open ones. */
     checks: Check[];
     /** The id of the page shown. */
@@ -33,9 +35,10 @@ interface ReviewPagesProps {
  * and the number of its gate checks that found something (warnings and failures naming it as `target`).
  * Picking one puts it in the URL (`?page=`), and the review page shows it: its preview, its checks and
  * whether it can be published. A published page also has a button that opens it on the website, in a new tab
- * (`usePublishedUrls`).
+ * (`usePublishedUrls`). The forms the plan publishes follow, each with its status only: a form has no preview, and one
+ * that failed holds the pages back (03-genaix-api.md §4.2, "Forms").
  */
-export function ReviewPages({ sessionId, publications, checks, selectedId }: ReviewPagesProps) {
+export function ReviewPages({ sessionId, publications, forms = [], checks, selectedId }: ReviewPagesProps) {
     const { t } = useTranslation();
     const publishedUrls = usePublishedUrls(publications, publications.map(({ cms_ref: page }) => page));
 
@@ -89,6 +92,33 @@ export function ReviewPages({ sessionId, publications, checks, selectedId }: Rev
                     );
                 })}
             </ul>
+            {forms.length > 0 && (
+                <>
+                    <h2 className={styles.overline}>{t('review.forms')}</h2>
+                    <ul className={styles.list}>
+                        {forms.map((form) => {
+                            const status = statusOf(form);
+                            const Icon = ICONS[status];
+                            const name = form.cms_ref.name || t('review.unnamedForm', { id: form.cms_ref.id });
+
+                            return (
+                                <li key={form.cms_ref.id} className={styles.item}>
+                                    <span className={`${styles.row} ${styles.static}`}>
+                                        <span className={styles.name}>{name}</span>
+                                        <span className={styles.meta}>
+                                            <span className={styles.status} data-status={status}>
+                                                <Icon size={12} aria-hidden="true" />
+                                                {t(`review.publication.${status}`)}
+                                            </span>
+                                        </span>
+                                    </span>
+                                    {status === 'failed' && form.error && <span className={styles.error}>{form.error.detail ?? form.error.title}</span>}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </>
+            )}
         </nav>
     );
 }

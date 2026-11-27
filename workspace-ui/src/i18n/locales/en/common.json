@@ -199,7 +199,8 @@
                 "file": "Files",
                 "project": "Project",
                 "template": "Templates",
-                "language": "Languages"
+                "language": "Languages",
+                "form": "Forms"
             },
             "clearScope": "Remove filter",
             "loading": "Searching",
@@ -329,7 +330,13 @@
             "required": "Selection required",
             "enterValue": "Enter a value…",
             "stillToChoose": "Still to choose: {{names}}",
-            "confirm": "Confirm"
+            "confirm": "Confirm",
+            "pickForm": "Or pick another form",
+            "formSearch": "Search forms",
+            "formLoading": "Loading forms …",
+            "formNoMatch": "No forms found.",
+            "formFailed": "The forms could not be loaded.",
+            "formNoNode": "This session works in no CMS node, so there are no forms to choose from."
         },
         "sideRun": "Answered beside the running plan"
     },
@@ -656,7 +663,9 @@
             "restore": "The plan is closed and the pages it changed go back to their version from before it.",
             "cancel": "Cancel",
             "confirm": "Discard"
-        }
+        },
+        "forms": "Forms",
+        "unnamedForm": "Form {{id}}"
     },
     "todos": {
         "title": "Open to-dos",
@@ -849,7 +858,8 @@
                 "designRevision": "With pages and text (shown by the fallback rule)",
                 "unknownWithText": "Unknown type, with text",
                 "unknownWithoutText": "Unknown type, without text (shows nothing)",
-                "brokenTable": "Known type that fails to render"
+                "brokenTable": "Known type that fails to render",
+                "listForms": "With a CMS form and an external form"
             }
         }
     },
@@ -983,6 +993,17 @@
         "publish_one": "object to publish",
         "publish_other": "objects to publish",
         "construct_one": "construct",
-        "construct_other": "constructs"
+        "construct_other": "constructs",
+        "create_form_one": "form",
+        "create_form_other": "forms",
+        "update_form_one": "form edited",
+        "update_form_other": "forms edited",
+        "delete_form_one": "form deleted",
+        "delete_form_other": "forms deleted",
+        "delete_one": "object deleted",
+        "delete_other": "objects deleted"
+    },
+    "reference": {
+        "external": "External"
     }
 }

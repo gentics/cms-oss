@@ -1,6 +1,6 @@
 import type { Editor, JSONContent, Range } from '@tiptap/core';
 import { exitSuggestion } from '@tiptap/suggestion';
-import { AtSignIcon, FileTextIcon, FolderIcon, FolderTreeIcon, GlobeIcon, HashIcon, ImageIcon, LanguagesIcon, LayoutTemplateIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
+import { AtSignIcon, ClipboardListIcon, FileTextIcon, FolderIcon, FolderTreeIcon, GlobeIcon, HashIcon, ImageIcon, LanguagesIcon, LayoutTemplateIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
 import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,7 @@ import { withPath } from '@/components/InteractionCard/withPath';
 import { Button } from '@/components/ui/button';
 import { FILE_REF_NODE, REFERENCE_NODE, SETTING_NODE } from '@/helper/composerParts/composerParts';
 import { formatMegabytes } from '@/helper/uploadLimits/uploadLimits';
-import { useCmsLanguages, useCmsNodes, useCmsSearch, useCmsTemplates } from '@/hooks/useCmsQueries';
+import { useCmsExternalFormTypes, useCmsLanguages, useCmsNodes, useCmsSearch, useCmsTemplates } from '@/hooks/useCmsQueries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useSessionUploads } from '@/hooks/useGenaixQueries';
 import { CMS_ITEM_TYPES, type CmsFolder, type CmsItemType, type CmsNode } from '@/services/cmsApiService/cmsApiService';
@@ -19,7 +19,7 @@ import { CMS_ITEM_TYPES, type CmsFolder, type CmsItemType, type CmsNode } from '
 import styles from './ReferenceMenu.module.css';
 
 /** The groups of the @-menu, in the order shown (draft `GROUPS`, without guidelines). */
-const GROUPS = ['page', 'folder', 'image', 'file', 'project'] as const;
+const GROUPS = ['page', 'folder', 'image', 'form', 'file', 'project'] as const;
 
 /** The groups of the #-menu: the settings a chip can set, in the order shown. */
 const SETTING_GROUPS = ['folder', 'template', 'language'] as const;
@@ -35,6 +35,7 @@ const GROUP_ICONS: Record<Group, LucideIcon> = {
     page: FileTextIcon,
     folder: FolderIcon,
     image: ImageIcon,
+    form: ClipboardListIcon,
     file: PaperclipIcon,
     project: GlobeIcon,
     template: LayoutTemplateIcon,
@@ -50,6 +51,8 @@ const SCOPE_PREFIXES: Record<string, Group> = {
     image: 'image',
     images: 'image',
     img: 'image',
+    form: 'form',
+    forms: 'form',
     file: 'file',
     files: 'file',
     project: 'project',
@@ -141,7 +144,7 @@ interface ReferenceMenuProps {
 /**
  * The @-menu of a composer's field (draft `#pop`). A bare `@` offers the groups; Enter, Tab or a
  * click on one narrows the menu to it and shows what it holds (CMS objects: those on the nodes' root
- * levels), and Backspace goes back to the groups. Text after `@` finds CMS pages, folders and images
+ * levels), and Backspace goes back to the groups. Text after `@` finds CMS pages, folders, images and forms
  * (only the narrowed type, if any), the session's uploaded files and the CMS nodes, grouped.
  * Arrows, Home and End move, Enter or a click inserts the token in place of `@query`, Tab narrows to
  * the active entry's group, Esc closes and keeps the text. The editor places it at the `@`
@@ -267,6 +270,8 @@ function MenuList({ editor, openMenu, sessionId, mode, initialScope, listKeyHand
     const types = searchedTypes(scope, mode);
     const nodes = useCmsNodes();
     const search = useCmsSearch(nodes.data ?? [], query, types);
+    // Which forms are external (contract `ContextReference.external`): asked only once forms are searched.
+    const externalForms = useCmsExternalFormTypes(types.includes('form') ? (nodes.data ?? []).map((node) => node.id) : []);
     const isSetting = mode === 'setting';
     const uploads = useSessionUploads(isSetting ? undefined : sessionId);
     // Setting chips: the templates of the folder chip in the field, the languages of every node.
@@ -281,14 +286,16 @@ function MenuList({ editor, openMenu, sessionId, mode, initialScope, listKeyHand
 
     const items: MenuItem[] = [
         ...search.results.flatMap(({ node, items: found }) => found.filter((item) => !isStale || contains(item.name, text)).map((item): MenuItem => {
+            const isExternal = item.type === 'form' && externalForms.isExternal(node.id, item.formType);
             // `path` tells same-named objects apart for GenAIx too (contract `ContextReference.path`).
-            const ref = { type: item.type, id: String(item.id), node_id: node.id, label: item.name, ...(item.path && { path: item.path }) };
+            const ref = { type: item.type, id: String(item.id), node_id: node.id, label: item.name, ...(item.path && { path: item.path }), ...(isExternal && { external: true }) };
+            const where = item.path ?? node.name;
 
             return {
                 key: `${node.id}-${item.type}-${item.id}`,
                 group: item.type,
                 name: item.name,
-                detail: item.path ?? node.name,
+                detail: isExternal ? `${where} · ${t('reference.external')}` : where,
                 token: isSetting ? settingToken('folder', ref.id, withPath(item.name, ref)) : { type: REFERENCE_NODE, attrs: { ref } },
             };
         })),

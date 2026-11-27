@@ -14,6 +14,7 @@ import {
     getCmsUiLanguage,
     getCmsUser,
     isCmsFeatureActive,
+    listCmsExternalFormTypes,
     listCmsFolders,
     listCmsNodes,
     listCmsTemplates,
@@ -226,6 +227,68 @@ describe('searchCmsItems', () => {
         await searchCmsItems(NODE, 'page', '', { elastic: true });
 
         expect(requestUrl(fetchMock).pathname).toBe('/rest/folder/getItems/7');
+    });
+
+    it('searches forms with the form list below the node root folder, each as a form', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [{ id: 4410, name: 'Kontaktformular', formType: 'contact' }] }));
+
+        await expect(searchCmsItems(NODE, 'form', 'Kontakt')).resolves.toEqual([{ id: 4410, name: 'Kontaktformular', formType: 'contact', type: 'form' }]);
+
+        const url = requestUrl(fetchMock);
+
+        expect(url.pathname).toBe('/rest/form');
+        expect(url.searchParams.get('folderId')).toBe('7');
+        expect(url.searchParams.get('q')).toBe('Kontakt');
+        expect(url.searchParams.get('recursive')).toBe('true');
+        expect(url.searchParams.get('pageSize')).toBe(String(CMS_SEARCH_MAX_ITEMS));
+    });
+
+    it('lists the forms of the root folder without a query', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [] }));
+
+        await searchCmsItems(NODE, 'form', '');
+
+        const url = requestUrl(fetchMock);
+
+        expect(url.searchParams.has('q')).toBe(false);
+        expect(url.searchParams.has('recursive')).toBe(false);
+    });
+
+    it('finds no forms in a node without the Forms feature, which the CMS answers with 405', async () => {
+        stubFetchSequence(Response.json({ responseInfo: { responseCode: 'FAILURE' } }, { status: 405 }));
+
+        await expect(searchCmsItems(NODE, 'form', 'Kontakt')).resolves.toEqual([]);
+    });
+
+    it('throws any other failure of the form search', async () => {
+        stubFetchSequence(new Response('', { status: 500 }));
+
+        await expect(searchCmsItems(NODE, 'form', 'Kontakt')).rejects.toBeInstanceOf(HttpError);
+    });
+
+    it('searches forms with Elasticsearch when asked to, each as a form', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ hits: { hits: [{ _object: { id: 4410, name: 'Kontaktformular', formType: 'contact' } }] } }));
+
+        await expect(searchCmsItems(NODE, 'form', 'Kontakt', { elastic: true })).resolves.toEqual([{ id: 4410, name: 'Kontaktformular', formType: 'contact', type: 'form' }]);
+        expect(requestUrl(fetchMock).pathname).toBe('/rest/elastic/form/_search');
+    });
+});
+
+describe('listCmsExternalFormTypes', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('asks the CMS for the external form types of the node', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [{ type: 'crm-lead', external: true }, { type: 'crm-event', external: true }] }));
+
+        await expect(listCmsExternalFormTypes(3)).resolves.toEqual(new Set(['crm-lead', 'crm-event']));
+
+        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+
+        expect(url.pathname).toBe('/rest/form/types');
+        expect(url.searchParams.get('nodeId')).toBe('3');
+        expect(url.searchParams.get('external')).toBe('true');
     });
 });
 

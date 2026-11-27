@@ -47,6 +47,22 @@ describe('PartRenderer', () => {
         expect(screen.getByText('Hero, text columns, form embed.')).toBeInTheDocument();
     });
 
+    it('shows a form as a form token, and says when it is an external one', () => {
+        const { container } = renderPart({
+            type: 'selectable_list',
+            label: 'Forms',
+            multi: false,
+            items: [
+                { id: '4410', label: 'Contact', ref: { type: 'form', id: '4410', node_id: 3, label: 'Contact form' } },
+                { id: '4412', label: 'Newsletter', ref: { type: 'form', id: '4412', node_id: 3, label: 'Newsletter sign-up', external: true } },
+            ],
+        });
+
+        expect(container.querySelectorAll('.lucide-clipboard-list')).toHaveLength(2);
+        expect(screen.getByTitle('Contact form')).toBeInTheDocument();
+        expect(screen.getByTitle('Newsletter sign-up · External')).toHaveTextContent('Newsletter sign-upExternal');
+    });
+
     it('renders a properties list as label and value, a reference as its token, and null as a dash', () => {
         renderPart({
             type: 'properties_list',

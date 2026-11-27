@@ -112,6 +112,19 @@
   color: var(--warning);
 }
 
+/* A form the plan publishes: a row without a link, so no hover (it opens nothing). */
+.static:hover {
+  background: none;
+}
+
+/* Why a form's publication failed. */
+.error {
+  display: block;
+  padding: 0 8px 4px;
+  color: var(--error);
+  font-size: var(--font-size-xs);
+}
+
 @media (max-width: 1180px) {
   .pages {
     width: 200px;

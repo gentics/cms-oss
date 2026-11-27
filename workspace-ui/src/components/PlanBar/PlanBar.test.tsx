@@ -156,6 +156,29 @@ describe('PlanBar', () => {
         expect(within(bar).getByText(headLine('Done · 1 page to publish'))).toBeInTheDocument();
     });
 
+    it('counts only the pages to publish in the head, not a form the plan publishes too (rc.6)', async () => {
+        const items: Plan['items'] = [
+            { id: 'f1', label: 'Edit the contact form', kind: 'update', workflow: 'form_manage', status: 'done', target: { type: 'form', id: '4410', node_id: 3 } },
+            { id: 'p1', label: 'Edit Versand und Lieferung', kind: 'update', workflow: 'content_edit', status: 'done', target: { type: 'page', id: '8644', node_id: 3 } },
+        ];
+
+        useWorkspaceEventStore.getState().applyEvent(SESSION, {
+            seq: 1,
+            ts: '2026-10-15T09:00:00Z',
+            session_id: SESSION,
+            plan_id: 'pl-1',
+            type: 'publications.updated',
+            publications: [
+                { cms_ref: { type: 'form', id: 4410, node_id: 3 }, status: 'pending', approval_chain: [] },
+                { cms_ref: { type: 'page', id: 8644, node_id: 3 }, status: 'pending', approval_chain: [] },
+            ],
+        } as GenaixEvent);
+
+        const bar = await renderBar('done', { items });
+
+        expect(within(bar).getByText(headLine('Done · 1 page to publish'))).toBeInTheDocument();
+    });
+
     it('says only the status in the head while collapsed, the plan at a glance only in the plan itself', async () => {
         const user = userEvent.setup();
         const items: Plan['items'] = [

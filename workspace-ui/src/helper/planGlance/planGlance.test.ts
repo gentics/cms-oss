@@ -30,6 +30,15 @@ const items: PlanItem[] = [
     item('o1', { kind: 'other' }),
 ];
 
+// rc.6: "+1 form · 1 form edited · 1 form deleted"; embedding a form is a sub-step of the page's item.
+const formItems: PlanItem[] = [
+    item('n1', { kind: 'create', workflow: 'form_manage', creates: { type: 'form', label: 'Contact' } }),
+    item('u1', { kind: 'update', workflow: 'form_manage', target: { type: 'form', id: '4410', node_id: 3 } }),
+    item('d1', { kind: 'delete', workflow: 'form_manage', target: { type: 'form', id: '4411', node_id: 3 } }),
+    item('p1', { kind: 'update', target: { type: 'page', id: '8871', node_id: 3 } }),
+    item('p1-form', { kind: 'link', parent: 'p1', target: { type: 'form', id: '4412', node_id: 3, external: true } }),
+];
+
 describe('planGlance', () => {
     it('counts the top-level items by kind and object type, in plan order', () => {
         expect(planGlance(items)).toEqual([
@@ -68,6 +77,22 @@ describe('planGlance', () => {
         expect(planGlance([])).toEqual([]);
         expect(planGlance([item('r1', { kind: 'report' })])).toEqual([]);
     });
+
+    it('counts form items by kind, a delete by its target, and an embedded form as its page', () => {
+        expect(planGlance(formItems)).toEqual([
+            { kind: 'create', type: 'form', total: 1, done: 0, isNew: true },
+            { kind: 'update', type: 'form', total: 1, done: 0, isNew: false },
+            { kind: 'delete', type: 'form', total: 1, done: 0, isNew: false },
+            { kind: 'update', type: 'page', total: 1, done: 0, isNew: false },
+        ]);
+    });
+
+    it('never counts an external form as created or deleted', () => {
+        const external = { type: 'form' as const, id: '4412', node_id: 3, external: true };
+
+        expect(planGlance([item('c1', { kind: 'create', target: external }), item('d1', { kind: 'delete', target: external })])).toEqual([]);
+        expect(planGlance([item('u1', { kind: 'update', target: external })])).toEqual([{ kind: 'update', type: 'form', total: 1, done: 0, isNew: false }]);
+    });
 });
 
 describe('showsProgress', () => {
@@ -91,6 +116,16 @@ describe('glanceText', () => {
 
     it('reads the progress as "done/total"', () => {
         expect(glanceText(t, planGlance(items)[0]!, true)).toEqual({ value: '2/3', label: 'folders' });
+    });
+
+    it('reads form items as created, edited and deleted forms', () => {
+        const [created, edited, deleted] = planGlance(formItems);
+
+        expect(glanceText(t, created!, false)).toEqual({ value: '+1', label: 'form' });
+        expect(glanceText(t, edited!, false)).toEqual({ value: '1', label: 'form edited' });
+        expect(glanceText(t, deleted!, false)).toEqual({ value: '1', label: 'form deleted' });
+        expect(glanceText(t, { kind: 'delete', type: 'page', total: 2, done: 0, isNew: false }, false).label).toBe('objects deleted');
+        expect(glanceText(i18n.getFixedT('de'), deleted!, false).label).toBe('Formular gelöscht');
     });
 
     it('falls back to the kind for an object type without its own wording', () => {
